@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 	"log"
+	"strings"
 )
 
 type PackageMeta struct {
@@ -13,6 +14,7 @@ type PackageMeta struct {
 type FieldMeta struct {
 	Name string
 	Type string
+	Tag  string
 }
 
 type StructMeta struct {
@@ -27,6 +29,16 @@ type StructCollector struct {
 
 func (sc *StructCollector) Visit(n ast.Node) ast.Visitor {
 	return sc.Collect(n)
+}
+
+func exprString(expr ast.Expr) string {
+	switch _expr := expr.(type) {
+	case *ast.Ident:
+		return _expr.Name
+	case *ast.SelectorExpr:
+		return exprString(_expr.X) + "." + _expr.Sel.Name
+	}
+	return ""
 }
 
 func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
@@ -49,13 +61,29 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 		case *ast.StructType:
 			var fields []FieldMeta
 			for _, field := range specType.Fields.List {
-				i := field.Type.(*ast.Ident)
-				fieldType := i.Name
-				for _, name := range field.Names {
-					log.Printf("\tField: name=%s type=%s\n", name.Name, fieldType)
+				var tag string
+				if field.Tag != nil {
+					tag = field.Tag.Value
+				}
+				var names []string
+				fieldType := exprString(field.Type)
+
+				if field.Names != nil {
+					for _, name := range field.Names {
+						names = append(names, name.Name)
+					}
+				} else {
+					splits := strings.Split(fieldType, ".")
+					names = append(names, splits[len(splits)-1])
+					fieldType = "embed"
+				}
+
+				for _, name := range names {
+					log.Printf("\tField: name=%s type=%s tag=%s\n", name, fieldType, tag)
 					fields = append(fields, FieldMeta{
-						Name: name.Name,
+						Name: name,
 						Type: fieldType,
+						Tag:  tag,
 					})
 				}
 			}

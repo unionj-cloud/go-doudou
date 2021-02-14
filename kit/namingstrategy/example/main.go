@@ -5,13 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 )
 
 func main() {
+	sch := vo.School{
+		Name:     "Beijing University",
+		Address:  "Beijing",
+		CreateAt: time.Now(),
+	}
 	stu := vo.Student{
 		Name:      "wubin",
 		Age:       30,
 		TestScore: 99,
+		School:    sch,
 	}
 	data, err := json.Marshal(stu)
 	if err != nil {

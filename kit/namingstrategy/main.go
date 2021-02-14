@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var file = flag.String("file", "", "name of file")
+var file = flag.String("file", "/Users/wubin1989/workspace/cloud/papilio/kit/namingstrategy/example/vo/vos.go", "name of file")
 var strategy = flag.String("strategy", "lowerCaseNamingStrategy", "name of strategy")
 
 func main() {
