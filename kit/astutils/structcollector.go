@@ -1,9 +1,12 @@
 package astutils
 
 import (
+	"cloud/unionj/papilio/kit/sliceutils"
 	"go/ast"
 	"go/token"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -73,7 +76,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 					for _, field := range specType.Fields.List {
 						var tag string
 						if field.Tag != nil {
-							tag = field.Tag.Value
+							tag = strings.Trim(field.Tag.Value, "`")
 						}
 
 						var fieldComments []string
@@ -117,4 +120,66 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 		}
 	}
 	return nil
+}
+
+func (sc *StructCollector) FlatEmbed() []StructMeta {
+	structMap := make(map[string]StructMeta)
+	for _, structMeta := range sc.Structs {
+		if _, exists := structMap[structMeta.Name]; !exists {
+			structMap[structMeta.Name] = structMeta
+		}
+	}
+	var result []StructMeta
+	for _, structMeta := range sc.Structs {
+		if sliceutils.IsEmpty(structMeta.Comments) {
+			continue
+		}
+		if structMeta.Comments[0] != "//papi:table" {
+			continue
+		}
+		_structMeta := StructMeta{
+			Name:     structMeta.Name,
+			Fields:   make([]FieldMeta, 0),
+			Comments: make([]string, len(structMeta.Comments)),
+		}
+		copy(_structMeta.Comments, structMeta.Comments)
+
+		fieldMap := make(map[string]FieldMeta)
+		embedFieldMap := make(map[string]FieldMeta)
+		for _, fieldMeta := range structMeta.Fields {
+			if fieldMeta.Type == "embed" {
+				if embeded, exists := structMap[fieldMeta.Name]; exists {
+					for _, field := range embeded.Fields {
+						if _, _exists := embedFieldMap[field.Name]; !_exists {
+							embedFieldMap[field.Name] = field
+						}
+					}
+				}
+			} else {
+				_structMeta.Fields = append(_structMeta.Fields, fieldMeta)
+				fieldMap[fieldMeta.Name] = fieldMeta
+			}
+		}
+
+		for key, field := range embedFieldMap {
+			if _, exists := fieldMap[key]; !exists {
+				_structMeta.Fields = append(_structMeta.Fields, field)
+			}
+		}
+		result = append(result, _structMeta)
+	}
+
+	return result
+}
+
+func Visit(files *[]string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !info.IsDir() {
+			*files = append(*files, path)
+		}
+		return nil
+	}
 }

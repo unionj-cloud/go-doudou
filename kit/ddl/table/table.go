@@ -4,6 +4,7 @@ import (
 	"cloud/unionj/papilio/kit/astutils"
 	"cloud/unionj/papilio/kit/stringutils"
 	"github.com/iancoleman/strcase"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -18,10 +19,27 @@ const (
 	now = "CURRENT_TIMESTAMP"
 )
 
+type IndexItems []IndexItem
+
+type IndexItem struct {
+	Column string
+	Order  int
+	Sort   string
+}
+
+func (it IndexItems) Len() int {
+	return len(it)
+}
+func (it IndexItems) Less(i, j int) bool {
+	return it[i].Order < it[j].Order
+}
+func (it IndexItems) Swap(i, j int) {
+	it[i], it[j] = it[j], it[i]
+}
+
 type Index struct {
 	Name  string
-	Order int
-	Sort  string
+	Items []IndexItem
 }
 
 type ColumnType string
@@ -110,7 +128,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			pk            bool
 		)
 		if stringutils.IsNotEmpty(field.Tag) {
-			tags := strings.Split(field.Tag, " ")
+			tags := strings.Split(field.Tag, `" `)
 			var papiTag string
 			for _, tag := range tags {
 				if trimedTag := strings.TrimPrefix(tag, "papi:"); len(trimedTag) < len(tag) {
@@ -148,9 +166,13 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							}
 							sort := props[2]
 							index = Index{
-								Name:  indexName,
-								Order: orderInt,
-								Sort:  sort,
+								Name: indexName,
+								Items: []IndexItem{
+									{
+										Order: orderInt,
+										Sort:  sort,
+									},
+								},
 							}
 							break
 						case "unique":
@@ -163,9 +185,13 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							}
 							sort := props[2]
 							uniqueindex = Index{
-								Name:  indexName,
-								Order: orderInt,
-								Sort:  sort,
+								Name: indexName,
+								Items: []IndexItem{
+									{
+										Order: orderInt,
+										Sort:  sort,
+									},
+								},
 							}
 							break
 						}
@@ -186,16 +212,24 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							break
 						case "index":
 							index = Index{
-								Name:  strcase.ToSnake(field.Name) + "_idx",
-								Order: 1,
-								Sort:  "asc",
+								Name: strcase.ToSnake(field.Name) + "_idx",
+								Items: []IndexItem{
+									{
+										Order: 1,
+										Sort:  "asc",
+									},
+								},
 							}
 							break
 						case "unique":
 							uniqueindex = Index{
-								Name:  strcase.ToSnake(field.Name) + "_idx",
-								Order: 1,
-								Sort:  "asc",
+								Name: strcase.ToSnake(field.Name) + "_idx",
+								Items: []IndexItem{
+									{
+										Order: 1,
+										Sort:  "asc",
+									},
+								},
 							}
 							break
 						}
@@ -216,6 +250,16 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			columnType = toColumnType(trimmedType)
 		}
 
+		if stringutils.IsNotEmpty(uniqueindex.Name) {
+			uniqueindex.Items[0].Column = columnName
+			uniqueindexes = append(uniqueindexes, uniqueindex)
+		}
+
+		if stringutils.IsNotEmpty(index.Name) {
+			index.Items[0].Column = columnName
+			indexes = append(indexes, index)
+		}
+
 		columns = append(columns, Column{
 			Name:          columnName,
 			Type:          columnType,
@@ -226,9 +270,6 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			Extra:         extra,
 			Pk:            pk,
 		})
-
-		uniqueindexes = append(uniqueindexes, uniqueindex)
-		indexes = append(indexes, index)
 	}
 
 	for _, column := range columns {
@@ -238,13 +279,52 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		}
 	}
 
-	
+	uniqueMap := make(map[string][]IndexItem)
+	indexMap := make(map[string][]IndexItem)
+
+	for _, unique := range uniqueindexes {
+		if items, exists := uniqueMap[unique.Name]; exists {
+			items = append(items, unique.Items...)
+			uniqueMap[unique.Name] = items
+		} else {
+			uniqueMap[unique.Name] = unique.Items
+		}
+	}
+
+	for _, index := range indexes {
+		if items, exists := indexMap[index.Name]; exists {
+			items = append(items, index.Items...)
+			indexMap[index.Name] = items
+		} else {
+			indexMap[index.Name] = index.Items
+		}
+	}
+
+	var uniquesResult, indexesResult []Index
+
+	for k, v := range uniqueMap {
+		it := IndexItems(v)
+		sort.Stable(it)
+		uniquesResult = append(uniquesResult, Index{
+			Name:  k,
+			Items: it,
+		})
+	}
+
+	for k, v := range indexMap {
+		it := IndexItems(v)
+		sort.Stable(it)
+		indexesResult = append(indexesResult, Index{
+			Name:  k,
+			Items: it,
+		})
+	}
 
 	return Table{
 		Name:          strcase.ToSnake(structMeta.Name) + "s",
 		Columns:       columns,
 		Pk:            pkColumn.Name,
-		UniqueIndexes: nil,
-		Indexes:       nil,
+		UniqueIndexes: uniquesResult,
+		Indexes:       indexesResult,
 	}
 }
