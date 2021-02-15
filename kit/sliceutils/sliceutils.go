@@ -1,5 +1,7 @@
 package sliceutils
 
+import "reflect"
+
 func StringSlice2InterfaceSlice(strSlice []string) []interface{} {
 	ret := make([]interface{}, len(strSlice))
 	for i, v := range strSlice {
@@ -41,4 +43,34 @@ func IndexOf(element string, data []string) int {
 		}
 	}
 	return -1 //not found.
+}
+
+func IsEmpty(src interface{}) bool {
+	if slice, ok := takeSliceArg(src); ok {
+		return slice == nil || len(slice) == 0
+	}
+	panic("not slice")
+}
+
+// https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
+func takeSliceArg(arg interface{}) (out []interface{}, ok bool) {
+	slice, success := takeArg(arg, reflect.Slice)
+	if !success {
+		ok = false
+		return
+	}
+	c := slice.Len()
+	out = make([]interface{}, c)
+	for i := 0; i < c; i++ {
+		out[i] = slice.Index(i).Interface()
+	}
+	return out, true
+}
+
+func takeArg(arg interface{}, kind reflect.Kind) (val reflect.Value, ok bool) {
+	val = reflect.ValueOf(arg)
+	if val.Kind() == kind {
+		ok = true
+	}
+	return
 }

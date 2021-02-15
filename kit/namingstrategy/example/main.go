@@ -14,12 +14,19 @@ func main() {
 		Address:  "Beijing",
 		CreateAt: time.Now(),
 	}
+	company := vo.Company{
+		Name:     "Stq",
+		CreateAt: time.Now().AddDate(0, -1, 0),
+	}
 	stu := vo.Student{
 		Name:      "wubin",
 		Age:       30,
 		TestScore: 99,
 		School:    sch,
+		Company:   company,
 	}
+
+
 	data, err := json.Marshal(stu)
 	if err != nil {
 		panic(err)

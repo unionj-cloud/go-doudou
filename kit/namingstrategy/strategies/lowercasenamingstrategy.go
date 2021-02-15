@@ -34,24 +34,7 @@ import (
 func (object {{$struct.Name}}) MarshalJSON() ([]byte, error) {
 	objectMap := make(map[string]interface{})
 	{{- range $field := $struct.Fields}}
-	{{- if ne $field.Type "embed"}}
 	objectMap[strategies.LowerCaseConvert("{{$field.Name}}")] = object.{{$field.Name}}
-	{{- else}}
-	data, err := json.Marshal(object.{{$field.Name}})
-	if err != nil {
-		panic(err)
-	}
-	_objectMap := make(map[string]interface{})
-	err = json.Unmarshal(data, &_objectMap)
-	if err != nil {
-		panic(err)
-	}
-    for k, v :=range _objectMap {
-		if _, exists := objectMap[k]; !exists {
-			objectMap[k] = v
-		}
-	}
-	{{- end }}
 	{{- end }}
 	return json.Marshal(objectMap)
 }
