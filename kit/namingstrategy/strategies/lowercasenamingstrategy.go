@@ -1,7 +1,7 @@
 package strategies
 
 import (
-	"cloud/unionj/papilio/kit/stringutils"
+	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"text/template"
 	"unicode"
 )
@@ -27,7 +27,7 @@ package {{ .StructCollector.Package.Name }}
 
 import (
 	"encoding/json"
-	"cloud/unionj/papilio/kit/namingstrategy/strategies"
+	"github.com/unionj-cloud/papilio/kit/namingstrategy/strategies"
 )
 
 {{ range $struct := .StructCollector.Structs }}

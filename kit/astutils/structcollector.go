@@ -1,7 +1,7 @@
 package astutils
 
 import (
-	"cloud/unionj/papilio/kit/sliceutils"
+	"github.com/unionj-cloud/papilio/kit/sliceutils"
 	"go/ast"
 	"go/token"
 	"log"

@@ -1,7 +1,7 @@
 package table
 
 import (
-	"cloud/unionj/papilio/kit/astutils"
+	"github.com/unionj-cloud/papilio/kit/astutils"
 	"fmt"
 	"go/ast"
 	"go/parser"

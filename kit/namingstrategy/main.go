@@ -1,9 +1,9 @@
 package main
 
 import (
-	"cloud/unionj/papilio/kit/astutils"
-	"cloud/unionj/papilio/kit/namingstrategy/strategies"
-	"cloud/unionj/papilio/kit/stringutils"
+	"github.com/unionj-cloud/papilio/kit/astutils"
+	"github.com/unionj-cloud/papilio/kit/namingstrategy/strategies"
+	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"flag"
 	"fmt"
 	"go/ast"

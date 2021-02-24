@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cloud/unionj/papilio/kit/astutils"
-	"cloud/unionj/papilio/kit/stringutils"
+	"github.com/unionj-cloud/papilio/kit/astutils"
+	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"flag"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"

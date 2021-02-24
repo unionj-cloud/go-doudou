@@ -1,8 +1,8 @@
 package table
 
 import (
-	"cloud/unionj/papilio/kit/astutils"
-	"cloud/unionj/papilio/kit/stringutils"
+	"github.com/unionj-cloud/papilio/kit/astutils"
+	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"github.com/iancoleman/strcase"
 	"sort"
 	"strconv"

@@ -1,4 +1,4 @@
-module cloud/unionj/papilio
+module github.com/unionj-cloud/papilio
 
 go 1.15
 
