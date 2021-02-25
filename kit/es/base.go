@@ -1,13 +1,13 @@
 package es
 
 import (
+	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"gopkg.in/olivere/elastic.v5"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"testing"
-	"github.com/unionj-cloud/papilio/kit/stringutils"
 )
 
 var lock sync.Mutex
@@ -67,8 +67,9 @@ func (b *Base) SetType(s string) {
 }
 
 type Field struct {
-	Name string      `json:"name"`
-	Type esFieldType `json:"type"`
+	Name   string      `json:"name"`
+	Type   esFieldType `json:"type"`
+	Format string      `json:"format"`
 }
 
 type QueryCond struct {
