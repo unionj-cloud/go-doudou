@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"github.com/unionj-cloud/papilio/kit/constants"
-	"github.com/unionj-cloud/papilio/kit/testutils"
+	"github.com/unionj-cloud/go-doudou/kit/constants"
+	"github.com/unionj-cloud/go-doudou/kit/testutils"
 )
 
 func Test_query(t *testing.T) {

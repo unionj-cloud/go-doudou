@@ -1,11 +1,12 @@
 package models
 
-//papi:table
+//dd:table
 type User struct {
-	ID    int    `papi:"pk;auto"`
-	Name  string `papi:"index:name_phone_idx,2,asc;default:wubin"`
-	Phone string `papi:"index:name_phone_idx,1,desc;default:13552053960"`
-	Age   int    `papi:"index"`
+	ID    int    `dd:"pk;auto"`
+	Name  string `dd:"index:name_phone_idx,2;default:wubin"`
+	Phone string `dd:"index:name_phone_idx,1;default:13552053960"`
+	Age   int    `dd:"index"`
+	No    int    `dd:"unique"`
 
 	Base
 }

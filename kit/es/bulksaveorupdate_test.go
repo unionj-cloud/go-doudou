@@ -3,7 +3,7 @@ package es
 import (
 	"testing"
 	"time"
-	"github.com/unionj-cloud/papilio/kit/constants"
+	"github.com/unionj-cloud/go-doudou/kit/constants"
 )
 
 func TestBulkSaveOrUpdate(t *testing.T) {

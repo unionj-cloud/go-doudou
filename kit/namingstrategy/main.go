@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/unionj-cloud/papilio/kit/astutils"
-	"github.com/unionj-cloud/papilio/kit/namingstrategy/strategies"
-	"github.com/unionj-cloud/papilio/kit/stringutils"
+	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/namingstrategy/strategies"
+	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var file = flag.String("file", "/Users/wubin1989/workspace/cloud/papilio/kit/namingstrategy/example/vo/vos.go", "name of file")
+var file = flag.String("file", "/Users/wubin1989/workspace/cloud/go-doudou/kit/namingstrategy/example/vo/vos.go", "name of file")
 var strategy = flag.String("strategy", "lowerCaseNamingStrategy", "name of strategy")
 
 func main() {

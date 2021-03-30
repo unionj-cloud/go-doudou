@@ -1,12 +1,16 @@
 package table
 
 import (
-	"github.com/unionj-cloud/papilio/kit/astutils"
-	"github.com/unionj-cloud/papilio/kit/stringutils"
+	"bytes"
 	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/pathutils"
+	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 type Extra string
@@ -24,7 +28,7 @@ type IndexItems []IndexItem
 type IndexItem struct {
 	Column string
 	Order  int
-	Sort   string
+	Sort   Sort
 }
 
 func (it IndexItems) Len() int {
@@ -38,8 +42,9 @@ func (it IndexItems) Swap(i, j int) {
 }
 
 type Index struct {
-	Name  string
-	Items []IndexItem
+	Unique bool
+	Name   string
+	Items  []IndexItem
 }
 
 type ColumnType string
@@ -66,6 +71,13 @@ const (
 	smallintType   ColumnType = "SMALLINT"
 	tinyintType    ColumnType = "TINYINT"
 	varcharType    ColumnType = "VARCHAR(255)"
+)
+
+type Sort string
+
+const (
+	asc  Sort = "asc"
+	desc Sort = "desc"
 )
 
 func toColumnType(goType string) ColumnType {
@@ -100,11 +112,10 @@ type Column struct {
 }
 
 type Table struct {
-	Name          string
-	Columns       []Column
-	Pk            string
-	UniqueIndexes []Index
-	Indexes       []Index
+	Name    string
+	Columns []Column
+	Pk      string
+	Indexes []Index
 }
 
 func NewTableFromStruct(structMeta astutils.StructMeta) Table {
@@ -129,15 +140,15 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		)
 		if stringutils.IsNotEmpty(field.Tag) {
 			tags := strings.Split(field.Tag, `" `)
-			var papiTag string
+			var ddTag string
 			for _, tag := range tags {
-				if trimedTag := strings.TrimPrefix(tag, "papi:"); len(trimedTag) < len(tag) {
-					papiTag = strings.Trim(trimedTag, `"`)
+				if trimedTag := strings.TrimPrefix(tag, "dd:"); len(trimedTag) < len(tag) {
+					ddTag = strings.Trim(trimedTag, `"`)
 					break
 				}
 			}
-			if stringutils.IsNotEmpty(papiTag) {
-				kvs := strings.Split(papiTag, ";")
+			if stringutils.IsNotEmpty(ddTag) {
+				kvs := strings.Split(ddTag, ";")
 				for _, kv := range kvs {
 					pair := strings.Split(kv, ":")
 					if len(pair) > 1 {
@@ -164,7 +175,12 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							if err != nil {
 								panic(err)
 							}
-							sort := props[2]
+							var sort Sort
+							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+								sort = asc
+							} else {
+								sort = Sort(props[2])
+							}
 							index = Index{
 								Name: indexName,
 								Items: []IndexItem{
@@ -183,7 +199,12 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							if err != nil {
 								panic(err)
 							}
-							sort := props[2]
+							var sort Sort
+							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+								sort = asc
+							} else {
+								sort = Sort(props[2])
+							}
 							uniqueindex = Index{
 								Name: indexName,
 								Items: []IndexItem{
@@ -216,7 +237,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 								Items: []IndexItem{
 									{
 										Order: 1,
-										Sort:  "asc",
+										Sort:  asc,
 									},
 								},
 							}
@@ -227,7 +248,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 								Items: []IndexItem{
 									{
 										Order: 1,
-										Sort:  "asc",
+										Sort:  asc,
 									},
 								},
 							}
@@ -306,8 +327,9 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		it := IndexItems(v)
 		sort.Stable(it)
 		uniquesResult = append(uniquesResult, Index{
-			Name:  k,
-			Items: it,
+			Unique: true,
+			Name:   k,
+			Items:  it,
 		})
 	}
 
@@ -320,11 +342,22 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		})
 	}
 
+	indexesResult = append(indexesResult, uniquesResult...)
+
 	return Table{
-		Name:          strcase.ToSnake(structMeta.Name) + "s",
-		Columns:       columns,
-		Pk:            pkColumn.Name,
-		UniqueIndexes: uniquesResult,
-		Indexes:       indexesResult,
+		Name:    strcase.ToSnake(structMeta.Name) + "s",
+		Columns: columns,
+		Pk:      pkColumn.Name,
+		Indexes: indexesResult,
 	}
+}
+
+func (t *Table) CreateSql() (string, error) {
+	tmplPath := pathutils.Abs("create.tmpl")
+	tpl := template.Must(template.New("create.tmpl").ParseFiles(tmplPath))
+	var sqlBuf bytes.Buffer
+	if err := tpl.Execute(&sqlBuf, t); err != nil {
+		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
+	}
+	return strings.TrimSpace(sqlBuf.String()), nil
 }

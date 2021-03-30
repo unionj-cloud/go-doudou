@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/unionj-cloud/papilio/kit/namingstrategy/example/vo"
+	"github.com/unionj-cloud/go-doudou/kit/namingstrategy/example/vo"
 	"encoding/json"
 	"fmt"
 	"log"

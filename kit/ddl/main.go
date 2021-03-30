@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/unionj-cloud/papilio/kit/astutils"
-	"github.com/unionj-cloud/papilio/kit/stringutils"
 	"flag"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
+	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -24,7 +26,7 @@ type DbConfig struct {
 	charset string
 }
 
-var dir = flag.String("models", "/Users/wubin1989/workspace/cloud/papilio/kit/ddl/example/models", "path of models folder")
+var dir = flag.String("models", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/models", "path of models folder")
 
 var dbConfig DbConfig
 
@@ -87,4 +89,20 @@ func main() {
 	}
 	fmt.Println(existTables)
 
+	for _, sm := range flattened {
+		table := table.NewTableFromStruct(sm)
+		fmt.Println(table)
+		if sliceutils.StringContains(existTables, table.Name) {
+			continue
+		}
+		var statement string
+		if statement, err = table.CreateSql(); err != nil {
+			fmt.Printf("FATAL: %+v\n", err)
+			return
+		}
+		if _, err = db.Exec(statement); err != nil {
+			fmt.Printf("FATAL: %+v\n", err)
+			return
+		}
+	}
 }

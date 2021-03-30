@@ -1,7 +1,7 @@
 package astutils
 
 import (
-	"github.com/unionj-cloud/papilio/kit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"go/ast"
 	"go/token"
 	"log"
@@ -134,7 +134,7 @@ func (sc *StructCollector) FlatEmbed() []StructMeta {
 		if sliceutils.IsEmpty(structMeta.Comments) {
 			continue
 		}
-		if structMeta.Comments[0] != "//papi:table" {
+		if structMeta.Comments[0] != "//dd:table" {
 			continue
 		}
 		_structMeta := StructMeta{

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"github.com/unionj-cloud/papilio/kit/constants"
+	"github.com/unionj-cloud/go-doudou/kit/constants"
 )
 
 func TestPage(t *testing.T) {

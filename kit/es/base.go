@@ -1,7 +1,7 @@
 package es
 
 import (
-	"github.com/unionj-cloud/papilio/kit/stringutils"
+	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"gopkg.in/olivere/elastic.v5"
 	"log"
 	"os"

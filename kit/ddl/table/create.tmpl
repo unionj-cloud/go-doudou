@@ -1,0 +1,12 @@
+CREATE TABLE `{{.Name}}` (
+{{- range $co := .Columns }}
+`{{$co.Name}}` {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}} {{if $co.Autoincrement}}AUTO_INCREMENT{{end}},
+{{- end }}
+PRIMARY KEY (`{{.Pk}}`){{if .Indexes}},{{end}}
+{{- range $i, $ind := .Indexes}}
+{{- if $i}},{{end}}
+{{if $ind.Unique}}UNIQUE {{end}}INDEX `{{$ind.Name}}` ({{ range $j, $it := $ind.Items }}{{if $j}},{{end}}`{{$it.Column}}` {{$it.Sort}}{{ end }})
+{{- end }});
+
+
+
