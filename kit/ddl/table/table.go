@@ -101,6 +101,7 @@ func toColumnType(goType string) ColumnType {
 }
 
 type Column struct {
+	Table         string
 	Name          string
 	Type          ColumnType
 	Default       interface{}
@@ -109,6 +110,50 @@ type Column struct {
 	Unsigned      bool
 	Autoincrement bool
 	Extra         Extra
+}
+
+func (c *Column) ChangeColumnSql() (string, error) {
+	tmplPath := pathutils.Abs("alter.tmpl")
+	tpl := template.Must(template.New("alter.tmpl").ParseFiles(tmplPath))
+	var sqlBuf bytes.Buffer
+	if err := tpl.ExecuteTemplate(&sqlBuf, "change", c); err != nil {
+		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
+	}
+	return strings.TrimSpace(sqlBuf.String()), nil
+}
+
+func (c *Column) AddColumnSql() (string, error) {
+	tmplPath := pathutils.Abs("alter.tmpl")
+	tpl := template.Must(template.New("alter.tmpl").ParseFiles(tmplPath))
+	var sqlBuf bytes.Buffer
+	if err := tpl.ExecuteTemplate(&sqlBuf, "add", c); err != nil {
+		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
+	}
+	return strings.TrimSpace(sqlBuf.String()), nil
+}
+
+type Key string
+
+const (
+	pri Key = "PRI"
+	uni Key = "UNI"
+	mul Key = "MUL"
+)
+
+type Null string
+
+const (
+	yes Null = "YES"
+	no  Null = "NO"
+)
+
+type DbColumn struct {
+	Field   string  `db:"Field"`
+	Type    string  `db:"Type"`
+	Null    Null    `db:"Null"`
+	Key     *Key    `db:"Key"`
+	Default *string `db:"Default"`
+	Extra   *string `db:"Extra"`
 }
 
 type Table struct {
@@ -124,7 +169,9 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		uniqueindexes []Index
 		indexes       []Index
 		pkColumn      Column
+		table         string
 	)
+	table = strcase.ToSnake(structMeta.Name) + "s"
 	for _, field := range structMeta.Fields {
 		var (
 			columnName    string
@@ -138,6 +185,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			index         Index
 			pk            bool
 		)
+		columnName = strcase.ToSnake(field.Name)
 		if stringutils.IsNotEmpty(field.Tag) {
 			tags := strings.Split(field.Tag, `" `)
 			var ddTag string
@@ -160,9 +208,6 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							break
 						case "default":
 							columnDefault = value
-							break
-						case "column":
-							columnName = value
 							break
 						case "extra":
 							extra = Extra(value)
@@ -259,10 +304,6 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			}
 		}
 
-		if stringutils.IsEmpty(columnName) {
-			columnName = strcase.ToSnake(field.Name)
-		}
-
 		if stringutils.IsEmpty(string(columnType)) {
 			var trimmedType string
 			if trimmedType = strings.TrimPrefix(field.Type, "*"); len(trimmedType) < len(field.Type) {
@@ -282,6 +323,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		}
 
 		columns = append(columns, Column{
+			Table:         table,
 			Name:          columnName,
 			Type:          columnType,
 			Default:       columnDefault,
@@ -345,7 +387,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 	indexesResult = append(indexesResult, uniquesResult...)
 
 	return Table{
-		Name:    strcase.ToSnake(structMeta.Name) + "s",
+		Name:    table,
 		Columns: columns,
 		Pk:      pkColumn.Name,
 		Indexes: indexesResult,

@@ -3,16 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	mapset "github.com/deckarep/golang-set"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/cmd"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
+	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -31,6 +36,10 @@ var dir = flag.String("models", "/Users/wubin1989/workspace/cloud/go-doudou/kit/
 var dbConfig DbConfig
 
 func init() {
+	err := godotenv.Load(pathutils.Abs(".env"))
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	dbConfig = DbConfig{
 		host:    os.Getenv("DB_HOST"),
 		port:    os.Getenv("DB_PORT"),
@@ -81,28 +90,42 @@ func main() {
 		log.Fatalln(err)
 	}
 	fmt.Println(db)
+	db.MapperFunc(strcase.ToSnake)
 
 	var existTables []string
-	err = db.Select(&existTables, "show tables")
-	if err != nil {
+	if err = db.Select(&existTables, "show tables"); err != nil {
 		panic(err)
 	}
 	fmt.Println(existTables)
 
 	for _, sm := range flattened {
-		table := table.NewTableFromStruct(sm)
-		fmt.Println(table)
-		if sliceutils.StringContains(existTables, table.Name) {
-			continue
-		}
-		var statement string
-		if statement, err = table.CreateSql(); err != nil {
-			fmt.Printf("FATAL: %+v\n", err)
-			return
-		}
-		if _, err = db.Exec(statement); err != nil {
-			fmt.Printf("FATAL: %+v\n", err)
-			return
+		t := table.NewTableFromStruct(sm)
+		if sliceutils.StringContains(existTables, t.Name) {
+			var columns []table.DbColumn
+			if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
+				panic(err)
+			}
+			var existColumnNames []interface{}
+			for _, dbCol := range columns {
+				existColumnNames = append(existColumnNames, dbCol.Field)
+			}
+			existColSet := mapset.NewSetFromSlice(existColumnNames)
+
+			for _, col := range t.Columns {
+				if existColSet.Contains(col.Name) {
+					if err = cmd.ChangeColumn(db, col); err != nil {
+						log.Infof("FATAL: %+v\n", err)
+					}
+				} else {
+					if err = cmd.AddColumn(db, col); err != nil {
+						log.Infof("FATAL: %+v\n", err)
+					}
+				}
+			}
+		} else {
+			if err = cmd.CreateTable(db, t); err != nil {
+				log.Infof("FATAL: %+v\n", err)
+			}
 		}
 	}
 }

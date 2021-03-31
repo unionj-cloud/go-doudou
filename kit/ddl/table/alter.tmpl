@@ -1,0 +1,12 @@
+{{define "change"}}
+ALTER TABLE `{{.Table}}`
+CHANGE COLUMN `{{.Name}}` `{{.Name}}` {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}}{{if .Autoincrement}} AUTO_INCREMENT{{end}}{{if .Default}} DEFAULT {{.Default}}{{end}}{{if .Extra}} {{.Extra}}{{end}};
+{{end}}
+
+{{define "add"}}
+ALTER TABLE `{{.Table}}`
+ADD COLUMN `{{.Name}}` {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}}{{if .Autoincrement}} AUTO_INCREMENT{{end}}{{if .Default}} DEFAULT {{.Default}}{{end}}{{if .Extra}} {{.Extra}}{{end}};
+{{end}}
+
+
+
