@@ -1,16 +1,14 @@
 package table
 
 import (
-	"bytes"
 	"github.com/iancoleman/strcase"
-	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
+	"github.com/unionj-cloud/go-doudou/kit/templateutils"
 	"sort"
 	"strconv"
 	"strings"
-	"text/template"
 )
 
 type Extra string
@@ -113,23 +111,11 @@ type Column struct {
 }
 
 func (c *Column) ChangeColumnSql() (string, error) {
-	tmplPath := pathutils.Abs("alter.tmpl")
-	tpl := template.Must(template.New("alter.tmpl").ParseFiles(tmplPath))
-	var sqlBuf bytes.Buffer
-	if err := tpl.ExecuteTemplate(&sqlBuf, "change", c); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
-	}
-	return strings.TrimSpace(sqlBuf.String()), nil
+	return templateutils.StringBlock(pathutils.Abs("alter.tmpl"), "change", c)
 }
 
 func (c *Column) AddColumnSql() (string, error) {
-	tmplPath := pathutils.Abs("alter.tmpl")
-	tpl := template.Must(template.New("alter.tmpl").ParseFiles(tmplPath))
-	var sqlBuf bytes.Buffer
-	if err := tpl.ExecuteTemplate(&sqlBuf, "add", c); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
-	}
-	return strings.TrimSpace(sqlBuf.String()), nil
+	return templateutils.StringBlock(pathutils.Abs("alter.tmpl"), "add", c)
 }
 
 type Key string
@@ -395,11 +381,5 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 }
 
 func (t *Table) CreateSql() (string, error) {
-	tmplPath := pathutils.Abs("create.tmpl")
-	tpl := template.Must(template.New("create.tmpl").ParseFiles(tmplPath))
-	var sqlBuf bytes.Buffer
-	if err := tpl.Execute(&sqlBuf, t); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
-	}
-	return strings.TrimSpace(sqlBuf.String()), nil
+	return templateutils.String(pathutils.Abs("create.tmpl"), t)
 }

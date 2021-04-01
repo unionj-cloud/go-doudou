@@ -31,7 +31,7 @@ type DbConfig struct {
 	charset string
 }
 
-var dir = flag.String("models", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/models", "path of models folder")
+var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/domain", "path of domain folder")
 
 var dbConfig DbConfig
 

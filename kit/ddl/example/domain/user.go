@@ -1,4 +1,4 @@
-package models
+package domain
 
 //dd:table
 type User struct {
