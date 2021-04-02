@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -58,7 +59,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 				Columns: []Column{
 					{
 						Name:          "id",
-						Type:          intType,
+						Type:          columnenum.IntType,
 						Default:       nil,
 						Pk:            true,
 						Nullable:      false,
@@ -68,7 +69,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					},
 					{
 						Name:          "name",
-						Type:          varcharType,
+						Type:          columnenum.VarcharType,
 						Default:       "'wubin'",
 						Pk:            false,
 						Nullable:      true,
@@ -78,7 +79,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					},
 					{
 						Name:          "phone",
-						Type:          varcharType,
+						Type:          columnenum.VarcharType,
 						Default:       "'13552053960'",
 						Pk:            false,
 						Nullable:      true,
@@ -88,7 +89,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					},
 					{
 						Name:          "age",
-						Type:          intType,
+						Type:          columnenum.IntType,
 						Default:       nil,
 						Pk:            false,
 						Nullable:      true,
@@ -98,7 +99,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					},
 					{
 						Name:          "no",
-						Type:          intType,
+						Type:          columnenum.IntType,
 						Default:       nil,
 						Pk:            false,
 						Nullable:      false,
@@ -166,7 +167,7 @@ func TestColumn_AlterColumnSql(t *testing.T) {
 	type fields struct {
 		Table         string
 		Name          string
-		Type          ColumnType
+		Type          columnenum.ColumnType
 		Default       interface{}
 		Pk            bool
 		Nullable      bool
@@ -185,7 +186,7 @@ func TestColumn_AlterColumnSql(t *testing.T) {
 			fields: fields{
 				Table:         "users",
 				Name:          "phone",
-				Type:          varcharType,
+				Type:          columnenum.VarcharType,
 				Default:       "'13552053960'",
 				Pk:            false,
 				Nullable:      false,
@@ -227,7 +228,7 @@ func TestColumn_AddColumnSql(t *testing.T) {
 	type fields struct {
 		Table         string
 		Name          string
-		Type          ColumnType
+		Type          columnenum.ColumnType
 		Default       interface{}
 		Pk            bool
 		Nullable      bool
@@ -246,7 +247,7 @@ func TestColumn_AddColumnSql(t *testing.T) {
 			fields: fields{
 				Table:         "users",
 				Name:          "school",
-				Type:          varcharType,
+				Type:          columnenum.VarcharType,
 				Default:       "'harvard'",
 				Pk:            false,
 				Nullable:      false,

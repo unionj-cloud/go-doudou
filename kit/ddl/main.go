@@ -8,6 +8,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/cmd"
@@ -24,34 +25,43 @@ import (
 )
 
 type DbConfig struct {
-	host    string
-	port    string
-	user    string
-	passwd  string
-	schema  string
-	charset string
+	Host    string
+	Port    string
+	User    string
+	Passwd  string
+	Schema  string
+	Charset string
 }
 
 var dir = flag.String("domain", "", "path of domain folder")
 
-var dbConfig DbConfig
-
-func init() {
+func main() {
+	var db *sqlx.DB
 	err := godotenv.Load(pathutils.Abs(".env"))
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file", err)
 	}
-	dbConfig = DbConfig{
-		host:    os.Getenv("DB_HOST"),
-		port:    os.Getenv("DB_PORT"),
-		user:    os.Getenv("DB_USER"),
-		passwd:  os.Getenv("DB_PASSWD"),
-		schema:  os.Getenv("DB_SCHEMA"),
-		charset: os.Getenv("DB_CHARSET"),
+	var dbConfig DbConfig
+	err = envconfig.Process("db", &dbConfig)
+	if err != nil {
+		log.Fatal("Error processing env", err)
 	}
-}
 
-func main() {
+	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
+		dbConfig.User,
+		dbConfig.Passwd,
+		dbConfig.Host,
+		dbConfig.Port,
+		dbConfig.Schema,
+		dbConfig.Charset)
+	conn += `&loc=Asia%2FShanghai&parseTime=True`
+	db, err = sqlx.Connect("mysql", conn)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Close()
+	db.MapperFunc(strcase.ToSnake)
+
 	flag.Parse()
 	log.Println(*dir)
 	if stringutils.IsEmpty(*dir) {
@@ -70,7 +80,6 @@ func main() {
 	}
 
 	var files []string
-	var err error
 	err = filepath.Walk(*dir, astutils.Visit(&files))
 	if err != nil {
 		panic(err)
@@ -84,31 +93,13 @@ func main() {
 		}
 		ast.Walk(&sc, root)
 	}
-	fmt.Println(sc.Structs)
 
 	flattened := sc.FlatEmbed()
-	fmt.Println(flattened)
-
-	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
-		dbConfig.user,
-		dbConfig.passwd,
-		dbConfig.host,
-		dbConfig.port,
-		dbConfig.schema,
-		dbConfig.charset)
-	conn += `&loc=Asia%2FShanghai&parseTime=True`
-	db, err := sqlx.Connect("mysql", conn)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println(db)
-	db.MapperFunc(strcase.ToSnake)
 
 	var existTables []string
 	if err = db.Select(&existTables, "show tables"); err != nil {
 		panic(err)
 	}
-	fmt.Println(existTables)
 
 	var tables []table.Table
 	for _, sm := range flattened {
