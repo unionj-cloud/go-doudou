@@ -3,6 +3,8 @@ package table
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
@@ -26,7 +28,7 @@ type IndexItems []IndexItem
 type IndexItem struct {
 	Column string
 	Order  int
-	Sort   Sort
+	Sort   sortenum.Sort
 }
 
 func (it IndexItems) Len() int {
@@ -45,55 +47,22 @@ type Index struct {
 	Items  []IndexItem
 }
 
-type ColumnType string
-
-const (
-	bitType        ColumnType = "BIT"
-	textType       ColumnType = "TEXT"
-	blobType       ColumnType = "BLOB"
-	dateType       ColumnType = "DATE"
-	datetimeType   ColumnType = "DATETIME"
-	decimalType    ColumnType = "DECIMAL"
-	doubleType     ColumnType = "DOUBLE"
-	enumType       ColumnType = "ENUM"
-	floatType      ColumnType = "FLOAT"
-	geometryType   ColumnType = "GEOMETRY"
-	mediumintType  ColumnType = "MEDIUMINT"
-	jsonType       ColumnType = "JSON"
-	intType        ColumnType = "INT"
-	longtextType   ColumnType = "LONGTEXT"
-	longblobType   ColumnType = "LONGBLOB"
-	bigintType     ColumnType = "BIGINT"
-	mediumtextType ColumnType = "MEDIUMTEXT"
-	mediumblobType ColumnType = "MEDIUMBLOB"
-	smallintType   ColumnType = "SMALLINT"
-	tinyintType    ColumnType = "TINYINT"
-	varcharType    ColumnType = "VARCHAR(255)"
-)
-
-type Sort string
-
-const (
-	asc  Sort = "asc"
-	desc Sort = "desc"
-)
-
-func toColumnType(goType string) ColumnType {
+func toColumnType(goType string) columnenum.ColumnType {
 	switch goType {
 	case "int":
-		return intType
+		return columnenum.IntType
 	case "int64":
-		return bigintType
+		return columnenum.BigintType
 	case "float32":
-		return floatType
+		return columnenum.FloatType
 	case "float64":
-		return doubleType
+		return columnenum.DoubleType
 	case "string":
-		return varcharType
+		return columnenum.VarcharType
 	case "bool":
-		return tinyintType
+		return columnenum.TinyintType
 	case "time.Time":
-		return datetimeType
+		return columnenum.DatetimeType
 	}
 	panic("no available type")
 }
@@ -101,7 +70,7 @@ func toColumnType(goType string) ColumnType {
 type Column struct {
 	Table         string
 	Name          string
-	Type          ColumnType
+	Type          columnenum.ColumnType
 	Default       interface{}
 	Pk            bool
 	Nullable      bool
@@ -161,7 +130,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 	for _, field := range structMeta.Fields {
 		var (
 			columnName    string
-			columnType    ColumnType
+			columnType    columnenum.ColumnType
 			columnDefault interface{}
 			nullable      bool
 			unsigned      bool
@@ -190,7 +159,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 						value := pair[1]
 						switch key {
 						case "type":
-							columnType = ColumnType(value)
+							columnType = columnenum.ColumnType(value)
 							break
 						case "default":
 							columnDefault = value
@@ -206,11 +175,11 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							if err != nil {
 								panic(err)
 							}
-							var sort Sort
+							var sort sortenum.Sort
 							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-								sort = asc
+								sort = sortenum.Asc
 							} else {
-								sort = Sort(props[2])
+								sort = sortenum.Sort(props[2])
 							}
 							index = Index{
 								Name: indexName,
@@ -230,11 +199,11 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							if err != nil {
 								panic(err)
 							}
-							var sort Sort
+							var sort sortenum.Sort
 							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-								sort = asc
+								sort = sortenum.Asc
 							} else {
-								sort = Sort(props[2])
+								sort = sortenum.Sort(props[2])
 							}
 							uniqueindex = Index{
 								Name: indexName,
@@ -268,7 +237,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 								Items: []IndexItem{
 									{
 										Order: 1,
-										Sort:  asc,
+										Sort:  sortenum.Asc,
 									},
 								},
 							}
@@ -279,7 +248,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 								Items: []IndexItem{
 									{
 										Order: 1,
-										Sort:  asc,
+										Sort:  sortenum.Asc,
 									},
 								},
 							}

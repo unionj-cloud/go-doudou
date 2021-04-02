@@ -9,8 +9,10 @@ import (
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain"
+	. "github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -23,7 +25,10 @@ type DbConfig struct {
 	charset string
 }
 
-var dbConfig DbConfig
+var (
+	db       *sqlx.DB
+	dbConfig DbConfig
+)
 
 func init() {
 	err := godotenv.Load(pathutils.Abs(".env"))
@@ -38,13 +43,7 @@ func init() {
 		schema:  os.Getenv("DB_SCHEMA"),
 		charset: os.Getenv("DB_CHARSET"),
 	}
-}
 
-func TestUserDaoGen_UpsertUser(t *testing.T) {
-	var (
-		db  *sqlx.DB
-		err error
-	)
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
 		dbConfig.user,
 		dbConfig.passwd,
@@ -58,10 +57,11 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 		log.Fatalln(err)
 	}
 	db.MapperFunc(strcase.ToSnake)
+}
 
+func TestUserDaoGen_UpsertUser(t *testing.T) {
 	type args struct {
 		ctx  context.Context
-		db   *sqlx.DB
 		user *domain.User
 	}
 	tests := []struct {
@@ -74,12 +74,11 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 			name: "upsert",
 			args: args{
 				ctx: context.TODO(),
-				db:  db,
 				user: &domain.User{
 					Name:   "wu",
 					Phone:  "13552053960",
-					Age:    35,
-					No:     1988,
+					Age:    18,
+					No:     1990,
 					School: "havard",
 				},
 			},
@@ -89,8 +88,8 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserDaoGen{}
-			got, err := u.UpsertUser(tt.args.ctx, tt.args.db, tt.args.user)
+			u := NewUserDaoGen(db)
+			got, err := u.UpsertUser(tt.args.ctx, tt.args.user)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpsertUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -104,27 +103,8 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 }
 
 func TestUserDaoGen_UpsertUser1(t *testing.T) {
-	var (
-		db  *sqlx.DB
-		err error
-	)
-	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
-		dbConfig.user,
-		dbConfig.passwd,
-		dbConfig.host,
-		dbConfig.port,
-		dbConfig.schema,
-		dbConfig.charset)
-	conn += `&loc=Asia%2FShanghai&parseTime=True`
-	db, err = sqlx.ConnectContext(context.TODO(), "mysql", conn)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	db.MapperFunc(strcase.ToSnake)
-
 	type args struct {
 		ctx  context.Context
-		db   *sqlx.DB
 		user *domain.User
 	}
 	tests := []struct {
@@ -137,7 +117,6 @@ func TestUserDaoGen_UpsertUser1(t *testing.T) {
 			name: "upsert",
 			args: args{
 				ctx: context.TODO(),
-				db:  db,
 				user: &domain.User{
 					Name:   "david",
 					Phone:  "13552053960",
@@ -152,8 +131,8 @@ func TestUserDaoGen_UpsertUser1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserDaoGen{}
-			got, err := u.UpsertUser(tt.args.ctx, tt.args.db, tt.args.user)
+			u := NewUserDaoGen(db)
+			got, err := u.UpsertUser(tt.args.ctx, tt.args.user)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpsertUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -162,6 +141,170 @@ func TestUserDaoGen_UpsertUser1(t *testing.T) {
 				t.Errorf("UpsertUser() got = %v, want %v", got, tt.want)
 			}
 			fmt.Println(tt.args.user.ID)
+		})
+	}
+}
+
+func TestUserDaoGen_GetUser(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "getUser",
+			args: args{
+				ctx: context.TODO(),
+				id:  6,
+			},
+			want:    "wu",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := NewUserDaoGen(db)
+			got, err := u.GetUser(tt.args.ctx, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got.Name, tt.want) {
+				t.Errorf("GetUser() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUserDaoGen_DeleteUsers(t *testing.T) {
+	type fields struct {
+		db *sqlx.DB
+	}
+	type args struct {
+		ctx   context.Context
+		where Q
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int64
+		wantErr bool
+	}{
+		{
+			name: "deleteUsers",
+			fields: fields{
+				db,
+			},
+			args: args{
+				ctx:   context.TODO(),
+				where: C().Col("name").Eq("wu").Or(C().Col("school").Eq("havard")).And(C().Col("age").Gte("27")),
+			},
+			want:    1,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := UserDaoGen{
+				db: tt.fields.db,
+			}
+			got, err := u.DeleteUsers(tt.args.ctx, tt.args.where)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeleteUsers() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUserDaoGen_PageUsers(t *testing.T) {
+	type fields struct {
+		db *sqlx.DB
+	}
+	type args struct {
+		ctx   context.Context
+		where Q
+		page  Page
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    PageRet
+		wantErr bool
+	}{
+		{
+			name: "pageUsers",
+			fields: fields{
+				db: db,
+			},
+			args: args{
+				ctx:   context.TODO(),
+				where: C().Col("age").Gt("27"),
+				page: Page{
+					Orders: []Order{
+						{
+							Col:  "age",
+							Sort: "desc",
+						},
+					},
+					Offset: 2,
+					Size:   1,
+				},
+			},
+			want: PageRet{
+				PageNo:   3,
+				PageSize: 1,
+				Total:    3,
+				HasNext:  false,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := UserDaoGen{
+				db: tt.fields.db,
+			}
+			got, err := u.PageUsers(tt.args.ctx, tt.args.where, tt.args.page)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PageUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			var (
+				items []domain.User
+				ok    bool
+			)
+			if items, ok = got.Items.([]domain.User); !ok {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if len(items) == 0 {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if items[0].ID != 11 {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if tt.want.HasNext != got.HasNext {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if tt.want.PageNo != got.PageNo {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if tt.want.PageSize != got.PageSize {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
+			if tt.want.Total != got.Total {
+				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

@@ -3,14 +3,24 @@ package dao
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
+	"math"
 )
 
 type UserDaoGen struct {
+	db *sqlx.DB
+}
+
+func NewUserDaoGen(db *sqlx.DB) UserDaoGen {
+	return UserDaoGen{
+		db: db,
+	}
 }
 
 // With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row,
@@ -18,7 +28,7 @@ type UserDaoGen struct {
 // If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API function when connecting to mysqld,
 // the affected-rows value is 1 (not 0) if an existing row is set to its current values.
 // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-func (u UserDaoGen) UpsertUser(ctx context.Context, db *sqlx.DB, user *domain.User) (int64, error) {
+func (u UserDaoGen) UpsertUser(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement    string
 		err          error
@@ -28,7 +38,7 @@ func (u UserDaoGen) UpsertUser(ctx context.Context, db *sqlx.DB, user *domain.Us
 	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "UpsertUser", nil); err != nil {
 		return 0, err
 	}
-	if result, err = db.NamedExecContext(ctx, statement, user); err != nil {
+	if result, err = u.db.NamedExecContext(ctx, statement, user); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.Exec")
 	}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
@@ -40,7 +50,7 @@ func (u UserDaoGen) UpsertUser(ctx context.Context, db *sqlx.DB, user *domain.Us
 	return result.RowsAffected()
 }
 
-func (u UserDaoGen) GetUser(ctx context.Context, db *sqlx.DB, id int) (domain.User, error) {
+func (u UserDaoGen) GetUser(ctx context.Context, id int) (domain.User, error) {
 	var (
 		statement string
 		err       error
@@ -49,8 +59,49 @@ func (u UserDaoGen) GetUser(ctx context.Context, db *sqlx.DB, id int) (domain.Us
 	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "GetUser", nil); err != nil {
 		return domain.User{}, err
 	}
-	if err = db.Select(&user, db.Rebind(statement), id); err != nil {
+	if err = u.db.GetContext(ctx, &user, u.db.Rebind(statement), id); err != nil {
 		return domain.User{}, errors.Wrap(err, "error returned from calling db.Select")
 	}
 	return user, nil
+}
+
+func (u UserDaoGen) DeleteUsers(ctx context.Context, where query.Q) (int64, error) {
+	var (
+		statement string
+		err       error
+		result    sql.Result
+	)
+	statement = fmt.Sprintf("delete from users where %s;", where.Sql())
+	if result, err = u.db.ExecContext(ctx, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
+	}
+	return result.RowsAffected()
+}
+
+func (u UserDaoGen) PageUsers(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
+	var (
+		statement string
+		err       error
+		users     []domain.User
+		total     int
+	)
+	statement = fmt.Sprintf("select * from users where %s %s;", where.Sql(), page.Sql())
+	if err = u.db.SelectContext(ctx, &users, statement); err != nil {
+		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
+	}
+
+	statement = fmt.Sprintf("select count(1) from users where %s;", where.Sql())
+	if err = u.db.GetContext(ctx, &total, statement); err != nil {
+		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
+	}
+
+	pageRet := query.NewPageRet(page)
+	pageRet.Items = users
+	pageRet.Total = total
+
+	if math.Ceil(float64(total)/float64(pageRet.PageSize)) > float64(pageRet.PageNo) {
+		pageRet.HasNext = true
+	}
+
+	return pageRet, nil
 }
