@@ -88,7 +88,7 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := NewUserDaoGen(db)
+			u := NewUserDao(db)
 			got, err := u.UpsertUser(tt.args.ctx, tt.args.user)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpsertUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -131,7 +131,7 @@ func TestUserDaoGen_UpsertUser1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := NewUserDaoGen(db)
+			u := NewUserDao(db)
 			got, err := u.UpsertUser(tt.args.ctx, tt.args.user)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpsertUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -168,7 +168,7 @@ func TestUserDaoGen_GetUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := NewUserDaoGen(db)
+			u := NewUserDao(db)
 			got, err := u.GetUser(tt.args.ctx, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -211,9 +211,7 @@ func TestUserDaoGen_DeleteUsers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserDaoGen{
-				db: tt.fields.db,
-			}
+			u := NewUserDao(db)
 			got, err := u.DeleteUsers(tt.args.ctx, tt.args.where)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeleteUsers() error = %v, wantErr %v", err, tt.wantErr)
@@ -272,9 +270,7 @@ func TestUserDaoGen_PageUsers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := UserDaoGen{
-				db: tt.fields.db,
-			}
+			u := NewUserDao(db)
 			got, err := u.PageUsers(tt.args.ctx, tt.args.where, tt.args.page)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PageUsers() error = %v, wantErr %v", err, tt.wantErr)

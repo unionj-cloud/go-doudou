@@ -13,12 +13,12 @@ import (
 	"math"
 )
 
-type UserDaoGen struct {
+type UserDaoImpl struct {
 	db *sqlx.DB
 }
 
-func NewUserDaoGen(db *sqlx.DB) UserDaoGen {
-	return UserDaoGen{
+func NewUserDao(db *sqlx.DB) UserDao {
+	return UserDaoImpl{
 		db: db,
 	}
 }
@@ -28,7 +28,7 @@ func NewUserDaoGen(db *sqlx.DB) UserDaoGen {
 // If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API function when connecting to mysqld,
 // the affected-rows value is 1 (not 0) if an existing row is set to its current values.
 // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-func (u UserDaoGen) UpsertUser(ctx context.Context, user *domain.User) (int64, error) {
+func (u UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement    string
 		err          error
@@ -50,7 +50,7 @@ func (u UserDaoGen) UpsertUser(ctx context.Context, user *domain.User) (int64, e
 	return result.RowsAffected()
 }
 
-func (u UserDaoGen) GetUser(ctx context.Context, id int) (domain.User, error) {
+func (u UserDaoImpl) GetUser(ctx context.Context, id int) (domain.User, error) {
 	var (
 		statement string
 		err       error
@@ -65,7 +65,7 @@ func (u UserDaoGen) GetUser(ctx context.Context, id int) (domain.User, error) {
 	return user, nil
 }
 
-func (u UserDaoGen) DeleteUsers(ctx context.Context, where query.Q) (int64, error) {
+func (u UserDaoImpl) DeleteUsers(ctx context.Context, where query.Q) (int64, error) {
 	var (
 		statement string
 		err       error
@@ -78,7 +78,7 @@ func (u UserDaoGen) DeleteUsers(ctx context.Context, where query.Q) (int64, erro
 	return result.RowsAffected()
 }
 
-func (u UserDaoGen) PageUsers(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
+func (u UserDaoImpl) PageUsers(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
 	var (
 		statement string
 		err       error
