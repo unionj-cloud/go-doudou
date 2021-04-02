@@ -1,4 +1,4 @@
-package dao
+package dao_bak
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao.sql"), "UpsertUser", nil); err != nil {
+	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "UpsertUser", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, user); err != nil {
@@ -56,7 +56,7 @@ func (receiver UserDaoImpl) GetUser(ctx context.Context, id int) (domain.User, e
 		err       error
 		user      domain.User
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao.sql"), "GetUser", nil); err != nil {
+	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "GetUser", nil); err != nil {
 		return domain.User{}, err
 	}
 	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {

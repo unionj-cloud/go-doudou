@@ -77,6 +77,8 @@ type Column struct {
 	Unsigned      bool
 	Autoincrement bool
 	Extra         Extra
+	Meta          astutils.FieldMeta
+	AutoSet       bool
 }
 
 func (c *Column) ChangeColumnSql() (string, error) {
@@ -116,6 +118,7 @@ type Table struct {
 	Columns []Column
 	Pk      string
 	Indexes []Index
+	Meta    astutils.StructMeta
 }
 
 func NewTableFromStruct(structMeta astutils.StructMeta) Table {
@@ -139,6 +142,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			uniqueindex   Index
 			index         Index
 			pk            bool
+			autoSet       bool
 		)
 		columnName = strcase.ToSnake(field.Name)
 		if stringutils.IsNotEmpty(field.Tag) {
@@ -163,6 +167,9 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							break
 						case "default":
 							columnDefault = value
+							if value == now {
+								autoSet = true
+							}
 							break
 						case "extra":
 							extra = Extra(value)
@@ -287,6 +294,8 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			Autoincrement: autoincrement,
 			Extra:         extra,
 			Pk:            pk,
+			Meta:          field,
+			AutoSet:       autoSet,
 		})
 	}
 
@@ -346,6 +355,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		Columns: columns,
 		Pk:      pkColumn.Name,
 		Indexes: indexesResult,
+		Meta:    structMeta,
 	}
 }
 

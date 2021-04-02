@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain"
+	"{{.DomainPackage}}"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
 	"math"
 )
 
-type UserDaoImpl struct {
+type {{.DomainName}}DaoImpl struct {
 	db *sqlx.DB
 }
 
-func NewUserDao(db *sqlx.DB) UserDao {
-	return UserDaoImpl{
+func New{{.DomainName}}Dao(db *sqlx.DB) {{.DomainName}}Dao {
+	return {{.DomainName}}DaoImpl{
 		db: db,
 	}
 }
@@ -28,17 +28,17 @@ func NewUserDao(db *sqlx.DB) UserDao {
 // If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API function when connecting to mysqld,
 // the affected-rows value is 1 (not 0) if an existing row is set to its current values.
 // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (int64, error) {
+func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error) {
 	var (
 		statement    string
 		err          error
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao.sql"), "UpsertUser", nil); err != nil {
+	if statement, err = templateutils.StringBlock(pathutils.Abs("{{.DomainName | ToLower}}dao.sql.tmpl"), "Upsert{{.DomainName}}", nil); err != nil {
 		return 0, err
 	}
-	if result, err = receiver.db.NamedExecContext(ctx, statement, user); err != nil {
+	if result, err = receiver.db.NamedExecContext(ctx, statement, {{.DomainName | ToLower}}); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.Exec")
 	}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
@@ -50,53 +50,53 @@ func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) GetUser(ctx context.Context, id int) (domain.User, error) {
+func (receiver {{.DomainName}}DaoImpl) Get{{.DomainName}}(ctx context.Context, {{.PkField.Name | ToLower}} {{.PkField.Type}}) (domain.{{.DomainName}}, error) {
 	var (
 		statement string
 		err       error
-		user      domain.User
+		{{.DomainName | ToLower}}      domain.{{.DomainName}}
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao.sql"), "GetUser", nil); err != nil {
-		return domain.User{}, err
+	if statement, err = templateutils.StringBlock(pathutils.Abs("{{.DomainName | ToLower}}dao.sql.tmpl"), "Get{{.DomainName}}", nil); err != nil {
+		return domain.{{.DomainName}}{}, err
 	}
-	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {
-		return domain.User{}, errors.Wrap(err, "error returned from calling db.Select")
+	if err = receiver.db.GetContext(ctx, &{{.DomainName | ToLower}}, receiver.db.Rebind(statement), {{.PkField.Name | ToLower}}); err != nil {
+		return domain.{{.DomainName}}{}, errors.Wrap(err, "error returned from calling db.Select")
 	}
-	return user, nil
+	return {{.DomainName | ToLower}}, nil
 }
 
-func (receiver UserDaoImpl) DeleteUsers(ctx context.Context, where query.Q) (int64, error) {
+func (receiver {{.DomainName}}DaoImpl) Delete{{.DomainName}}s(ctx context.Context, where query.Q) (int64, error) {
 	var (
 		statement string
 		err       error
 		result    sql.Result
 	)
-	statement = fmt.Sprintf("delete from users where %s;", where.Sql())
+	statement = fmt.Sprintf("delete from {{.DomainName | ToSnake}}s where %s;", where.Sql())
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
 	}
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) PageUsers(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
+func (receiver {{.DomainName}}DaoImpl) Page{{.DomainName}}s(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
 	var (
 		statement string
 		err       error
-		users     []domain.User
+		{{.DomainName | ToLower}}s     []domain.{{.DomainName}}
 		total     int
 	)
-	statement = fmt.Sprintf("select * from users where %s %s;", where.Sql(), page.Sql())
-	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
+	statement = fmt.Sprintf("select * from {{.DomainName | ToSnake}}s where %s %s;", where.Sql(), page.Sql())
+	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 
-	statement = fmt.Sprintf("select count(1) from users where %s;", where.Sql())
+	statement = fmt.Sprintf("select count(1) from {{.DomainName | ToSnake}}s where %s;", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
 	}
 
 	pageRet := query.NewPageRet(page)
-	pageRet.Items = users
+	pageRet.Items = {{.DomainName | ToLower}}s
 	pageRet.Total = total
 
 	if math.Ceil(float64(total)/float64(pageRet.PageSize)) > float64(pageRet.PageNo) {

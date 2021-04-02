@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/cmd"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/codegen/dao"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
@@ -31,7 +32,7 @@ type DbConfig struct {
 	charset string
 }
 
-var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/domain", "path of domain folder")
+var dir = flag.String("domain", "", "path of domain folder")
 
 var dbConfig DbConfig
 
@@ -54,7 +55,18 @@ func main() {
 	flag.Parse()
 	log.Println(*dir)
 	if stringutils.IsEmpty(*dir) {
-		log.Fatal("dir flag should not be empty")
+		if wd, err := os.Getwd(); err != nil {
+			log.Fatal(err)
+		} else {
+			*dir = filepath.Join(wd, "domain")
+		}
+	}
+	if !filepath.IsAbs(*dir) {
+		if wd, err := os.Getwd(); err != nil {
+			log.Fatal(err)
+		} else {
+			*dir = filepath.Join(wd, *dir)
+		}
 	}
 
 	var files []string
@@ -98,8 +110,11 @@ func main() {
 	}
 	fmt.Println(existTables)
 
+	var tables []table.Table
 	for _, sm := range flattened {
-		t := table.NewTableFromStruct(sm)
+		tables = append(tables, table.NewTableFromStruct(sm))
+	}
+	for _, t := range tables {
 		if sliceutils.StringContains(existTables, t.Name) {
 			var columns []table.DbColumn
 			if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
@@ -124,8 +139,23 @@ func main() {
 			}
 		} else {
 			if err = cmd.CreateTable(db, t); err != nil {
-				log.Infof("FATAL: %+v\n", err)
+				log.Errorf("FATAL: %+v\n", err)
 			}
+		}
+	}
+
+	for _, t := range tables {
+		if err = dao.GenDaoGo(*dir, t); err != nil {
+			log.Errorf("FATAL: %+v\n", err)
+			break
+		}
+		if err = dao.GenDaoImplGo(*dir, t); err != nil {
+			log.Errorf("FATAL: %+v\n", err)
+			break
+		}
+		if err = dao.GenDaoSql(*dir, t); err != nil {
+			log.Errorf("FATAL: %+v\n", err)
+			break
 		}
 	}
 }

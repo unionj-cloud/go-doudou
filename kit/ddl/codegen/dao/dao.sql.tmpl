@@ -1,0 +1,25 @@
+-- {{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
+INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+`{{$co.Name}}`
+{{- end }})
+VALUES ({{- range $i, $co := .InsertColumns}}
+        {{- if $i}},{{end}}
+        :{{$co.Name}}
+        {{- end }})
+ON DUPLICATE KEY
+    UPDATE {{- range $i, $co := .UpdateColumns}}
+		   {{- if $i}},{{end}}
+		   `{{$co.Name}}`=:{{$co.Name}}
+		   {{- end }};
+-- {{`{{`}}end{{`}}`}}
+
+-- {{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
+select *
+from `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+where {{.Pk}} = ?
+-- {{`{{`}}end{{`}}`}}
+
+
+

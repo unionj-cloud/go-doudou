@@ -1,6 +1,7 @@
 package astutils
 
 import (
+	"bufio"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"go/ast"
 	"go/token"
@@ -182,4 +183,27 @@ func Visit(files *[]string) filepath.WalkFunc {
 		}
 		return nil
 	}
+}
+
+func GetMod() string {
+	var (
+		f         *os.File
+		err       error
+		firstLine string
+	)
+	dir, _ := os.Getwd()
+	mod := filepath.Join(dir, "go.mod")
+	if f, err = os.Open(mod); err != nil {
+		panic(err)
+	}
+	reader := bufio.NewReader(f)
+	if firstLine, err = reader.ReadString('\n'); err != nil {
+		panic(err)
+	}
+	return strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+}
+
+func GetImportPath(file string) string {
+	dir, _ := os.Getwd()
+	return GetMod() + strings.TrimPrefix(file, dir)
 }
