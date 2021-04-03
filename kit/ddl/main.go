@@ -33,7 +33,7 @@ type DbConfig struct {
 	Charset string
 }
 
-var dir = flag.String("domain", "", "path of domain folder")
+var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/domain", "path of domain folder")
 
 func main() {
 	var db *sqlx.DB

@@ -17,6 +17,153 @@ type UserDaoImpl struct {
 	db *sqlx.DB
 }
 
+func (receiver UserDaoImpl) UpdateUsers(ctx context.Context, user domain.User, where query.Q) (int64, error) {
+	var (
+		statement string
+		err       error
+		result    sql.Result
+	)
+	fmt.Println(where.Sql())
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsers", struct {
+		domain.User
+		Where string
+	}{
+		User:  user,
+		Where: where.Sql(),
+	}); err != nil {
+		return 0, err
+	}
+	fmt.Println(statement)
+	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) UpdateUsersNoneZero(ctx context.Context, user domain.User, where query.Q) (int64, error) {
+	var (
+		statement string
+		err       error
+		result    sql.Result
+	)
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsersNoneZero", struct {
+		domain.User
+		Where string
+	}{
+		User:  user,
+		Where: where.Sql(),
+	}); err != nil {
+		return 0, err
+	}
+	fmt.Println(statement)
+	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) InsertUser(ctx context.Context, user *domain.User) (int64, error) {
+	var (
+		statement    string
+		err          error
+		result       sql.Result
+		lastInsertID int64
+	)
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "InsertUser", nil); err != nil {
+		return 0, err
+	}
+	if result, err = receiver.db.NamedExecContext(ctx, statement, user); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	if lastInsertID, err = result.LastInsertId(); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
+	}
+	if lastInsertID > 0 {
+		user.ID = int(lastInsertID)
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) UpdateUser(ctx context.Context, user *domain.User) (int64, error) {
+	var (
+		statement string
+		err       error
+		result    sql.Result
+	)
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUser", nil); err != nil {
+		return 0, err
+	}
+	if result, err = receiver.db.NamedExecContext(ctx, statement, user); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) UpdateUserNoneZero(ctx context.Context, user *domain.User) (int64, error) {
+	var (
+		statement string
+		err       error
+		result    sql.Result
+	)
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUserNoneZero", user); err != nil {
+		return 0, err
+	}
+	fmt.Println(statement)
+	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) UpsertUserNoneZero(ctx context.Context, user *domain.User) (int64, error) {
+	var (
+		statement    string
+		err          error
+		result       sql.Result
+		lastInsertID int64
+	)
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpsertUserNoneZero", user); err != nil {
+		return 0, err
+	}
+	fmt.Println(statement)
+	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	}
+	if lastInsertID, err = result.LastInsertId(); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
+	}
+	if lastInsertID > 0 {
+		user.ID = int(lastInsertID)
+	}
+	return result.RowsAffected()
+}
+
+func (receiver UserDaoImpl) SelectUsers(ctx context.Context, where query.Q) ([]domain.User, error) {
+	var (
+		statement string
+		err       error
+		users     []domain.User
+	)
+	statement = fmt.Sprintf("select * from users where %s", where.Sql())
+	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
+		return nil, errors.Wrap(err, "error returned from calling db.SelectContext")
+	}
+	return users, nil
+}
+
+func (receiver UserDaoImpl) CountUsers(ctx context.Context, where query.Q) (int, error) {
+	var (
+		statement string
+		err       error
+		total     int
+	)
+	statement = fmt.Sprintf("select count(1) from users where %s", where.Sql())
+	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
+		return 0, errors.Wrap(err, "error returned from calling db.GetContext")
+	}
+	return total, nil
+}
+
 func NewUserDao(db *sqlx.DB) UserDao {
 	return UserDaoImpl{
 		db: db,
@@ -35,7 +182,7 @@ func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "UpsertUser", nil); err != nil {
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpsertUser", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, user); err != nil {
@@ -56,7 +203,7 @@ func (receiver UserDaoImpl) GetUser(ctx context.Context, id int) (domain.User, e
 		err       error
 		user      domain.User
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("userdao_gen.sql"), "GetUser", nil); err != nil {
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "GetUser", nil); err != nil {
 		return domain.User{}, err
 	}
 	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {
@@ -71,7 +218,7 @@ func (receiver UserDaoImpl) DeleteUsers(ctx context.Context, where query.Q) (int
 		err       error
 		result    sql.Result
 	)
-	statement = fmt.Sprintf("delete from users where %s;", where.Sql())
+	statement = fmt.Sprintf("delete from users where %s", where.Sql())
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
 	}
@@ -85,12 +232,12 @@ func (receiver UserDaoImpl) PageUsers(ctx context.Context, where query.Q, page q
 		users     []domain.User
 		total     int
 	)
-	statement = fmt.Sprintf("select * from users where %s %s;", where.Sql(), page.Sql())
+	statement = fmt.Sprintf("select * from users where %s %s", where.Sql(), page.Sql())
 	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 
-	statement = fmt.Sprintf("select count(1) from users where %s;", where.Sql())
+	statement = fmt.Sprintf("select count(1) from users where %s", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
 	}

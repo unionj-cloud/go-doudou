@@ -21,7 +21,7 @@ type criteria struct {
 }
 
 func (c criteria) Sql() string {
-	return fmt.Sprintf("%s %s '%s'", c.col, c.asym, c.val)
+	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, c.val)
 }
 
 func C() criteria {

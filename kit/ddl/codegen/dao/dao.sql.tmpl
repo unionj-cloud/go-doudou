@@ -1,4 +1,22 @@
--- {{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
+{{`{{`}}define "NoneZeroSet"{{`}}`}}
+	{{- range $i, $co := .UpdateColumns}}
+	{{- if or (eq $co.Meta.Type "time.Time") (eq $co.Meta.Type "*time.Time")}}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}',
+	{{`{{`}}- end{{`}}`}}
+	{{- else if or (eq $co.Meta.Type "bool") (eq $co.Meta.Type "*bool")}}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}',
+	{{`{{`}}- end{{`}}`}}
+	{{- else}}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}',
+	{{`{{`}}- end{{`}}`}}
+	{{- end}}
+	{{- end}}
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
 INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -12,14 +30,14 @@ ON DUPLICATE KEY
     UPDATE {{- range $i, $co := .UpdateColumns}}
 		   {{- if $i}},{{end}}
 		   `{{$co.Name}}`=:{{$co.Name}}
-		   {{- end }};
--- {{`{{`}}end{{`}}`}}
+		   {{- end }}
+{{`{{`}}end{{`}}`}}
 
--- {{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
+{{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
 select *
 from `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
-where {{.Pk}} = ?
--- {{`{{`}}end{{`}}`}}
+where `{{.Pk}}` = ?
+{{`{{`}}end{{`}}`}}
 
 
 
