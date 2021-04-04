@@ -16,6 +16,37 @@
 	{{- end}}
 {{`{{`}}end{{`}}`}}
 
+{{`{{`}}define "Insert{{.DomainName}}"{{`}}`}}
+INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+`{{$co.Name}}`
+{{- end }})
+VALUES ({{- range $i, $co := .InsertColumns}}
+	   {{- if $i}},{{end}}
+	   :{{$co.Name}}
+	   {{- end }})
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "Update{{.DomainName}}"{{`}}`}}
+UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+SET
+	{{- range $i, $co := .UpdateColumns}}
+	{{- if $i}},{{end}}
+	`{{$co.Name}}`=:{{$co.Name}}
+	{{- end }}
+WHERE
+    `{{.Pk.Name}}` = ?
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "Update{{.DomainName}}NoneZero"{{`}}`}}
+UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+SET
+    {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
+WHERE
+    `{{.Pk.Name}}`='{{.ID}}'
+{{`{{`}}end{{`}}`}}
+
 {{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
 INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
 ({{- range $i, $co := .InsertColumns}}
@@ -36,7 +67,7 @@ ON DUPLICATE KEY
 {{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
 select *
 from `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
-where `{{.Pk}}` = ?
+where `{{.Pk.Name}}` = ?
 {{`{{`}}end{{`}}`}}
 
 

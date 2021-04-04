@@ -50,18 +50,26 @@ func GenDaoSql(domainpath string, t table.Table) error {
 			}
 		}
 
+		var pkColumn table.Column
+		for _, co := range t.Columns {
+			if co.Pk {
+				pkColumn = co
+				break
+			}
+		}
+
 		if err = tpl.Execute(f, struct {
 			Schema        string
 			DomainName    string
 			InsertColumns []table.Column
 			UpdateColumns []table.Column
-			Pk            string
+			Pk            table.Column
 		}{
 			Schema:        os.Getenv("DB_SCHEMA"),
 			DomainName:    t.Meta.Name,
 			InsertColumns: iColumns,
 			UpdateColumns: uColumns,
-			Pk:            t.Pk,
+			Pk:            pkColumn,
 		}); err != nil {
 			return errors.Wrap(err, "error")
 		}
