@@ -34,6 +34,8 @@ type DbConfig struct {
 }
 
 var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/domain", "path of domain folder")
+var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
+	"Default is false")
 
 func main() {
 	var db *sqlx.DB
@@ -64,89 +66,96 @@ func main() {
 
 	flag.Parse()
 	log.Println(*dir)
-	if stringutils.IsEmpty(*dir) {
-		if wd, err := os.Getwd(); err != nil {
-			log.Fatal(err)
-		} else {
-			*dir = filepath.Join(wd, "domain")
-		}
-	}
-	if !filepath.IsAbs(*dir) {
-		if wd, err := os.Getwd(); err != nil {
-			log.Fatal(err)
-		} else {
-			*dir = filepath.Join(wd, *dir)
-		}
-	}
+	log.Println(*reverse)
 
-	var files []string
-	err = filepath.Walk(*dir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
-	}
-	var sc astutils.StructCollector
-	for _, file := range files {
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if !*reverse {
+		if stringutils.IsEmpty(*dir) {
+			if wd, err := os.Getwd(); err != nil {
+				log.Fatal(err)
+			} else {
+				*dir = filepath.Join(wd, "domain")
+			}
+		}
+		if !filepath.IsAbs(*dir) {
+			if wd, err := os.Getwd(); err != nil {
+				log.Fatal(err)
+			} else {
+				*dir = filepath.Join(wd, *dir)
+			}
+		}
+
+		var files []string
+		err = filepath.Walk(*dir, astutils.Visit(&files))
 		if err != nil {
 			panic(err)
 		}
-		ast.Walk(&sc, root)
-	}
-
-	flattened := sc.FlatEmbed()
-
-	var existTables []string
-	if err = db.Select(&existTables, "show tables"); err != nil {
-		panic(err)
-	}
-
-	var tables []table.Table
-	for _, sm := range flattened {
-		tables = append(tables, table.NewTableFromStruct(sm))
-	}
-	for _, t := range tables {
-		if sliceutils.StringContains(existTables, t.Name) {
-			var columns []table.DbColumn
-			if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
+		var sc astutils.StructCollector
+		for _, file := range files {
+			fset := token.NewFileSet()
+			root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+			if err != nil {
 				panic(err)
 			}
-			var existColumnNames []interface{}
-			for _, dbCol := range columns {
-				existColumnNames = append(existColumnNames, dbCol.Field)
-			}
-			existColSet := mapset.NewSetFromSlice(existColumnNames)
+			ast.Walk(&sc, root)
+		}
 
-			for _, col := range t.Columns {
-				if existColSet.Contains(col.Name) {
-					if err = cmd.ChangeColumn(db, col); err != nil {
-						log.Infof("FATAL: %+v\n", err)
-					}
-				} else {
-					if err = cmd.AddColumn(db, col); err != nil {
-						log.Infof("FATAL: %+v\n", err)
+		flattened := sc.FlatEmbed()
+
+		var existTables []string
+		if err = db.Select(&existTables, "show tables"); err != nil {
+			panic(err)
+		}
+
+		var tables []table.Table
+		for _, sm := range flattened {
+			tables = append(tables, table.NewTableFromStruct(sm))
+		}
+		for _, t := range tables {
+			if sliceutils.StringContains(existTables, t.Name) {
+				var columns []table.DbColumn
+				if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
+					panic(err)
+				}
+				var existColumnNames []interface{}
+				for _, dbCol := range columns {
+					existColumnNames = append(existColumnNames, dbCol.Field)
+				}
+				existColSet := mapset.NewSetFromSlice(existColumnNames)
+
+				for _, col := range t.Columns {
+					if existColSet.Contains(col.Name) {
+						if err = cmd.ChangeColumn(db, col); err != nil {
+							log.Infof("FATAL: %+v\n", err)
+						}
+					} else {
+						if err = cmd.AddColumn(db, col); err != nil {
+							log.Infof("FATAL: %+v\n", err)
+						}
 					}
 				}
-			}
-		} else {
-			if err = cmd.CreateTable(db, t); err != nil {
-				log.Errorf("FATAL: %+v\n", err)
+			} else {
+				if err = cmd.CreateTable(db, t); err != nil {
+					log.Errorf("FATAL: %+v\n", err)
+				}
 			}
 		}
+
+		for _, t := range tables {
+			if err = dao.GenDaoGo(*dir, t); err != nil {
+				log.Errorf("FATAL: %+v\n", err)
+				break
+			}
+			if err = dao.GenDaoImplGo(*dir, t); err != nil {
+				log.Errorf("FATAL: %+v\n", err)
+				break
+			}
+			if err = dao.GenDaoSql(*dir, t); err != nil {
+				log.Errorf("FATAL: %+v\n", err)
+				break
+			}
+		}
+	} else {
+		// TODO
 	}
 
-	for _, t := range tables {
-		if err = dao.GenDaoGo(*dir, t); err != nil {
-			log.Errorf("FATAL: %+v\n", err)
-			break
-		}
-		if err = dao.GenDaoImplGo(*dir, t); err != nil {
-			log.Errorf("FATAL: %+v\n", err)
-			break
-		}
-		if err = dao.GenDaoSql(*dir, t); err != nil {
-			log.Errorf("FATAL: %+v\n", err)
-			break
-		}
-	}
 }

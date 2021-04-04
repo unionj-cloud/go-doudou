@@ -44,7 +44,7 @@ UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
 SET
     {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
 WHERE
-    `{{.Pk.Name}}`='{{.ID}}'
+    `{{.Pk.Name}}`='{{`{{`}}.{{.Pk.Meta.Name}}{{`}}`}}'
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
@@ -56,18 +56,87 @@ INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
 VALUES ({{- range $i, $co := .InsertColumns}}
         {{- if $i}},{{end}}
         :{{$co.Name}}
-        {{- end }})
-ON DUPLICATE KEY
-    UPDATE {{- range $i, $co := .UpdateColumns}}
-		   {{- if $i}},{{end}}
-		   `{{$co.Name}}`=:{{$co.Name}}
-		   {{- end }}
+        {{- end }}) ON DUPLICATE KEY
+UPDATE
+		{{- range $i, $co := .UpdateColumns}}
+		{{- if $i}},{{end}}
+		`{{$co.Name}}`=:{{$co.Name}}
+		{{- end }}
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "Upsert{{.DomainName}}NoneZero"{{`}}`}}
+INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+`{{$co.Name}}`
+{{- end }})
+VALUES ({{- range $i, $co := .InsertColumns}}
+		{{- if $i}},{{end}}
+		{{- if eq $co.Meta.Type "time.Time" }}
+		'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+		{{- else if eq $co.Meta.Type "*time.Time" }}
+		{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+		'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+		{{`{{`}}- else{{`}}`}}
+		null
+		{{`{{`}}- end{{`}}`}}
+		{{- else if eq $co.Meta.Type "bool" }}
+		'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+		{{- else if eq $co.Meta.Type "*bool" }}
+		{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+		'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+		{{`{{`}}- else{{`}}`}}
+		null
+		{{`{{`}}- end{{`}}`}}
+		{{- else}}
+		'{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
+		{{- end}}
+		{{- end }}) ON DUPLICATE KEY
+UPDATE
+		{{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
 select *
 from `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
 where `{{.Pk.Name}}` = ?
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "Update{{.DomainName}}s"{{`}}`}}
+UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+SET
+    {{- range $i, $co := .UpdateColumns}}
+	{{- if $i}},{{end}}
+	{{- if eq $co.Meta.Type "time.Time" }}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+	{{- else if eq $co.Meta.Type "*time.Time" }}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+	{{`{{`}}- else{{`}}`}}
+	`{{$co.Name}}`=null
+	{{`{{`}}- end{{`}}`}}
+	{{- else if eq $co.Meta.Type "bool" }}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+	{{- else if eq $co.Meta.Type "*bool" }}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+	{{`{{`}}- else{{`}}`}}
+	`{{$co.Name}}`=null
+	{{`{{`}}- end{{`}}`}}
+	{{- else}}
+	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
+	{{- end}}
+	{{- end }}
+WHERE
+    {{`{{`}}.Where{{`}}`}}
+{{`{{`}}end{{`}}`}}
+
+{{`{{`}}define "UpdateUsersNoneZero"{{`}}`}}
+UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}s`
+SET
+    {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
+WHERE
+    {{`{{`}}.Where{{`}}`}}
 {{`{{`}}end{{`}}`}}
 
 
