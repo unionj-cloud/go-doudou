@@ -22,6 +22,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type DbConfig struct {
@@ -34,19 +35,19 @@ type DbConfig struct {
 }
 
 var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/example/domain", "path of domain folder")
-var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
+var reverse = flag.Bool("reverse", false, "If true, generate domain and dao code from database. If false, update or create database tables from domain code."+
 	"Default is false")
 
 func main() {
 	var db *sqlx.DB
 	err := godotenv.Load(pathutils.Abs(".env"))
 	if err != nil {
-		log.Fatal("Error loading .env file", err)
+		log.Panicln("Error loading .env file", err)
 	}
 	var dbConfig DbConfig
 	err = envconfig.Process("db", &dbConfig)
 	if err != nil {
-		log.Fatal("Error processing env", err)
+		log.Panicln("Error processing env", err)
 	}
 
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
@@ -59,7 +60,7 @@ func main() {
 	conn += `&loc=Asia%2FShanghai&parseTime=True`
 	db, err = sqlx.Connect("mysql", conn)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panicln(err)
 	}
 	defer db.Close()
 	db.MapperFunc(strcase.ToSnake)
@@ -68,17 +69,22 @@ func main() {
 	log.Println(*dir)
 	log.Println(*reverse)
 
+	var existTables []string
+	if err = db.Select(&existTables, "show tables"); err != nil {
+		log.Panicln(err)
+	}
+
 	if !*reverse {
 		if stringutils.IsEmpty(*dir) {
 			if wd, err := os.Getwd(); err != nil {
-				log.Fatal(err)
+				log.Panicln(err)
 			} else {
 				*dir = filepath.Join(wd, "domain")
 			}
 		}
 		if !filepath.IsAbs(*dir) {
 			if wd, err := os.Getwd(); err != nil {
-				log.Fatal(err)
+				log.Panicln(err)
 			} else {
 				*dir = filepath.Join(wd, *dir)
 			}
@@ -87,24 +93,19 @@ func main() {
 		var files []string
 		err = filepath.Walk(*dir, astutils.Visit(&files))
 		if err != nil {
-			panic(err)
+			log.Panicln(err)
 		}
 		var sc astutils.StructCollector
 		for _, file := range files {
 			fset := token.NewFileSet()
 			root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 			if err != nil {
-				panic(err)
+				log.Panicln(err)
 			}
 			ast.Walk(&sc, root)
 		}
 
 		flattened := sc.FlatEmbed()
-
-		var existTables []string
-		if err = db.Select(&existTables, "show tables"); err != nil {
-			panic(err)
-		}
 
 		var tables []table.Table
 		for _, sm := range flattened {
@@ -114,7 +115,7 @@ func main() {
 			if sliceutils.StringContains(existTables, t.Name) {
 				var columns []table.DbColumn
 				if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
-					panic(err)
+					log.Panicln(err)
 				}
 				var existColumnNames []interface{}
 				for _, dbCol := range columns {
@@ -155,6 +156,26 @@ func main() {
 			}
 		}
 	} else {
+		dfolder := pathutils.Abs("domain")
+		if err = os.MkdirAll(dfolder, os.ModePerm); err != nil {
+			log.Panicln(err)
+		}
+		for _, t := range existTables {
+			domain := filepath.Join(dfolder, strings.ToLower(strcase.ToCamel(strings.TrimSuffix(t, "s")))+".go")
+			if _, err = os.Stat(domain); os.IsNotExist(err) {
+				var f *os.File
+				if f, err = os.Create(domain); err != nil {
+					log.Panicln(err)
+				}
+				defer f.Close()
+
+
+
+
+			} else {
+				log.Warnf("file %s already exists", domain)
+			}
+		}
 		// TODO
 	}
 

@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
@@ -61,6 +62,8 @@ func GenDaoImplGo(domainpath string, t table.Table) error {
 		}); err != nil {
 			return errors.Wrap(err, "error")
 		}
+	} else {
+		log.Warnf("file %s already exists", daofile)
 	}
 	return nil
 }

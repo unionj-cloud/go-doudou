@@ -113,6 +113,21 @@ type DbColumn struct {
 	Extra   *string `db:"Extra"`
 }
 
+type DbIndex struct {
+	Table string `db:"Table"`
+	Non_unique `db:"Non_unique"`
+	Key_name `db:"Field"`
+	Seq_in_index `db:"Field"`
+	Column_name `db:"Field"`
+	Collation `db:"Field"`
+	Cardinality `db:"Field"`
+	Sub_part `db:"Field"`
+	Packed `db:"Field"`
+	Index_type `db:"Field"`
+	Comment `db:"Field"`
+	Index_comment `db:"Field"`
+}
+
 type Table struct {
 	Name    string
 	Columns []Column
