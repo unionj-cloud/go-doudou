@@ -4,6 +4,9 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/extraenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/keyenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/nullenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
@@ -11,12 +14,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-)
-
-type Extra string
-
-const (
-	update Extra = "on update CURRENT_TIMESTAMP"
 )
 
 const (
@@ -67,6 +64,49 @@ func toColumnType(goType string) columnenum.ColumnType {
 	panic("no available type")
 }
 
+func DbColType2ColumnType(dbColType string) columnenum.ColumnType {
+	if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.IntType))) {
+		return columnenum.IntType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.BigintType))) {
+		return columnenum.BigintType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.FloatType))) {
+		return columnenum.FloatType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.DoubleType))) {
+		return columnenum.DoubleType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.VarcharType))) {
+		return columnenum.VarcharType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.TinyintType))) {
+		return columnenum.TinyintType
+	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.DatetimeType))) {
+		return columnenum.DatetimeType
+	}
+	panic("no available type")
+}
+
+func CheckPk(key keyenum.Key) bool {
+	return key == keyenum.Pri
+}
+
+func CheckNull(null nullenum.Null) bool {
+	return null == nullenum.Yes
+}
+
+func CheckUnsigned(dbColType string) bool {
+	splits := strings.Split(dbColType, " ")
+	if len(splits) == 1 {
+		return false
+	}
+	return splits[1] == "unsigned"
+}
+
+func CheckAutoincrement(extra string) bool {
+	return strings.Contains(extra, "auto_increment")
+}
+
+func CheckAutoSet(defaultVal *string) bool {
+	return defaultVal != nil && *defaultVal == now
+}
+
 type Column struct {
 	Table         string
 	Name          string
@@ -76,7 +116,7 @@ type Column struct {
 	Nullable      bool
 	Unsigned      bool
 	Autoincrement bool
-	Extra         Extra
+	Extra         extraenum.Extra
 	Meta          astutils.FieldMeta
 	AutoSet       bool
 }
@@ -89,43 +129,23 @@ func (c *Column) AddColumnSql() (string, error) {
 	return templateutils.StringBlock(pathutils.Abs("alter.tmpl"), "add", c)
 }
 
-type Key string
-
-const (
-	pri Key = "PRI"
-	uni Key = "UNI"
-	mul Key = "MUL"
-)
-
-type Null string
-
-const (
-	yes Null = "YES"
-	no  Null = "NO"
-)
-
 type DbColumn struct {
-	Field   string  `db:"Field"`
-	Type    string  `db:"Type"`
-	Null    Null    `db:"Null"`
-	Key     *Key    `db:"Key"`
-	Default *string `db:"Default"`
-	Extra   *string `db:"Extra"`
+	Field   string        `db:"Field"`
+	Type    string        `db:"Type"`
+	Null    nullenum.Null `db:"Null"`
+	Key     keyenum.Key   `db:"Key"`
+	Default *string       `db:"Default"`
+	Extra   string        `db:"Extra"`
 }
 
+// https://www.mysqltutorial.org/mysql-index/mysql-show-indexes/
 type DbIndex struct {
-	Table string `db:"Table"`
-	Non_unique `db:"Non_unique"`
-	Key_name `db:"Field"`
-	Seq_in_index `db:"Field"`
-	Column_name `db:"Field"`
-	Collation `db:"Field"`
-	Cardinality `db:"Field"`
-	Sub_part `db:"Field"`
-	Packed `db:"Field"`
-	Index_type `db:"Field"`
-	Comment `db:"Field"`
-	Index_comment `db:"Field"`
+	Table        string `db:"Table"`        // The name of the table
+	Non_unique   bool   `db:"Non_unique"`   // 1 if the index can contain duplicates, 0 if it cannot.
+	Key_name     string `db:"Key_name"`     // The name of the index. The primary key index always has the name of PRIMARY.
+	Seq_in_index int    `db:"Seq_in_index"` // The column sequence number in the index. The first column sequence number starts from 1.
+	Column_name  string `db:"Column_name"`  // The column name
+	Collation    string `db:"Collation"`    // Collation represents how the column is sorted in the index. A means ascending, B means descending, or NULL means not sorted.
 }
 
 type Table struct {
@@ -153,7 +173,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			nullable      bool
 			unsigned      bool
 			autoincrement bool
-			extra         Extra
+			extra         extraenum.Extra
 			uniqueindex   Index
 			index         Index
 			pk            bool
@@ -187,7 +207,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 							}
 							break
 						case "extra":
-							extra = Extra(value)
+							extra = extraenum.Extra(value)
 							break
 						case "index":
 							props := strings.Split(value, ",")
