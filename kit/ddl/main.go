@@ -220,7 +220,7 @@ func main() {
 				tab.Indexes = indexes
 
 				var columns []table.DbColumn
-				if err = db.Select(&columns, fmt.Sprintf("desc %s", t)); err != nil {
+				if err = db.Select(&columns, fmt.Sprintf("SHOW FULL COLUMNS FROM %s", t)); err != nil {
 					log.Panicln(err)
 				}
 
@@ -239,19 +239,24 @@ func main() {
 						Unsigned:      table.CheckUnsigned(item.Type),
 						Autoincrement: table.CheckAutoincrement(item.Extra),
 						Extra:         extraenum.Extra(item.Extra),
-						Meta:          astutils.FieldMeta{}, // TODO
-						AutoSet:       table.CheckAutoSet(item.Default),
+						Meta: astutils.FieldMeta{
+							Name:     "",
+							Type:     "",
+							Tag:      "",
+							Comments: nil,
+						}, // TODO
+						AutoSet: table.CheckAutoSet(item.Default),
 					}
 					cols = append(cols, col)
 				}
 
 				tab.Columns = cols
-
+				// TODO
 			} else {
 				log.Warnf("file %s already exists", domain)
 			}
 		}
-		// TODO
+
 	}
 
 }

@@ -136,6 +136,7 @@ type DbColumn struct {
 	Key     keyenum.Key   `db:"Key"`
 	Default *string       `db:"Default"`
 	Extra   string        `db:"Extra"`
+	Comment string        `db:"Comment"`
 }
 
 // https://www.mysqltutorial.org/mysql-index/mysql-show-indexes/
