@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
@@ -11,6 +12,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,6 +66,32 @@ func toColumnType(goType string) columnenum.ColumnType {
 	panic("no available type")
 }
 
+func toGoType(colType columnenum.ColumnType, nullable bool) string {
+	var goType string
+	if nullable {
+		goType += "*"
+	}
+	switch colType {
+	case columnenum.IntType:
+		goType += "int"
+	case columnenum.BigintType:
+		goType += "int64"
+	case columnenum.FloatType:
+		goType += "float32"
+	case columnenum.DoubleType:
+		goType += "float64"
+	case columnenum.VarcharType:
+		goType += "string"
+	case columnenum.TinyintType:
+		goType += "bool"
+	case columnenum.DatetimeType:
+		goType += "time.Time"
+	default:
+		panic("no available type")
+	}
+	return goType
+}
+
 func DbColType2ColumnType(dbColType string) columnenum.ColumnType {
 	if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.IntType))) {
 		return columnenum.IntType
@@ -111,6 +139,7 @@ type Column struct {
 	Table         string
 	Name          string
 	Type          columnenum.ColumnType
+	RawType       string
 	Default       interface{}
 	Pk            bool
 	Nullable      bool
@@ -393,6 +422,33 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		Indexes: indexesResult,
 		Meta:    structMeta,
 	}
+}
+
+func NewFieldFromColumn(col Column) astutils.FieldMeta {
+	field := astutils.FieldMeta{
+		Name: strcase.ToCamel(col.Name),
+		Type: toGoType(col.Type, col.Nullable),
+	}
+
+	tag := "dd:"
+	var feats []string
+	if col.Pk {
+		feats = append(feats, "pk")
+	}
+	if col.Autoincrement {
+		feats = append(feats, "auto")
+	}
+	if col.Nullable {
+		feats = append(feats, "null")
+	}
+	if stringutils.IsNotEmpty(string(col.Type)) {
+		feats = append(feats, fmt.Sprintf("type:%s", string(col.Type)))
+	}
+	if !reflect.ValueOf(col.Default).IsZero() {
+		feats = append(feats, fmt.Sprintf("default:'%s'", string(col.Type)))
+	}
+
+	return field
 }
 
 func (t *Table) CreateSql() (string, error) {

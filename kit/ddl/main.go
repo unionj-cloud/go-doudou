@@ -13,6 +13,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/cmd"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/codegen/dao"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
@@ -232,21 +233,16 @@ func main() {
 					col := table.Column{
 						Table:         t,
 						Name:          item.Field,
-						Type:          table.DbColType2ColumnType(item.Type),
+						Type:          columnenum.ColumnType(item.Type),
 						Default:       item.Default,
 						Pk:            table.CheckPk(item.Key),
 						Nullable:      table.CheckNull(item.Null),
 						Unsigned:      table.CheckUnsigned(item.Type),
 						Autoincrement: table.CheckAutoincrement(item.Extra),
 						Extra:         extraenum.Extra(item.Extra),
-						Meta: astutils.FieldMeta{
-							Name:     "",
-							Type:     "",
-							Tag:      "",
-							Comments: nil,
-						}, // TODO
-						AutoSet: table.CheckAutoSet(item.Default),
+						AutoSet:       table.CheckAutoSet(item.Default),
 					}
+					col.Meta = table.NewFieldFromColumn(col)
 					cols = append(cols, col)
 				}
 
