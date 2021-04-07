@@ -37,7 +37,7 @@ type DbConfig struct {
 }
 
 var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/cmd/domain", "path of domain folder")
-var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
+var reverse = flag.Bool("reverse", true, "If true, generate domain code from database. If false, update or create database tables from domain code."+
 	"Default is false")
 var dao = flag.Bool("dao", false, "If true, generate dao code. Default is false.")
 
