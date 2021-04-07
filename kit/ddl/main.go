@@ -36,8 +36,8 @@ type DbConfig struct {
 	Charset string
 }
 
-var dir = flag.String("domain", "/Users/wubin1989/workspace/cloud/go-doudou/kit/ddl/cmd/domain", "path of domain folder")
-var reverse = flag.Bool("reverse", true, "If true, generate domain code from database. If false, update or create database tables from domain code."+
+var dir = flag.String("domain", "", "path of domain folder")
+var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
 	"Default is false")
 var dao = flag.Bool("dao", false, "If true, generate dao code. Default is false.")
 
@@ -81,6 +81,23 @@ func main() {
 	logrus.Println(*reverse)
 	logrus.Println(*dao)
 
+	if stringutils.IsEmpty(*dir) {
+		if wd, err := os.Getwd(); err != nil {
+			logrus.Panicln(err)
+		} else {
+			*dir = filepath.Join(wd, "domain")
+			logrus.Println("dir => " + *dir)
+		}
+	}
+	if !filepath.IsAbs(*dir) {
+		if wd, err := os.Getwd(); err != nil {
+			logrus.Panicln(err)
+		} else {
+			*dir = filepath.Join(wd, *dir)
+			logrus.Println("dir " + *dir)
+		}
+	}
+
 	var existTables []string
 	if err = db.Select(&existTables, "show tables"); err != nil {
 		logrus.Panicln(err)
@@ -88,21 +105,6 @@ func main() {
 
 	var tables []table.Table
 	if !*reverse {
-		if stringutils.IsEmpty(*dir) {
-			if wd, err := os.Getwd(); err != nil {
-				logrus.Panicln(err)
-			} else {
-				*dir = filepath.Join(wd, "domain")
-			}
-		}
-		if !filepath.IsAbs(*dir) {
-			if wd, err := os.Getwd(); err != nil {
-				logrus.Panicln(err)
-			} else {
-				*dir = filepath.Join(wd, *dir)
-			}
-		}
-
 		var files []string
 		err = filepath.Walk(*dir, astutils.Visit(&files))
 		if err != nil {
@@ -152,8 +154,7 @@ func main() {
 			}
 		}
 	} else {
-		dfolder := pathutils.Abs("domain")
-		if err = os.MkdirAll(dfolder, os.ModePerm); err != nil {
+		if err = os.MkdirAll(*dir, os.ModePerm); err != nil {
 			logrus.Panicln(err)
 		}
 		for _, t := range existTables {
@@ -269,9 +270,9 @@ func main() {
 				Meta:    domain,
 			})
 
-			dfile := filepath.Join(dfolder, strings.ToLower(domain.Name)+".go")
+			dfile := filepath.Join(*dir, strings.ToLower(domain.Name)+".go")
 			if _, err = os.Stat(dfile); os.IsNotExist(err) {
-				if err = codegen.GenDomainGo(dfolder, domain); err != nil {
+				if err = codegen.GenDomainGo(*dir, domain); err != nil {
 					logrus.Errorf("FATAL: %+v\n", err)
 				}
 			} else {
