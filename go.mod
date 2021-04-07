@@ -16,5 +16,6 @@ require (
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44 // indirect
+	golang.org/x/tools v0.1.0
 	gopkg.in/olivere/elastic.v5 v5.0.86
 )

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/kit/astutils"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/extraenum"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -173,7 +174,7 @@ func TestColumn_AlterColumnSql(t *testing.T) {
 		Nullable      bool
 		Unsigned      bool
 		Autoincrement bool
-		Extra         Extra
+		Extra         extraenum.Extra
 	}
 	tests := []struct {
 		name    string
@@ -234,7 +235,7 @@ func TestColumn_AddColumnSql(t *testing.T) {
 		Nullable      bool
 		Unsigned      bool
 		Autoincrement bool
-		Extra         Extra
+		Extra         extraenum.Extra
 	}
 	tests := []struct {
 		name    string

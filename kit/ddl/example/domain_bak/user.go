@@ -1,4 +1,4 @@
-package domain
+package domain_bak
 
 //dd:table
 type User struct {

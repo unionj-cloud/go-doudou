@@ -1,0 +1,8 @@
+package domain
+
+//dd:table
+type {{.Name}} struct {
+{{- range $f := .Fields }}
+	{{$f.Name}} {{$f.Type}} `{{$f.Tag}}`
+{{- end }}
+}

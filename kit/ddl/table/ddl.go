@@ -1,12 +1,11 @@
-package cmd
+package table
 
 import (
 	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
+	"github.com/sirupsen/logrus"
 )
 
-func CreateTable(db *sqlx.DB, t table.Table) error {
+func CreateTable(db *sqlx.DB, t Table) error {
 	var (
 		statement string
 		err       error
@@ -14,14 +13,14 @@ func CreateTable(db *sqlx.DB, t table.Table) error {
 	if statement, err = t.CreateSql(); err != nil {
 		return err
 	}
-	log.Infoln(statement)
+	logrus.Infoln(statement)
 	if _, err = db.Exec(statement); err != nil {
 		return err
 	}
 	return err
 }
 
-func ChangeColumn(db *sqlx.DB, col table.Column) error {
+func ChangeColumn(db *sqlx.DB, col Column) error {
 	var (
 		statement string
 		err       error
@@ -29,14 +28,14 @@ func ChangeColumn(db *sqlx.DB, col table.Column) error {
 	if statement, err = col.ChangeColumnSql(); err != nil {
 		return err
 	}
-	log.Infoln(statement)
+	logrus.Infoln(statement)
 	if _, err = db.Exec(statement); err != nil {
 		return err
 	}
 	return err
 }
 
-func AddColumn(db *sqlx.DB, col table.Column) error {
+func AddColumn(db *sqlx.DB, col Column) error {
 	var (
 		statement string
 		err       error
@@ -44,7 +43,7 @@ func AddColumn(db *sqlx.DB, col table.Column) error {
 	if statement, err = col.AddColumnSql(); err != nil {
 		return err
 	}
-	log.Infoln(statement)
+	logrus.Infoln(statement)
 	if _, err = db.Exec(statement); err != nil {
 		return err
 	}

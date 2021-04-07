@@ -2,10 +2,10 @@ package astutils
 
 import (
 	"bufio"
+	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"go/ast"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +54,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 	case *ast.Package:
 		return sc
 	case *ast.File: // actually it is package name
-		log.Printf("File: name=%s\n", spec.Name)
+		logrus.Printf("File: name=%s\n", spec.Name)
 		sc.Package = PackageMeta{
 			Name: spec.Name.Name,
 		}
@@ -70,7 +70,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 			for _, item := range spec.Specs {
 				typeSpec := item.(*ast.TypeSpec)
 				typeName := typeSpec.Name.Name
-				log.Printf("Type: name=%s\n", typeName)
+				logrus.Printf("Type: name=%s\n", typeName)
 				switch specType := typeSpec.Type.(type) {
 				case *ast.StructType:
 					var fields []FieldMeta
@@ -101,7 +101,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 						}
 
 						for _, name := range names {
-							log.Printf("\tField: name=%s type=%s tag=%s\n", name, fieldType, tag)
+							logrus.Printf("\tField: name=%s type=%s tag=%s\n", name, fieldType, tag)
 							fields = append(fields, FieldMeta{
 								Name:     name,
 								Type:     fieldType,
@@ -176,7 +176,7 @@ func (sc *StructCollector) FlatEmbed() []StructMeta {
 func Visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatal(err)
+			logrus.Panicln(err)
 		}
 		if !info.IsDir() {
 			*files = append(*files, path)

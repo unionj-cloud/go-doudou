@@ -1,4 +1,4 @@
-package dao
+package codegen
 
 import (
 	"github.com/iancoleman/strcase"

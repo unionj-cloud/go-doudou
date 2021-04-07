@@ -13,6 +13,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,6 +26,8 @@ const (
 type IndexItems []IndexItem
 
 type IndexItem struct {
+	Unique bool
+	Name   string
 	Column string
 	Order  int
 	Sort   sortenum.Sort
@@ -71,44 +74,24 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 	if nullable {
 		goType += "*"
 	}
-	switch colType {
-	case columnenum.IntType:
+	if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.IntType))) {
 		goType += "int"
-	case columnenum.BigintType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.BigintType))) {
 		goType += "int64"
-	case columnenum.FloatType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.FloatType))) {
 		goType += "float32"
-	case columnenum.DoubleType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DoubleType))) {
 		goType += "float64"
-	case columnenum.VarcharType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.VarcharType))) {
 		goType += "string"
-	case columnenum.TinyintType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.TinyintType))) {
 		goType += "bool"
-	case columnenum.DatetimeType:
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DatetimeType))) {
 		goType += "time.Time"
-	default:
+	} else {
 		panic("no available type")
 	}
 	return goType
-}
-
-func DbColType2ColumnType(dbColType string) columnenum.ColumnType {
-	if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.IntType))) {
-		return columnenum.IntType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.BigintType))) {
-		return columnenum.BigintType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.FloatType))) {
-		return columnenum.FloatType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.DoubleType))) {
-		return columnenum.DoubleType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.VarcharType))) {
-		return columnenum.VarcharType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.TinyintType))) {
-		return columnenum.TinyintType
-	} else if strings.HasPrefix(dbColType, strings.ToLower(string(columnenum.DatetimeType))) {
-		return columnenum.DatetimeType
-	}
-	panic("no available type")
 }
 
 func CheckPk(key keyenum.Key) bool {
@@ -139,7 +122,6 @@ type Column struct {
 	Table         string
 	Name          string
 	Type          columnenum.ColumnType
-	RawType       string
 	Default       interface{}
 	Pk            bool
 	Nullable      bool
@@ -148,6 +130,7 @@ type Column struct {
 	Extra         extraenum.Extra
 	Meta          astutils.FieldMeta
 	AutoSet       bool
+	Indexes       []IndexItem
 }
 
 func (c *Column) ChangeColumnSql() (string, error) {
@@ -194,7 +177,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		pkColumn      Column
 		table         string
 	)
-	table = strcase.ToSnake(structMeta.Name) + "s"
+	table = strcase.ToSnake(structMeta.Name)
 	for _, field := range structMeta.Fields {
 		var (
 			columnName    string
@@ -331,12 +314,12 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 			}
 		}
 
+		if strings.HasPrefix(field.Type, "*") {
+			nullable = true
+		}
+
 		if stringutils.IsEmpty(string(columnType)) {
-			var trimmedType string
-			if trimmedType = strings.TrimPrefix(field.Type, "*"); len(trimmedType) < len(field.Type) {
-				nullable = true
-			}
-			columnType = toColumnType(trimmedType)
+			columnType = toColumnType(strings.TrimPrefix(field.Type, "*"))
 		}
 
 		if stringutils.IsNotEmpty(uniqueindex.Name) {
@@ -425,11 +408,6 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 }
 
 func NewFieldFromColumn(col Column) astutils.FieldMeta {
-	field := astutils.FieldMeta{
-		Name: strcase.ToCamel(col.Name),
-		Type: toGoType(col.Type, col.Nullable),
-	}
-
 	tag := "dd:"
 	var feats []string
 	if col.Pk {
@@ -438,17 +416,48 @@ func NewFieldFromColumn(col Column) astutils.FieldMeta {
 	if col.Autoincrement {
 		feats = append(feats, "auto")
 	}
-	if col.Nullable {
+	goType := toGoType(col.Type, col.Nullable)
+	if col.Nullable && !strings.HasPrefix(goType, "*") {
 		feats = append(feats, "null")
 	}
 	if stringutils.IsNotEmpty(string(col.Type)) {
 		feats = append(feats, fmt.Sprintf("type:%s", string(col.Type)))
 	}
 	if !reflect.ValueOf(col.Default).IsZero() {
-		feats = append(feats, fmt.Sprintf("default:'%s'", string(col.Type)))
+		if ptr, ok := col.Default.(*string); ok {
+			val := *ptr
+			re := regexp.MustCompile(`^\(.+\)$`)
+			var defaultClause string
+			if val == "CURRENT_TIMESTAMP" || re.MatchString(val) {
+				defaultClause = fmt.Sprintf("default:%s", val)
+			} else {
+				defaultClause = fmt.Sprintf("default:'%s'", val)
+			}
+			feats = append(feats, defaultClause)
+		}
+	}
+	if stringutils.IsNotEmpty(string(col.Extra)) {
+		feats = append(feats, fmt.Sprintf("extra:%s", string(col.Extra)))
+	}
+	for _, idx := range col.Indexes {
+		var indexClause string
+		if idx.Name == "PRIMARY" {
+			continue
+		}
+		if idx.Unique {
+			indexClause = "unique:"
+		} else {
+			indexClause = "index:"
+		}
+		indexClause += fmt.Sprintf("%s,%d,%s", idx.Name, idx.Order, string(idx.Sort))
+		feats = append(feats, indexClause)
 	}
 
-	return field
+	return astutils.FieldMeta{
+		Name: strcase.ToCamel(col.Name),
+		Type: goType,
+		Tag:  fmt.Sprintf(`%s"%s"`, tag, strings.Join(feats, ";")),
+	}
 }
 
 func (t *Table) CreateSql() (string, error) {
