@@ -28,7 +28,9 @@ func (receiver {{.DomainName}}DaoImpl) Insert{{.DomainName}}(ctx context.Context
 		statement    string
 		err          error
 		result       sql.Result
+		{{- if .PkCol.Autoincrement }}
 		lastInsertID int64
+		{{- end }}
 	)
 	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("{{.DomainName | ToLower}}dao.sql"), "Insert{{.DomainName}}", nil); err != nil {
 		return 0, err
@@ -36,12 +38,14 @@ func (receiver {{.DomainName}}DaoImpl) Insert{{.DomainName}}(ctx context.Context
 	if result, err = receiver.db.NamedExecContext(ctx, statement, {{.DomainName | ToLower}}); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.Exec")
 	}
+	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
 	}
 	if lastInsertID > 0 {
 		{{.DomainName | ToLower}}.{{.PkField.Name}} = int(lastInsertID)
 	}
+	{{- end }}
 	return result.RowsAffected()
 }
 
@@ -55,7 +59,9 @@ func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}(ctx context.Context
 		statement    string
 		err          error
 		result       sql.Result
+		{{- if .PkCol.Autoincrement }}
 		lastInsertID int64
+		{{- end }}
 	)
 	if statement, err = templateutils.StringBlock(pathutils.Abs("{{.DomainName | ToLower}}dao.sql.tmpl"), "Upsert{{.DomainName}}", nil); err != nil {
 		return 0, err
@@ -63,12 +69,14 @@ func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}(ctx context.Context
 	if result, err = receiver.db.NamedExecContext(ctx, statement, {{.DomainName | ToLower}}); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.Exec")
 	}
+	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
 	}
 	if lastInsertID > 0 {
 		{{.DomainName | ToLower}}.{{.PkField.Name}} = int(lastInsertID)
 	}
+	{{- end }}
 	return result.RowsAffected()
 }
 
@@ -77,7 +85,9 @@ func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}NoneZero(ctx context
 		statement    string
 		err          error
 		result       sql.Result
+		{{- if .PkCol.Autoincrement }}
 		lastInsertID int64
+		{{- end }}
 	)
 	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("{{.DomainName | ToLower}}dao.sql"), "Upsert{{.DomainName}}NoneZero", {{.DomainName | ToLower}}); err != nil {
 		return 0, err
@@ -85,12 +95,14 @@ func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}NoneZero(ctx context
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.Exec")
 	}
+	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
 	}
 	if lastInsertID > 0 {
 		{{.DomainName | ToLower}}.{{.PkField.Name}} = int(lastInsertID)
 	}
+	{{- end }}
 	return result.RowsAffected()
 }
 

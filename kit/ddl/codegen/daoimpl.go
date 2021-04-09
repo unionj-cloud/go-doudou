@@ -55,10 +55,12 @@ func GenDaoImplGo(domainpath string, t table.Table) error {
 			DomainPackage string
 			DomainName    string
 			PkField       astutils.FieldMeta
+			PkCol         table.Column
 		}{
 			DomainPackage: dpkg,
 			DomainName:    t.Meta.Name,
 			PkField:       pkColumn.Meta,
+			PkCol:         pkColumn,
 		}); err != nil {
 			return errors.Wrap(err, "error")
 		}
