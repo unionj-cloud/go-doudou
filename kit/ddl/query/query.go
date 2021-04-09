@@ -5,6 +5,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/ddl/arithsymbol"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/logicsymbol"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/valtypeenum"
 	"strings"
 )
 
@@ -14,14 +15,43 @@ type Q interface {
 	Or(q Q) Q
 }
 
+type Val struct {
+	Data interface{}
+	Type valtypeenum.ValType
+}
+
+func Literal(data interface{}) Val {
+	return Val{
+		Data: data,
+		Type: valtypeenum.Literal,
+	}
+}
+
+func Func(data string) Val {
+	return Val{
+		Data: data,
+		Type: valtypeenum.Func,
+	}
+}
+
+func null() Val {
+	return Val{
+		Data: "null",
+		Type: valtypeenum.Null,
+	}
+}
+
 type criteria struct {
 	col  string
-	val  interface{}
+	val  Val
 	asym arithsymbol.ArithSymbol
 }
 
 func (c criteria) Sql() string {
-	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, c.val)
+	if c.val.Type != valtypeenum.Literal {
+		return fmt.Sprintf("`%s` %s %v", c.col, c.asym, c.val.Data)
+	}
+	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, c.val.Data)
 }
 
 func C() criteria {
@@ -33,50 +63,50 @@ func (c criteria) Col(col string) criteria {
 	return c
 }
 
-func (c criteria) Eq(val interface{}) criteria {
+func (c criteria) Eq(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Eq
 	return c
 }
 
-func (c criteria) Ne(val interface{}) criteria {
+func (c criteria) Ne(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Ne
 	return c
 }
 
-func (c criteria) Gt(val interface{}) criteria {
+func (c criteria) Gt(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Gt
 	return c
 }
 
-func (c criteria) Lt(val interface{}) criteria {
+func (c criteria) Lt(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Lt
 	return c
 }
 
-func (c criteria) Gte(val interface{}) criteria {
+func (c criteria) Gte(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Gte
 	return c
 }
 
-func (c criteria) Lte(val interface{}) criteria {
+func (c criteria) Lte(val Val) criteria {
 	c.val = val
 	c.asym = arithsymbol.Lte
 	return c
 }
 
-func (c criteria) Is(val interface{}) criteria {
-	c.val = val
+func (c criteria) IsNull() criteria {
+	c.val = null()
 	c.asym = arithsymbol.Is
 	return c
 }
 
-func (c criteria) Not(val interface{}) criteria {
-	c.val = val
+func (c criteria) IsNotNull() criteria {
+	c.val = null()
 	c.asym = arithsymbol.Not
 	return c
 }
