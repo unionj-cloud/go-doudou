@@ -16,7 +16,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
-	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"go/ast"
@@ -50,7 +49,14 @@ func init() {
 
 func main() {
 	var db *sqlx.DB
-	err := godotenv.Load(pathutils.Abs(".env"))
+	var wd string
+	var err error
+	if wd, err = os.Getwd(); err != nil {
+		logrus.Panicln(err)
+	}
+	envfile := filepath.Join(wd, ".env")
+	logrus.Println(envfile)
+	err = godotenv.Load(envfile)
 	if err != nil {
 		logrus.Panicln("Error loading .env file", err)
 	}

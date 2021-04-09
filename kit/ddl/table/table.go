@@ -66,7 +66,7 @@ func toColumnType(goType string) columnenum.ColumnType {
 	case "time.Time":
 		return columnenum.DatetimeType
 	}
-	panic("no available type")
+	panic(fmt.Sprintf("no available type %s", goType))
 }
 
 func toGoType(colType columnenum.ColumnType, nullable bool) string {
@@ -82,14 +82,16 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 		goType += "float32"
 	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DoubleType))) {
 		goType += "float64"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.VarcharType))) {
+	} else if strings.HasPrefix(string(colType), "varchar") {
+		goType += "string"
+	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.TextType))) {
 		goType += "string"
 	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.TinyintType))) {
 		goType += "bool"
 	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DatetimeType))) {
 		goType += "time.Time"
 	} else {
-		panic("no available type")
+		panic(fmt.Sprintf("no available type %s", colType))
 	}
 	return goType
 }
