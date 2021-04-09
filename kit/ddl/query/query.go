@@ -6,6 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/ddl/logicsymbol"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/valtypeenum"
+	"reflect"
 	"strings"
 )
 
@@ -48,10 +49,39 @@ type criteria struct {
 }
 
 func (c criteria) Sql() string {
-	if c.val.Type != valtypeenum.Literal {
-		return fmt.Sprintf("`%s` %s %v", c.col, c.asym, c.val.Data)
+	if c.asym == arithsymbol.In {
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("`%s` %s (", c.col, c.asym))
+
+		var vals []string
+		switch reflect.TypeOf(c.val.Data).Kind() {
+		case reflect.Slice:
+			data := reflect.ValueOf(c.val.Data)
+			for i := 0; i < data.Len(); i++ {
+				if c.val.Type != valtypeenum.Literal {
+					vals = append(vals, fmt.Sprintf("%v", data.Index(i)))
+				} else {
+					vals = append(vals, fmt.Sprintf("'%v'", data.Index(i)))
+				}
+			}
+		default:
+			if c.val.Type != valtypeenum.Literal {
+				vals = append(vals, fmt.Sprintf("%v", c.val.Data))
+			} else {
+				vals = append(vals, fmt.Sprintf("'%v'", c.val.Data))
+			}
+		}
+
+		sb.WriteString(strings.Join(vals, ","))
+		sb.WriteString(")")
+
+		return sb.String()
+	} else {
+		if c.val.Type != valtypeenum.Literal {
+			return fmt.Sprintf("`%s` %s %v", c.col, c.asym, c.val.Data)
+		}
+		return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, c.val.Data)
 	}
-	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, c.val.Data)
 }
 
 func C() criteria {
@@ -108,6 +138,12 @@ func (c criteria) IsNull() criteria {
 func (c criteria) IsNotNull() criteria {
 	c.val = null()
 	c.asym = arithsymbol.Not
+	return c
+}
+
+func (c criteria) In(val Val) criteria {
+	c.val = val
+	c.asym = arithsymbol.In
 	return c
 }
 

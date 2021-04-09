@@ -11,4 +11,5 @@ const (
 	Lte ArithSymbol = "<="
 	Is  ArithSymbol = "is"
 	Not ArithSymbol = "is not"
+	In  ArithSymbol = "in"
 )
