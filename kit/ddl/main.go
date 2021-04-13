@@ -35,11 +35,11 @@ type DbConfig struct {
 	Charset string
 }
 
-var dir = flag.String("domain", "", "path of domain folder")
-var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
-	"Default is false")
-var dao = flag.Bool("dao", false, "If true, generate dao code. Default is false.")
-var pre = flag.String("pre", "", "table name prefix. e.g.: biz_product, biz_order...")
+var dir = flag.String("domain", "domain", "Path of domain folder.")
+var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code.")
+var dao = flag.Bool("dao", false, "If true, generate dao code.")
+var pre = flag.String("pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
+var daofolder = flag.String("daofolder", "dao", "Name of dao folder.")
 
 func init() {
 	customFormatter := new(logrus.TextFormatter)
@@ -56,7 +56,7 @@ func main() {
 		logrus.Panicln(err)
 	}
 	envfile := filepath.Join(wd, ".env")
-	logrus.Println(envfile)
+	logrus.Debugln(envfile)
 	err = godotenv.Load(envfile)
 	if err != nil {
 		logrus.Panicln("Error loading .env file", err)
@@ -84,17 +84,18 @@ func main() {
 	db = db.Unsafe()
 
 	flag.Parse()
-	logrus.Println(*dir)
-	logrus.Println(*reverse)
-	logrus.Println(*dao)
-	logrus.Println(*pre)
+	logrus.Debugln(*dir)
+	logrus.Debugln(*reverse)
+	logrus.Debugln(*dao)
+	logrus.Debugln(*pre)
+	logrus.Debugln(*daofolder)
 
 	if stringutils.IsEmpty(*dir) {
 		if wd, err = os.Getwd(); err != nil {
 			logrus.Panicln(err)
 		} else {
 			*dir = filepath.Join(wd, "domain")
-			logrus.Println("dir => " + *dir)
+			logrus.Debugln("dir => " + *dir)
 		}
 	}
 	if !filepath.IsAbs(*dir) {
@@ -102,7 +103,7 @@ func main() {
 			logrus.Panicln(err)
 		} else {
 			*dir = filepath.Join(wd, *dir)
-			logrus.Println("dir " + *dir)
+			logrus.Debugln("dir " + *dir)
 		}
 	}
 
@@ -291,15 +292,15 @@ func main() {
 
 	if *dao {
 		for _, t := range tables {
-			if err = codegen.GenDaoGo(*dir, t); err != nil {
+			if err = codegen.GenDaoGo(*dir, t, *daofolder); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}
-			if err = codegen.GenDaoImplGo(*dir, t); err != nil {
+			if err = codegen.GenDaoImplGo(*dir, t, *daofolder); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}
-			if err = codegen.GenDaoSql(*dir, t); err != nil {
+			if err = codegen.GenDaoSql(*dir, t, *daofolder); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}

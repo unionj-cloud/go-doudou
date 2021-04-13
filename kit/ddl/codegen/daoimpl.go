@@ -13,7 +13,7 @@ import (
 	"text/template"
 )
 
-func GenDaoImplGo(domainpath string, t table.Table) error {
+func GenDaoImplGo(domainpath string, t table.Table, folder ...string) error {
 	var (
 		err      error
 		dpkg     string
@@ -23,8 +23,13 @@ func GenDaoImplGo(domainpath string, t table.Table) error {
 		funcMap  map[string]interface{}
 		tpl      *template.Template
 		pkColumn table.Column
+		df       string
 	)
-	daopath = filepath.Join(filepath.Dir(domainpath), "dao")
+	df = "dao"
+	if len(folder) > 0 {
+		df = folder[0]
+	}
+	daopath = filepath.Join(filepath.Dir(domainpath), df)
 	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
 		return errors.Wrap(err, "error")
 	}

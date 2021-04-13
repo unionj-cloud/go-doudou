@@ -12,7 +12,7 @@ import (
 	"text/template"
 )
 
-func GenDaoSql(domainpath string, t table.Table) error {
+func GenDaoSql(domainpath string, t table.Table, folder ...string) error {
 	var (
 		err      error
 		tplpath  string
@@ -22,8 +22,13 @@ func GenDaoSql(domainpath string, t table.Table) error {
 		tpl      *template.Template
 		iColumns []table.Column
 		uColumns []table.Column
+		df       string
 	)
-	daopath = filepath.Join(filepath.Dir(domainpath), "dao")
+	df = "dao"
+	if len(folder) > 0 {
+		df = folder[0]
+	}
+	daopath = filepath.Join(filepath.Dir(domainpath), df)
 	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
 		return errors.Wrap(err, "error")
 	}
