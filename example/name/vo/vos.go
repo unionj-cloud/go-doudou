@@ -6,11 +6,13 @@ import "time"
 type Student struct {
 	School
 	Company
-	
+
 	Name string
 	Age  int
 
 	TestScore int
+
+	IsPaid bool
 }
 
 type School struct {
