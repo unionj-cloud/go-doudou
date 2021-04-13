@@ -2,7 +2,7 @@ package vo
 
 import "time"
 
-//go:generate namingstrategy -file $GOFILE
+//go:generate name -file $GOFILE
 type Student struct {
 	School
 	Company

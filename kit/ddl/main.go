@@ -16,6 +16,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/kit/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/table"
+	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/kit/stringutils"
 	"go/ast"
@@ -40,27 +41,38 @@ var reverse = flag.Bool("reverse", false, "If true, generate domain code from da
 var dao = flag.Bool("dao", false, "If true, generate dao code.")
 var pre = flag.String("pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
 var daofolder = flag.String("daofolder", "dao", "Name of dao folder.")
+var env = flag.String("env", ".env", "Path of database connection config .env file")
 
 func init() {
 	customFormatter := new(logrus.TextFormatter)
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	customFormatter.FullTimestamp = true
 	logrus.SetFormatter(customFormatter)
+
+	flag.Parse()
+	logrus.Debugln(*dir)
+	logrus.Debugln(*reverse)
+	logrus.Debugln(*dao)
+	logrus.Debugln(*pre)
+	logrus.Debugln(*daofolder)
+	logrus.Debugln(*env)
+
+	var err error
+	if *env, err = pathutils.FixPath(*env, ".env"); err != nil {
+		logrus.Panicln(err)
+	}
+	if err = godotenv.Load(*env); err != nil {
+		logrus.Panicln("Error loading .env file", err)
+	}
+
+	if *dir, err = pathutils.FixPath(*dir, "domain"); err != nil {
+		logrus.Panicln(err)
+	}
 }
 
 func main() {
 	var db *sqlx.DB
-	var wd string
 	var err error
-	if wd, err = os.Getwd(); err != nil {
-		logrus.Panicln(err)
-	}
-	envfile := filepath.Join(wd, ".env")
-	logrus.Debugln(envfile)
-	err = godotenv.Load(envfile)
-	if err != nil {
-		logrus.Panicln("Error loading .env file", err)
-	}
 	var dbConfig DbConfig
 	err = envconfig.Process("db", &dbConfig)
 	if err != nil {
@@ -82,30 +94,6 @@ func main() {
 	defer db.Close()
 	db.MapperFunc(strcase.ToSnake)
 	db = db.Unsafe()
-
-	flag.Parse()
-	logrus.Debugln(*dir)
-	logrus.Debugln(*reverse)
-	logrus.Debugln(*dao)
-	logrus.Debugln(*pre)
-	logrus.Debugln(*daofolder)
-
-	if stringutils.IsEmpty(*dir) {
-		if wd, err = os.Getwd(); err != nil {
-			logrus.Panicln(err)
-		} else {
-			*dir = filepath.Join(wd, "domain")
-			logrus.Debugln("dir => " + *dir)
-		}
-	}
-	if !filepath.IsAbs(*dir) {
-		if wd, err = os.Getwd(); err != nil {
-			logrus.Panicln(err)
-		} else {
-			*dir = filepath.Join(wd, *dir)
-			logrus.Debugln("dir " + *dir)
-		}
-	}
 
 	var existTables []string
 	if err = db.Select(&existTables, "show tables"); err != nil {

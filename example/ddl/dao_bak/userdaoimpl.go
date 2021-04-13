@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"example/domain_bak"
+	"example/ddl/domain_bak"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"

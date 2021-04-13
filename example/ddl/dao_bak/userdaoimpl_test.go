@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
-	"example/domain_bak"
+	"example/ddl/domain_bak"
 	. "github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"reflect"

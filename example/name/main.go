@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/unionj-cloud/go-doudou/kit/namingstrategy/example/vo"
 	"encoding/json"
+	"example/name/vo"
 	"fmt"
 	"log"
 	"time"
@@ -25,7 +25,6 @@ func main() {
 		School:    sch,
 		Company:   company,
 	}
-
 
 	data, err := json.Marshal(stu)
 	if err != nil {

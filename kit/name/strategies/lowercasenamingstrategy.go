@@ -27,7 +27,7 @@ package {{ .StructCollector.Package.Name }}
 
 import (
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/kit/namingstrategy/strategies"
+	"github.com/unionj-cloud/go-doudou/kit/name/strategies"
 )
 
 {{ range $struct := .StructCollector.Structs }}
