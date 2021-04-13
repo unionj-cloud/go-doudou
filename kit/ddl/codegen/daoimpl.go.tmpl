@@ -63,7 +63,7 @@ func (receiver {{.DomainName}}DaoImpl) Upsert{{.DomainName}}(ctx context.Context
 		lastInsertID int64
 		{{- end }}
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("{{.DomainName | ToLower}}dao.sql.tmpl"), "Upsert{{.DomainName}}", nil); err != nil {
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("{{.DomainName | ToLower}}dao.sql"), "Upsert{{.DomainName}}", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, {{.DomainName | ToLower}}); err != nil {
@@ -197,7 +197,7 @@ func (receiver {{.DomainName}}DaoImpl) Get{{.DomainName}}(ctx context.Context, {
 		err       error
 		{{.DomainName | ToLower}}      domain.{{.DomainName}}
 	)
-	if statement, err = templateutils.StringBlock(pathutils.Abs("{{.DomainName | ToLower}}dao.sql.tmpl"), "Get{{.DomainName}}", nil); err != nil {
+	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("{{.DomainName | ToLower}}dao.sql"), "Get{{.DomainName}}", nil); err != nil {
 		return domain.{{.DomainName}}{}, err
 	}
 	if err = receiver.db.GetContext(ctx, &{{.DomainName | ToLower}}, receiver.db.Rebind(statement), {{.PkField.Name | ToLower}}); err != nil {
