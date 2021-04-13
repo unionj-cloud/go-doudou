@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain_bak"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain"
 	. "github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"reflect"
@@ -58,7 +58,7 @@ func init() {
 func TestUserDaoGen_UpsertUser(t *testing.T) {
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -70,7 +70,7 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 			name: "upsert",
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					Name:   "wu",
 					Phone:  "13552053960",
 					Age:    18,
@@ -101,7 +101,7 @@ func TestUserDaoGen_UpsertUser(t *testing.T) {
 func TestUserDaoGen_UpsertUser1(t *testing.T) {
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -113,7 +113,7 @@ func TestUserDaoGen_UpsertUser1(t *testing.T) {
 			name: "upsert",
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					Name:   "david",
 					Phone:  "13552053960",
 					Age:    35,
@@ -199,7 +199,7 @@ func TestUserDaoGen_DeleteUsers(t *testing.T) {
 			},
 			args: args{
 				ctx:   context.TODO(),
-				where: C().Col("name").Eq("wu").Or(C().Col("school").Eq("havard")).And(C().Col("age").Gte("27")),
+				where: C().Col("name").Eq(Literal("wu")).Or(C().Col("school").Eq(Literal("havard"))).And(C().Col("age").Gte(Literal("27"))),
 			},
 			want:    1,
 			wantErr: false,
@@ -243,7 +243,7 @@ func TestUserDaoGen_PageUsers(t *testing.T) {
 			},
 			args: args{
 				ctx:   context.TODO(),
-				where: C().Col("age").Gt("27"),
+				where: C().Col("age").Gt(Literal("27")),
 				page: Page{
 					Orders: []Order{
 						{
@@ -273,10 +273,10 @@ func TestUserDaoGen_PageUsers(t *testing.T) {
 				return
 			}
 			var (
-				items []domain_bak.User
+				items []domain.User
 				ok    bool
 			)
-			if items, ok = got.Items.([]domain_bak.User); !ok {
+			if items, ok = got.Items.([]domain.User); !ok {
 				t.Errorf("PageUsers() got = %v, want %v", got, tt.want)
 			}
 			if len(items) == 0 {
@@ -307,7 +307,7 @@ func TestUserDaoImpl_UpdateUsers(t *testing.T) {
 	}
 	type args struct {
 		ctx   context.Context
-		user  domain_bak.User
+		user  domain.User
 		where Q
 	}
 	tests := []struct {
@@ -324,12 +324,12 @@ func TestUserDaoImpl_UpdateUsers(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				user: domain_bak.User{
+				user: domain.User{
 					Name: "jones",
 					Age:  60,
 					No:   1998,
 				},
-				where: C().Col("no").Eq(1998),
+				where: C().Col("no").Eq(Literal(1998)),
 			},
 			want:    1,
 			wantErr: false,
@@ -356,7 +356,7 @@ func TestUserDaoImpl_UpdateUsersNoneZero(t *testing.T) {
 	}
 	type args struct {
 		ctx   context.Context
-		user  domain_bak.User
+		user  domain.User
 		where Q
 	}
 	tests := []struct {
@@ -373,12 +373,12 @@ func TestUserDaoImpl_UpdateUsersNoneZero(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				user: domain_bak.User{
+				user: domain.User{
 					Name: "jones",
 					Age:  60,
 					No:   1990,
 				},
-				where: C().Col("no").Eq(1990),
+				where: C().Col("no").Eq(Literal(1990)),
 			},
 			want:    1,
 			wantErr: false,
@@ -407,7 +407,7 @@ func TestUserDaoImpl_InsertUser(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -423,7 +423,7 @@ func TestUserDaoImpl_InsertUser(t *testing.T) {
 			name: "InsertUser",
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					Name:   "Lemon",
 					Phone:  "18811386894",
 					Age:    39,
@@ -458,7 +458,7 @@ func TestUserDaoImpl_UpdateUser(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -474,7 +474,7 @@ func TestUserDaoImpl_UpdateUser(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					ID:     15,
 					Age:    50,
 					School: "Beijing Univ.",
@@ -507,7 +507,7 @@ func TestUserDaoImpl_UpdateUserNoneZero(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -523,7 +523,7 @@ func TestUserDaoImpl_UpdateUserNoneZero(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					ID:     13,
 					Age:    50,
 					School: "Beijing Univ.",
@@ -556,7 +556,7 @@ func TestUserDaoImpl_UpsertUserNoneZero(t *testing.T) {
 	}
 	type args struct {
 		ctx  context.Context
-		user *domain_bak.User
+		user *domain.User
 	}
 	tests := []struct {
 		name    string
@@ -572,7 +572,7 @@ func TestUserDaoImpl_UpsertUserNoneZero(t *testing.T) {
 			name: "UpsertUserNoneZero",
 			args: args{
 				ctx: context.TODO(),
-				user: &domain_bak.User{
+				user: &domain.User{
 					No:     1990,
 					School: "havard",
 				},

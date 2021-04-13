@@ -171,7 +171,7 @@ type Table struct {
 	Meta    astutils.StructMeta
 }
 
-func NewTableFromStruct(structMeta astutils.StructMeta) Table {
+func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table {
 	var (
 		columns       []Column
 		uniqueindexes []Index
@@ -180,6 +180,9 @@ func NewTableFromStruct(structMeta astutils.StructMeta) Table {
 		table         string
 	)
 	table = strcase.ToSnake(structMeta.Name)
+	if len(prefix) > 0 {
+		table = prefix[0] + table
+	}
 	for _, field := range structMeta.Fields {
 		var (
 			columnName    string

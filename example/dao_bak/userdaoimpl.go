@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain_bak"
+	"github.com/unionj-cloud/go-doudou/kit/ddl/example/domain"
 	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
 	"github.com/unionj-cloud/go-doudou/kit/pathutils"
 	"github.com/unionj-cloud/go-doudou/kit/templateutils"
@@ -17,7 +17,7 @@ type UserDaoImpl struct {
 	db *sqlx.DB
 }
 
-func (receiver UserDaoImpl) UpdateUsers(ctx context.Context, user domain_bak.User, where query.Q) (int64, error) {
+func (receiver UserDaoImpl) UpdateUsers(ctx context.Context, user domain.User, where query.Q) (int64, error) {
 	var (
 		statement string
 		err       error
@@ -25,7 +25,7 @@ func (receiver UserDaoImpl) UpdateUsers(ctx context.Context, user domain_bak.Use
 	)
 	fmt.Println(where.Sql())
 	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsers", struct {
-		domain_bak.User
+		domain.User
 		Where string
 	}{
 		User:  user,
@@ -40,14 +40,14 @@ func (receiver UserDaoImpl) UpdateUsers(ctx context.Context, user domain_bak.Use
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) UpdateUsersNoneZero(ctx context.Context, user domain_bak.User, where query.Q) (int64, error) {
+func (receiver UserDaoImpl) UpdateUsersNoneZero(ctx context.Context, user domain.User, where query.Q) (int64, error) {
 	var (
 		statement string
 		err       error
 		result    sql.Result
 	)
 	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsersNoneZero", struct {
-		domain_bak.User
+		domain.User
 		Where string
 	}{
 		User:  user,
@@ -62,7 +62,7 @@ func (receiver UserDaoImpl) UpdateUsersNoneZero(ctx context.Context, user domain
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) InsertUser(ctx context.Context, user *domain_bak.User) (int64, error) {
+func (receiver UserDaoImpl) InsertUser(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement    string
 		err          error
@@ -84,7 +84,7 @@ func (receiver UserDaoImpl) InsertUser(ctx context.Context, user *domain_bak.Use
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) UpdateUser(ctx context.Context, user *domain_bak.User) (int64, error) {
+func (receiver UserDaoImpl) UpdateUser(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement string
 		err       error
@@ -99,7 +99,7 @@ func (receiver UserDaoImpl) UpdateUser(ctx context.Context, user *domain_bak.Use
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) UpdateUserNoneZero(ctx context.Context, user *domain_bak.User) (int64, error) {
+func (receiver UserDaoImpl) UpdateUserNoneZero(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement string
 		err       error
@@ -115,7 +115,7 @@ func (receiver UserDaoImpl) UpdateUserNoneZero(ctx context.Context, user *domain
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) UpsertUserNoneZero(ctx context.Context, user *domain_bak.User) (int64, error) {
+func (receiver UserDaoImpl) UpsertUserNoneZero(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement    string
 		err          error
@@ -138,11 +138,11 @@ func (receiver UserDaoImpl) UpsertUserNoneZero(ctx context.Context, user *domain
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) SelectUsers(ctx context.Context, where query.Q) ([]domain_bak.User, error) {
+func (receiver UserDaoImpl) SelectUsers(ctx context.Context, where query.Q) ([]domain.User, error) {
 	var (
 		statement string
 		err       error
-		users     []domain_bak.User
+		users     []domain.User
 	)
 	statement = fmt.Sprintf("select * from users where %s", where.Sql())
 	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
@@ -175,7 +175,7 @@ func NewUserDao(db *sqlx.DB) UserDao {
 // If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API function when connecting to mysqld,
 // the affected-rows value is 1 (not 0) if an existing row is set to its current values.
 // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain_bak.User) (int64, error) {
+func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain.User) (int64, error) {
 	var (
 		statement    string
 		err          error
@@ -197,17 +197,17 @@ func (receiver UserDaoImpl) UpsertUser(ctx context.Context, user *domain_bak.Use
 	return result.RowsAffected()
 }
 
-func (receiver UserDaoImpl) GetUser(ctx context.Context, id int) (domain_bak.User, error) {
+func (receiver UserDaoImpl) GetUser(ctx context.Context, id int) (domain.User, error) {
 	var (
 		statement string
 		err       error
-		user      domain_bak.User
+		user      domain.User
 	)
 	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "GetUser", nil); err != nil {
-		return domain_bak.User{}, err
+		return domain.User{}, err
 	}
 	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {
-		return domain_bak.User{}, errors.Wrap(err, "error returned from calling db.Select")
+		return domain.User{}, errors.Wrap(err, "error returned from calling db.Select")
 	}
 	return user, nil
 }
@@ -229,7 +229,7 @@ func (receiver UserDaoImpl) PageUsers(ctx context.Context, where query.Q, page q
 	var (
 		statement string
 		err       error
-		users     []domain_bak.User
+		users     []domain.User
 		total     int
 	)
 	statement = fmt.Sprintf("select * from users where %s %s", where.Sql(), page.Sql())

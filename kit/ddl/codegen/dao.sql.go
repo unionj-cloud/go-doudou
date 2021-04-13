@@ -61,12 +61,14 @@ func GenDaoSql(domainpath string, t table.Table) error {
 
 		if err = tpl.Execute(f, struct {
 			Schema        string
+			TableName     string
 			DomainName    string
 			InsertColumns []table.Column
 			UpdateColumns []table.Column
 			Pk            table.Column
 		}{
 			Schema:        os.Getenv("DB_SCHEMA"),
+			TableName:     t.Name,
 			DomainName:    t.Meta.Name,
 			InsertColumns: iColumns,
 			UpdateColumns: uColumns,

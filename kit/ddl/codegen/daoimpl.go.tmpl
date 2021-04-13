@@ -112,7 +112,7 @@ func (receiver {{.DomainName}}DaoImpl) Delete{{.DomainName}}s(ctx context.Contex
 		err       error
 		result    sql.Result
 	)
-	statement = fmt.Sprintf("delete from {{.DomainName | ToSnake}} where %s;", where.Sql())
+	statement = fmt.Sprintf("delete from {{.TableName}} where %s;", where.Sql())
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
 	}
@@ -212,7 +212,7 @@ func (receiver {{.DomainName}}DaoImpl) Select{{.DomainName}}s(ctx context.Contex
 		err       error
 		{{.DomainName | ToLower}}s     []domain.{{.DomainName}}
 	)
-	statement = fmt.Sprintf("select * from {{.DomainName | ToSnake}} where %s", where.Sql())
+	statement = fmt.Sprintf("select * from {{.TableName}} where %s", where.Sql())
 	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, statement); err != nil {
 		return nil, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
@@ -225,7 +225,7 @@ func (receiver {{.DomainName}}DaoImpl) Count{{.DomainName}}s(ctx context.Context
 		err       error
 		total     int
 	)
-	statement = fmt.Sprintf("select count(1) from {{.DomainName | ToSnake}} where %s", where.Sql())
+	statement = fmt.Sprintf("select count(1) from {{.TableName}} where %s", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.GetContext")
 	}
@@ -239,12 +239,12 @@ func (receiver {{.DomainName}}DaoImpl) Page{{.DomainName}}s(ctx context.Context,
 		{{.DomainName | ToLower}}s     []domain.{{.DomainName}}
 		total     int
 	)
-	statement = fmt.Sprintf("select * from {{.DomainName | ToSnake}} where %s %s;", where.Sql(), page.Sql())
+	statement = fmt.Sprintf("select * from {{.TableName}} where %s %s;", where.Sql(), page.Sql())
 	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 
-	statement = fmt.Sprintf("select count(1) from {{.DomainName | ToSnake}} where %s;", where.Sql())
+	statement = fmt.Sprintf("select count(1) from {{.TableName}} where %s;", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
 	}

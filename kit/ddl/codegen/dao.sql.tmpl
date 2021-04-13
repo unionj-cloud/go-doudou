@@ -17,7 +17,7 @@
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Insert{{.DomainName}}"{{`}}`}}
-INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+INSERT INTO `{{.Schema}}`.`{{.TableName}}`
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
 `{{$co.Name}}`
@@ -29,7 +29,7 @@ VALUES ({{- range $i, $co := .InsertColumns}}
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Update{{.DomainName}}"{{`}}`}}
-UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+UPDATE `{{.Schema}}`.`{{.TableName}}`
 SET
 	{{- range $i, $co := .UpdateColumns}}
 	{{- if $i}},{{end}}
@@ -40,7 +40,7 @@ WHERE
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Update{{.DomainName}}NoneZero"{{`}}`}}
-UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+UPDATE `{{.Schema}}`.`{{.TableName}}`
 SET
     {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
 WHERE
@@ -48,7 +48,7 @@ WHERE
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Upsert{{.DomainName}}"{{`}}`}}
-INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+INSERT INTO `{{.Schema}}`.`{{.TableName}}`
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
 `{{$co.Name}}`
@@ -65,7 +65,7 @@ UPDATE
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Upsert{{.DomainName}}NoneZero"{{`}}`}}
-INSERT INTO `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+INSERT INTO `{{.Schema}}`.`{{.TableName}}`
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
 `{{$co.Name}}`
@@ -98,12 +98,12 @@ UPDATE
 
 {{`{{`}}define "Get{{.DomainName}}"{{`}}`}}
 select *
-from `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+from `{{.Schema}}`.`{{.TableName}}`
 where `{{.Pk.Name}}` = ?
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "Update{{.DomainName}}s"{{`}}`}}
-UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+UPDATE `{{.Schema}}`.`{{.TableName}}`
 SET
     {{- range $i, $co := .UpdateColumns}}
 	{{- if $i}},{{end}}
@@ -132,7 +132,7 @@ WHERE
 {{`{{`}}end{{`}}`}}
 
 {{`{{`}}define "UpdateUsersNoneZero"{{`}}`}}
-UPDATE `{{.Schema}}`.`{{.DomainName | ToSnake}}`
+UPDATE `{{.Schema}}`.`{{.TableName}}`
 SET
     {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
 WHERE

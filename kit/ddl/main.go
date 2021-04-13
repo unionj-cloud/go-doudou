@@ -39,6 +39,7 @@ var dir = flag.String("domain", "", "path of domain folder")
 var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code."+
 	"Default is false")
 var dao = flag.Bool("dao", false, "If true, generate dao code. Default is false.")
+var pre = flag.String("pre", "", "table name prefix. e.g.: biz_product, biz_order...")
 
 func init() {
 	customFormatter := new(logrus.TextFormatter)
@@ -86,9 +87,10 @@ func main() {
 	logrus.Println(*dir)
 	logrus.Println(*reverse)
 	logrus.Println(*dao)
+	logrus.Println(*pre)
 
 	if stringutils.IsEmpty(*dir) {
-		if wd, err := os.Getwd(); err != nil {
+		if wd, err = os.Getwd(); err != nil {
 			logrus.Panicln(err)
 		} else {
 			*dir = filepath.Join(wd, "domain")
@@ -96,7 +98,7 @@ func main() {
 		}
 	}
 	if !filepath.IsAbs(*dir) {
-		if wd, err := os.Getwd(); err != nil {
+		if wd, err = os.Getwd(); err != nil {
 			logrus.Panicln(err)
 		} else {
 			*dir = filepath.Join(wd, *dir)
@@ -128,7 +130,7 @@ func main() {
 
 		flattened := sc.FlatEmbed()
 		for _, sm := range flattened {
-			tables = append(tables, table.NewTableFromStruct(sm))
+			tables = append(tables, table.NewTableFromStruct(sm, *pre))
 		}
 		for _, t := range tables {
 			if sliceutils.StringContains(existTables, t.Name) {
@@ -256,7 +258,7 @@ func main() {
 			}
 
 			domain := astutils.StructMeta{
-				Name:   strcase.ToCamel(t),
+				Name:   strcase.ToCamel(strings.TrimPrefix(t, *pre)),
 				Fields: fields,
 			}
 
