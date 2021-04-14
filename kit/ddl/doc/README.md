@@ -4,6 +4,50 @@
 
 
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+### TOC
+
+- [快速上手](#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)
+- [命令行参数](#%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0)
+- [API](#api)
+  - [示例](#%E7%A4%BA%E4%BE%8B)
+  - [结构体标签](#%E7%BB%93%E6%9E%84%E4%BD%93%E6%A0%87%E7%AD%BE)
+    - [pk](#pk)
+    - [auto](#auto)
+    - [type](#type)
+    - [default](#default)
+    - [extra](#extra)
+    - [index](#index)
+    - [unique](#unique)
+    - [null](#null)
+    - [unsigned](#unsigned)
+  - [dao层接口](#dao%E5%B1%82%E6%8E%A5%E5%8F%A3)
+    - [InsertXXX](#insertxxx)
+    - [UpsertXXX](#upsertxxx)
+    - [UpsertXXXNoneZero](#upsertxxxnonezero)
+    - [DeleteXXXs](#deletexxxs)
+    - [UpdateXXX](#updatexxx)
+    - [UpdateXXXNoneZero](#updatexxxnonezero)
+    - [UpdateXXXs](#updatexxxs)
+    - [UpdateXXXsNoneZero](#updatexxxsnonezero)
+    - [GetXXX](#getxxx)
+    - [SelectXXXs](#selectxxxs)
+    - [CountXXXs](#countxxxs)
+    - [PageXXXs](#pagexxxs)
+  - [查询Dsl](#%E6%9F%A5%E8%AF%A2dsl)
+    - [示例](#%E7%A4%BA%E4%BE%8B-1)
+    - [API](#api-1)
+      - [Q接口](#q%E6%8E%A5%E5%8F%A3)
+      - [criteria结构体](#criteria%E7%BB%93%E6%9E%84%E4%BD%93)
+      - [where结构体](#where%E7%BB%93%E6%9E%84%E4%BD%93)
+      - [Page结构体](#page%E7%BB%93%E6%9E%84%E4%BD%93)
+- [TODO](#todo)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
 ### 快速上手
 
 - ```
@@ -72,7 +116,7 @@ Usage of ddl:
 
 ### API
 
-#### 示例：
+#### 示例
 
 ```
 //dd:table

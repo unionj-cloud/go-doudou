@@ -60,8 +60,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
-github.com/unionj-cloud/go-doudou v0.1.1 h1:/DZmrUBFFKraS5QjcovD5DchVndeQe7Zn60Pm4Thmj0=
-github.com/unionj-cloud/go-doudou v0.1.1/go.mod h1:B96ARSnLMnrmOHe8mOIh5AynPUxKZxhh0mxj/25Y34g=
+github.com/unionj-cloud/go-doudou v0.1.2 h1:FXtoJLwVQ1S40CWTtLhiOliGhvS3J4e48FwxoHx/eZ0=
+github.com/unionj-cloud/go-doudou v0.1.2/go.mod h1:B96ARSnLMnrmOHe8mOIh5AynPUxKZxhh0mxj/25Y34g=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/ztrue/tracerr v0.3.0 h1:lDi6EgEYhPYPnKcjsYzmWw4EkFEoA/gfe+I9Y5f+h6Y=
 github.com/ztrue/tracerr v0.3.0/go.mod h1:qEalzze4VN9O8tnhBXScfCrmoJo10o8TN5ciKjm6Mww=
