@@ -155,6 +155,9 @@ func main() {
 			logrus.Panicln(err)
 		}
 		for _, t := range existTables {
+			if stringutils.IsNotEmpty(*pre) && !strings.HasPrefix(t, *pre) {
+				continue
+			}
 			var dbIndice []table.DbIndex
 			if err = db.Select(&dbIndice, fmt.Sprintf("SHOW INDEXES FROM %s", t)); err != nil {
 				logrus.Panicln(err)

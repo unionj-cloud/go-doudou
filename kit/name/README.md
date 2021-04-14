@@ -130,6 +130,7 @@ func (object Company) MarshalJSON() ([]byte, error) {
 
 ### TODO
 
++ [ ] 支持omitempty
 + [ ] 蛇形命名策略
 + [ ] 只针对上方标注了`//go:generate name -file $GOFILE`的结构体生效，而不是对整个文件的结构体都生效
 
