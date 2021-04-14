@@ -1,6 +1,6 @@
 package vo
 
-import "github.com/unionj-cloud/go-doudou/kit/ddl/query"
+import "github.com/unionj-cloud/go-doudou/ddl/query"
 
 //go:generate name -file $GOFILE
 

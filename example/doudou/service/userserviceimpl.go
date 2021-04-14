@@ -7,7 +7,7 @@ import (
 	"example/doudou/domain"
 	"example/doudou/vo"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
 type UserServiceImpl struct{}

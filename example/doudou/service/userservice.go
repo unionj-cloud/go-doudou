@@ -4,7 +4,7 @@ import (
 	"context"
 	"example/doudou/vo"
 
-	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
 type UserService interface {

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"example/ddl/dao"
 	"example/ddl/domain"
+	"example/doudou/dao"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
@@ -11,8 +11,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
-	. "github.com/unionj-cloud/go-doudou/kit/ddl/query"
-	"github.com/unionj-cloud/go-doudou/kit/pathutils"
+	. "github.com/unionj-cloud/go-doudou/ddl/query"
+	"github.com/unionj-cloud/go-doudou/pathutils"
 	"log"
 )
 

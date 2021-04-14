@@ -7,9 +7,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"example/ddl/domain"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
-	"github.com/unionj-cloud/go-doudou/kit/pathutils"
-	"github.com/unionj-cloud/go-doudou/kit/templateutils"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
+	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/templateutils"
 	"math"
 )
 

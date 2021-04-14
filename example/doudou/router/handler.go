@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"github.com/gorilla/schema"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
 	"net/http"
 	"strconv"
 )
 
 var decoder = schema.NewDecoder()
-var us = service.NewUserService()
+var userService = service.NewUserService()
 
 func handleError(w http.ResponseWriter, err error, status ...int) {
 	logrus.Errorln(fmt.Sprintf("%+v", err))
@@ -46,7 +46,7 @@ func postSignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var uid int
-	if uid, err = us.PostSignUp(context.Background(), form); err != nil {
+	if uid, err = userService.PostSignUp(context.Background(), form); err != nil {
 		handleError(w, err)
 		return
 	}
@@ -74,7 +74,7 @@ func postLogInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var auth vo.Auth
-	if auth, err = us.PostLogIn(context.Background(), form); err != nil {
+	if auth, err = userService.PostLogIn(context.Background(), form); err != nil {
 		handleError(w, err)
 		return
 	}
@@ -97,7 +97,7 @@ func getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userVo vo.UserVo
-	if userVo, err = us.GetUser(context.Background(), uid); err != nil {
+	if userVo, err = userService.GetUser(context.Background(), uid); err != nil {
 		handleError(w, err)
 		return
 	}
@@ -122,7 +122,7 @@ func postPageUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	var pr query.PageRet
 
-	if pr, err = us.PostPageUsers(context.Background(), p); err != nil {
+	if pr, err = userService.PostPageUsers(context.Background(), p); err != nil {
 		handleError(w, err)
 		return
 	}

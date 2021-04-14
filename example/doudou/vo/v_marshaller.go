@@ -5,7 +5,7 @@ package vo
 
 import (
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/kit/name/strategies"
+	"github.com/unionj-cloud/go-doudou/name/strategies"
 )
 
 

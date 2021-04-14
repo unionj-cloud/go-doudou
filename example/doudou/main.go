@@ -12,6 +12,13 @@ import (
 	"time"
 )
 
+func init() {
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	customFormatter.FullTimestamp = true
+	logrus.SetFormatter(customFormatter)
+}
+
 func main() {
 	var wait time.Duration
 	flag.DurationVar(&wait, "grace", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")

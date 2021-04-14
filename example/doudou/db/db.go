@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/kit/pathutils"
+	"github.com/unionj-cloud/go-doudou/pathutils"
 	"log"
 )
 

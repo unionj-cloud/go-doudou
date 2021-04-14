@@ -3,7 +3,7 @@ package dao
 import (
 	"context"
 	"example/ddl/domain"
-	"github.com/unionj-cloud/go-doudou/kit/ddl/query"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
 type UserDao interface {
