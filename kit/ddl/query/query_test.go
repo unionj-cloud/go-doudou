@@ -8,9 +8,9 @@ func ExampleCriteria() {
 
 	query := C().Col("name").Eq(Literal("wubin")).Or(C().Col("school").Eq(Literal("havard"))).And(C().Col("age").Eq(Literal(18)))
 	fmt.Println(query.Sql())
+
 	query = C().Col("name").Eq(Literal("wubin")).Or(C().Col("school").Eq(Literal("havard"))).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
-	//query = C().Col("name").Eq(Literal("wubin")).Or(C().Col("school").Eq(Literal("havard"))).And(C().Col("delete_at").Gt(Literal(time.Now().Format(constants.FORMAT))))
 
 	query = C().Col("name").Eq(Literal("wubin")).Or(C().Col("school").In(Literal("havard"))).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())

@@ -15,7 +15,7 @@
 kit包有一些命令行工具：
 
 - name: 根据预设的命名规则生成结构体的Marshaler接口方法实现，省去了在结构体字段后面加`json`tag的工作。[查看文档](./kit/name/README.md)
-- ddl: 简单的orm工具。可以从结构体同步数据库表结构，也可以从数据库表结构生成结构体，还可以生成dao层代码。[查看文档](./kit/ddl/doc/README.md)
+- ddl: 基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。可以从结构体同步数据库表结构，也可以从数据库表结构生成结构体，还可以生成dao层代码。[查看文档](./kit/ddl/doc/README.md)
 - ...
 
 

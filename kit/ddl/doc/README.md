@@ -1,5 +1,7 @@
 ## ddl
 
+基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。暂不支持索引的更新，不支持外键。
+
 
 
 ### 快速上手
@@ -94,63 +96,295 @@ type User struct {
 
 #### 结构体标签
 
-- pk: 表示主键
+##### pk
 
-- auto: 表示自增
+表示主键
 
-- type: 表示数据库字段类型。非必填。默认映射规则如下表：
+##### auto
 
-  | 支持的Go语言类型（含指针） | 数据库字段类型 |
-  | :------------------------: | :------------: |
-  |            Int             |      Int       |
-  |           Int64            |     bigint     |
-  |          float32           |     Float      |
-  |          float64           |     Double     |
-  |           string           |  varchar(255)  |
-  |            bool            |    tinyint     |
-  |         time.Time          |    datetime    |
+表示自增
 
-- default: 表示默认值。需自己区分数据库内建函数还是字面量。如果是数据库内建函数或者是由数据库内建函数组成的表达式，则不需要带单引号。如果是字面量，则需要自己加上单引号。
+##### type
 
-- extra: 表示其他字段信息，比如"on update CURRENT_TIMESTAMP"，"comment '手机号'"
+表示数据库字段类型。非必填。默认映射规则如下表：
 
-- index: 表示索引
+| 支持的Go语言类型（含指针） | 数据库字段类型 |
+| :------------------------: | :------------: |
+|            Int             |      Int       |
+|           Int64            |     bigint     |
+|          float32           |     Float      |
+|          float64           |     Double     |
+|           string           |  varchar(255)  |
+|            bool            |    tinyint     |
+|         time.Time          |    datetime    |
 
-  - 格式："index:索引名称,排序,升降序" 或者 "index"
-  - 索引名称：字符串。如果多个字段用同一个索引名称，表示该索引是联合索引。非必填。如果没有声明索引名称，则默认名称为：column名称+_idx
-  - 排序：整型。如果声明了索引名称，则必填
-  - 升降序：字符串。只支持"asc"和"desc"。非必填。默认"asc"
+##### default
 
-- unique: 表示唯一索引。格式和用法同index
-- null: 表示可以存入null值。注意：如果是该结构体字段的类型是指针类型，则默认是nullable的
-- unsigned: 表示无符号
+表示默认值。需自己区分数据库内建函数还是字面量。如果是数据库内建函数或者是由数据库内建函数组成的表达式，则不需要带单引号。如果是字面量，则需要自己加上单引号。
+
+##### extra
+
+表示其他字段信息，比如"on update CURRENT_TIMESTAMP"，"comment '手机号'"
+
+##### index
+
+表示索引
+
+- 格式："index:索引名称,排序,升降序" 或者 "index"
+- 索引名称：字符串。如果多个字段用同一个索引名称，表示该索引是联合索引。非必填。如果没有声明索引名称，则默认名称为：column名称+_idx
+- 排序：整型。如果声明了索引名称，则必填
+- 升降序：字符串。只支持"asc"和"desc"。非必填。默认"asc"
+
+##### unique
+
+表示唯一索引。格式和用法同index
+
+##### null
+
+表示可以存入null值。注意：如果是该结构体字段的类型是指针类型，则默认是nullable的
+
+##### unsigned
+
+表示无符号
 
 
 
 #### dao层接口
 
-- InsertXXX: 插入记录
-- UpsertXXX: 如果存在冲突的字段值，比如主键值或者加了唯一索引的字段值，则执行更新操作，否则执行插入操作
-- UpsertXXXNoneZero: 同UpsertXXX。区别是只插入或者更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-- DeleteXXXs: 删除多条记录
-- UpdateXXX: 更新记录
-- UpdateXXXNoneZero: 同UpdateXXX。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-- UpdateXXXs: 更新多条记录
-- UpdateXXXsNoneZero: 同UpdateXXXs。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-- GetXXX: 查询记录
-- SelectXXXs: 查询多条记录
-- CountXXXs: Count多条记录
-- PageXXXs: 分页
+##### InsertXXX
+
+插入记录
+
+##### UpsertXXX
+
+如果存在冲突的字段值，比如主键值或者加了唯一索引的字段值，则执行更新操作，否则执行插入操作
+
+##### UpsertXXXNoneZero
+
+同UpsertXXX。区别是只插入或者更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
+
+##### DeleteXXXs
+
+删除多条记录
+
+##### UpdateXXX
+
+更新记录
+
+##### UpdateXXXNoneZero
+
+同UpdateXXX。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
+
+##### UpdateXXXs
+
+更新多条记录
+
+##### UpdateXXXsNoneZero
+
+同UpdateXXXs。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
+
+##### GetXXX
+
+查询记录
+
+##### SelectXXXs
+
+查询多条记录
+
+##### CountXXXs
+
+Count多条记录
+
+##### PageXXXs
+
+分页
 
 
 
 #### 查询Dsl
 
+##### 示例
+
+```go
+func ExampleCriteria() {
+	
+	query := C().Col("name").Eq(Literal("wubin")).
+  Or(C().Col("school").Eq(Literal("havard"))).
+  And(C().Col("age").Eq(Literal(18)))
+	fmt.Println(query.Sql())
+
+	query = C().Col("name").Eq(Literal("wubin")).
+  Or(C().Col("school").Eq(Literal("havard"))).
+  And(C().Col("delete_at").IsNotNull())
+	fmt.Println(query.Sql())
+
+	query = C().Col("name").Eq(Literal("wubin"))
+  .Or(C().Col("school").In(Literal("havard")))
+  .And(C().Col("delete_at").IsNotNull())
+	fmt.Println(query.Sql())
+
+	query = C().Col("name").Eq(Literal("wubin")).
+  Or(C().Col("school").In(Literal([]string{"havard", "beijing unv"}))).
+  And(C().Col("delete_at").IsNotNull())
+	fmt.Println(query.Sql())
+
+	var d int
+	var e int
+	d = 10
+	e = 5
+
+	query = C().Col("name").Eq(Literal("wubin")).
+  Or(C().Col("age").In(Literal([]*int{&d, &e}))).
+  And(C().Col("delete_at").IsNotNull())
+	fmt.Println(query.Sql())
+
+	// Output:
+	// ((`name` = 'wubin' or `school` = 'havard') and `age` = '18')
+	// ((`name` = 'wubin' or `school` = 'havard') and `delete_at` is not null)
+	// ((`name` = 'wubin' or `school` in ('havard')) and `delete_at` is not null)
+	// ((`name` = 'wubin' or `school` in ('havard','beijing unv')) and `delete_at` is not null)
+	// ((`name` = 'wubin' or `age` in ('10','5')) and `delete_at` is not null)
+}
+```
 
 
 
+##### API
+
+主要包括1个接口和6个结构体
 
 
+
+###### Q接口
+
+```go
+type Q interface {
+	Sql() string
+	And(q Q) Q
+	Or(q Q) Q
+}
+```
+
+- 调用Sql方法返回最终拼接而成的where语句
+
+- And方法表示sql里的"and"
+
+- Or方法表示sql里的"or"
+
+  
+
+###### criteria结构体
+
+```go
+type criteria struct {
+	col  string
+	val  Val
+	asym arithsymbol.ArithSymbol
+}
+```
+
+- col表示表字段名称
+- val表示表字段值
+- asym表示算数运算符，可选值：
+  - Eq: `=`
+  - Ne: `!=`
+  - Gt: `>`
+  - Lt: `<`
+  - Gte: `>=`
+  - Lte: `<=`
+  - Is: `is`
+  - Not: `is not`
+  - In: `in`
+
+
+
+Val结构体
+
+```go
+type Val struct {
+	Data interface{}
+	Type valtypeenum.ValType
+}
+```
+
+- Data表示表字段值
+- Type表示值类型，可选值
+  - Func: 表示数据库内建函数或由内建函数构成的表达式
+  - Null: 表示数据库的null
+  - Literal: 表示区别于Func和Null的值
+
+
+
+###### where结构体
+
+```
+type where struct {
+   lsym     logicsymbol.LogicSymbol
+   children []Q
+}
+```
+
+- lsym表示逻辑运算符，可选值：
+  - And: `and`
+  - Or: `or`
+- children表示子查询条件，通过lsym表示的逻辑关系构成组，每两个子条件为一组。每一个子条件既可以是一个`criteria`，也可以是一个`where`。只要实现了Q接口就可以做一个子条件，通过lsym与另外一个子条件构成一组。
+
+
+
+###### Page结构体
+
+```go
+type Page struct {
+	Orders []Order
+	Offset int
+	Size   int
+}
+```
+
+- Orders表示排序
+- Offset表示偏移
+- Size表示一页有多少行
+
+
+
+Order结构体
+
+```go
+type Order struct {
+	Col  string
+	Sort sortenum.Sort
+}
+```
+
+- Col表示表字段
+- Sort表示升降序, 可选值：asc/desc
+
+
+
+PageRet结构体
+
+```go
+type PageRet struct {
+	Items    interface{}
+	PageNo   int
+	PageSize int
+	Total    int
+	HasNext  bool
+}
+```
+
+- Items表示行数据
+- PageNo表示当前页页码
+- PageSize表示一页有多少行
+- Total表示总数
+- HasNext表示是否有下一页
+
+
+
+### TODO
+
++ [ ] 支持索引的更新
++ [ ] 支持外键
 
 
 
