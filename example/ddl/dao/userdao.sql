@@ -23,7 +23,7 @@
 {{end}}
 
 {{define "InsertUser"}}
-INSERT INTO `test`.`biz_user`
+INSERT INTO `test`.`ddl_user`
 (
 `id`,
 `name`,
@@ -45,7 +45,7 @@ VALUES (
 {{end}}
 
 {{define "UpdateUser"}}
-UPDATE `test`.`biz_user`
+UPDATE `test`.`ddl_user`
 SET
 	`name`=:name,
 	`phone`=:phone,
@@ -59,7 +59,7 @@ WHERE
 {{end}}
 
 {{define "UpdateUserNoneZero"}}
-UPDATE `test`.`biz_user`
+UPDATE `test`.`ddl_user`
 SET
     {{Eval "NoneZeroSet" . | TrimSuffix ","}}
 WHERE
@@ -67,7 +67,7 @@ WHERE
 {{end}}
 
 {{define "UpsertUser"}}
-INSERT INTO `test`.`biz_user`
+INSERT INTO `test`.`ddl_user`
 (
 `id`,
 `name`,
@@ -97,7 +97,7 @@ UPDATE
 {{end}}
 
 {{define "UpsertUserNoneZero"}}
-INSERT INTO `test`.`biz_user`
+INSERT INTO `test`.`ddl_user`
 (
 `id`,
 `name`,
@@ -126,12 +126,12 @@ UPDATE
 
 {{define "GetUser"}}
 select *
-from `test`.`biz_user`
+from `test`.`ddl_user`
 where `id` = ?
 {{end}}
 
 {{define "UpdateUsers"}}
-UPDATE `test`.`biz_user`
+UPDATE `test`.`ddl_user`
 SET
 	`name`='{{.Name}}',
 	`phone`='{{.Phone}}',
@@ -149,7 +149,7 @@ WHERE
 {{end}}
 
 {{define "UpdateUsersNoneZero"}}
-UPDATE `test`.`biz_user`
+UPDATE `test`.`ddl_user`
 SET
     {{Eval "NoneZeroSet" . | TrimSuffix ","}}
 WHERE

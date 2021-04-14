@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 
@@ -34,7 +35,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "doudou",
+	Use:   "go-doudou",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -54,13 +55,18 @@ func Execute() {
 }
 
 func init() {
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	customFormatter.FullTimestamp = true
+	logrus.SetFormatter(customFormatter)
+
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.doudou.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-doudou.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -77,9 +83,9 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".doudou" (without extension).
+		// Search config in home directory with name ".go-doudou" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".doudou")
+		viper.SetConfigName(".go-doudou")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

@@ -1,13 +1,11 @@
-package main
+package ddl
 
 import (
-	"flag"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
@@ -16,7 +14,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
@@ -27,7 +24,7 @@ import (
 	"strings"
 )
 
-type DbConfig struct {
+type dbConfig struct {
 	Host    string
 	Port    string
 	User    string
@@ -36,56 +33,30 @@ type DbConfig struct {
 	Charset string
 }
 
-var dir = flag.String("domain", "domain", "Path of domain folder.")
-var reverse = flag.Bool("reverse", false, "If true, generate domain code from database. If false, update or create database tables from domain code.")
-var dao = flag.Bool("dao", false, "If true, generate dao code.")
-var pre = flag.String("pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
-var daofolder = flag.String("daofolder", "dao", "Name of dao folder.")
-var env = flag.String("env", ".env", "Path of database connection config .env file")
-
-func init() {
-	customFormatter := new(logrus.TextFormatter)
-	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
-	customFormatter.FullTimestamp = true
-	logrus.SetFormatter(customFormatter)
-
-	flag.Parse()
-	logrus.Debugln(*dir)
-	logrus.Debugln(*reverse)
-	logrus.Debugln(*dao)
-	logrus.Debugln(*pre)
-	logrus.Debugln(*daofolder)
-	logrus.Debugln(*env)
-
-	var err error
-	if *env, err = pathutils.FixPath(*env, ".env"); err != nil {
-		logrus.Panicln(err)
-	}
-	if err = godotenv.Load(*env); err != nil {
-		logrus.Panicln("Error loading .env file", err)
-	}
-
-	if *dir, err = pathutils.FixPath(*dir, "domain"); err != nil {
-		logrus.Panicln(err)
-	}
+type Ddl struct {
+	Dir     string
+	Reverse bool
+	Dao     bool
+	Pre     string
+	Df      string
 }
 
-func main() {
+func (d Ddl) Exec() {
 	var db *sqlx.DB
 	var err error
-	var dbConfig DbConfig
-	err = envconfig.Process("db", &dbConfig)
+	var conf dbConfig
+	err = envconfig.Process("db", &conf)
 	if err != nil {
 		logrus.Panicln("Error processing env", err)
 	}
 
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
-		dbConfig.User,
-		dbConfig.Passwd,
-		dbConfig.Host,
-		dbConfig.Port,
-		dbConfig.Schema,
-		dbConfig.Charset)
+		conf.User,
+		conf.Passwd,
+		conf.Host,
+		conf.Port,
+		conf.Schema,
+		conf.Charset)
 	conn += `&loc=Asia%2FShanghai&parseTime=True`
 	db, err = sqlx.Connect("mysql", conn)
 	if err != nil {
@@ -101,9 +72,9 @@ func main() {
 	}
 
 	var tables []table.Table
-	if !*reverse {
+	if !d.Reverse {
 		var files []string
-		err = filepath.Walk(*dir, astutils.Visit(&files))
+		err = filepath.Walk(d.Dir, astutils.Visit(&files))
 		if err != nil {
 			logrus.Panicln(err)
 		}
@@ -119,7 +90,7 @@ func main() {
 
 		flattened := sc.FlatEmbed()
 		for _, sm := range flattened {
-			tables = append(tables, table.NewTableFromStruct(sm, *pre))
+			tables = append(tables, table.NewTableFromStruct(sm, d.Pre))
 		}
 		for _, t := range tables {
 			if sliceutils.StringContains(existTables, t.Name) {
@@ -151,11 +122,11 @@ func main() {
 			}
 		}
 	} else {
-		if err = os.MkdirAll(*dir, os.ModePerm); err != nil {
+		if err = os.MkdirAll(d.Dir, os.ModePerm); err != nil {
 			logrus.Panicln(err)
 		}
 		for _, t := range existTables {
-			if stringutils.IsNotEmpty(*pre) && !strings.HasPrefix(t, *pre) {
+			if stringutils.IsNotEmpty(d.Pre) && !strings.HasPrefix(t, d.Pre) {
 				continue
 			}
 			var dbIndice []table.DbIndex
@@ -250,7 +221,7 @@ func main() {
 			}
 
 			domain := astutils.StructMeta{
-				Name:   strcase.ToCamel(strings.TrimPrefix(t, *pre)),
+				Name:   strcase.ToCamel(strings.TrimPrefix(t, d.Pre)),
 				Fields: fields,
 			}
 
@@ -270,9 +241,9 @@ func main() {
 				Meta:    domain,
 			})
 
-			dfile := filepath.Join(*dir, strings.ToLower(domain.Name)+".go")
+			dfile := filepath.Join(d.Dir, strings.ToLower(domain.Name)+".go")
 			if _, err = os.Stat(dfile); os.IsNotExist(err) {
-				if err = codegen.GenDomainGo(*dir, domain); err != nil {
+				if err = codegen.GenDomainGo(d.Dir, domain); err != nil {
 					logrus.Errorf("FATAL: %+v\n", err)
 				}
 			} else {
@@ -281,17 +252,17 @@ func main() {
 		}
 	}
 
-	if *dao {
+	if d.Dao {
 		for _, t := range tables {
-			if err = codegen.GenDaoGo(*dir, t, *daofolder); err != nil {
+			if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}
-			if err = codegen.GenDaoImplGo(*dir, t, *daofolder); err != nil {
+			if err = codegen.GenDaoImplGo(d.Dir, t, d.Df); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}
-			if err = codegen.GenDaoSql(*dir, t, *daofolder); err != nil {
+			if err = codegen.GenDaoSql(d.Dir, t, d.Df); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}

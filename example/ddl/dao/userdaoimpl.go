@@ -100,7 +100,7 @@ func (receiver UserDaoImpl) DeleteUsers(ctx context.Context, where query.Q) (int
 		err       error
 		result    sql.Result
 	)
-	statement = fmt.Sprintf("delete from biz_user where %s;", where.Sql())
+	statement = fmt.Sprintf("delete from ddl_user where %s;", where.Sql())
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
 	}
@@ -200,7 +200,7 @@ func (receiver UserDaoImpl) SelectUsers(ctx context.Context, where query.Q) ([]d
 		err       error
 		users     []domain.User
 	)
-	statement = fmt.Sprintf("select * from biz_user where %s", where.Sql())
+	statement = fmt.Sprintf("select * from ddl_user where %s", where.Sql())
 	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
 		return nil, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
@@ -213,7 +213,7 @@ func (receiver UserDaoImpl) CountUsers(ctx context.Context, where query.Q) (int,
 		err       error
 		total     int
 	)
-	statement = fmt.Sprintf("select count(1) from biz_user where %s", where.Sql())
+	statement = fmt.Sprintf("select count(1) from ddl_user where %s", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.GetContext")
 	}
@@ -227,12 +227,12 @@ func (receiver UserDaoImpl) PageUsers(ctx context.Context, where query.Q, page q
 		users     []domain.User
 		total     int
 	)
-	statement = fmt.Sprintf("select * from biz_user where %s %s;", where.Sql(), page.Sql())
+	statement = fmt.Sprintf("select * from ddl_user where %s %s;", where.Sql(), page.Sql())
 	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 
-	statement = fmt.Sprintf("select count(1) from biz_user where %s;", where.Sql())
+	statement = fmt.Sprintf("select count(1) from ddl_user where %s;", where.Sql())
 	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
 	}

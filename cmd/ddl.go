@@ -22,10 +22,20 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/ddl"
+	"github.com/unionj-cloud/go-doudou/pathutils"
 
 	"github.com/spf13/cobra"
 )
+
+var dir string
+var reverse bool
+var dao bool
+var pre string
+var df string
+var env string
 
 // ddlCmd represents the ddl command
 var ddlCmd = &cobra.Command{
@@ -38,7 +48,19 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ddl called")
+		var err error
+		if env, err = pathutils.FixPath(env, ".env"); err != nil {
+			logrus.Panicln(err)
+		}
+		if err = godotenv.Load(env); err != nil {
+			logrus.Panicln("Error loading .env file", err)
+		}
+		if dir, err = pathutils.FixPath(dir, "domain"); err != nil {
+			logrus.Panicln(err)
+		}
+
+		d := ddl.Ddl{dir, reverse, dao, pre, df}
+		d.Exec()
 	},
 }
 
@@ -53,5 +75,10 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// ddlCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	ddlCmd.Flags().StringVar(&dir, "domain", "domain", "Path of domain folder.")
+	ddlCmd.Flags().StringVar(&pre, "pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
+	ddlCmd.Flags().StringVar(&df, "df", "dao", "Name of dao folder.")
+	ddlCmd.Flags().StringVar(&env, "env", ".env", "Path of database connection config .env file")
+	ddlCmd.Flags().BoolVarP(&reverse, "reverse", "r", false, "If true, generate domain code from database. If false, update or create database tables from domain code.")
+	ddlCmd.Flags().BoolVarP(&dao, "dao", "d", false, "If true, generate dao code.")
 }
