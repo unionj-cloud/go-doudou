@@ -253,23 +253,23 @@ Count多条记录
 func ExampleCriteria() {
 	
 	query := C().Col("name").Eq(Literal("wubin")).
-  Or(C().Col("school").Eq(Literal("havard"))).
-  And(C().Col("age").Eq(Literal(18)))
+              Or(C().Col("school").Eq(Literal("havard"))).
+              And(C().Col("age").Eq(Literal(18)))
 	fmt.Println(query.Sql())
 
 	query = C().Col("name").Eq(Literal("wubin")).
-  Or(C().Col("school").Eq(Literal("havard"))).
-  And(C().Col("delete_at").IsNotNull())
-	fmt.Println(query.Sql())
-
-	query = C().Col("name").Eq(Literal("wubin"))
-  .Or(C().Col("school").In(Literal("havard")))
-  .And(C().Col("delete_at").IsNotNull())
+              Or(C().Col("school").Eq(Literal("havard"))).
+              And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
 	query = C().Col("name").Eq(Literal("wubin")).
-  Or(C().Col("school").In(Literal([]string{"havard", "beijing unv"}))).
-  And(C().Col("delete_at").IsNotNull())
+              Or(C().Col("school").In(Literal("havard"))).
+              And(C().Col("delete_at").IsNotNull())
+	fmt.Println(query.Sql())
+
+	query = C().Col("name").Eq(Literal("wubin")).
+              Or(C().Col("school").In(Literal([]string{"havard", "beijing unv"}))).
+              And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
 	var d int
@@ -278,8 +278,8 @@ func ExampleCriteria() {
 	e = 5
 
 	query = C().Col("name").Eq(Literal("wubin")).
-  Or(C().Col("age").In(Literal([]*int{&d, &e}))).
-  And(C().Col("delete_at").IsNotNull())
+              Or(C().Col("age").In(Literal([]*int{&d, &e}))).
+              And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
 	// Output:
