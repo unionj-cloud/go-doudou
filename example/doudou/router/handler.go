@@ -14,6 +14,7 @@ import (
 )
 
 var decoder = schema.NewDecoder()
+var us = service.NewUserService()
 
 func handleError(w http.ResponseWriter, err error, status ...int) {
 	logrus.Errorln(fmt.Sprintf("%+v", err))
@@ -44,8 +45,6 @@ func postSignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	us := service.NewUserService()
-
 	var uid int
 	if uid, err = us.PostSignUp(context.Background(), form); err != nil {
 		handleError(w, err)
@@ -74,8 +73,6 @@ func postLogInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	us := service.NewUserService()
-
 	var auth vo.Auth
 	if auth, err = us.PostLogIn(context.Background(), form); err != nil {
 		handleError(w, err)
@@ -98,8 +95,6 @@ func getUserHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, err, http.StatusBadRequest)
 		return
 	}
-
-	us := service.NewUserService()
 
 	var userVo vo.UserVo
 	if userVo, err = us.GetUser(context.Background(), uid); err != nil {
@@ -124,8 +119,6 @@ func postPageUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-
-	us := service.NewUserService()
 
 	var pr query.PageRet
 
