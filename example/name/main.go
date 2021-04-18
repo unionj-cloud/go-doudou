@@ -5,6 +5,7 @@ import (
 	"example/name/vo"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -39,4 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(stu1)
+
+	s := "vo.go"
+	fmt.Println(strings.TrimSuffix(s, ".go"))
 }

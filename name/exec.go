@@ -1,7 +1,6 @@
-package main
+package name
 
 import (
-	"flag"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/name/strategies"
@@ -15,19 +14,18 @@ import (
 	"time"
 )
 
-var file = flag.String("file", "", "absolute path of vo file")
-var strategy = flag.String("strategy", "lowerCaseNamingStrategy", "name of strategy")
+type Name struct {
+	File     string
+	Strategy string
+}
 
-func main() {
-	flag.Parse()
-	log.Println(*file)
-	log.Println(*strategy)
-	if stringutils.IsEmpty(*file) {
+func (receiver Name) Exec() {
+	if stringutils.IsEmpty(receiver.File) {
 		log.Fatal("file flag should not be empty")
 	}
 
 	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, *file, nil, 0)
+	root, err := parser.ParseFile(fset, receiver.File, nil, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -35,14 +33,14 @@ func main() {
 	ast.Walk(&sc, root)
 	fmt.Println(sc.Structs)
 
-	marshalers := strings.TrimRight(*file, ".go") + "_marshaller.go"
+	marshalers := strings.TrimSuffix(receiver.File, ".go") + "_marshaller.go"
 	f, err := os.Create(marshalers)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	strategies.Registry[*strategy].Execute(f, struct {
+	strategies.Registry[receiver.Strategy].Execute(f, struct {
 		StructCollector astutils.StructCollector
 		Timestamp       time.Time
 	}{

@@ -2,7 +2,7 @@ package vo
 
 import "github.com/unionj-cloud/go-doudou/ddl/query"
 
-//go:generate name -file $GOFILE
+//go:generate go-doudou name --file $GOFILE
 
 type Ret struct {
 	Code int
