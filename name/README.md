@@ -19,22 +19,34 @@
 ### 命令行参数
 
 ```shell
-➜  example git:(main) ✗ name -h                                                         
-Usage of name:
-  -file string
-    	absolute path of vo file
-  -strategy string
-    	name of strategy (default "lowerCaseNamingStrategy")
+➜  ~ go-doudou name -h
+A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.
+
+Usage:
+  go-doudou name [flags]
+
+Flags:
+      --file string       absolute path of vo file
+  -h, --help              help for name
+      --strategy string   name of strategy (default "lowerCaseNamingStrategy")
+
+Global Flags:
+      --config string   config file (default is $HOME/.go-doudou.yaml)
 ```
 
 
 
 ### 用法
 
-- 在go文件里写上`//go:generate name -file $GOFILE`，不限位置，最好是写在上方。目前的实现是对整个文件的所有struct都生效。
+- 在go文件里写上`//go:generate go-doudou name --file $GOFILE`，不限位置，最好是写在上方。目前的实现是对整个文件的所有struct都生效。
 
 ```go
-//go:generate name -file $GOFILE
+//go:generate go-doudou name --file $GOFILE
 type Student struct {
 	School
 	Company

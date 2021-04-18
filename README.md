@@ -18,7 +18,7 @@
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.1.2
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.1.3
 ```
 
 
@@ -29,11 +29,11 @@ kit包有一些命令行工具，执行上面👆的安装命令后，就可以�
 
 #### name
 
-根据预设的命名规则生成结构体的Marshaler接口方法实现，省去了在结构体字段后面加`json`tag的工作。[查看文档](./kit/name/README.md)
+根据预设的命名规则生成结构体的Marshaler接口方法实现，省去了在结构体字段后面加`json`tag的工作。[查看文档](./name/README.md)
 
 #### ddl
 
-基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。可以从结构体同步数据库表结构，也可以从数据库表结构生成结构体，还可以生成dao层代码。[查看文档](./kit/ddl/doc/README.md)
+基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。可以从结构体同步数据库表结构，也可以从数据库表结构生成结构体，还可以生成dao层代码。[查看文档](./ddl/doc/README.md)
 
 
 

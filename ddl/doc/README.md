@@ -63,7 +63,7 @@
   ![example1](./example1.jpeg)
 
 - ```
-  ddl -dao -pre=biz_ -domain=ddl/domain -env=ddl/.env
+  go-doudou ddl --dao --pre=biz_ --domain=ddl/domain --env=ddl/.env
   ```
 
 - 执行以上命令后example目录结构
@@ -96,20 +96,28 @@
 ### 命令行参数
 
 ```
-➜  example git:(main) ✗ ddl -help
-Usage of ddl:
-  -dao
-    	If true, generate dao code.
-  -daofolder string
-    	Name of dao folder. (default "dao")
-  -domain string
-    	Path of domain folder. (default "domain")
-  -env string
-    	Path of database connection config .env file (default ".env")
-  -pre string
-    	Table name prefix. e.g.: prefix biz_ for biz_product.
-  -reverse
-    	If true, generate domain code from database. If false, update or create database tables from domain code.
+➜  ~ go-doudou ddl -h
+A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.
+
+Usage:
+  go-doudou ddl [flags]
+
+Flags:
+  -d, --dao             If true, generate dao code.
+      --df string       Name of dao folder. (default "dao")
+      --domain string   Path of domain folder. (default "domain")
+      --env string      Path of database connection config .env file (default ".env")
+  -h, --help            help for ddl
+      --pre string      Table name prefix. e.g.: prefix biz_ for biz_product.
+  -r, --reverse         If true, generate domain code from database. If false, update or create database tables from domain code.
+
+Global Flags:
+      --config string   config file (default is $HOME/.go-doudou.yaml)
 ```
 
 
