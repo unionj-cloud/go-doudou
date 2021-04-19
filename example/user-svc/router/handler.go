@@ -3,8 +3,8 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"example/doudou/service"
-	"example/doudou/vo"
+	service "example/user-svc"
+	"example/user-svc/vo"
 	"fmt"
 	"github.com/gorilla/schema"
 	"github.com/sirupsen/logrus"

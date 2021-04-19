@@ -13,35 +13,9 @@ type route struct {
 }
 
 func NewRouter() *mux.Router {
-	routes := []route{
-		{
-			"SignUp",
-			"POST",
-			"/signup",
-			postSignUpHandler,
-		},
-		{
-			"LogIn",
-			"POST",
-			"/login",
-			postLogInHandler,
-		},
-		{
-			"User",
-			"GET",
-			"/user",
-			getUserHandler,
-		},
-		{
-			"PageUsers",
-			"POST",
-			"/pageusers",
-			postPageUsersHandler,
-		},
-	}
-
+	rous := routes()
 	router := mux.NewRouter().StrictSlash(true)
-	for _, r := range routes {
+	for _, r := range rous {
 		var handler http.Handler
 
 		handler = r.HandlerFunc

@@ -2,8 +2,7 @@ package service
 
 import (
 	"context"
-	"example/doudou/vo"
-
+	"example/user-svc/vo"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 

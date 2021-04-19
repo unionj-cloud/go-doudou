@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"example/doudou/db"
-	"example/doudou/router"
+	"example/user-svc/db"
+	"example/user-svc/router"
 	"flag"
 	"github.com/sirupsen/logrus"
 	"net/http"
