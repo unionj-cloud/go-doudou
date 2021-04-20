@@ -2,12 +2,18 @@ package svc
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"github.com/go-git/go-billy/v5/osfs"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/codegen"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -19,19 +25,28 @@ import (
 )
 
 type SvcCmd interface {
-	Create()
-	Update()
+	Init()
+	Http()
 }
 
 type Svc struct {
 	Dir string
 }
 
-func (receiver Svc) Update() {
+func (receiver Svc) Http() {
 	var (
-		err     error
-		svcfile string
-		dir     string
+		err       error
+		modfile   string
+		modName   string
+		svcfile   string
+		mainfile  string
+		dir       string
+		firstLine string
+		f         *os.File
+		tpl       *template.Template
+		cmdDir    string
+		source    string
+		sqlBuf    bytes.Buffer
 	)
 	dir = receiver.Dir
 	if stringutils.IsEmpty(dir) {
@@ -40,6 +55,10 @@ func (receiver Svc) Update() {
 		}
 	}
 	fmt.Println(dir)
+
+	codegen.GenRouterMiddleware(dir)
+	codegen.GenRouterRouter(dir)
+	codegen.GenMain(dir)
 
 	svcfile = filepath.Join(dir, "svc.go")
 	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
@@ -55,23 +74,23 @@ func (receiver Svc) Update() {
 	ast.Walk(&ic, root)
 
 	fmt.Printf("%+v\n", ic)
-
 }
 
-func (receiver Svc) Create() {
+func (receiver Svc) Init() {
 	var (
-		err       error
-		modName   string
-		svcName   string
-		svcfile   string
-		modfile   string
-		vodir     string
-		vofile    string
-		goVersion string
-		firstLine string
-		f         *os.File
-		tpl       *template.Template
-		dir       string
+		err           error
+		modName       string
+		svcName       string
+		gitignorefile string
+		svcfile       string
+		modfile       string
+		vodir         string
+		vofile        string
+		goVersion     string
+		firstLine     string
+		f             *os.File
+		tpl           *template.Template
+		dir           string
 	)
 	dir = receiver.Dir
 	if stringutils.IsEmpty(dir) {
@@ -85,6 +104,33 @@ func (receiver Svc) Create() {
 		panic(err)
 	}
 
+	// git init
+	fs := osfs.New(dir)
+	dot, _ := fs.Chroot(".git")
+	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
+
+	if _, err = git.Init(storage, fs); err != nil {
+		panic("git init error")
+	}
+
+	// add .gitignore file
+	gitignorefile = filepath.Join(dir, ".gitignore")
+	if _, err = os.Stat(gitignorefile); os.IsNotExist(err) {
+		if f, err = os.Create(gitignorefile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		if tpl, err = template.New(".gitignore.tmpl").Parse(gitignoreTmpl); err != nil {
+			panic(err)
+		}
+		if err = tpl.Execute(f, nil); err != nil {
+			panic(err)
+		}
+	} else {
+		logrus.Warnf("file %s already exists", ".gitignore")
+	}
+
 	modName = filepath.Base(dir)
 	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
 	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
@@ -96,7 +142,7 @@ func (receiver Svc) Create() {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("go.mod.tmpl").Parse(modTempl); err != nil {
+		if tpl, err = template.New("go.mod.tmpl").Parse(modTmpl); err != nil {
 			panic(err)
 		}
 		if err = tpl.Execute(f, struct {
@@ -215,10 +261,14 @@ type {{.SvcName}} interface {
 }
 `
 
-var modTempl = `module {{.ModName}}
+var modTmpl = `module {{.ModName}}
 
 go {{.GoVersion}}
 
 require (
+    github.com/gorilla/mux v1.8.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/unionj-cloud/go-doudou v0.1.3
 )`
+
+var gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"

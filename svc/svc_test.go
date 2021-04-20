@@ -13,7 +13,7 @@ func TestSvc_Create(t *testing.T) {
 		{
 			name: "1",
 			fields: fields{
-				Dir: "/Users/wubin1989/workspace/cloud/go-doudou/example/order-svc",
+				Dir: "/Users/wubin1989/workspace/cloud/comment-svc",
 			},
 		},
 	}
@@ -22,7 +22,7 @@ func TestSvc_Create(t *testing.T) {
 			receiver := Svc{
 				Dir: tt.fields.Dir,
 			}
-			receiver.Create()
+			receiver.Init()
 		})
 	}
 }
@@ -38,7 +38,7 @@ func TestSvc_Update(t *testing.T) {
 		{
 			name: "2",
 			fields: fields{
-				Dir: "/Users/wubin1989/workspace/cloud/go-doudou/example/order-svc",
+				Dir: "/Users/wubin1989/workspace/cloud/comment-svc",
 			},
 		},
 	}
@@ -47,7 +47,7 @@ func TestSvc_Update(t *testing.T) {
 			receiver := Svc{
 				Dir: tt.fields.Dir,
 			}
-			receiver.Update()
+			receiver.Http()
 		})
 	}
 }

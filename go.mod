@@ -5,6 +5,8 @@ go 1.15
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/deckarep/golang-set v1.7.1
+	github.com/go-git/go-billy/v5 v5.1.0
+	github.com/go-git/go-git/v5 v5.3.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jmoiron/sqlx v1.3.1
