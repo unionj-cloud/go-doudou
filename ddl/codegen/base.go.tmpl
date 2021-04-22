@@ -5,7 +5,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
-type Dao interface {
+type base interface {
 	Insert(ctx context.Context, data interface{}) (int64, error)
 	Upsert(ctx context.Context, data interface{}) (int64, error)
 	UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)

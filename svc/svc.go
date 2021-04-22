@@ -2,7 +2,6 @@ package svc
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
@@ -36,17 +35,8 @@ type Svc struct {
 func (receiver Svc) Http() {
 	var (
 		err       error
-		modfile   string
-		modName   string
 		svcfile   string
-		mainfile  string
 		dir       string
-		firstLine string
-		f         *os.File
-		tpl       *template.Template
-		cmdDir    string
-		source    string
-		sqlBuf    bytes.Buffer
 	)
 	dir = receiver.Dir
 	if stringutils.IsEmpty(dir) {

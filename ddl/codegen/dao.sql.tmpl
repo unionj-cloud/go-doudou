@@ -16,6 +16,35 @@
 	{{- end}}
 {{`{{`}}end{{`}}`}}
 
+{{`{{`}}define "InsertClause"{{`}}`}}
+	{{- range $i, $co := .InsertColumns}}
+	{{- if $i}},{{end}}
+	{{- if eq $co.Meta.Type "time.Time" }}
+	'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+	{{- else if eq $co.Meta.Type "*time.Time" }}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
+	{{`{{`}}- else{{`}}`}}
+	null
+	{{`{{`}}- end{{`}}`}}
+	{{- else if eq $co.Meta.Type "bool" }}
+	'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+	{{- else if eq $co.Meta.Type "*bool" }}
+	{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
+	'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
+	{{`{{`}}- else{{`}}`}}
+	null
+	{{`{{`}}- end{{`}}`}}
+	{{- else}}
+	{{`{{`}}- if kindIs "invalid" .{{$co.Meta.Name}} {{`}}`}}
+	null
+	{{`{{`}}- else{{`}}`}}
+	'{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
+	{{`{{`}}- end{{`}}`}}
+	{{- end}}
+	{{- end }}
+{{`{{`}}end{{`}}`}}
+
 {{`{{`}}define "Insert{{.DomainName}}"{{`}}`}}
 INSERT INTO `{{.Schema}}`.`{{.TableName}}`
 ({{- range $i, $co := .InsertColumns}}
@@ -70,28 +99,7 @@ INSERT INTO `{{.Schema}}`.`{{.TableName}}`
 {{- if $i}},{{end}}
 `{{$co.Name}}`
 {{- end }})
-VALUES ({{- range $i, $co := .InsertColumns}}
-		{{- if $i}},{{end}}
-		{{- if eq $co.Meta.Type "time.Time" }}
-		'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
-		{{- else if eq $co.Meta.Type "*time.Time" }}
-		{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
-		'{{`{{`}}.{{$co.Meta.Name}} | FormatTime{{`}}`}}'
-		{{`{{`}}- else{{`}}`}}
-		null
-		{{`{{`}}- end{{`}}`}}
-		{{- else if eq $co.Meta.Type "bool" }}
-		'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
-		{{- else if eq $co.Meta.Type "*bool" }}
-		{{`{{`}}- if .{{$co.Meta.Name}}{{`}}`}}
-		'{{`{{`}}.{{$co.Meta.Name}} | BoolToInt{{`}}`}}'
-		{{`{{`}}- else{{`}}`}}
-		null
-		{{`{{`}}- end{{`}}`}}
-		{{- else}}
-		'{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
-		{{- end}}
-		{{- end }}) ON DUPLICATE KEY
+VALUES ({{`{{`}}Eval "InsertClause" . | TrimSuffix ","{{`}}`}}) ON DUPLICATE KEY
 UPDATE
 		{{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}
 {{`{{`}}end{{`}}`}}
@@ -124,14 +132,18 @@ SET
 	`{{$co.Name}}`=null
 	{{`{{`}}- end{{`}}`}}
 	{{- else}}
+	{{`{{`}}- if kindIs "invalid" .{{$co.Meta.Name}} {{`}}`}}
+	`{{$co.Name}}`=null
+	{{`{{`}}- else{{`}}`}}
 	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
+	{{`{{`}}- end{{`}}`}}
 	{{- end}}
 	{{- end }}
 WHERE
     {{`{{`}}.Where{{`}}`}}
 {{`{{`}}end{{`}}`}}
 
-{{`{{`}}define "UpdateUsersNoneZero"{{`}}`}}
+{{`{{`}}define "Update{{.DomainName}}sNoneZero"{{`}}`}}
 UPDATE `{{.Schema}}`.`{{.TableName}}`
 SET
     {{`{{`}}Eval "NoneZeroSet" . | TrimSuffix ","{{`}}`}}

@@ -2,6 +2,7 @@ package templateutils
 
 import (
 	"bytes"
+	"github.com/Masterminds/sprig"
 	"github.com/pkg/errors"
 	"path/filepath"
 	"strings"
@@ -47,7 +48,7 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	funcMap["BoolToInt"] = BoolToInt
 	funcMap["Eval"] = Eval(tpl)
 	funcMap["TrimSuffix"] = TrimSuffix
-	tpl = template.Must(tpl.Funcs(funcMap).ParseFiles(tmpl))
+	tpl = template.Must(tpl.Funcs(funcMap).Funcs(template.FuncMap(sprig.FuncMap())).ParseFiles(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
 		return "", errors.Wrap(err, "error returned from calling tpl.ExecuteTemplate")
 	}
