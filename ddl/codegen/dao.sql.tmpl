@@ -36,7 +36,7 @@
 	null
 	{{`{{`}}- end{{`}}`}}
 	{{- else}}
-	{{`{{`}}- if kindIs "invalid" .{{$co.Meta.Name}} {{`}}`}}
+	{{`{{`}}- if isNil .{{$co.Meta.Name}} {{`}}`}}
 	null
 	{{`{{`}}- else{{`}}`}}
 	'{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
@@ -132,7 +132,7 @@ SET
 	`{{$co.Name}}`=null
 	{{`{{`}}- end{{`}}`}}
 	{{- else}}
-	{{`{{`}}- if kindIs "invalid" .{{$co.Meta.Name}} {{`}}`}}
+	{{`{{`}}- if isNil .{{$co.Meta.Name}} {{`}}`}}
 	`{{$co.Name}}`=null
 	{{`{{`}}- else{{`}}`}}
 	`{{$co.Name}}`='{{`{{`}}.{{$co.Meta.Name}}{{`}}`}}'
