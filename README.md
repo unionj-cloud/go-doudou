@@ -18,7 +18,7 @@
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.1.3
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.1.7
 ```
 
 
