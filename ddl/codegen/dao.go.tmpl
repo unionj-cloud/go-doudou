@@ -1,22 +1,5 @@
 package dao
 
-import (
-	"context"
-	"{{.DomainPackage}}"
-	"github.com/unionj-cloud/go-doudou/ddl/query"
-)
-
 type {{.DomainName}}Dao interface {
-    Insert{{.DomainName}}(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error)
-	Upsert{{.DomainName}}(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error)
-	Upsert{{.DomainName}}NoneZero(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error)
-	Delete{{.DomainName}}s(ctx context.Context, where query.Q) (int64, error)
-	Update{{.DomainName}}(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error)
-    Update{{.DomainName}}NoneZero(ctx context.Context, {{.DomainName | ToLower}} *domain.{{.DomainName}}) (int64, error)
-	Update{{.DomainName}}s(ctx context.Context, {{.DomainName | ToLower}} domain.{{.DomainName}}, where query.Q) (int64, error)
-    Update{{.DomainName}}sNoneZero(ctx context.Context, {{.DomainName | ToLower}} domain.{{.DomainName}}, where query.Q) (int64, error)
-	Get{{.DomainName}}(ctx context.Context, {{.PkField.Name | ToLower}} {{.PkField.Type}}) (domain.{{.DomainName}}, error)
-	Select{{.DomainName}}s(ctx context.Context, where query.Q) ([]domain.{{.DomainName}}, error)
-	Count{{.DomainName}}s(ctx context.Context, where query.Q) (int, error)
-	Page{{.DomainName}}s(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error)
+	base
 }

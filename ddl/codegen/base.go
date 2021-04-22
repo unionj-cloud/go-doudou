@@ -3,15 +3,13 @@ package codegen
 import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/ddl/table"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
-func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
+func GenBaseGo(domainpath string, folder ...string) error {
 	var (
 		err     error
 		daopath string
@@ -27,25 +25,21 @@ func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
 		return errors.Wrap(err, "error")
 	}
-	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"dao.go")
-	if _, err = os.Stat(daofile); os.IsNotExist(err) {
-		if f, err = os.Create(daofile); err != nil {
+
+	basefile := filepath.Join(daopath, "base.go")
+	if _, err = os.Stat(basefile); os.IsNotExist(err) {
+		if f, err = os.Create(basefile); err != nil {
 			return errors.Wrap(err, "error")
 		}
 		defer f.Close()
-
-		if tpl, err = template.New("dao.go.tmpl").ParseFiles(pathutils.Abs("dao.go.tmpl")); err != nil {
+		if tpl, err = template.New("base.go.tmpl").ParseFiles(pathutils.Abs("base.go.tmpl")); err != nil {
 			return errors.Wrap(err, "error")
 		}
-		if err = tpl.Execute(f, struct {
-			DomainName string
-		}{
-			DomainName: t.Meta.Name,
-		}); err != nil {
+		if err = tpl.Execute(f, nil); err != nil {
 			return errors.Wrap(err, "error")
 		}
 	} else {
-		log.Warnf("file %s already exists", daofile)
+		log.Warnf("file %s already exists", basefile)
 	}
 	return nil
 }

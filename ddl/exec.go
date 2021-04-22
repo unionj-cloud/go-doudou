@@ -253,6 +253,9 @@ func (d Ddl) Exec() {
 	}
 
 	if d.Dao {
+		if err = codegen.GenBaseGo(d.Dir, d.Df); err != nil {
+			logrus.Errorf("FATAL: %+v\n", err)
+		}
 		for _, t := range tables {
 			if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
