@@ -61,7 +61,7 @@ func main() {
 
 	u := dao.NewUserDao(db)
 
-	if _, err = u.UpsertUser(context.Background(), &domain.User{
+	if _, err = u.Upsert(context.Background(), &domain.User{
 		Name:      "Biden",
 		Phone:     "13893997878",
 		Age:       70,
@@ -72,7 +72,7 @@ func main() {
 		logrus.Panicln(err)
 	}
 
-	if _, err = u.UpsertUser(context.Background(), &domain.User{
+	if _, err = u.Upsert(context.Background(), &domain.User{
 		Name:      "Trump",
 		Phone:     "13893997979",
 		Age:       12,
@@ -83,7 +83,7 @@ func main() {
 		logrus.Panicln(err)
 	}
 
-	got, err := u.PageUsers(context.TODO(), C().Col("age").Gt(Literal("27")), Page{
+	got, err := u.PageMany(context.TODO(), C().Col("age").Gt(Literal("27")), Page{
 		Orders: []Order{
 			{
 				Col:  "age",

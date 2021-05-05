@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"example/user-svc/config"
 	"example/user-svc/db"
-	"example/user-svc/router"
+	"example/user-svc/transport/httpsrv"
 	"flag"
 	"github.com/sirupsen/logrus"
-	"net/http"
+	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"os/signal"
 	"time"
@@ -24,22 +25,23 @@ func main() {
 	flag.DurationVar(&wait, "grace", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
 	flag.Parse()
 
-	srv := &http.Server{
-		Addr: "0.0.0.0:8080",
-		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      router.NewRouter(), // Pass our instance of gorilla/mux in.
+	conf := config.NewConf(config.Dotenv{pathutils.Abs("../.env")})
+	db, err := db.NewDb(conf.DbConf)
+	if err != nil {
+		panic(err)
 	}
-
-	// Run our server in a goroutine so that it doesn't block.
-	go func() {
-		logrus.Infof("server is listening on %s\n", srv.Addr)
-		if err := srv.ListenAndServe(); err != nil {
-			logrus.Println(err)
+	defer func() {
+		if db == nil {
+			return
+		}
+		if err := db.Close(); err == nil {
+			logrus.Infoln("Database connection is closed")
+		} else {
+			logrus.Warnln("Failed to close database connection")
 		}
 	}()
+
+	srv := httpsrv.Start(conf.HttpConf)
 
 	c := make(chan os.Signal, 1)
 	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
@@ -56,15 +58,8 @@ func main() {
 	// until the timeout deadline.
 	srv.Shutdown(ctx)
 
-	if err := db.Db().Close(); err == nil {
-		logrus.Infoln("Database connection is closed")
-	} else {
-		logrus.Warnln("Failed to close database connection")
-	}
 	// Optionally, you could run srv.Shutdown in a goroutine and block on
 	// <-ctx.Done() if your application should wait for other services
 	// to finalize based on context cancellation.
 	logrus.Infoln("shutting down")
-
-	os.Exit(0)
 }

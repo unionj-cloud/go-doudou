@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"example/user-svc/config"
 	"example/user-svc/dao"
 	"example/user-svc/db"
 	"example/user-svc/domain"
@@ -10,7 +11,10 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
-type UserServiceImpl struct{}
+type UserServiceImpl struct {
+	conf    config.SvcConfig
+	userdao dao.UserDao
+}
 
 func (u UserServiceImpl) PostSignUp(ctx context.Context, form vo.SignUpForm) (int, error) {
 	panic("implement me")

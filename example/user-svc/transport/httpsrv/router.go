@@ -1,4 +1,4 @@
-package router
+package httpsrv
 
 import (
 	"github.com/gorilla/mux"
@@ -12,7 +12,7 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-func NewRouter() *mux.Router {
+func newRouter() *mux.Router {
 	rous := routes()
 	router := mux.NewRouter().StrictSlash(true)
 	for _, r := range rous {
