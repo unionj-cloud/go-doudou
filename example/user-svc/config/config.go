@@ -1,13 +1,18 @@
 package config
 
+import "github.com/sirupsen/logrus"
+
 type Configurator interface {
-	NewConf() Config
+	Load()
+	GetConf() Config
+	GetLogLevel() logrus.Level
 }
 
 type Config struct {
 	DbConf   DbConfig
 	HttpConf HttpConfig
 	SvcConf  SvcConfig
+	AppConf  AppConfig
 }
 
 type DbConfig struct {
@@ -31,6 +36,8 @@ type HttpConfig struct {
 type SvcConfig struct {
 }
 
-func NewConf(configurator Configurator) Config {
-	return configurator.NewConf()
+type AppConfig struct {
+	Logo         string
+	LogLevel     string
+	GraceTimeout string
 }

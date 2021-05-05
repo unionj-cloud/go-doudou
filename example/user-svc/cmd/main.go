@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	service "example/user-svc"
 	"example/user-svc/config"
+	"example/user-svc/dao"
 	"example/user-svc/db"
 	"example/user-svc/transport/httpsrv"
 	"flag"
+	"github.com/common-nighthawk/go-figure"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
@@ -13,19 +16,24 @@ import (
 	"time"
 )
 
-func init() {
+func main() {
+	env := config.NewDotenv(pathutils.Abs("../.env"))
+	conf := env.GetConf()
+	conf.AppConf.GraceTimeout
+
+
+	if conf.AppConf.Logo != "off" {
+		figure.NewColorFigure("Go-doudou", "doom", "green", true).Print()
+	}
+
 	customFormatter := new(logrus.TextFormatter)
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	customFormatter.FullTimestamp = true
 	logrus.SetFormatter(customFormatter)
-}
+	logrus.SetLevel(logrus.WarnLevel)
 
-func main() {
-	var wait time.Duration
-	flag.DurationVar(&wait, "grace", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
-	flag.Parse()
 
-	conf := config.NewConf(config.Dotenv{pathutils.Abs("../.env")})
+
 	db, err := db.NewDb(conf.DbConf)
 	if err != nil {
 		panic(err)
@@ -41,7 +49,11 @@ func main() {
 		}
 	}()
 
-	srv := httpsrv.Start(conf.HttpConf)
+	userdao := dao.NewUserDao(db)
+	svc := service.NewUserService(conf.SvcConf, userdao)
+	handler := httpsrv.NewUserHandler(svc)
+
+	srv := httpsrv.Run(conf.HttpConf, handler)
 
 	c := make(chan os.Signal, 1)
 	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
