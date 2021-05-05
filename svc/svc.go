@@ -34,9 +34,9 @@ type Svc struct {
 
 func (receiver Svc) Http() {
 	var (
-		err       error
-		svcfile   string
-		dir       string
+		err     error
+		svcfile string
+		dir     string
 	)
 	dir = receiver.Dir
 	if stringutils.IsEmpty(dir) {
@@ -46,9 +46,10 @@ func (receiver Svc) Http() {
 	}
 	fmt.Println(dir)
 
-	codegen.GenRouterMiddleware(dir)
-	codegen.GenRouterRouter(dir)
-	codegen.GenMain(dir)
+	codegen.GenConfig(dir)
+	codegen.GenDotenv(dir)
+	codegen.GenDb(dir)
+	codegen.GenHttpMiddleware(dir)
 
 	svcfile = filepath.Join(dir, "svc.go")
 	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
@@ -64,6 +65,14 @@ func (receiver Svc) Http() {
 	ast.Walk(&ic, root)
 
 	fmt.Printf("%+v\n", ic)
+
+	if len(ic.Interfaces) > 0 {
+		codegen.GenHttpServer(dir, ic)
+		codegen.GenMain(dir, ic)
+		codegen.GenHttpHandler(dir, ic)
+		codegen.GenHttpHandlerImpl(dir, ic)
+		codegen.GenSvcImpl(dir, ic)
+	}
 }
 
 func (receiver Svc) Init() {
@@ -81,6 +90,7 @@ func (receiver Svc) Init() {
 		f             *os.File
 		tpl           *template.Template
 		dir           string
+		envfile       string
 	)
 	dir = receiver.Dir
 	if stringutils.IsEmpty(dir) {
@@ -121,10 +131,10 @@ func (receiver Svc) Init() {
 		logrus.Warnf("file %s already exists", ".gitignore")
 	}
 
-	modName = filepath.Base(dir)
 	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
 	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
 	fmt.Println(goVersion)
+	modName = filepath.Base(dir)
 	modfile = filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {
 		if f, err = os.Create(modfile); err != nil {
@@ -146,6 +156,23 @@ func (receiver Svc) Init() {
 		}
 	} else {
 		logrus.Warnf("file %s already exists", "go.mod")
+	}
+
+	envfile = filepath.Join(dir, ".env")
+	if _, err = os.Stat(envfile); os.IsNotExist(err) {
+		if f, err = os.Create(envfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		if tpl, err = template.New(".env.tmpl").Parse(envTmpl); err != nil {
+			panic(err)
+		}
+		if err = tpl.Execute(f, nil); err != nil {
+			panic(err)
+		}
+	} else {
+		logrus.Warnf("file %s already exists", vofile)
 	}
 
 	vodir = filepath.Join(dir, "vo")
@@ -258,7 +285,28 @@ go {{.GoVersion}}
 require (
     github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v0.1.3
+	github.com/unionj-cloud/go-doudou v0.1.8-0.20210505063953-d7f6dd401fc1
+	github.com/olekukonko/tablewriter v0.0.5
+	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 )`
 
 var gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
+
+var envTmpl = `APP_BANNER=on
+APP_BANNERTEXT=Go-doudou
+APP_LOGLEVEL=
+APP_GRACETIMEOUT=15s
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWD=1234
+DB_SCHEMA=test
+DB_CHARSET=utf8mb4
+DB_DRIVER=mysql
+
+SRV_HOST=
+SRV_PORT=6060
+SRV_WRITETIMEOUT=15s
+SRV_READTIMEOUT=15s
+SRV_IDLETIMEOUT=60s`

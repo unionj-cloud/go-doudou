@@ -11,13 +11,22 @@ import (
 	"text/template"
 )
 
-var svcimplTmpl = `package {{.Ic.Package.Name}}
+var svcimplTmpl = `package {{.SvcPackage}}
 
-{{- range $interface := .Ic.Interfaces }}
-type {{$interface.Name}}Impl struct{}
+import (
+	"context"
+	"{{.ConfigPackage}}"
+	"{{.VoPackage}}"
+	"github.com/jmoiron/sqlx"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
+)
 
-{{- range $m := $interface.Methods }}
-	func (receiver {{$interface.Name}}Impl) {{$m.Name}}({{- range $i, $p := $m.Params}}
+type {{.Meta.Name}}Impl struct {
+	conf config.SvcConfig
+}
+
+{{- range $m := .Meta.Methods }}
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
     {{- $p.Name}} {{$p.Type}}
     {{- end }}) ({{- range $i, $r := $m.Results}}
@@ -28,10 +37,11 @@ type {{$interface.Name}}Impl struct{}
     }
 {{- end }}
 
-func New{{$interface.Name}}() {{$interface.Name}} {
-	return {{$interface.Name}}Impl{}
+func New{{.Meta.Name}}(conf config.SvcConfig, db *sqlx.DB) {{.Meta.Name}} {
+	return &{{.Meta.Name}}Impl{
+		conf,
+	}
 }
-{{- end }}
 `
 
 func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
@@ -67,11 +77,15 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 			panic(err)
 		}
 		if err = tpl.Execute(&sqlBuf, struct {
-			VoPackage string
-			Ic        astutils.InterfaceCollector
+			ConfigPackage string
+			VoPackage     string
+			SvcPackage    string
+			Meta          astutils.InterfaceMeta
 		}{
-			VoPackage: modName + "/vo",
-			Ic:        ic,
+			VoPackage:     modName + "/vo",
+			ConfigPackage: modName + "/config",
+			SvcPackage:    ic.Package.Name,
+			Meta:          ic.Interfaces[0],
 		}); err != nil {
 			panic(err)
 		}

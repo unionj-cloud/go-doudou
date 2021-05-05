@@ -22,9 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/svc"
 )
 
 // initCmd represents the init command
@@ -38,7 +39,16 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		var svcdir string
+		if len(args) > 0 {
+			svcdir = args[0]
+		}
+		var err error
+		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
+			logrus.Panicln(err)
+		}
+		s := svc.Svc{svcdir}
+		s.Init()
 	},
 }
 

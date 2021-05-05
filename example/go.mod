@@ -25,7 +25,7 @@ require (
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
-	github.com/unionj-cloud/go-doudou v0.1.3-0.20210414144451-f7e1f28aa082
+	github.com/unionj-cloud/go-doudou v0.1.8-0.20210505063953-d7f6dd401fc1
 	golang.org/x/sys v0.0.0-20210414055047-fe65e336abe0 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect

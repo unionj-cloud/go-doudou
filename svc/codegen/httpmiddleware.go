@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-var routerMwTmpl = `package router
+var httpMwTmpl = `package httpsrv
 
 import (
 	"github.com/sirupsen/logrus"
@@ -37,27 +37,27 @@ func rest(inner http.Handler) http.Handler {
 }
 `
 
-func GenRouterMiddleware(dir string) {
+func GenHttpMiddleware(dir string) {
 	var (
-		err       error
-		mwfile    string
-		f         *os.File
-		tpl       *template.Template
-		routerDir string
+		err     error
+		mwfile  string
+		f       *os.File
+		tpl     *template.Template
+		httpDir string
 	)
-	routerDir = filepath.Join(dir, "router")
-	if err = os.MkdirAll(routerDir, os.ModePerm); err != nil {
+	httpDir = filepath.Join(dir, "transport/httpsrv")
+	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 
-	mwfile = filepath.Join(routerDir, "middleware.go")
+	mwfile = filepath.Join(httpDir, "middleware.go")
 	if _, err = os.Stat(mwfile); os.IsNotExist(err) {
 		if f, err = os.Create(mwfile); err != nil {
 			panic(err)
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("middleware.go.tmpl").Parse(routerMwTmpl); err != nil {
+		if tpl, err = template.New("middleware.go.tmpl").Parse(httpMwTmpl); err != nil {
 			panic(err)
 		}
 		if err = tpl.Execute(f, nil); err != nil {
