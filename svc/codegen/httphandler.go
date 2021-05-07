@@ -92,6 +92,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector) {
 		httpDir     string
 		source      string
 		sqlBuf      bytes.Buffer
+		fi          os.FileInfo
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
 	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
@@ -99,25 +100,28 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	handlerfile = filepath.Join(httpDir, "handler.go")
-	if _, err = os.Stat(handlerfile); os.IsNotExist(err) {
-		if f, err = os.Create(handlerfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		funcMap := make(map[string]interface{})
-		funcMap["httpMethod"] = httpMethod
-		funcMap["routeName"] = routeName
-		funcMap["pattern"] = pattern
-		if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(&sqlBuf, ic.Interfaces[0]); err != nil {
-			panic(err)
-		}
-		source = strings.TrimSpace(sqlBuf.String())
-		astutils.FixImport([]byte(source), handlerfile)
-	} else {
-		logrus.Warnf("file %s already exists", handlerfile)
+	fi, err = os.Stat(handlerfile)
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
 	}
+	if fi != nil {
+		logrus.Warningln("file handler.go will be overwrited")
+	}
+	if f, err = os.Create(handlerfile); err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	funcMap := make(map[string]interface{})
+	funcMap["httpMethod"] = httpMethod
+	funcMap["routeName"] = routeName
+	funcMap["pattern"] = pattern
+	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&sqlBuf, ic.Interfaces[0]); err != nil {
+		panic(err)
+	}
+	source = strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), handlerfile)
 }

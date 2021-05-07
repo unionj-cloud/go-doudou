@@ -1,6 +1,9 @@
 package svc
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestSvc_Create(t *testing.T) {
 	type fields struct {
@@ -27,7 +30,7 @@ func TestSvc_Create(t *testing.T) {
 	}
 }
 
-func TestSvc_Update(t *testing.T) {
+func TestSvc_Http(t *testing.T) {
 	type fields struct {
 		Dir string
 	}
@@ -50,4 +53,12 @@ func TestSvc_Update(t *testing.T) {
 			receiver.Http()
 		})
 	}
+}
+
+func ExampleParseInterface() {
+	svcfile := "/Users/wubin1989/workspace/cloud/comment-svc/svc.go"
+	ic := buildIc(svcfile)
+	fmt.Printf("%+v\n", ic)
+	// Output:
+
 }

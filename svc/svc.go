@@ -32,6 +32,20 @@ type Svc struct {
 	Dir string
 }
 
+func buildIc(svcfile string) astutils.InterfaceCollector {
+	if _, err := os.Stat(svcfile); os.IsNotExist(err) {
+		logrus.Panicln(svcfile + " file cannot be found. Execute command go-doudou svc init first!")
+	}
+	var ic astutils.InterfaceCollector
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, svcfile, nil, parser.ParseComments)
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	ast.Walk(&ic, root)
+	return ic
+}
+
 func (receiver Svc) Http() {
 	var (
 		err     error
@@ -52,17 +66,7 @@ func (receiver Svc) Http() {
 	codegen.GenHttpMiddleware(dir)
 
 	svcfile = filepath.Join(dir, "svc.go")
-	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-		panic("Svc.go file cannot be found. Execute command go-doudou svc create first!")
-	}
-
-	var ic astutils.InterfaceCollector
-	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, svcfile, nil, parser.ParseComments)
-	if err != nil {
-		logrus.Panicln(err)
-	}
-	ast.Walk(&ic, root)
+	ic := buildIc(svcfile)
 
 	fmt.Printf("%+v\n", ic)
 

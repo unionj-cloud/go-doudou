@@ -1,8 +1,6 @@
 package astutils
 
 import (
-	"fmt"
-	"github.com/sirupsen/logrus"
 	"go/ast"
 	"go/token"
 )
@@ -34,7 +32,6 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	case *ast.Package:
 		return sc
 	case *ast.File: // actually it is package name
-		logrus.Printf("File: name=%s\n", spec.Name)
 		sc.Package = PackageMeta{
 			Name: spec.Name.Name,
 		}
@@ -50,12 +47,10 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 			for _, item := range spec.Specs {
 				typeSpec := item.(*ast.TypeSpec)
 				typeName := typeSpec.Name.Name
-				logrus.Printf("Type: name=%s\n", typeName)
 				switch specType := typeSpec.Type.(type) {
 				case *ast.InterfaceType:
 					var methods []MethodMeta
 					for _, method := range specType.Methods.List {
-						fmt.Printf("%+v\n", method)
 						if len(method.Names) == 0 {
 							panic("no method name")
 						}
