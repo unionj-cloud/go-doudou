@@ -1,6 +1,9 @@
 package sliceutils
 
-import "reflect"
+import (
+	"github.com/pkg/errors"
+	"reflect"
+)
 
 func StringSlice2InterfaceSlice(strSlice []string) []interface{} {
 	ret := make([]interface{}, len(strSlice))
@@ -43,6 +46,20 @@ func IndexOf(element string, data []string) int {
 		}
 	}
 	return -1 //not found.
+}
+
+func IndexOfAny(target interface{}, anySlice interface{}) (int, error) {
+	if reflect.TypeOf(anySlice).Kind() != reflect.Slice {
+		return -1, errors.New("not slice")
+	}
+	data := reflect.ValueOf(anySlice)
+	for i := 0; i < data.Len(); i++ {
+		elem := data.Index(i)
+		if elem.Interface() == target {
+			return i, nil
+		}
+	}
+	return -1, nil //not found.
 }
 
 func IsEmpty(src interface{}) bool {

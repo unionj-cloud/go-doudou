@@ -58,3 +58,114 @@ func TestInterfaceSlice2StringSlice(t *testing.T) {
 		})
 	}
 }
+
+func TestIndexOfAny(t *testing.T) {
+	type args struct {
+		target   interface{}
+		anySlice interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "3",
+			args: args{
+				target: "a",
+				anySlice: []string{
+					"b", "m", "a", "K",
+				},
+			},
+			want:    2,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := IndexOfAny(tt.args.target, tt.args.anySlice)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("IndexOfAny() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("IndexOfAny() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIndexOfAnyInt(t *testing.T) {
+	type args struct {
+		target   interface{}
+		anySlice interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "4",
+			args: args{
+				target: 3,
+				anySlice: []int{
+					2, 5, 1, 6, 3, 8, 9,
+				},
+			},
+			want:    4,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := IndexOfAny(tt.args.target, tt.args.anySlice)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("IndexOfAny() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("IndexOfAny() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIndexOfAnyNotContain(t *testing.T) {
+	type args struct {
+		target   interface{}
+		anySlice interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name: "4",
+			args: args{
+				target: 3,
+				anySlice: []int{
+					2, 5, 1, 6, 11, 8, 9,
+				},
+			},
+			want:    -1,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := IndexOfAny(tt.args.target, tt.args.anySlice)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("IndexOfAny() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("IndexOfAny() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
