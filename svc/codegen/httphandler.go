@@ -36,7 +36,7 @@ func routes(handler {{.Name}}Handler) []route {
 		{
 			"{{$m.Name | routeName}}",
 			"{{$m.Name | httpMethod}}",
-			"/{{$m.Name | pattern}}",
+			"/{{.Name | lower}}/{{$m.Name | pattern}}",
 			handler.{{$m.Name}},
 		},
 		{{- end }}
@@ -116,6 +116,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector) {
 	funcMap["httpMethod"] = httpMethod
 	funcMap["routeName"] = routeName
 	funcMap["pattern"] = pattern
+	funcMap["lower"] = strings.ToLower
 	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
 		panic(err)
 	}

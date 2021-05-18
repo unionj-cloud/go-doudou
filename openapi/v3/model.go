@@ -226,64 +226,41 @@ const (
 	FloatF    Format = "float"
 	DoubleF   Format = "double"
 	DateTimeF Format = "date-time"
+	BinaryF   Format = "binary"
 )
 
 var (
-	Any = Schema{
+	Any = &Schema{
 		Type: ObjectT,
 	}
-	Int = Schema{
+	Int = &Schema{
 		Type:   IntegerT,
 		Format: Int32F,
 	}
-	Int64 = Schema{
+	Int64 = &Schema{
 		Type:   IntegerT,
 		Format: Int64F,
 	}
-	String = Schema{
+	String = &Schema{
 		Type: StringT,
 	}
-	Time = Schema{
+	Time = &Schema{
 		Type:   StringT,
 		Format: DateTimeF,
 	}
-	Bool = Schema{
+	Bool = &Schema{
 		Type: BooleanT,
 	}
-	Float32 = Schema{
+	Float32 = &Schema{
 		Type:   NumberT,
 		Format: FloatF,
 	}
-	Float64 = Schema{
+	Float64 = &Schema{
 		Type:   NumberT,
 		Format: DoubleF,
 	}
-	IntArray = Schema{
-		Type:  ArrayT,
-		Items: &Int,
-	}
-	Int64Array = Schema{
-		Type:  ArrayT,
-		Items: &Int64,
-	}
-	StringArray = Schema{
-		Type:  ArrayT,
-		Items: &String,
-	}
-	TimeArray = Schema{
-		Type:  ArrayT,
-		Items: &Time,
-	}
-	BoolArray = Schema{
-		Type:  ArrayT,
-		Items: &Bool,
-	}
-	Float32Array = Schema{
-		Type:  ArrayT,
-		Items: &Float32,
-	}
-	Float64Array = Schema{
-		Type:  ArrayT,
-		Items: &Float64,
+	File = &Schema{
+		Type:   StringT,
+		Format: BinaryF,
 	}
 )
