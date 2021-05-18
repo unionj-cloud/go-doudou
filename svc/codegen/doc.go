@@ -2,9 +2,6 @@ package codegen
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/astutils"
-	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -12,6 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/astutils"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 )
 
 /**
@@ -105,7 +106,6 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		err     error
 		svcname string
 		docfile string
-		f       *os.File
 		fi      os.FileInfo
 		api     v3.Api
 		data    []byte
