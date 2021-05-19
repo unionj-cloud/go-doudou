@@ -1,36 +1,36 @@
 package v3
 
 type Contact struct {
-	Email string `json:"email"`
+	Email string `json:"email,omitempty"`
 }
 
 type License struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
+	Name string `json:"name,omitempty"`
+	Url  string `json:"url,omitempty"`
 }
 
 type Info struct {
-	Title          string  `json:"title"`
-	Description    string  `json:"description"`
-	TermsOfService string  `json:"termsOfService"`
-	Contact        Contact `json:"contact"`
-	License        License `json:"license"`
-	Version        string  `json:"version"`
+	Title          string   `json:"title,omitempty"`
+	Description    string   `json:"description,omitempty"`
+	TermsOfService string   `json:"termsOfService,omitempty"`
+	Contact        *Contact `json:"contact,omitempty"`
+	License        *License `json:"license,omitempty"`
+	Version        string   `json:"version,omitempty"`
 }
 
 type Server struct {
-	Url string `json:"url"`
+	Url string `json:"url,omitempty"`
 }
 
 type ExternalDocs struct {
-	Description string `json:"description"`
-	Url         string `json:"url"`
+	Description string `json:"description,omitempty"`
+	Url         string `json:"url,omitempty"`
 }
 
 type Tag struct {
-	Name         string       `json:"name"`
-	Description  string       `json:"description"`
-	ExternalDocs ExternalDocs `json:"externalDocs"`
+	Name         string        `json:"name,omitempty"`
+	Description  string        `json:"description,omitempty"`
+	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
 type In string
@@ -50,48 +50,48 @@ type Encoding struct {
 }
 
 type MediaType struct {
-	Schema   Schema              `json:"schema"`
-	Example  interface{}         `json:"example"`
-	Examples map[string]Example  `json:"examples"`
-	Encoding map[string]Encoding `json:"encoding"`
+	Schema   *Schema             `json:"schema,omitempty"`
+	Example  interface{}         `json:"example,omitempty"`
+	Examples map[string]Example  `json:"examples,omitempty"`
+	Encoding map[string]Encoding `json:"encoding,omitempty"`
 }
 
 type Content struct {
-	TextPlain MediaType `json:"text/plain"`
-	Json      MediaType `json:"application/json"`
-	FormUrl   MediaType `json:"application/x-www-form-urlencoded"`
-	Stream    MediaType `json:"application/octet-stream"`
-	FormData  MediaType `json:"multipart/form-data"`
+	TextPlain *MediaType `json:"text/plain,omitempty"`
+	Json      *MediaType `json:"application/json,omitempty"`
+	FormUrl   *MediaType `json:"application/x-www-form-urlencoded,omitempty"`
+	Stream    *MediaType `json:"application/octet-stream,omitempty"`
+	FormData  *MediaType `json:"multipart/form-data,omitempty"`
 }
 
 type Parameter struct {
-	Ref           string      `json:"$ref"`
-	Name          string      `json:"name"`
-	In            In          `json:"in"`
-	Description   string      `json:"description"`
-	Required      bool        `json:"required"`
-	Deprecated    bool        `json:"deprecated"`
-	Example       interface{} `json:"example"`
-	Schema        Schema      `json:"schema"`
-	Style         string      `json:"style"`
-	Explode       bool        `json:"explode"`
-	AllowReserved bool        `json:"allowReserved"`
-	Content       Content     `json:"content"`
+	Ref           string      `json:"$ref,omitempty"`
+	Name          string      `json:"name,omitempty"`
+	In            In          `json:"in,omitempty"`
+	Description   string      `json:"description,omitempty"`
+	Required      bool        `json:"required,omitempty"`
+	Deprecated    bool        `json:"deprecated,omitempty"`
+	Example       interface{} `json:"example,omitempty"`
+	Schema        *Schema     `json:"schema,omitempty"`
+	Style         string      `json:"style,omitempty"`
+	Explode       bool        `json:"explode,omitempty"`
+	AllowReserved bool        `json:"allowReserved,omitempty"`
+	Content       *Content    `json:"content,omitempty"`
 }
 
 type RequestBody struct {
-	Description string  `json:"description"`
-	Content     Content `json:"content"`
-	Required    bool    `json:"required"`
+	Description string   `json:"description,omitempty"`
+	Content     *Content `json:"content,omitempty"`
+	Required    bool     `json:"required,omitempty"`
 }
 
 type Header struct {
-	Ref         string      `json:"$ref"`
-	Description string      `json:"description"`
-	Required    bool        `json:"required"`
-	Deprecated  bool        `json:"deprecated"`
-	Example     interface{} `json:"example"`
-	Schema      Schema      `json:"schema"`
+	Ref         string      `json:"$ref,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Required    bool        `json:"required,omitempty"`
+	Deprecated  bool        `json:"deprecated,omitempty"`
+	Example     interface{} `json:"example,omitempty"`
+	Schema      *Schema     `json:"schema,omitempty"`
 }
 
 type Link struct {
@@ -99,20 +99,20 @@ type Link struct {
 }
 
 type Response struct {
-	Description string            `json:"description"`
-	Content     Content           `json:"content"`
-	Headers     map[string]Header `json:"headers"`
-	Links       map[string]Link   `json:"links"`
+	Description string            `json:"description,omitempty"`
+	Content     *Content          `json:"content,omitempty"`
+	Headers     map[string]Header `json:"headers,omitempty"`
+	Links       map[string]Link   `json:"links,omitempty"`
 }
 
 type Responses struct {
-	Resp200 Response `json:"200"`
-	Resp400 Response `json:"400"`
-	Resp401 Response `json:"401"`
-	Resp403 Response `json:"403"`
-	Resp404 Response `json:"404"`
-	Resp405 Response `json:"405"`
-	Default Response `json:"default"`
+	Resp200 *Response `json:"200,omitempty"`
+	Resp400 *Response `json:"400,omitempty"`
+	Resp401 *Response `json:"401,omitempty"`
+	Resp403 *Response `json:"403,omitempty"`
+	Resp404 *Response `json:"404,omitempty"`
+	Resp405 *Response `json:"405,omitempty"`
+	Default *Response `json:"default,omitempty"`
 }
 
 type Callback struct {
@@ -124,27 +124,26 @@ type Security struct {
 }
 
 type Operation struct {
-	Tags         []string            `json:"tags"`
-	Summary      string              `json:"summary"`
-	Description  string              `json:"description"`
-	OperationId  string              `json:"operationId"`
-	Parameters   []Parameter         `json:"parameters"`
-	RequestBody  RequestBody         `json:"requestBody"`
-	Responses    Responses           `json:"responses"`
-	Deprecated   bool                `json:"deprecated"`
-	ExternalDocs ExternalDocs        `json:"externalDocs"`
-	Callbacks    map[string]Callback `json:"callbacks"`
-	Security     []Security          `json:"security"`
-	Servers      []Server            `json:"servers"`
+	Tags         []string            `json:"tags,omitempty"`
+	Summary      string              `json:"summary,omitempty"`
+	Description  string              `json:"description,omitempty"`
+	OperationId  string              `json:"operationId,omitempty"`
+	Parameters   []Parameter         `json:"parameters,omitempty"`
+	RequestBody  *RequestBody        `json:"requestBody,omitempty"`
+	Responses    *Responses          `json:"responses,omitempty"`
+	Deprecated   bool                `json:"deprecated,omitempty"`
+	ExternalDocs *ExternalDocs       `json:"externalDocs,omitempty"`
+	Callbacks    map[string]Callback `json:"callbacks,omitempty"`
+	Security     []Security          `json:"security,omitempty"`
+	Servers      []Server            `json:"servers,omitempty"`
 }
 
 type Path struct {
-	Endpoint   string      `json:"endpoint"`
-	Get        Operation   `json:"get"`
-	Post       Operation   `json:"post"`
-	Put        Operation   `json:"put"`
-	Delete     Operation   `json:"delete"`
-	Parameters []Parameter `json:"parameters"`
+	Get        *Operation  `json:"get,omitempty"`
+	Post       *Operation  `json:"post,omitempty"`
+	Put        *Operation  `json:"put,omitempty"`
+	Delete     *Operation  `json:"delete,omitempty"`
+	Parameters []Parameter `json:"parameters,omitempty"`
 }
 
 type SecurityScheme struct {
@@ -152,59 +151,59 @@ type SecurityScheme struct {
 }
 
 type Discriminator struct {
-	PropertyName string            `json:"propertyName"`
-	Mapping      map[string]string `json:"mapping"`
+	PropertyName string            `json:"propertyName,omitempty"`
+	Mapping      map[string]string `json:"mapping,omitempty"`
 }
 
 type Schema struct {
-	Ref                  string             `json:"$ref"`
-	Title                string             `json:"title"`
-	Type                 Type               `json:"type"`
-	Properties           map[string]*Schema `json:"properties"`
-	Format               Format             `json:"format"`
-	Items                *Schema            `json:"items"`
-	Description          string             `json:"description"`
-	Default              interface{}        `json:"default"`
-	Example              interface{}        `json:"example"`
-	Deprecated           bool               `json:"deprecated"`
-	Discriminator        Discriminator      `json:"discriminator"`
-	Nullable             bool               `json:"nullable"`
-	Maximum              interface{}        `json:"maximum"`
-	Minimum              interface{}        `json:"minimum"`
-	ExclusiveMaximum     interface{}        `json:"exclusiveMaximum"`
-	ExclusiveMinimum     interface{}        `json:"exclusiveMinimum"`
-	MaxLength            int                `json:"maxLength"`
-	MinLength            int                `json:"minLength"`
-	Required             []string           `json:"required"`
-	Enum                 []string           `json:"enum"`
-	AllOf                []*Schema          `json:"allOf"`
-	OneOf                []*Schema          `json:"oneOf"`
-	AnyOf                []*Schema          `json:"anyOf"`
-	Not                  []*Schema          `json:"not"`
-	AdditionalProperties *Schema            `json:"additionalProperties"`
-	Pattern              interface{}        `json:"pattern"`
+	Ref                  string             `json:"$ref,omitempty"`
+	Title                string             `json:"title,omitempty"`
+	Type                 Type               `json:"type,omitempty"`
+	Properties           map[string]*Schema `json:"properties,omitempty"`
+	Format               Format             `json:"format,omitempty"`
+	Items                *Schema            `json:"items,omitempty"`
+	Description          string             `json:"description,omitempty"`
+	Default              interface{}        `json:"default,omitempty"`
+	Example              interface{}        `json:"example,omitempty"`
+	Deprecated           bool               `json:"deprecated,omitempty"`
+	Discriminator        *Discriminator     `json:"discriminator,omitempty"`
+	Nullable             bool               `json:"nullable,omitempty"`
+	Maximum              interface{}        `json:"maximum,omitempty"`
+	Minimum              interface{}        `json:"minimum,omitempty"`
+	ExclusiveMaximum     interface{}        `json:"exclusiveMaximum,omitempty"`
+	ExclusiveMinimum     interface{}        `json:"exclusiveMinimum,omitempty"`
+	MaxLength            int                `json:"maxLength,omitempty"`
+	MinLength            int                `json:"minLength,omitempty"`
+	Required             []string           `json:"required,omitempty"`
+	Enum                 []string           `json:"enum,omitempty"`
+	AllOf                []*Schema          `json:"allOf,omitempty"`
+	OneOf                []*Schema          `json:"oneOf,omitempty"`
+	AnyOf                []*Schema          `json:"anyOf,omitempty"`
+	Not                  []*Schema          `json:"not,omitempty"`
+	AdditionalProperties *Schema            `json:"additionalProperties,omitempty"`
+	Pattern              interface{}        `json:"pattern,omitempty"`
 }
 
 type Components struct {
-	Schemas         map[string]Schema         `json:"schemas"`
-	Responses       map[string]Response       `json:"responses"`
-	Parameters      map[string]Parameter      `json:"parameters"`
-	Examples        map[string]Example        `json:"examples"`
-	RequestBodies   map[string]RequestBody    `json:"requestBodies"`
-	Headers         map[string]Header         `json:"headers"`
-	SecuritySchemes map[string]SecurityScheme `json:"securitySchemes"`
-	Links           map[string]Link           `json:"links"`
-	Callbacks       map[string]Callback       `json:"callbacks"`
+	Schemas         map[string]Schema         `json:"schemas,omitempty"`
+	Responses       map[string]Response       `json:"responses,omitempty"`
+	Parameters      map[string]Parameter      `json:"parameters,omitempty"`
+	Examples        map[string]Example        `json:"examples,omitempty"`
+	RequestBodies   map[string]RequestBody    `json:"requestBodies,omitempty"`
+	Headers         map[string]Header         `json:"headers,omitempty"`
+	SecuritySchemes map[string]SecurityScheme `json:"securitySchemes,omitempty"`
+	Links           map[string]Link           `json:"links,omitempty"`
+	Callbacks       map[string]Callback       `json:"callbacks,omitempty"`
 }
 
 type Api struct {
-	Openapi      string          `json:"openapi"`
-	Info         Info            `json:"info"`
-	Servers      []Server        `json:"servers"`
-	Tags         []Tag           `json:"tags"`
-	Paths        map[string]Path `json:"paths"`
-	Components   Components      `json:"components"`
-	ExternalDocs ExternalDocs    `json:"externalDocs"`
+	Openapi      string          `json:"openapi,omitempty"`
+	Info         *Info           `json:"info,omitempty"`
+	Servers      []Server        `json:"servers,omitempty"`
+	Tags         []Tag           `json:"tags,omitempty"`
+	Paths        map[string]Path `json:"paths,omitempty"`
+	Components   *Components     `json:"components,omitempty"`
+	ExternalDocs *ExternalDocs   `json:"externalDocs,omitempty"`
 }
 
 type Type string

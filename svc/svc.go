@@ -3,6 +3,15 @@ package svc
 import (
 	"bufio"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"text/template"
+
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/cache"
@@ -13,14 +22,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/codegen"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"text/template"
 )
 
 type SvcCmd interface {
@@ -76,6 +77,7 @@ func (receiver Svc) Http() {
 		codegen.GenHttpHandler(dir, ic)
 		codegen.GenHttpHandlerImpl(dir, ic)
 		codegen.GenSvcImpl(dir, ic)
+		codegen.GenDoc(dir, ic)
 	}
 }
 

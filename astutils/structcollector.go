@@ -2,13 +2,14 @@ package astutils
 
 import (
 	"bufio"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"go/ast"
 	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/sliceutils"
 )
 
 type PackageMeta struct {
@@ -45,6 +46,22 @@ func exprString(expr ast.Expr) string {
 		return "*" + exprString(_expr.X)
 	case *ast.SelectorExpr:
 		return exprString(_expr.X) + "." + _expr.Sel.Name
+	case *ast.InterfaceType:
+		return "interface{}"
+	case *ast.ArrayType:
+		if _expr.Len == nil {
+			return "[]" + exprString(_expr.Elt)
+		} else {
+			return "[" + exprString(_expr.Len) + "]" + exprString(_expr.Elt)
+		}
+	case *ast.BasicLit:
+		if _expr.Kind == token.INT {
+			return _expr.Value
+		}
+	case *ast.MapType:
+		return "map[" + exprString(_expr.Key) + "]" + exprString(_expr.Value)
+	case *ast.ChanType: // TODO
+	case *ast.FuncType: // TODO
 	}
 	return ""
 }

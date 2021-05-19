@@ -1,13 +1,13 @@
 package vo
 
-import "github.com/unionj-cloud/go-doudou/ddl/query"
-
 //go:generate go-doudou name --file $GOFILE
 
 type Ret struct {
 	Code int
 	Data interface{}
 	Msg  string
+	Err  error
+	Mmm  map[string]UserVo
 }
 
 // 用户注册表单
@@ -35,10 +35,34 @@ type PageFilter struct {
 	Dept int
 }
 
+const (
+	Asc  = "asc"
+	Desc = "desc"
+)
+
+type Order struct {
+	Col  string
+	Sort string
+}
+
+type Page struct {
+	Orders [3]Order
+	Offset int
+	Size   int
+}
+
+type PageRet struct {
+	Items    interface{}
+	PageNo   int
+	PageSize int
+	Total    int
+	HasNext  bool
+}
+
 // 分页筛选条件
 type PageQuery struct {
-	filter PageFilter
-	page   query.Page
+	Filter PageFilter
+	Page   Page
 }
 
 type UserVo struct {
