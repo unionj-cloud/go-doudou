@@ -48,7 +48,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 		return v3.Int64
 	case "bool":
 		return v3.Bool
-	case "string":
+	case "string", "error":
 		return v3.String
 	case "float32":
 		return v3.Float32
@@ -219,13 +219,25 @@ func operationOf(method astutils.MethodMeta) v3.Operation {
 		respContent.Stream = &v3.MediaType{
 			Schema: v3.File,
 		}
-	} else if len(method.Results) > 0 {
-		respContent.Json = &v3.MediaType{
-			Schema: schemaOf(method.Results[0]),
-		}
 	} else {
+		title := method.Name + "Resp"
+		respSchema := v3.Schema{
+			Type:       v3.ObjectT,
+			Title:      title,
+			Properties: make(map[string]*v3.Schema),
+		}
+		for _, item := range method.Results {
+			key := item.Name
+			if stringutils.IsEmpty(key) {
+				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
+			}
+			respSchema.Properties[strcase.ToLowerCamel(key)] = schemaOf(item)
+		}
+		schemas[title] = respSchema
 		respContent.Json = &v3.MediaType{
-			Schema: v3.Any,
+			Schema: &v3.Schema{
+				Ref: "#/components/schemas/" + title,
+			},
 		}
 	}
 	ret.Responses = &v3.Responses{

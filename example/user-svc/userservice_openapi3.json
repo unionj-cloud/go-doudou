@@ -1,1 +1,322 @@
-{"openapi":"3.0.2","paths":{"/userservice/login":{"post":{"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/LogInForm"}}},"required":true},"responses":{"200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Auth"}}}}}}},"/userservice/pageusers":{"post":{"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PageQuery"}}},"required":true},"responses":{"200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PageRet"}}}}}}},"/userservice/signup":{"post":{"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/SignUpForm"}}},"required":true},"responses":{"200":{"content":{"application/json":{"schema":{"type":"integer","format":"int32"}}}}}}},"/userservice/user":{"get":{"parameters":[{"name":"id","in":"query","schema":{"type":"integer","format":"int32"}}],"responses":{"200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserVo"}}}}}}}},"components":{"schemas":{"Auth":{"title":"Auth","type":"object","properties":{"token":{"type":"string"},"user":{"$ref":"#/components/schemas/UserVo"}}},"LogInForm":{"title":"LogInForm","type":"object","properties":{"password":{"type":"string"},"username":{"type":"string"}}},"Order":{"title":"Order","type":"object","properties":{"col":{"type":"string"},"sort":{"type":"string"}}},"Page":{"title":"Page","type":"object","properties":{"offset":{"type":"integer","format":"int32"},"orders":{"type":"array","items":{"$ref":"#/components/schemas/Order"}},"size":{"type":"integer","format":"int32"}}},"PageFilter":{"title":"PageFilter","type":"object","properties":{"dept":{"type":"integer","format":"int32"},"name":{"type":"string"}}},"PageQuery":{"title":"PageQuery","type":"object","properties":{"filter":{"$ref":"#/components/schemas/PageFilter"},"page":{"$ref":"#/components/schemas/Page"}}},"PageRet":{"title":"PageRet","type":"object","properties":{"hasNext":{"type":"boolean"},"items":{"type":"object"},"pageNo":{"type":"integer","format":"int32"},"pageSize":{"type":"integer","format":"int32"},"total":{"type":"integer","format":"int32"}}},"Ret":{"title":"Ret","type":"object","properties":{"code":{"type":"integer","format":"int32"},"data":{"type":"object"},"err":{"type":"object"},"mmm":{"type":"object","additionalProperties":{"$ref":"#/components/schemas/UserVo"}},"msg":{"type":"string"}}},"SignUpForm":{"title":"SignUpForm","type":"object","properties":{"passConfirm":{"type":"string"},"password":{"type":"string"},"username":{"type":"string"}}},"UserVo":{"title":"UserVo","type":"object","properties":{"dept":{"type":"string"},"id":{"type":"integer","format":"int32"},"name":{"type":"string"},"phone":{"type":"string"}}}}}}
+{
+    "openapi": "3.0.2",
+    "paths": {
+        "/userservice/login": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogInForm"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostLogInResp"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/userservice/pageusers": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PageQuery"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostPageUsersResp"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/userservice/signup": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpForm"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostSignUpResp"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/userservice/user": {
+            "get": {
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetUserResp"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Auth": {
+                "title": "Auth",
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserVo"
+                    }
+                }
+            },
+            "GetUserResp": {
+                "title": "GetUserResp",
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "userVo": {
+                        "$ref": "#/components/schemas/UserVo"
+                    }
+                }
+            },
+            "LogInForm": {
+                "title": "LogInForm",
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Order": {
+                "title": "Order",
+                "type": "object",
+                "properties": {
+                    "col": {
+                        "type": "string"
+                    },
+                    "sort": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Page": {
+                "title": "Page",
+                "type": "object",
+                "properties": {
+                    "offset": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Order"
+                        }
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageFilter": {
+                "title": "PageFilter",
+                "type": "object",
+                "properties": {
+                    "dept": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PageQuery": {
+                "title": "PageQuery",
+                "type": "object",
+                "properties": {
+                    "filter": {
+                        "$ref": "#/components/schemas/PageFilter"
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/Page"
+                    }
+                }
+            },
+            "PageRet": {
+                "title": "PageRet",
+                "type": "object",
+                "properties": {
+                    "hasNext": {
+                        "type": "boolean"
+                    },
+                    "items": {
+                        "type": "object"
+                    },
+                    "pageNo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pageSize": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PostLogInResp": {
+                "title": "PostLogInResp",
+                "type": "object",
+                "properties": {
+                    "auth": {
+                        "$ref": "#/components/schemas/Auth"
+                    },
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PostPageUsersResp": {
+                "title": "PostPageUsersResp",
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "pageRet": {
+                        "$ref": "#/components/schemas/PageRet"
+                    }
+                }
+            },
+            "PostSignUpResp": {
+                "title": "PostSignUpResp",
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "int": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "Ret": {
+                "title": "Ret",
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "type": "object"
+                    },
+                    "err": {
+                        "type": "string"
+                    },
+                    "mmm": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/UserVo"
+                        }
+                    },
+                    "msg": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SignUpForm": {
+                "title": "SignUpForm",
+                "type": "object",
+                "properties": {
+                    "passConfirm": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UserVo": {
+                "title": "UserVo",
+                "type": "object",
+                "properties": {
+                    "dept": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
