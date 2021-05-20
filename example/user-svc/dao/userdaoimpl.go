@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
+	"usersvc/domain"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"example/user-svc/domain"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
-	"math"
 )
 
 type UserDaoImpl struct {

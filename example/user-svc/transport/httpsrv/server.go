@@ -1,7 +1,7 @@
 package httpsrv
 
 import (
-	"example/user-svc/config"
+	"usersvc/config"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func newRouter(handler UserHandler) *mux.Router {
+func newRouter(handler UserServiceHandler) *mux.Router {
 	rous := routes(handler)
 	router := mux.NewRouter().StrictSlash(true)
 	for _, r := range rous {
@@ -50,7 +50,7 @@ func printRoutes(rous []route) {
 	logrus.Infoln("===================================================")
 }
 
-func Run(conf config.HttpConfig, handler UserHandler) *http.Server {
+func Run(conf config.HttpConfig, handler UserServiceHandler) *http.Server {
 	srv := &http.Server{
 		Addr: strings.Join([]string{conf.Host, conf.Port}, ":"),
 		// Good practice to set timeouts to avoid Slowloris attacks.

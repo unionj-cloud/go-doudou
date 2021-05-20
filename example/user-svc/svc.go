@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"example/user-svc/vo"
+	"usersvc/vo"
 )
 
 type UserService interface {

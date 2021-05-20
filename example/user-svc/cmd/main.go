@@ -2,20 +2,21 @@ package main
 
 import (
 	"context"
-	service "example/user-svc"
-	"example/user-svc/config"
-	"example/user-svc/db"
-	"example/user-svc/transport/httpsrv"
 	"fmt"
-	"github.com/common-nighthawk/go-figure"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/stringutils"
 	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"time"
+	service "usersvc"
+	"usersvc/config"
+	"usersvc/db"
+	"usersvc/transport/httpsrv"
+
+	"github.com/common-nighthawk/go-figure"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
 func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) *os.File {

@@ -2,13 +2,14 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/iancoleman/strcase"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/astutils"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/iancoleman/strcase"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/astutils"
 )
 
 var httpHandlerTmpl = `package httpsrv
@@ -36,7 +37,7 @@ func routes(handler {{.Name}}Handler) []route {
 		{
 			"{{$m.Name | routeName}}",
 			"{{$m.Name | httpMethod}}",
-			"/{{.Name | lower}}/{{$m.Name | pattern}}",
+			"/{{$.Name | lower}}/{{$m.Name | pattern}}",
 			handler.{{$m.Name}},
 		},
 		{{- end }}

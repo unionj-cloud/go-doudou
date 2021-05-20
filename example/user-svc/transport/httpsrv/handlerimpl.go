@@ -1,32 +1,29 @@
 package httpsrv
 
 import (
-	service "example/user-svc"
 	"net/http"
+	service "usersvc"
 )
 
-type userHandlerImpl struct {
+type UserServiceHandlerImpl struct {
 	userService service.UserService
 }
 
-func (u *userHandlerImpl) PostSignUp(w http.ResponseWriter, r *http.Request) {
+func (receiver *UserServiceHandlerImpl) PostSignUp(w http.ResponseWriter, r *http.Request) {
+	panic("implement me")
+}
+func (receiver *UserServiceHandlerImpl) PostLogIn(w http.ResponseWriter, r *http.Request) {
+	panic("implement me")
+}
+func (receiver *UserServiceHandlerImpl) GetUser(w http.ResponseWriter, r *http.Request) {
+	panic("implement me")
+}
+func (receiver *UserServiceHandlerImpl) PostPageUsers(w http.ResponseWriter, r *http.Request) {
 	panic("implement me")
 }
 
-func (u *userHandlerImpl) PostLogIn(w http.ResponseWriter, r *http.Request) {
-	panic("implement me")
-}
-
-func (u *userHandlerImpl) GetUser(w http.ResponseWriter, r *http.Request) {
-	panic("implement me")
-}
-
-func (u *userHandlerImpl) PostPageUsers(w http.ResponseWriter, r *http.Request) {
-	panic("implement me")
-}
-
-func NewUserHandler(usersvc service.UserService) UserHandler {
-	return &userHandlerImpl{
-		userService: usersvc,
+func NewUserServiceHandler(userService service.UserService) UserServiceHandler {
+	return &UserServiceHandlerImpl{
+		userService,
 	}
 }

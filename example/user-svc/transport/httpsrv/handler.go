@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type UserHandler interface {
+type UserServiceHandler interface {
 	PostSignUp(w http.ResponseWriter, r *http.Request)
 	PostLogIn(w http.ResponseWriter, r *http.Request)
 	GetUser(w http.ResponseWriter, r *http.Request)
@@ -18,30 +18,30 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-func routes(handler UserHandler) []route {
+func routes(handler UserServiceHandler) []route {
 	return []route{
 		{
 			"SignUp",
 			"POST",
-			"/signup",
+			"/userservice/signup",
 			handler.PostSignUp,
 		},
 		{
 			"LogIn",
 			"POST",
-			"/login",
+			"/userservice/login",
 			handler.PostLogIn,
 		},
 		{
 			"User",
 			"GET",
-			"/user",
+			"/userservice/user",
 			handler.GetUser,
 		},
 		{
 			"PageUsers",
 			"POST",
-			"/pageusers",
+			"/userservice/pageusers",
 			handler.PostPageUsers,
 		},
 	}

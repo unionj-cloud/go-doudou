@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"example/user-svc/config"
-	"example/user-svc/vo"
+	"usersvc/config"
+	"usersvc/vo"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
