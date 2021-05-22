@@ -1,11 +1,13 @@
 package codegen
 
 import (
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -50,6 +52,32 @@ func TestGenDoc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			GenDoc(tt.args.dir, tt.args.ic)
+		})
+	}
+}
+
+func Test_schemasOf(t *testing.T) {
+	type args struct {
+		vofile string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []v3.Schema
+	}{
+		{
+			name: "Test_schemasOf",
+			args: args{
+				vofile: "/Users/wubin1989/workspace/chengdutreeyee/team3-cloud-analyse/vo/vo.go",
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := schemasOf(tt.args.vofile); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("schemasOf() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

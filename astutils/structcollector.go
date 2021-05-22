@@ -114,7 +114,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 						} else {
 							splits := strings.Split(fieldType, ".")
 							names = append(names, splits[len(splits)-1])
-							fieldType = "embed"
+							fieldType = "embed:" + fieldType
 						}
 
 						for _, name := range names {
@@ -140,6 +140,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
+// Only for ddl tool
 func (sc *StructCollector) FlatEmbed() []StructMeta {
 	structMap := make(map[string]StructMeta)
 	for _, structMeta := range sc.Structs {
@@ -165,12 +166,10 @@ func (sc *StructCollector) FlatEmbed() []StructMeta {
 		fieldMap := make(map[string]FieldMeta)
 		embedFieldMap := make(map[string]FieldMeta)
 		for _, fieldMeta := range structMeta.Fields {
-			if fieldMeta.Type == "embed" {
+			if strings.HasPrefix(fieldMeta.Type, "embed") {
 				if embeded, exists := structMap[fieldMeta.Name]; exists {
 					for _, field := range embeded.Fields {
-						if _, _exists := embedFieldMap[field.Name]; !_exists {
-							embedFieldMap[field.Name] = field
-						}
+						embedFieldMap[field.Name] = field
 					}
 				}
 			} else {

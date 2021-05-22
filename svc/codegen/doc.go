@@ -3,6 +3,7 @@ package codegen
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/constants"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/iancoleman/strcase"
@@ -81,6 +83,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 				}),
 			}
 		}
+		ft = strings.TrimPrefix(ft, "embed:")
 		if !strings.Contains(ft, ".") {
 			title := ft
 			if unicode.IsUpper(rune(title[0])) {
@@ -301,7 +304,20 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	paths = pathsOf(ic)
 	api = v3.Api{
 		Openapi: "3.0.2",
-		Paths:   paths,
+		Info: &v3.Info{
+			Title:          svcname,
+			Description:    "",
+			TermsOfService: "",
+			Contact:        nil,
+			License:        nil,
+			Version:        fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
+		},
+		Servers: []v3.Server{
+			{
+				Url: "",
+			},
+		},
+		Paths: paths,
 		Components: &v3.Components{
 			Schemas: schemas,
 		},
