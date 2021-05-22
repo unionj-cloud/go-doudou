@@ -3,7 +3,7 @@ package es
 import (
 	"testing"
 	"time"
-	"github.com/unionj-cloud/go-doudou/constants"
+	common "github.com/unionj-cloud/go-doudou/constants"
 )
 
 func TestBulkSaveOrUpdate(t *testing.T) {
@@ -30,7 +30,7 @@ func TestBulkSaveOrUpdate(t *testing.T) {
 				estype:  index,
 				docs: []map[string]interface{}{
 					{
-						"createAt": time.Now().In(constants.Loc).Format(constants.FORMATES),
+						"createAt": time.Now().In(common.Loc).Format(common.FORMATES),
 					},
 				},
 			},

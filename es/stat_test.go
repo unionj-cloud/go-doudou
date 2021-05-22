@@ -2,7 +2,9 @@ package es
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -108,4 +110,12 @@ func TestStat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleTEst2()  {
+	a := `铜仁市\t`
+	fmt.Println(strings.TrimSuffix(a, `\t`))
+
+	// Output:
+
 }

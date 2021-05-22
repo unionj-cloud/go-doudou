@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"github.com/unionj-cloud/go-doudou/constants"
+	common "github.com/unionj-cloud/go-doudou/constants"
 )
 
 func TestList(t *testing.T) {
@@ -18,21 +18,21 @@ func TestList(t *testing.T) {
 	data2 := "2020-06-20"
 	data3 := "2020-07-10"
 
-	createAt1, _ := time.Parse(constants.FORMAT2, data1)
-	createAt2, _ := time.Parse(constants.FORMAT2, data2)
-	createAt3, _ := time.Parse(constants.FORMAT2, data3)
+	createAt1, _ := time.Parse(common.FORMAT2, data1)
+	createAt2, _ := time.Parse(common.FORMAT2, data2)
+	createAt3, _ := time.Parse(common.FORMAT2, data3)
 
 	err := BulkSaveOrUpdate(index, index, []map[string]interface{}{
 		{
-			"createAt": createAt1.UTC().Format(constants.FORMATES),
+			"createAt": createAt1.UTC().Format(common.FORMATES),
 			"text":     "2020年7月8日11时25分，高考文科综合/理科综合科目考试将要结束时，平顶山市一中考点一考生突然情绪失控，先后抓其右边、后边考生答题卡，造成两位考生答题卡损毁。",
 		},
 		{
-			"createAt": createAt2.UTC().Format(constants.FORMATES),
+			"createAt": createAt2.UTC().Format(common.FORMATES),
 			"text":     "考场两位监考教师及时制止，并稳定了考场秩序，市一中考点按程序启用备用答题卡，按规定补足答题卡被损毁的两位考生耽误的考试时间，两位考生将损毁卡的内容誊写在新答题卡上。",
 		},
 		{
-			"createAt": createAt3.UTC().Format(constants.FORMATES),
+			"createAt": createAt3.UTC().Format(common.FORMATES),
 			"text":     "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 		},
 	})

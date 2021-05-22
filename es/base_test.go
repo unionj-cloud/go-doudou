@@ -2,12 +2,12 @@ package es
 
 import (
 	"encoding/json"
+	common "github.com/unionj-cloud/go-doudou/constants"
+	"github.com/unionj-cloud/go-doudou/testutils"
 	"log"
 	"reflect"
 	"testing"
 	"time"
-	"github.com/unionj-cloud/go-doudou/constants"
-	"github.com/unionj-cloud/go-doudou/testutils"
 )
 
 func Test_query(t *testing.T) {
@@ -21,21 +21,21 @@ func Test_query(t *testing.T) {
 	data2 := "2020-06-20"
 	data3 := "2020-07-10"
 
-	createAt1, _ := time.Parse(constants.FORMAT2, data1)
-	createAt2, _ := time.Parse(constants.FORMAT2, data2)
-	createAt3, _ := time.Parse(constants.FORMAT2, data3)
+	createAt1, _ := time.Parse(common.FORMAT2, data1)
+	createAt2, _ := time.Parse(common.FORMAT2, data2)
+	createAt3, _ := time.Parse(common.FORMAT2, data3)
 
 	err := BulkSaveOrUpdate(index, index, []map[string]interface{}{
 		{
-			"createAt": createAt1.UTC().Format(constants.FORMATES),
+			"createAt": createAt1.UTC().Format(common.FORMATES),
 			"text":     "2020年7月8日11时25分，高考文科综合/理科综合科目考试将要结束时，平顶山市一中考点一考生突然情绪失控，先后抓其右边、后边考生答题卡，造成两位考生答题卡损毁。",
 		},
 		{
-			"createAt": createAt2.UTC().Format(constants.FORMATES),
+			"createAt": createAt2.UTC().Format(common.FORMATES),
 			"text":     "考场两位监考教师及时制止，并稳定了考场秩序，市一中考点按程序启用备用答题卡，按规定补足答题卡被损毁的两位考生耽误的考试时间，两位考生将损毁卡的内容誊写在新答题卡上。",
 		},
 		{
-			"createAt": createAt3.UTC().Format(constants.FORMATES),
+			"createAt": createAt3.UTC().Format(common.FORMATES),
 			"text":     "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 		},
 	})
@@ -152,6 +152,144 @@ func Test_range_query(t *testing.T) {
 				},
 			},
 			want: `{"bool":{"must":[{"range":{"acceptDate":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-01"}}},{"range":{"senseResult":{"from":null,"include_lower":true,"include_upper":true,"to":0.4}}},{"range":{"visitSenseResult":{"from":0.6,"include_lower":true,"include_upper":true,"to":null}}},{"terms":{"orderPhrase":[300]}}]}}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bq := query(tt.args.startDate, tt.args.endDate, tt.args.dateField, tt.args.queryConds)
+			var got string
+			if src, err := bq.Source(); err != nil {
+				panic(err)
+			} else {
+				if data, err := json.Marshal(src); err != nil {
+					panic(err)
+				} else {
+					log.Println(string(data))
+					got = string(data)
+				}
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("query() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_exists_query(t *testing.T) {
+	type args struct {
+		startDate  string
+		endDate    string
+		dateField  string
+		queryConds []QueryCond
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				startDate: "2020-06-01",
+				endDate:   "2020-07-01",
+				dateField: "acceptDate",
+				queryConds: []QueryCond{
+					{
+						Pair: map[string][]interface{}{
+							"delete_at": {},
+							"flag":      {},
+						},
+						QueryLogic: MUSTNOT,
+						QueryType:  EXISTS,
+					},
+					{
+						Pair: map[string][]interface{}{
+							"orderPhrase": {300},
+						},
+						QueryLogic: MUST,
+						QueryType:  TERMS,
+					},
+				},
+			},
+			want: `{"bool":{"must":[{"range":{"acceptDate":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-01"}}},{"terms":{"orderPhrase":[300]}}],"must_not":[{"exists":{"field":"delete_at"}},{"exists":{"field":"flag"}}]}}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bq := query(tt.args.startDate, tt.args.endDate, tt.args.dateField, tt.args.queryConds)
+			var got string
+			if src, err := bq.Source(); err != nil {
+				panic(err)
+			} else {
+				if data, err := json.Marshal(src); err != nil {
+					panic(err)
+				} else {
+					log.Println(string(data))
+					got = string(data)
+				}
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("query() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_children_query(t *testing.T) {
+	type args struct {
+		startDate  string
+		endDate    string
+		dateField  string
+		queryConds []QueryCond
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				startDate: "2020-06-01",
+				endDate:   "2020-07-01",
+				dateField: "acceptDate",
+				queryConds: []QueryCond{
+					{
+						Pair: map[string][]interface{}{
+							"delete_at": {},
+						},
+						QueryLogic: MUSTNOT,
+						QueryType:  EXISTS,
+					},
+					{
+						Pair: map[string][]interface{}{
+							"status": {100, 300},
+						},
+						QueryLogic: MUSTNOT,
+						QueryType:  TERMS,
+					},
+					{
+						QueryLogic: MUSTNOT,
+						Children: []QueryCond{
+							{
+								Pair: map[string][]interface{}{
+									"type": {"网络调查"},
+								},
+								QueryLogic: MUST,
+								QueryType:  TERMS,
+							},
+							{
+								Pair: map[string][]interface{}{
+									"price": {0},
+								},
+								QueryLogic: MUST,
+								QueryType:  TERMS,
+							},
+						},
+					},
+				},
+			},
+			want: `{"bool":{"must":[{"range":{"acceptDate":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-01"}}},{"terms":{"orderPhrase":[300]}}],"must_not":[{"exists":{"field":"delete_at"}},{"exists":{"field":"flag"}}]}}`,
 		},
 	}
 	for _, tt := range tests {

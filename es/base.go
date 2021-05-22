@@ -27,6 +27,7 @@ const (
 	RANGE
 	PREFIX
 	WILDCARD
+	EXISTS
 )
 
 type esFieldType string
@@ -76,6 +77,7 @@ type QueryCond struct {
 	Pair       map[string][]interface{} `json:"pair"`
 	QueryLogic queryLogic               `json:"query_logic"`
 	QueryType  queryType                `json:"query_type"`
+	Children   []QueryCond              `json:"children"`
 }
 
 type Sort struct {
@@ -107,6 +109,148 @@ func InitG_EsClient(hosts []string, username, password string) {
 	}
 }
 
+func querynode(boolQuery *elastic.BoolQuery, qc QueryCond) {
+	for field, value := range qc.Pair {
+		if len(value) == 0 && qc.QueryType != EXISTS {
+			continue
+		}
+		if qc.QueryType == TERMS {
+			termsQuery := elastic.NewTermsQuery(field, value...)
+			if qc.QueryLogic == SHOULD {
+				boolQuery.Should(termsQuery)
+			} else if qc.QueryLogic == MUST {
+				boolQuery.Must(termsQuery)
+			} else if qc.QueryLogic == MUSTNOT {
+				boolQuery.MustNot(termsQuery)
+			}
+		} else if qc.QueryType == RANGE {
+			if paramsMap, ok := value[0].(map[string]interface{}); ok {
+				rangeQuery := elastic.NewRangeQuery(field)
+				if paramsMap["from"] != nil || paramsMap["to"] != nil {
+					if paramsMap["from"] != nil {
+						rangeQuery.From(paramsMap["from"])
+					}
+					if paramsMap["to"] != nil {
+						rangeQuery.To(paramsMap["to"])
+					}
+					if paramsMap["include_lower"] != nil {
+						rangeQuery.IncludeLower(paramsMap["include_lower"].(bool))
+					}
+					if paramsMap["include_upper"] != nil {
+						rangeQuery.IncludeUpper(paramsMap["include_upper"].(bool))
+					}
+					if qc.QueryLogic == SHOULD {
+						boolQuery.Should(rangeQuery)
+					} else if qc.QueryLogic == MUST {
+						boolQuery.Must(rangeQuery)
+					} else if qc.QueryLogic == MUSTNOT {
+						boolQuery.MustNot(rangeQuery)
+					}
+				}
+			}
+		} else if qc.QueryType == MATCHPHRASE {
+			bQuery := elastic.NewBoolQuery()
+			for _, item := range value {
+				keyword := item.(string)
+				words := strings.Split(keyword, "+")
+				if len(words) > 1 {
+					nestedBoolQuery := elastic.NewBoolQuery()
+					for _, word := range words {
+						word = strings.TrimSpace(word)
+						if word != "" {
+							if word[0] != '-' {
+								nestedBoolQuery.Must(elastic.NewMatchPhraseQuery(field, word))
+							} else {
+								word = word[1:]
+								nestedBoolQuery.MustNot(elastic.NewMatchPhraseQuery(field, word))
+							}
+						}
+					}
+					bQuery.Should(nestedBoolQuery)
+				} else {
+					word := words[0]
+					if word != "" {
+						if word[0] != '-' {
+							bQuery.Should(elastic.NewMatchPhraseQuery(field, word))
+						} else {
+							nestedBoolQuery := elastic.NewBoolQuery()
+							word = word[1:]
+							nestedBoolQuery.MustNot(elastic.NewMatchPhraseQuery(field, word))
+							bQuery.Should(nestedBoolQuery)
+						}
+					}
+				}
+			}
+			if qc.QueryLogic == SHOULD {
+				boolQuery.Should(bQuery)
+			} else if qc.QueryLogic == MUST {
+				boolQuery.Must(bQuery)
+			} else if qc.QueryLogic == MUSTNOT {
+				boolQuery.MustNot(bQuery)
+			}
+		} else if qc.QueryType == PREFIX {
+			var prefix string
+			if len(value) > 0 && value[0] != nil {
+				prefix = value[0].(string)
+			}
+			if stringutils.IsNotEmpty(prefix) {
+				prefixQuery := elastic.NewPrefixQuery(field, prefix)
+				if qc.QueryLogic == SHOULD {
+					boolQuery.Should(prefixQuery)
+				} else if qc.QueryLogic == MUST {
+					boolQuery.Must(prefixQuery)
+				} else if qc.QueryLogic == MUSTNOT {
+					boolQuery.MustNot(prefixQuery)
+				}
+			}
+		} else if qc.QueryType == WILDCARD {
+			var wild string
+			if len(value) > 0 && value[0] != nil {
+				wild = value[0].(string)
+			}
+			if stringutils.IsNotEmpty(wild) {
+				prefixQuery := elastic.NewWildcardQuery(field, wild)
+				if qc.QueryLogic == SHOULD {
+					boolQuery.Should(prefixQuery)
+				} else if qc.QueryLogic == MUST {
+					boolQuery.Must(prefixQuery)
+				} else if qc.QueryLogic == MUSTNOT {
+					boolQuery.MustNot(prefixQuery)
+				}
+			}
+		} else if qc.QueryType == EXISTS {
+			if stringutils.IsNotEmpty(field) {
+				prefixQuery := elastic.NewExistsQuery(field)
+				if qc.QueryLogic == SHOULD {
+					boolQuery.Should(prefixQuery)
+				} else if qc.QueryLogic == MUST {
+					boolQuery.Must(prefixQuery)
+				} else if qc.QueryLogic == MUSTNOT {
+					boolQuery.MustNot(prefixQuery)
+				}
+			}
+		}
+	}
+}
+
+func querytree(boolQuery *elastic.BoolQuery, cond QueryCond) {
+	if len(cond.Children) > 0 {
+		bq := elastic.NewBoolQuery()
+		for _, qc := range cond.Children {
+			querytree(bq, qc)
+		}
+		if cond.QueryLogic == SHOULD {
+			boolQuery.Should(bq)
+		} else if cond.QueryLogic == MUST {
+			boolQuery.Must(bq)
+		} else if cond.QueryLogic == MUSTNOT {
+			boolQuery.MustNot(bq)
+		}
+		return
+	}
+	querynode(boolQuery, cond)
+}
+
 func query(startDate string, endDate string, dateField string, queryConds []QueryCond) *elastic.BoolQuery {
 	boolQuery := elastic.NewBoolQuery()
 	if dateField != "" && startDate != "" && endDate != "" {
@@ -123,116 +267,7 @@ func query(startDate string, endDate string, dateField string, queryConds []Quer
 		if !hasShould && qc.QueryLogic == SHOULD {
 			hasShould = true
 		}
-		for field, value := range qc.Pair {
-			if len(value) == 0 {
-				continue
-			}
-			if qc.QueryType == TERMS {
-				termsQuery := elastic.NewTermsQuery(field, value...)
-				if qc.QueryLogic == SHOULD {
-					boolQuery.Should(termsQuery)
-				} else if qc.QueryLogic == MUST {
-					boolQuery.Must(termsQuery)
-				} else if qc.QueryLogic == MUSTNOT {
-					boolQuery.MustNot(termsQuery)
-				}
-			} else if qc.QueryType == RANGE {
-				if paramsMap, ok := value[0].(map[string]interface{}); ok {
-					rangeQuery := elastic.NewRangeQuery(field)
-					if paramsMap["from"] != nil || paramsMap["to"] != nil {
-						if paramsMap["from"] != nil {
-							rangeQuery.From(paramsMap["from"])
-						}
-						if paramsMap["to"] != nil {
-							rangeQuery.To(paramsMap["to"])
-						}
-						if paramsMap["include_lower"] != nil {
-							rangeQuery.IncludeLower(paramsMap["include_lower"].(bool))
-						}
-						if paramsMap["include_upper"] != nil {
-							rangeQuery.IncludeUpper(paramsMap["include_upper"].(bool))
-						}
-						if qc.QueryLogic == SHOULD {
-							boolQuery.Should(rangeQuery)
-						} else if qc.QueryLogic == MUST {
-							boolQuery.Must(rangeQuery)
-						} else if qc.QueryLogic == MUSTNOT {
-							boolQuery.MustNot(rangeQuery)
-						}
-					}
-				}
-			} else if qc.QueryType == MATCHPHRASE {
-				bQuery := elastic.NewBoolQuery()
-				for _, item := range value {
-					keyword := item.(string)
-					words := strings.Split(keyword, "+")
-					if len(words) > 1 {
-						nestedBoolQuery := elastic.NewBoolQuery()
-						for _, word := range words {
-							word = strings.TrimSpace(word)
-							if word != "" {
-								if word[0] != '-' {
-									nestedBoolQuery.Must(elastic.NewMatchPhraseQuery(field, word))
-								} else {
-									word = word[1:]
-									nestedBoolQuery.MustNot(elastic.NewMatchPhraseQuery(field, word))
-								}
-							}
-						}
-						bQuery.Should(nestedBoolQuery)
-					} else {
-						word := words[0]
-						if word != "" {
-							if word[0] != '-' {
-								bQuery.Should(elastic.NewMatchPhraseQuery(field, word))
-							} else {
-								nestedBoolQuery := elastic.NewBoolQuery()
-								word = word[1:]
-								nestedBoolQuery.MustNot(elastic.NewMatchPhraseQuery(field, word))
-								bQuery.Should(nestedBoolQuery)
-							}
-						}
-					}
-				}
-				if qc.QueryLogic == SHOULD {
-					boolQuery.Should(bQuery)
-				} else if qc.QueryLogic == MUST {
-					boolQuery.Must(bQuery)
-				} else if qc.QueryLogic == MUSTNOT {
-					boolQuery.MustNot(bQuery)
-				}
-			} else if qc.QueryType == PREFIX {
-				var prefix string
-				if len(value) > 0 && value[0] != nil {
-					prefix = value[0].(string)
-				}
-				if stringutils.IsNotEmpty(prefix) {
-					prefixQuery := elastic.NewPrefixQuery(field, prefix)
-					if qc.QueryLogic == SHOULD {
-						boolQuery.Should(prefixQuery)
-					} else if qc.QueryLogic == MUST {
-						boolQuery.Must(prefixQuery)
-					} else if qc.QueryLogic == MUSTNOT {
-						boolQuery.MustNot(prefixQuery)
-					}
-				}
-			} else if qc.QueryType == WILDCARD {
-				var wild string
-				if len(value) > 0 && value[0] != nil {
-					wild = value[0].(string)
-				}
-				if stringutils.IsNotEmpty(wild) {
-					prefixQuery := elastic.NewWildcardQuery(field, wild)
-					if qc.QueryLogic == SHOULD {
-						boolQuery.Should(prefixQuery)
-					} else if qc.QueryLogic == MUST {
-						boolQuery.Must(prefixQuery)
-					} else if qc.QueryLogic == MUSTNOT {
-						boolQuery.MustNot(prefixQuery)
-					}
-				}
-			}
-		}
+		querytree(boolQuery, qc)
 	}
 	if hasShould {
 		boolQuery.MinimumNumberShouldMatch(1)
