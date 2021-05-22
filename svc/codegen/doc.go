@@ -312,11 +312,6 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 			License:        nil,
 			Version:        fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
 		},
-		Servers: []v3.Server{
-			{
-				Url: "",
-			},
-		},
 		Paths: paths,
 		Components: &v3.Components{
 			Schemas: schemas,
