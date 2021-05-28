@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/framework"
 	"io"
 	"net/http"
 	"os"
@@ -76,7 +77,7 @@ func (srv *HttpSrv) Run() {
 	if isSet {
 		logptr = &logpath
 	}
-	var loglevel LogLevel
+	var loglevel framework.LogLevel
 	(&loglevel).Decode(os.Getenv("APP_LOGLEVEL"))
 
 	logFile := configureLogger(logrus.StandardLogger(), logptr, logrus.Level(loglevel))
@@ -86,7 +87,7 @@ func (srv *HttpSrv) Run() {
 		}
 	}()
 
-	var bannerSwitch Switch
+	var bannerSwitch framework.Switch
 	(&bannerSwitch).Decode(os.Getenv("APP_BANNER"))
 	if bannerSwitch {
 		banner := os.Getenv("APP_BANNERTEXT")
@@ -179,37 +180,6 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
-}
-
-type Switch bool
-
-func (s *Switch) Decode(value string) error {
-	if value == "on" {
-		*s = true
-	}
-	return nil
-}
-
-type LogLevel logrus.Level
-
-func (ll *LogLevel) Decode(value string) error {
-	switch value {
-	case "panic":
-		*ll = LogLevel(logrus.PanicLevel)
-	case "fatal":
-		*ll = LogLevel(logrus.FatalLevel)
-	case "error":
-		*ll = LogLevel(logrus.ErrorLevel)
-	case "warn":
-		*ll = LogLevel(logrus.WarnLevel)
-	case "debug":
-		*ll = LogLevel(logrus.DebugLevel)
-	case "trace":
-		*ll = LogLevel(logrus.TraceLevel)
-	default:
-		*ll = LogLevel(logrus.InfoLevel)
-	}
-	return nil
 }
 
 func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) *os.File {
