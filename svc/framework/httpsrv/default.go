@@ -19,28 +19,20 @@ import (
 	"time"
 )
 
-type Interface interface {
-	// Run the service
-	Run()
-	// Register routes
-	Route(route Route)
-	// Create http server
-	NewServer(router http.Handler) *http.Server
-}
-
-type HttpSrv struct {
+// gorilla
+type DefaultHttpSrv struct {
 	*mux.Router
 	routes []Route
 }
 
-func NewHttpSrv() Interface {
-	return &HttpSrv{
+func NewDefaultHttpSrv() Interface {
+	return &DefaultHttpSrv{
 		mux.NewRouter().StrictSlash(true),
 		[]Route{},
 	}
 }
 
-func (srv *HttpSrv) Route(route Route) {
+func (srv *DefaultHttpSrv) Route(route Route) {
 	srv.routes = append(srv.routes, route)
 	srv.
 		Methods(route.Method).
@@ -49,7 +41,15 @@ func (srv *HttpSrv) Route(route Route) {
 		Handler(route.HandlerFunc)
 }
 
-func (srv *HttpSrv) printRoutes() {
+func (srv *DefaultHttpSrv) Use(mwf ...func(http.Handler) http.Handler) {
+	var middlewares []mux.MiddlewareFunc
+	for _, item := range mwf {
+		middlewares = append(middlewares, item)
+	}
+	srv.Router.Use(middlewares...)
+}
+
+func (srv *DefaultHttpSrv) printRoutes() {
 	logrus.Infoln("================ Registered Routes ================")
 	data := [][]string{}
 	for _, r := range srv.routes {
@@ -70,7 +70,7 @@ func (srv *HttpSrv) printRoutes() {
 	logrus.Infoln("===================================================")
 }
 
-func (srv *HttpSrv) Run() {
+func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
 	var logptr *string
 	logpath, isSet := os.LookupEnv("APP_LOGPATH")
@@ -131,7 +131,7 @@ func (srv *HttpSrv) Run() {
 	logrus.Infoln("shutting down")
 }
 
-func (srv *HttpSrv) NewServer(router http.Handler) *http.Server {
+func (srv *DefaultHttpSrv) NewServer(router http.Handler) *http.Server {
 	host := os.Getenv("SRV_HOST")
 	port := os.Getenv("SRV_PORT")
 	write, err := time.ParseDuration(os.Getenv("SRV_WRITETIMEOUT"))
