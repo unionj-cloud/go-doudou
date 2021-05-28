@@ -4,23 +4,19 @@ go 1.15
 
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
-	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/deckarep/golang-set v1.7.1
 	github.com/go-git/go-billy/v5 v5.1.0
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/google/uuid v1.2.0 // indirect
-	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/gorilla/mux v1.8.0
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/mitchellh/copystructure v1.1.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3

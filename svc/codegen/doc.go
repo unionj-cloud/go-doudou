@@ -40,6 +40,8 @@ rune // alias for int32
 float32 float64
 
 complex64 complex128
+
+TODO 支持匿名结构体
 */
 func schemaOf(field astutils.FieldMeta) *v3.Schema {
 	ft := strings.TrimPrefix(field.Type, "*")
