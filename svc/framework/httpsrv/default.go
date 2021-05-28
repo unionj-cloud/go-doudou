@@ -32,13 +32,15 @@ func NewDefaultHttpSrv() Interface {
 	}
 }
 
-func (srv *DefaultHttpSrv) Route(route Route) {
-	srv.routes = append(srv.routes, route)
-	srv.
-		Methods(route.Method).
-		Path(route.Pattern).
-		Name(route.Name).
-		Handler(route.HandlerFunc)
+func (srv *DefaultHttpSrv) Route(route ...Route) {
+	srv.routes = append(srv.routes, route...)
+	for _, item := range route {
+		srv.
+			Methods(item.Method).
+			Path(item.Pattern).
+			Name(item.Name).
+			Handler(item.HandlerFunc)
+	}
 }
 
 func (srv *DefaultHttpSrv) Use(mwf ...func(http.Handler) http.Handler) {
@@ -173,13 +175,6 @@ func (srv *DefaultHttpSrv) NewServer(router http.Handler) *http.Server {
 	}()
 
 	return server
-}
-
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
 }
 
 func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) *os.File {

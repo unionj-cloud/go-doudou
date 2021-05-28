@@ -2,11 +2,18 @@ package httpsrv
 
 import "net/http"
 
+type Route struct {
+	Name        string
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
+}
+
 type Interface interface {
 	// Run the service
 	Run()
 	// Register routes
-	Route(route Route)
+	Route(route ...Route)
 	// Create http server
 	NewServer(router http.Handler) *http.Server
 	// Use middleware
