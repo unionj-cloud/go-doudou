@@ -6,7 +6,7 @@ require (
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/deckarep/golang-set v1.7.1
-	github.com/go-chi/chi/v5 v5.0.3 // indirect
+	github.com/go-chi/chi/v5 v5.0.3
 	github.com/go-git/go-billy/v5 v5.1.0
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/go-sql-driver/mysql v1.5.0

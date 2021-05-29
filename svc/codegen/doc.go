@@ -160,23 +160,6 @@ func vosOf(ic astutils.InterfaceCollector) []string {
 	return vos
 }
 
-func hasFile(field astutils.FieldMeta) bool {
-	if strings.Contains(field.Type, "*vo.") || strings.Contains(field.Type, "vo.") {
-		title := strings.TrimPrefix(strings.TrimPrefix(field.Type, "*"), "vo.")
-		if schema, ok := schemas[title]; ok {
-			props := schema.Properties
-			for _, v := range props {
-				if v == v3.File {
-					return true
-				} else if v.Type == v3.ArrayT && v.Items == v3.File {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
 func operationOf(method astutils.MethodMeta) v3.Operation {
 	var ret v3.Operation
 	var params []v3.Parameter
@@ -185,7 +168,19 @@ func operationOf(method astutils.MethodMeta) v3.Operation {
 		if pschema == v3.Any {
 			continue
 		}
-		if stringutils.IsEmpty(pschema.Ref) && pschema.Type != v3.ObjectT && pschema.Type != v3.ArrayT {
+		if reflect.DeepEqual(pschema, v3.FileArray) || pschema == v3.File {
+			var content v3.Content
+			mt := &v3.MediaType{
+				Schema: pschema,
+			}
+			reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
+			ret.RequestBody = &v3.RequestBody{
+				Content:  &content,
+				Required: true,
+			}
+		} else if stringutils.IsEmpty(pschema.Ref) &&
+			pschema.Type != v3.ObjectT &&
+			(pschema.Type != v3.ArrayT || (stringutils.IsEmpty(pschema.Items.Ref) && pschema.Items.Type != v3.ObjectT && pschema.Items.Type != v3.ArrayT)) {
 			params = append(params, v3.Parameter{
 				Name:   strcase.ToLowerCamel(item.Name),
 				In:     v3.InQuery,
@@ -196,15 +191,7 @@ func operationOf(method astutils.MethodMeta) v3.Operation {
 			mt := &v3.MediaType{
 				Schema: pschema,
 			}
-			if strings.HasSuffix(method.Name, "Form") {
-				if hasFile(item) {
-					reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
-				} else {
-					reflect.ValueOf(&content).Elem().FieldByName("FormUrl").Set(reflect.ValueOf(mt))
-				}
-			} else {
-				reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
-			}
+			reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
 			ret.RequestBody = &v3.RequestBody{
 				Content:  &content,
 				Required: true,

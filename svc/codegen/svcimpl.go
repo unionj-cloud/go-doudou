@@ -18,11 +18,10 @@ import (
 	"{{.ConfigPackage}}"
 	"{{.VoPackage}}"
 	"github.com/jmoiron/sqlx"
-	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
 type {{.Meta.Name}}Impl struct {
-	conf config.SvcConfig
+	conf config.Config
 }
 
 {{- range $m := .Meta.Methods }}
@@ -37,7 +36,7 @@ type {{.Meta.Name}}Impl struct {
     }
 {{- end }}
 
-func New{{.Meta.Name}}(conf config.SvcConfig, db *sqlx.DB) {{.Meta.Name}} {
+func New{{.Meta.Name}}(conf config.Config, db *sqlx.DB) {{.Meta.Name}} {
 	return &{{.Meta.Name}}Impl{
 		conf,
 	}

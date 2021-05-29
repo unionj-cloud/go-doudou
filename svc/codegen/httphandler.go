@@ -15,6 +15,7 @@ import (
 var httpHandlerTmpl = `package httpsrv
 
 import (
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"net/http"
 )
 
@@ -24,15 +25,8 @@ type {{.Name}}Handler interface {
 {{- end }}
 }
 
-type route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
-
-func routes(handler {{.Name}}Handler) []route {
-	return []route{
+func Routes(handler {{.Name}}Handler) []ddhttp.Route {
+	return []ddhttp.Route{
 		{{- range $m := .Methods }}
 		{
 			"{{$m.Name | routeName}}",

@@ -33,7 +33,7 @@ func TestGenDoc(t *testing.T) {
 		dir string
 		ic  astutils.InterfaceCollector
 	}
-	dir := "/Users/wubin1989/workspace/cloud/go-doudou/example/user-svc"
+	dir := "/Users/wubin1989/workspace/cloud/usersvc"
 	svcfile := filepath.Join(dir, "svc.go")
 	ic := buildIc(svcfile)
 

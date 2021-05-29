@@ -29,6 +29,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var handler bool
+
 // httpCmd represents the http command
 var httpCmd = &cobra.Command{
 	Use:   "http",
@@ -48,7 +50,7 @@ to quickly create a Cobra application.`,
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{svcdir}
+		s := svc.Svc{svcdir, handler}
 		s.Http()
 	},
 }
@@ -64,5 +66,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// httpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	httpCmd.Flags().BoolVarP(&handler, "handler", "", false, "Whether generate default handler implementation or not")
 }

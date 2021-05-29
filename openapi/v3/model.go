@@ -262,4 +262,8 @@ var (
 		Type:   StringT,
 		Format: BinaryF,
 	}
+	FileArray = &Schema{
+		Type:  ArrayT,
+		Items: File,
+	}
 )

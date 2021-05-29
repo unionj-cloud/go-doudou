@@ -30,7 +30,8 @@ type SvcCmd interface {
 }
 
 type Svc struct {
-	Dir string
+	Dir     string
+	Handler bool
 }
 
 func buildIc(svcfile string) astutils.InterfaceCollector {
@@ -72,10 +73,13 @@ func (receiver Svc) Http() {
 	fmt.Printf("%+v\n", ic)
 
 	if len(ic.Interfaces) > 0 {
-		codegen.GenHttpServer(dir, ic)
 		codegen.GenMain(dir, ic)
 		codegen.GenHttpHandler(dir, ic)
-		codegen.GenHttpHandlerImpl(dir, ic)
+		if receiver.Handler {
+			codegen.GenHttpHandlerImplWithImpl(dir, ic)
+		} else {
+			codegen.GenHttpHandlerImpl(dir, ic)
+		}
 		codegen.GenSvcImpl(dir, ic)
 		codegen.GenDoc(dir, ic)
 	}
@@ -239,15 +243,7 @@ func (receiver Svc) Init() {
 
 var voTmpl = `package vo
 
-import "github.com/unionj-cloud/go-doudou/ddl/query"
-
 //go:generate go-doudou name --file $GOFILE
-
-type Ret struct {
-	Code int
-	Data interface{}
-	Msg  string
-}
 
 type PageFilter struct {
 	// 真实姓名，前缀匹配
@@ -256,10 +252,32 @@ type PageFilter struct {
 	Dept int
 }
 
+type Order struct {
+	Col  string
+	Sort string
+}
+
+type Page struct {
+	// 排序规则
+	Orders []Order
+	// 页码
+	PageNo int
+	// 每页行数
+	Size int
+}
+
 // 分页筛选条件
 type PageQuery struct {
-	filter PageFilter
-	page   query.Page
+	Filter PageFilter
+	Page   Page
+}
+
+type PageRet struct {
+	Items    interface{}
+	PageNo   int
+	PageSize int
+	Total    int
+	HasNext  bool
 }
 
 type UserVo struct {
@@ -275,12 +293,11 @@ var svcTmpl = `package service
 import (
 	"context"
 	"{{.VoPackage}}"
-	"github.com/unionj-cloud/go-doudou/ddl/query"
 )
 
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
-	PageUsers(ctx context.Context, query vo.PageQuery) (query.PageRet, error)
+	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error)
 }
 `
 
@@ -291,7 +308,7 @@ go {{.GoVersion}}
 require (
     github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v0.1.8
+	github.com/unionj-cloud/go-doudou v0.2.1-0.20210529035031-23cc21c5a82e
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 )`

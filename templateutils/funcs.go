@@ -31,3 +31,7 @@ func Eval(t *template.Template) func(string, interface{}) (string, error) {
 func TrimSuffix(suffix, v string) string {
 	return strings.TrimSuffix(strings.TrimSpace(v), suffix)
 }
+
+func HasPrefix(v, prefix string) bool {
+	return strings.HasPrefix(strings.TrimSpace(v), prefix)
+}

@@ -27,10 +27,12 @@ type StructMeta struct {
 	Name     string
 	Fields   []FieldMeta
 	Comments []string
+	Methods  []MethodMeta
 }
 
 type StructCollector struct {
 	Structs []StructMeta
+	Methods map[string][]MethodMeta
 	Package PackageMeta
 }
 
@@ -76,6 +78,13 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 			Name: spec.Name.Name,
 		}
 		return sc
+	case *ast.FuncDecl:
+		if spec.Recv != nil {
+			structName := strings.TrimPrefix(exprString(spec.Recv.List[0].Type), "*")
+			methods, _ := sc.Methods[structName]
+			methods = append(methods, getMethodMeta(spec))
+			sc.Methods[structName] = methods
+		}
 	case *ast.GenDecl:
 		if spec.Tok == token.TYPE {
 			var comments []string
@@ -222,4 +231,12 @@ func GetMod() string {
 func GetImportPath(file string) string {
 	dir, _ := os.Getwd()
 	return GetMod() + strings.TrimPrefix(file, dir)
+}
+
+func NewStructCollector() *StructCollector {
+	return &StructCollector{
+		Structs: nil,
+		Methods: make(map[string][]MethodMeta),
+		Package: PackageMeta{},
+	}
 }

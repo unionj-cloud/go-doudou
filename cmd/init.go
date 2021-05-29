@@ -47,7 +47,10 @@ to quickly create a Cobra application.`,
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{svcdir}
+		s := svc.Svc{
+			Dir:     svcdir,
+			Handler: false,
+		}
 		s.Init()
 	},
 }

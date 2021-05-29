@@ -88,24 +88,26 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 								Comments: pComments,
 							})
 						}
-						for _, result := range ft.Results.List {
-							var rn string
-							if len(result.Names) > 0 {
-								rn = result.Names[0].Name
-							}
-							rt := exprString(result.Type)
-							var rComments []string
-							if result.Comment != nil {
-								for _, comment := range result.Comment.List {
-									rComments = append(rComments, comment.Text)
+						if ft.Results != nil {
+							for _, result := range ft.Results.List {
+								var rn string
+								if len(result.Names) > 0 {
+									rn = result.Names[0].Name
 								}
+								rt := exprString(result.Type)
+								var rComments []string
+								if result.Comment != nil {
+									for _, comment := range result.Comment.List {
+										rComments = append(rComments, comment.Text)
+									}
+								}
+								results = append(results, FieldMeta{
+									Name:     rn,
+									Type:     rt,
+									Tag:      "",
+									Comments: rComments,
+								})
 							}
-							results = append(results, FieldMeta{
-								Name:     rn,
-								Type:     rt,
-								Tag:      "",
-								Comments: rComments,
-							})
 						}
 						methods = append(methods, MethodMeta{
 							Name:     mn,
