@@ -76,7 +76,7 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
-		// Use config file from the flag.
+		// AddMiddleware config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find home directory.

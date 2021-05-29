@@ -1,4 +1,4 @@
-package framework
+package svc
 
 import "github.com/sirupsen/logrus"
 
