@@ -1,4 +1,4 @@
-package http
+package ddhttp
 
 import (
 	"github.com/go-chi/chi/v5"
