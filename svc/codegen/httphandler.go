@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"bytes"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,7 +67,7 @@ func routeName(method string) string {
 }
 
 func httpMethod(method string) string {
-	if strings.Contains(method, "Download") {
+	if stringutils.ContainsI(method, "download") {
 		return "GET"
 	}
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
