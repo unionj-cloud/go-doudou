@@ -106,117 +106,6 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 }
 
-var initHttpHandlerImplTmpl = `package httpsrv
-
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/sirupsen/logrus"
-	{{.ServiceAlias}} "{{.ServicePackage}}"
-	"net/http"
-	"{{.VoPackage}}"
-)
-
-type {{.Meta.Name}}HandlerImpl struct{
-	{{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}
-}
-
-{{- range $m := .Meta.Methods }}
-	func (receiver *{{$.Meta.Name}}HandlerImpl) {{$m.Name}}(w http.ResponseWriter, r *http.Request) {
-    	var (
-			{{- range $p := $m.Params }}
-			{{ $p.Name }} {{ $p.Type }}
-			{{- end }}
-			{{- range $r := $m.Results }}
-			{{ $r.Name }} {{ $r.Type }}
-			{{- end }}
-		)
-		{{- range $p := $m.Params }}
-		{{ if contains $p.Type "*multipart.FileHeader" }}
-		if err := r.ParseMultipartForm(32 << 20); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		files := r.MultipartForm.File["{{$p.Name}}"]
-		if len(files) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("no file received"))
-			return
-		}
-		{{if contains $p.Type "["}}
-		{{$p.Name}} = files
-		{{else}}
-		{{$p.Name}} = files[0]
-		{{end}}
-		{{ else if eq $p.Type "context.Context" }}
-		{{$p.Name}} = context.Background()
-		{{ else if not (isSimple $p)}}
-		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		defer r.Body.Close()
-		{{ else if contains $p.Type "["}}
-		{{$p.Name}} = r.Form("{{$p.Name}}")
-		{{ else }}
-		{{$p.Name}} = r.FormValue("{{$p.Name}}")
-		{{ end }}
-		{{- end }}
-		{{range $i, $r := $m.Results }}{{- if $i}},{{end}}{{ $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
-			{{- range $p := $m.Params }}
-			{{ $p.Name }},
-			{{- end }}
-		)
-		{{- range $r := $m.Results }}
-			{{ if eq $r.Type "error" }}
-				if {{ $r.Name }} != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-			{{ end }}
-		{{- end }}
-		{{ $done := false }}
-		{{- range $r := $m.Results }}
-			{{ if eq $r.Type "*os.File" }}
-				fi, err := {{$r.Name}}.Stat()
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-
-				w.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
-				w.Header().Set("Content-Type", "application/octet-stream")
-				w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
-
-				io.Copy(w, {{$r.Name}})
-				{{ $done = true }}	
-			{{ end }}
-		{{- end }}
-		{{ if not $done }}
-			if err := json.NewEncoder(w).Encode(struct{
-				{{- range $r := $m.Results }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
-				{{- end }}
-			}{
-				{{- range $r := $m.Results }}
-				{{ $r.Name | toCamel }}: {{ $r.Name }},
-				{{- end }}
-			}); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-			}
-		{{ end }}
-    }
-{{- end }}
-
-func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}) {{.Meta.Name}}Handler {
-	return &{{.Meta.Name}}HandlerImpl{
-		{{.Meta.Name | toLowerCamel}},
-	}
-}
-`
-
 var appendHttpHandlerImplTmpl = `
 {{- range $m := .Meta.Methods }}
 	func (receiver *{{$.Meta.Name}}HandlerImpl) {{$m.Name}}(w http.ResponseWriter, r *http.Request) {
@@ -305,6 +194,31 @@ var appendHttpHandlerImplTmpl = `
 		{{ end }}
     }
 {{- end }}
+`
+
+var initHttpHandlerImplTmpl = `package httpsrv
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	{{.ServiceAlias}} "{{.ServicePackage}}"
+	"net/http"
+	"{{.VoPackage}}"
+)
+
+type {{.Meta.Name}}HandlerImpl struct{
+	{{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}
+}
+
+` + appendHttpHandlerImplTmpl + `
+
+func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}) {{.Meta.Name}}Handler {
+	return &{{.Meta.Name}}HandlerImpl{
+		{{.Meta.Name | toLowerCamel}},
+	}
+}
 `
 
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
@@ -424,6 +338,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, sqlBuf.Bytes()...)
-	fmt.Println(string(original))
+	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }

@@ -57,9 +57,7 @@ func exprString(expr ast.Expr) string {
 			return "[" + exprString(_expr.Len) + "]" + exprString(_expr.Elt)
 		}
 	case *ast.BasicLit:
-		if _expr.Kind == token.INT {
-			return _expr.Value
-		}
+		return _expr.Value
 	case *ast.MapType:
 		return "map[" + exprString(_expr.Key) + "]" + exprString(_expr.Value)
 	case *ast.ChanType: // TODO

@@ -27,3 +27,23 @@ func ExampleStruct() {
 
 	//Output:
 }
+
+func ExampleInter() {
+	file := "/Users/wubin1989/workspace/cloud/usersvc/svc.go"
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, 0)
+	if err != nil {
+		panic(err)
+	}
+	var sc InterfaceCollector
+	ast.Walk(&sc, root)
+	fmt.Println(sc.Interfaces)
+
+	ast.Print(fset, root)
+
+	var a = []string{"a", "b"}
+	var b = []string{"b", "a"}
+	fmt.Println(reflect.DeepEqual(a, b))
+
+	//Output:
+}
