@@ -66,6 +66,9 @@ func routeName(method string) string {
 }
 
 func httpMethod(method string) string {
+	if strings.Contains(method, "Download") {
+		return "GET"
+	}
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	snake := strcase.ToSnake(method)
 	splits := strings.Split(snake, "_")

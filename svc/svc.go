@@ -308,7 +308,7 @@ go {{.GoVersion}}
 require (
     github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v0.2.1-0.20210529035031-23cc21c5a82e
+	github.com/unionj-cloud/go-doudou v0.2.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 )`
