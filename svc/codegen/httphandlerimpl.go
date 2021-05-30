@@ -177,18 +177,36 @@ type {{.Meta.Name}}HandlerImpl struct{
 				}
 			{{ end }}
 		{{- end }}
-		if err := json.NewEncoder(w).Encode(struct{
-			{{- range $r := $m.Results }}
-			{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
-			{{- end }}
-		}{
-			{{- range $r := $m.Results }}
-			{{ $r.Name | toCamel }}: {{ $r.Name }},
-			{{- end }}
-		}); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-		}
+		{{ $done := false }}
+		{{- range $r := $m.Results }}
+			{{ if eq $r.Type "*os.File" }}
+				fi, err := {{$r.Name}}.Stat()
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+
+				w.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
+				w.Header().Set("Content-Type", "application/octet-stream")
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+
+				io.Copy(w, {{$r.Name}})
+				{{ $done = true }}	
+			{{ end }}
+		{{- end }}
+		{{ if not $done }}
+			if err := json.NewEncoder(w).Encode(struct{
+				{{- range $r := $m.Results }}
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
+				{{- end }}
+			}{
+				{{- range $r := $m.Results }}
+				{{ $r.Name | toCamel }}: {{ $r.Name }},
+				{{- end }}
+			}); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+			}
+		{{ end }}
     }
 {{- end }}
 
