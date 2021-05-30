@@ -263,7 +263,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 		tmpl = appendHttpHandlerImplTmpl
 
 		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, handlerimplfile, nil, 0)
+		root, err := parser.ParseFile(fset, handlerimplfile, nil, parser.ParseComments)
 		if err != nil {
 			panic(err)
 		}

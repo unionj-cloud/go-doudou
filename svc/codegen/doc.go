@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/constants"
+	"github.com/unionj-cloud/go-doudou/copier"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"go/ast"
 	"go/parser"
@@ -105,9 +106,18 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 	}
 }
 
+func copySchema(field astutils.FieldMeta) v3.Schema {
+	var schema v3.Schema
+	err := copier.DeepCopy(schemaOf(field), &schema)
+	if err != nil {
+		panic(err)
+	}
+	return schema
+}
+
 func schemasOf(vofile string) []v3.Schema {
 	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, vofile, nil, 0)
+	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -120,45 +130,18 @@ func schemasOf(vofile string) []v3.Schema {
 		}
 		properties := make(map[string]*v3.Schema)
 		for _, field := range item.Fields {
-			properties[strcase.ToLowerCamel(field.Name)] = schemaOf(field)
+			fschema := copySchema(field)
+			fschema.Description = strings.Join(field.Comments, "\n")
+			properties[strcase.ToLowerCamel(field.Name)] = &fschema
 		}
 		ret = append(ret, v3.Schema{
-			Title:      item.Name,
-			Type:       v3.ObjectT,
-			Properties: properties,
+			Title:       item.Name,
+			Type:        v3.ObjectT,
+			Properties:  properties,
+			Description: strings.Join(item.Comments, "\n"),
 		})
 	}
 	return ret
-}
-
-func vosOf(ic astutils.InterfaceCollector) []string {
-	if len(ic.Interfaces) <= 0 {
-		return nil
-	}
-	vomap := make(map[string]int)
-	var vos []string
-	inter := ic.Interfaces[0]
-	for _, method := range inter.Methods {
-		for _, field := range method.Params {
-			if strings.Contains(field.Type, "*vo.") || strings.Contains(field.Type, "vo.") {
-				title := strings.TrimPrefix(strings.TrimPrefix(field.Type, "*"), "vo.")
-				if _, ok := vomap[title]; !ok {
-					vomap[title] = 1
-					vos = append(vos, title)
-				}
-			}
-		}
-		for _, field := range method.Results {
-			if strings.Contains(field.Type, "*vo.") || strings.Contains(field.Type, "vo.") {
-				title := strings.TrimPrefix(strings.TrimPrefix(field.Type, "*"), "vo.")
-				if _, ok := vomap[title]; !ok {
-					vomap[title] = 1
-					vos = append(vos, title)
-				}
-			}
-		}
-	}
-	return vos
 }
 
 const (
@@ -178,15 +161,18 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	var ret v3.Operation
 	var params []v3.Parameter
 
+	ret.Summary = strings.Join(method.Comments, "\n")
+
 	// If http method is "POST" and each parameters' type is one of v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64,
 	// then we use application/x-www-form-urlencoded as Content-type and we make one ref schema from them as request body.
-	var pschemas []*v3.Schema
+	// Note: unionj-generator project hasn't support application/x-www-form-urlencoded yet
+	var simpleCnt int
 	for _, item := range method.Params {
-		if IsSimple(item) {
-			pschemas = append(pschemas, schemaOf(item))
+		if IsSimple(item) || item.Type == "context.Context" {
+			simpleCnt++
 		}
 	}
-	if httpMethod == post && len(pschemas) == len(method.Params) {
+	if httpMethod == post && simpleCnt == len(method.Params) {
 		title := method.Name + "Req"
 		reqSchema := v3.Schema{
 			Type:       v3.ObjectT,
@@ -194,8 +180,13 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			Properties: make(map[string]*v3.Schema),
 		}
 		for _, item := range method.Params {
+			if item.Type == "context.Context" {
+				continue
+			}
 			key := item.Name
-			reqSchema.Properties[strcase.ToLowerCamel(key)] = schemaOf(item)
+			pschema := copySchema(item)
+			pschema.Description = strings.Join(item.Comments, "\n")
+			reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
 		}
 		schemas[title] = reqSchema
 		mt := &v3.MediaType{
@@ -219,11 +210,13 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if item.Type == "context.Context" {
 				continue
 			}
-			pschema := schemaOf(item)
-			if reflect.DeepEqual(pschema, v3.FileArray) || pschema == v3.File {
+			pschema := copySchema(item)
+			pschema.Description = strings.Join(item.Comments, "\n")
+			pschemaType := schemaOf(item)
+			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
 				var content v3.Content
 				mt := &v3.MediaType{
-					Schema: pschema,
+					Schema: &pschema,
 				}
 				reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
 				ret.RequestBody = &v3.RequestBody{
@@ -234,12 +227,12 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				params = append(params, v3.Parameter{
 					Name:   strcase.ToLowerCamel(item.Name),
 					In:     v3.InQuery,
-					Schema: pschema,
+					Schema: &pschema,
 				})
 			} else {
 				var content v3.Content
 				mt := &v3.MediaType{
-					Schema: pschema,
+					Schema: &pschema,
 				}
 				reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
 				ret.RequestBody = &v3.RequestBody{
@@ -253,15 +246,21 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	ret.Parameters = params
 	var respContent v3.Content
 	var hasFile bool
+	var fileDoc string
 	for _, item := range method.Results {
 		if item.Type == "*os.File" {
 			hasFile = true
+			fileDoc = strings.Join(item.Comments, "\n")
 			break
 		}
 	}
 	if hasFile {
 		respContent.Stream = &v3.MediaType{
-			Schema: v3.File,
+			Schema: &v3.Schema{
+				Type:        v3.StringT,
+				Format:      v3.BinaryF,
+				Description: fileDoc,
+			},
 		}
 	} else {
 		title := method.Name + "Resp"
@@ -275,7 +274,9 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if stringutils.IsEmpty(key) {
 				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
 			}
-			respSchema.Properties[strcase.ToLowerCamel(key)] = schemaOf(item)
+			rschema := copySchema(item)
+			rschema.Description = strings.Join(item.Comments, "\n")
+			respSchema.Properties[strcase.ToLowerCamel(key)] = &rschema
 		}
 		schemas[title] = respSchema
 		respContent.Json = &v3.MediaType{

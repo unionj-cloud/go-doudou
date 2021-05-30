@@ -9,9 +9,9 @@ import (
 )
 
 func ExampleStruct() {
-	file := "/Users/wubin1989/workspace/cloud/usersvc/transport/httpsrv/handlerimpl.go"
+	file := "/Users/wubin1989/workspace/cloud/usersvc/vo/vo.go"
 	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, file, nil, 0)
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +31,7 @@ func ExampleStruct() {
 func ExampleInter() {
 	file := "/Users/wubin1989/workspace/cloud/usersvc/svc.go"
 	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, file, nil, 0)
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}

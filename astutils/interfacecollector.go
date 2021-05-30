@@ -45,7 +45,7 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 			var comments []string
 			if spec.Doc != nil {
 				for _, comment := range spec.Doc.List {
-					comments = append(comments, comment.Text)
+					comments = append(comments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 				}
 			}
 			for _, item := range spec.Specs {
@@ -61,9 +61,9 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 						mn := method.Names[0].Name
 
 						var mComments []string
-						if method.Comment != nil {
-							for _, comment := range method.Comment.List {
-								mComments = append(mComments, comment.Text)
+						if method.Doc != nil {
+							for _, comment := range method.Doc.List {
+								mComments = append(mComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 							}
 						}
 
@@ -99,9 +99,9 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 								}
 							}
 							var pComments []string
-							if param.Comment != nil {
-								for _, comment := range param.Comment.List {
-									pComments = append(pComments, comment.Text)
+							if param.Doc != nil {
+								for _, comment := range param.Doc.List {
+									pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 								}
 							}
 							params = append(params, FieldMeta{
@@ -138,9 +138,9 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 									}
 								}
 								var rComments []string
-								if result.Comment != nil {
-									for _, comment := range result.Comment.List {
-										rComments = append(rComments, comment.Text)
+								if result.Doc != nil {
+									for _, comment := range result.Doc.List {
+										rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 									}
 								}
 								results = append(results, FieldMeta{

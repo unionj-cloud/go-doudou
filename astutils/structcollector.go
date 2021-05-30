@@ -90,7 +90,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 			var comments []string
 			if spec.Doc != nil {
 				for _, comment := range spec.Doc.List {
-					comments = append(comments, comment.Text)
+					comments = append(comments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 				}
 			}
 			for _, item := range spec.Specs {
@@ -107,9 +107,9 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 						}
 
 						var fieldComments []string
-						if field.Comment != nil {
-							for _, comment := range field.Comment.List {
-								fieldComments = append(fieldComments, comment.Text)
+						if field.Doc != nil {
+							for _, comment := range field.Doc.List {
+								fieldComments = append(fieldComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 							}
 						}
 

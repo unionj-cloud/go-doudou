@@ -25,7 +25,7 @@ func (receiver Name) Exec() {
 	}
 
 	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, receiver.File, nil, 0)
+	root, err := parser.ParseFile(fset, receiver.File, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
