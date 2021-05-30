@@ -3,6 +3,7 @@ package svc
 import (
 	"bufio"
 	"fmt"
+	"github.com/pkg/errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -60,7 +61,6 @@ func (receiver Svc) Http() {
 			panic(err)
 		}
 	}
-	fmt.Println(dir)
 
 	codegen.GenConfig(dir)
 	codegen.GenDotenv(dir)
@@ -70,7 +70,7 @@ func (receiver Svc) Http() {
 	svcfile = filepath.Join(dir, "svc.go")
 	ic := buildIc(svcfile)
 
-	fmt.Printf("%+v\n", ic)
+	checkIc(ic)
 
 	if len(ic.Interfaces) > 0 {
 		codegen.GenMain(dir, ic)
@@ -82,6 +82,30 @@ func (receiver Svc) Http() {
 		}
 		codegen.GenSvcImpl(dir, ic)
 		codegen.GenDoc(dir, ic)
+	}
+}
+
+func checkIc(ic astutils.InterfaceCollector) {
+	if len(ic.Interfaces) == 0 {
+		panic(errors.New("no service interface found!"))
+	}
+	svcInter := ic.Interfaces[0]
+	for _, method := range svcInter.Methods {
+		var complexParams []string
+		for _, param := range method.Params {
+			if param.Type == "context.Context" {
+				continue
+			}
+			if param.Type == "chan" || param.Type == "func" || stringutils.IsEmpty(param.Type) {
+				panic(errors.New(fmt.Sprintf("Error occur at %s %s. Support struct, map, string, bool, numberic and corresponding slice type only!", param.Name, param.Type)))
+			}
+			if !codegen.IsSimple(param) {
+				complexParams = append(complexParams, param.Name)
+			}
+		}
+		if len(complexParams) > 1 {
+			panic("Too many struct/map/*multipart.FileHeader parameters, can't decide which one should be put into request body!")
+		}
 	}
 }
 

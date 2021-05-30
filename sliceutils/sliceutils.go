@@ -30,6 +30,15 @@ func Contains(src []interface{}, test interface{}) bool {
 	return false
 }
 
+func ContainsDeep(src []interface{}, test interface{}) bool {
+	for _, item := range src {
+		if reflect.DeepEqual(item, test) {
+			return true
+		}
+	}
+	return false
+}
+
 func StringContains(src []string, test string) bool {
 	for _, item := range src {
 		if item == test {

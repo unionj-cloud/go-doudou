@@ -63,7 +63,9 @@ func exprString(expr ast.Expr) string {
 	case *ast.MapType:
 		return "map[" + exprString(_expr.Key) + "]" + exprString(_expr.Value)
 	case *ast.ChanType: // TODO
+		return "chan"
 	case *ast.FuncType: // TODO
+		return "func"
 	}
 	return ""
 }

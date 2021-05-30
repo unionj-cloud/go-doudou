@@ -133,16 +133,7 @@ type {{.Meta.Name}}HandlerImpl struct{
 			{{- end }}
 		)
 		{{- range $p := $m.Params }}
-		{{ if or (hasPrefix $p.Type "vo.") (hasPrefix $p.Type "*vo.") (hasPrefix $p.Type "[]vo.") (hasPrefix $p.Type "[]*vo.") (contains $p.Type "map[")}}
-		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		defer r.Body.Close()
-		{{ else if eq $p.Type "context.Context" }}
-		{{$p.Name}} = context.Background()
-		{{ else if contains $p.Type "*multipart.FileHeader" }}
+		{{ if contains $p.Type "*multipart.FileHeader" }}
 		if err := r.ParseMultipartForm(32 << 20); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -159,6 +150,15 @@ type {{.Meta.Name}}HandlerImpl struct{
 		{{else}}
 		{{$p.Name}} = files[0]
 		{{end}}
+		{{ else if eq $p.Type "context.Context" }}
+		{{$p.Name}} = context.Background()
+		{{ else if not (isSimple $p)}}
+		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		defer r.Body.Close()
 		{{ else if contains $p.Type "["}}
 		{{$p.Name}} = r.Form("{{$p.Name}}")
 		{{ else }}
@@ -229,16 +229,7 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		)
 		{{- range $p := $m.Params }}
-		{{ if or (hasPrefix $p.Type "vo.") (hasPrefix $p.Type "*vo.") (hasPrefix $p.Type "[]vo.") (hasPrefix $p.Type "[]*vo.") (contains $p.Type "map[")}}
-		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		defer r.Body.Close()
-		{{ else if eq $p.Type "context.Context" }}
-		{{$p.Name}} = context.Background()
-		{{ else if contains $p.Type "*multipart.FileHeader" }}
+		{{ if contains $p.Type "*multipart.FileHeader" }}
 		if err := r.ParseMultipartForm(32 << 20); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -255,6 +246,15 @@ var appendHttpHandlerImplTmpl = `
 		{{else}}
 		{{$p.Name}} = files[0]
 		{{end}}
+		{{ else if eq $p.Type "context.Context" }}
+		{{$p.Name}} = context.Background()
+		{{ else if not (isSimple $p)}}
+		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		defer r.Body.Close()
 		{{ else if contains $p.Type "["}}
 		{{$p.Name}} = r.Form("{{$p.Name}}")
 		{{ else }}
@@ -273,18 +273,36 @@ var appendHttpHandlerImplTmpl = `
 				}
 			{{ end }}
 		{{- end }}
-		if err := json.NewEncoder(w).Encode(struct{
-			{{- range $r := $m.Results }}
-			{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
-			{{- end }}
-		}{
-			{{- range $r := $m.Results }}
-			{{ $r.Name | toCamel }}: {{ $r.Name }},
-			{{- end }}
-		}); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-		}
+		{{ $done := false }}
+		{{- range $r := $m.Results }}
+			{{ if eq $r.Type "*os.File" }}
+				fi, err := {{$r.Name}}.Stat()
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+
+				w.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
+				w.Header().Set("Content-Type", "application/octet-stream")
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+
+				io.Copy(w, {{$r.Name}})
+				{{ $done = true }}	
+			{{ end }}
+		{{- end }}
+		{{ if not $done }}
+			if err := json.NewEncoder(w).Encode(struct{
+				{{- range $r := $m.Results }}
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
+				{{- end }}
+			}{
+				{{- range $r := $m.Results }}
+				{{ $r.Name | toCamel }}: {{ $r.Name }},
+				{{- end }}
+			}); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+			}
+		{{ end }}
     }
 {{- end }}
 `
@@ -382,6 +400,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["hasPrefix"] = templateutils.HasPrefix
 	funcMap["contains"] = strings.Contains
+	funcMap["isSimple"] = IsSimple
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
@@ -405,5 +424,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, sqlBuf.Bytes()...)
+	fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }

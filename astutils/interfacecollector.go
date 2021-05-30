@@ -1,8 +1,12 @@
 package astutils
 
 import (
+	"fmt"
+	"github.com/iancoleman/strcase"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
 type MethodMeta struct {
@@ -69,12 +73,31 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 							panic("not funcType")
 						}
 						var params, results []FieldMeta
+						pkeymap := make(map[string]int)
 						for _, param := range ft.Params.List {
 							var pn string
 							if len(param.Names) > 0 {
 								pn = param.Names[0].Name
 							}
 							pt := exprString(param.Type)
+							if stringutils.IsEmpty(pn) {
+								elemt := strings.TrimPrefix(pt, "*")
+								if stringutils.IsNotEmpty(elemt) {
+									if strings.Contains(elemt, "[") {
+										elemt = elemt[strings.Index(elemt, "]")+1:]
+										elemt = strings.TrimPrefix(elemt, "*")
+									}
+									splits := strings.Split(elemt, ".")
+									_key := "p" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
+									if _, exists := pkeymap[_key]; exists {
+										pkeymap[_key]++
+										pn = _key + fmt.Sprintf("%d", pkeymap[_key])
+									} else {
+										pkeymap[_key]++
+										pn = _key
+									}
+								}
+							}
 							var pComments []string
 							if param.Comment != nil {
 								for _, comment := range param.Comment.List {
@@ -89,12 +112,31 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 							})
 						}
 						if ft.Results != nil {
+							rkeymap := make(map[string]int)
 							for _, result := range ft.Results.List {
 								var rn string
 								if len(result.Names) > 0 {
 									rn = result.Names[0].Name
 								}
 								rt := exprString(result.Type)
+								if stringutils.IsEmpty(rn) {
+									elemt := strings.TrimPrefix(rt, "*")
+									if stringutils.IsNotEmpty(elemt) {
+										if strings.Contains(elemt, "[") {
+											elemt = elemt[strings.Index(elemt, "]")+1:]
+											elemt = strings.TrimPrefix(elemt, "*")
+										}
+										splits := strings.Split(elemt, ".")
+										_key := "r" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
+										if _, exists := rkeymap[_key]; exists {
+											rkeymap[_key]++
+											rn = _key + fmt.Sprintf("%d", rkeymap[_key])
+										} else {
+											rkeymap[_key]++
+											rn = _key
+										}
+									}
+								}
 								var rComments []string
 								if result.Comment != nil {
 									for _, comment := range result.Comment.List {

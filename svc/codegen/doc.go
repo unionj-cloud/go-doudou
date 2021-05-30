@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/constants"
+	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -94,7 +95,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 				}
 			}
 		}
-		if strings.Contains(ft, "vo.") {
+		if strings.HasPrefix(ft, "vo.") {
 			title := strings.TrimPrefix(ft, "vo.")
 			return &v3.Schema{
 				Ref: "#/components/schemas/" + title,
@@ -160,44 +161,95 @@ func vosOf(ic astutils.InterfaceCollector) []string {
 	return vos
 }
 
-func operationOf(method astutils.MethodMeta) v3.Operation {
+const (
+	get    = "GET"
+	post   = "POST"
+	put    = "PUT"
+	delete = "DELETE"
+)
+
+func IsSimple(field astutils.FieldMeta) bool {
+	simples := []interface{}{v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64}
+	pschema := schemaOf(field)
+	return sliceutils.Contains(simples, pschema) || (pschema.Type == v3.ArrayT && sliceutils.Contains(simples, pschema.Items))
+}
+
+func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	var ret v3.Operation
 	var params []v3.Parameter
+
+	// If http method is "POST" and each parameters' type is one of v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64,
+	// then we use application/x-www-form-urlencoded as Content-type and we make one ref schema from them as request body.
+	var pschemas []*v3.Schema
 	for _, item := range method.Params {
-		pschema := schemaOf(item)
-		if pschema == v3.Any {
-			continue
+		if IsSimple(item) {
+			pschemas = append(pschemas, schemaOf(item))
 		}
-		if reflect.DeepEqual(pschema, v3.FileArray) || pschema == v3.File {
-			var content v3.Content
-			mt := &v3.MediaType{
-				Schema: pschema,
+	}
+	if httpMethod == post && len(pschemas) == len(method.Params) {
+		title := method.Name + "Req"
+		reqSchema := v3.Schema{
+			Type:       v3.ObjectT,
+			Title:      title,
+			Properties: make(map[string]*v3.Schema),
+		}
+		for _, item := range method.Params {
+			key := item.Name
+			reqSchema.Properties[strcase.ToLowerCamel(key)] = schemaOf(item)
+		}
+		schemas[title] = reqSchema
+		mt := &v3.MediaType{
+			Schema: &v3.Schema{
+				Ref: "#/components/schemas/" + title,
+			},
+		}
+		var content v3.Content
+		reflect.ValueOf(&content).Elem().FieldByName("FormUrl").Set(reflect.ValueOf(mt))
+		ret.RequestBody = &v3.RequestBody{
+			Content:  &content,
+			Required: true,
+		}
+	} else {
+		// Simple parameters such as v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64 and corresponding Array type
+		// will be put into query parameter as url search params no matter what http method is.
+		// Complex parameters such as structs in vo package, map and corresponding slice/array type
+		// will be put into request body as json content type.
+		// File and file array parameter will be put into request body as multipart/form-data content type.
+		for _, item := range method.Params {
+			if item.Type == "context.Context" {
+				continue
 			}
-			reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
-			ret.RequestBody = &v3.RequestBody{
-				Content:  &content,
-				Required: true,
-			}
-		} else if stringutils.IsEmpty(pschema.Ref) &&
-			pschema.Type != v3.ObjectT &&
-			(pschema.Type != v3.ArrayT || (stringutils.IsEmpty(pschema.Items.Ref) && pschema.Items.Type != v3.ObjectT && pschema.Items.Type != v3.ArrayT)) {
-			params = append(params, v3.Parameter{
-				Name:   strcase.ToLowerCamel(item.Name),
-				In:     v3.InQuery,
-				Schema: pschema,
-			})
-		} else {
-			var content v3.Content
-			mt := &v3.MediaType{
-				Schema: pschema,
-			}
-			reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
-			ret.RequestBody = &v3.RequestBody{
-				Content:  &content,
-				Required: true,
+			pschema := schemaOf(item)
+			if reflect.DeepEqual(pschema, v3.FileArray) || pschema == v3.File {
+				var content v3.Content
+				mt := &v3.MediaType{
+					Schema: pschema,
+				}
+				reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
+				ret.RequestBody = &v3.RequestBody{
+					Content:  &content,
+					Required: true,
+				}
+			} else if IsSimple(item) {
+				params = append(params, v3.Parameter{
+					Name:   strcase.ToLowerCamel(item.Name),
+					In:     v3.InQuery,
+					Schema: pschema,
+				})
+			} else {
+				var content v3.Content
+				mt := &v3.MediaType{
+					Schema: pschema,
+				}
+				reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
+				ret.RequestBody = &v3.RequestBody{
+					Content:  &content,
+					Required: true,
+				}
 			}
 		}
 	}
+
 	ret.Parameters = params
 	var respContent v3.Content
 	var hasFile bool
@@ -242,8 +294,8 @@ func operationOf(method astutils.MethodMeta) v3.Operation {
 
 func pathOf(method astutils.MethodMeta) v3.Path {
 	var ret v3.Path
-	op := operationOf(method)
 	hm := httpMethod(method.Name)
+	op := operationOf(method, hm)
 	reflect.ValueOf(&ret).Elem().FieldByName(strings.Title(strings.ToLower(hm))).Set(reflect.ValueOf(&op))
 	return ret
 }
