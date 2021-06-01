@@ -169,3 +169,36 @@ func TestIndexOfAnyNotContain(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertAny2Interface(t *testing.T) {
+	type args struct {
+		src interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []interface{}
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				src: []int{1, 2, 3},
+			},
+			want:    []interface{}{1, 2, 3},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertAny2Interface(tt.args.src)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertAny2Interface() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertAny2Interface() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
