@@ -2,6 +2,7 @@ package svc
 
 import (
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"testing"
 )
 
@@ -61,4 +62,28 @@ func ExampleParseInterface() {
 	fmt.Printf("%+v\n", ic)
 	// Output:
 
+}
+
+func Test_checkIc(t *testing.T) {
+	svcfile := "/Users/wubin1989/workspace/cloud/ordersvc/svc.go"
+	ic := buildIc(svcfile)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checkIc(ic)
+		})
+	}
 }

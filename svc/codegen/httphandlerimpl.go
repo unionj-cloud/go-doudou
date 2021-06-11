@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/copier"
-	"github.com/unionj-cloud/go-doudou/templateutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -81,7 +80,6 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 		funcMap := make(map[string]interface{})
 		funcMap["toLowerCamel"] = strcase.ToLowerCamel
 		funcMap["toCamel"] = strcase.ToCamel
-		funcMap["hasPrefix"] = templateutils.HasPrefix
 		if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(httpHandlerImpl); err != nil {
 			panic(err)
 		}
@@ -118,67 +116,67 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		)
 		{{- range $p := $m.Params }}
-		{{ if contains $p.Type "*multipart.FileHeader" }}
+		{{- if contains $p.Type "*multipart.FileHeader" }}
 		if err := r.ParseMultipartForm(32 << 20); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		files := r.MultipartForm.File["{{$p.Name}}"]
-		if len(files) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("no file received"))
-			return
+		{{$p.Name}}Files := r.MultipartForm.File["{{$p.Name}}"]
+		{{- if contains $p.Type "["}}
+		{{$p.Name}} = {{$p.Name}}Files
+		{{- else}}
+		if len({{$p.Name}}Files) > 0 {
+			{{$p.Name}} = {{$p.Name}}Files[0]
 		}
-		{{if contains $p.Type "["}}
-		{{$p.Name}} = files
-		{{else}}
-		{{$p.Name}} = files[0]
-		{{end}}
-		{{ else if eq $p.Type "context.Context" }}
+		{{- end}}
+		{{- else if eq $p.Type "context.Context" }}
 		{{$p.Name}} = context.Background()
-		{{ else if not (isSimple $p)}}
+		{{- else if not (isSimple $p)}}
 		if err := json.NewDecoder(r.Body).Decode(&{{$p.Name}}); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 		defer r.Body.Close()
-		{{ else if contains $p.Type "["}}
-		{{$p.Name}} = r.Form("{{$p.Name}}")
-		{{ else }}
+		{{- else if contains $p.Type "["}}
+		if err := r.ParseForm(); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		{{$p.Name}} = r.Form["{{$p.Name}}"]
+		{{- else }}
 		{{$p.Name}} = r.FormValue("{{$p.Name}}")
-		{{ end }}
 		{{- end }}
-		{{range $i, $r := $m.Results }}{{- if $i}},{{end}}{{ $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
+		{{- end }}
+		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
 			{{- range $p := $m.Params }}
 			{{ $p.Name }},
 			{{- end }}
 		)
 		{{- range $r := $m.Results }}
-			{{ if eq $r.Type "error" }}
+			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 				}
-			{{ end }}
+			{{- end }}
 		{{- end }}
-		{{ $done := false }}
+		{{- $done := false }}
 		{{- range $r := $m.Results }}
-			{{ if eq $r.Type "*os.File" }}
+			{{- if eq $r.Type "*os.File" }}
 				fi, err := {{$r.Name}}.Stat()
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 				}
-
 				w.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
 				w.Header().Set("Content-Type", "application/octet-stream")
 				w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
-
 				io.Copy(w, {{$r.Name}})
-				{{ $done = true }}	
-			{{ end }}
+				{{- $done = true }}	
+			{{- end }}
 		{{- end }}
-		{{ if not $done }}
+		{{- if not $done }}
 			if err := json.NewEncoder(w).Encode(struct{
 				{{- range $r := $m.Results }}
 				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
@@ -191,7 +189,7 @@ var appendHttpHandlerImplTmpl = `
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(err.Error()))
 			}
-		{{ end }}
+		{{- end }}
     }
 {{- end }}
 `
@@ -312,7 +310,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
-	funcMap["hasPrefix"] = templateutils.HasPrefix
 	funcMap["contains"] = strings.Contains
 	funcMap["isSimple"] = IsSimple
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {

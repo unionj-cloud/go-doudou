@@ -33,6 +33,7 @@ type SvcCmd interface {
 type Svc struct {
 	Dir     string
 	Handler bool
+	Client  string
 }
 
 func buildIc(svcfile string) astutils.InterfaceCollector {
@@ -80,6 +81,12 @@ func (receiver Svc) Http() {
 		} else {
 			codegen.GenHttpHandlerImpl(dir, ic)
 		}
+		if stringutils.IsNotEmpty(receiver.Client) {
+			switch receiver.Client {
+			case "go":
+				codegen.GenGoClient(dir, ic)
+			}
+		}
 		codegen.GenSvcImpl(dir, ic)
 		codegen.GenDoc(dir, ic)
 	}
@@ -92,6 +99,9 @@ func checkIc(ic astutils.InterfaceCollector) {
 	svcInter := ic.Interfaces[0]
 	for _, method := range svcInter.Methods {
 		var complexParams []string
+		// Append *multipart.FileHeader value to complexTypes only once at most as multipart/form-data support multiple fields as file type
+		var complexTypes []string
+		cpmap := make(map[string]int)
 		for _, param := range method.Params {
 			if param.Type == "context.Context" {
 				continue
@@ -101,9 +111,28 @@ func checkIc(ic astutils.InterfaceCollector) {
 			}
 			if !codegen.IsSimple(param) {
 				complexParams = append(complexParams, param.Name)
+				ptype := param.Type
+				if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
+					elem := ptype[strings.Index(ptype, "]")+1:]
+					if elem == "*multipart.FileHeader" {
+						if _, exists := cpmap[elem]; !exists {
+							cpmap[elem]++
+							complexTypes = append(complexTypes, elem)
+						}
+						continue
+					}
+				}
+				if ptype == "*multipart.FileHeader" {
+					if _, exists := cpmap[ptype]; !exists {
+						cpmap[ptype]++
+						complexTypes = append(complexTypes, ptype)
+					}
+					continue
+				}
+				complexTypes = append(complexTypes, param.Type)
 			}
 		}
-		if len(complexParams) > 1 {
+		if len(complexTypes) > 1 {
 			panic("Too many struct/map/*multipart.FileHeader parameters, can't decide which one should be put into request body!")
 		}
 	}
@@ -332,7 +361,7 @@ go {{.GoVersion}}
 require (
     github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v0.2.2
+	github.com/unionj-cloud/go-doudou v0.2.3
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 )`
