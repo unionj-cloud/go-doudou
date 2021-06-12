@@ -10,27 +10,32 @@ import (
 var httpMwTmpl = `package httpsrv
 
 import (
+	"github.com/felixge/httpsnoop"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"net/http"
-	"time"
 )
 
 func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		inner.ServeHTTP(w, r)
-		logrus.Infof(
-			"%s\t%s\t%s\n",
+		m := httpsnoop.CaptureMetrics(inner, w, r)
+		logrus.Printf(
+			"%s\t%s\t%s\t%d\t%d\t%s\n",
+			r.RemoteAddr,
 			r.Method,
-			r.RequestURI,
-			time.Since(start),
+			r.URL,
+			m.Code,
+			m.Written,
+			m.Duration,
 		)
 	})
 }
 
 func Rest(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		}
 		inner.ServeHTTP(w, r)
 	})
 }

@@ -88,6 +88,7 @@ type {{.Meta.Name}}Client struct {
 		_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
 		{{- end}}
 		{{- else if eq $p.Type "context.Context" }}
+		_req.SetContext({{$p.Name}})
 		{{- else if not (isSimple $p)}}
 		_req.SetBody({{$p.Name}})
 		{{- else if contains $p.Type "["}}
