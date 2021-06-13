@@ -28,4 +28,4 @@ jobs:
       - store_test_results:
           path: /tmp/test-reports
       - codecov/upload:
-          file: /tmp/test-reports/unit-tests.xml
+          file: /tmp/test-reports/cover.out
