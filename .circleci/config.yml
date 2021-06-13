@@ -24,7 +24,7 @@ jobs:
           command: |
             PACKAGE_NAMES=$(go list ./... | grep -v /testfiles/ | circleci tests split --split-by=timings --timings-type=classname)
             mkdir -p /tmp/test-reports
-            gotestsum --junitfile /tmp/test-reports/unit-tests.xml -- $PACKAGE_NAMES
+            gotestsum --junitfile /tmp/test-reports/unit-tests.xml -- -coverprofile=cover.out $PACKAGE_NAMES
       - store_test_results:
           path: /tmp/test-reports
       - codecov/upload:
