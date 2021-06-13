@@ -155,7 +155,11 @@ var appendHttpHandlerImplTmpl = `
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
-					_writer.WriteHeader(http.StatusInternalServerError)
+					if {{ $r.Name }} == context.Canceled {
+						_writer.WriteHeader(http.StatusBadRequest)
+					} else {
+						_writer.WriteHeader(http.StatusInternalServerError)
+					}
 				}
 			{{- end }}
 		{{- end }}
@@ -176,11 +180,19 @@ var appendHttpHandlerImplTmpl = `
 		{{- if not $done }}
 			if err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
+				{{- if eq $r.Type "error" }}
+				{{ $r.Name | toCamel }} string ` + "`" + `json:"{{ $r.Name | toLowerCamel }},omitempty"` + "`" + `
+				{{- else }}
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }},omitempty"` + "`" + `
+				{{- end }}
 				{{- end }}
 			}{
 				{{- range $r := $m.Results }}
+				{{- if eq $r.Type "error" }}
+				{{ $r.Name | toCamel }}: {{ $r.Name }}.Error(),
+				{{- else }}
 				{{ $r.Name | toCamel }}: {{ $r.Name }},
+				{{- end }}
 				{{- end }}
 			}); err != nil {
 				http.Error(_writer, err.Error(), http.StatusInternalServerError)

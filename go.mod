@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
-	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee // indirect
+	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/deckarep/golang-set v1.7.1
 	github.com/felixge/httpsnoop v1.0.2

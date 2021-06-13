@@ -13,6 +13,8 @@ import (
 var mainTmpl = `package main
 
 import (
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
@@ -45,7 +47,7 @@ func main() {
 
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(httpsrv.Logger, httpsrv.Rest)
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
