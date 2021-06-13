@@ -1,5 +1,6 @@
 ## go-doudou
 [![unionj-cloud](https://circleci.com/gh/unionj-cloud/go-doudou.svg?style=shield)](https://circleci.com/gh/unionj-cloud/go-doudou)
+[![codecov](https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885)](https://codecov.io/gh/unionj-cloud/go-doudou)
 
 基于gossip协议的go语言微服务敏捷开发框架go-doudou（doudou发音/dəudəu/），包含必要的基础设施和提效的工具箱。还在开发中，敬请期待...
 
