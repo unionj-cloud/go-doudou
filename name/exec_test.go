@@ -1,6 +1,9 @@
 package name
 
-import "testing"
+import (
+	"github.com/unionj-cloud/go-doudou/pathutils"
+	"testing"
+)
 
 func TestName_Exec(t *testing.T) {
 	type fields struct {
@@ -14,7 +17,7 @@ func TestName_Exec(t *testing.T) {
 		{
 			name: "1",
 			fields: fields{
-				File:     "/Users/wubin1989/workspace/cloud/go-doudou/example/doudou/vo/vo.go",
+				File:     pathutils.Abs("testfiles/vo.go"),
 				Strategy: "lowerCaseNamingStrategy",
 			},
 		},

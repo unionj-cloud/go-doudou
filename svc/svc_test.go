@@ -1,10 +1,17 @@
 package svc
 
 import (
-	"fmt"
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/pathutils"
+	"os"
 	"testing"
 )
+
+var testDir string
+
+func init() {
+	testDir = pathutils.Abs("testfiles")
+}
 
 func TestSvc_Create(t *testing.T) {
 	type fields struct {
@@ -17,7 +24,7 @@ func TestSvc_Create(t *testing.T) {
 		{
 			name: "1",
 			fields: fields{
-				Dir: "/Users/wubin1989/workspace/cloud/comment-svc",
+				Dir: testDir + "1",
 			},
 		},
 	}
@@ -27,6 +34,7 @@ func TestSvc_Create(t *testing.T) {
 				Dir: tt.fields.Dir,
 			}
 			receiver.Init()
+			defer os.RemoveAll(testDir + "1")
 		})
 	}
 }
@@ -42,7 +50,7 @@ func TestSvc_Http(t *testing.T) {
 		{
 			name: "2",
 			fields: fields{
-				Dir: "/Users/wubin1989/workspace/cloud/comment-svc",
+				Dir: testDir + "2",
 			},
 		},
 	}
@@ -51,21 +59,20 @@ func TestSvc_Http(t *testing.T) {
 			receiver := Svc{
 				Dir: tt.fields.Dir,
 			}
+			receiver.Init()
+			defer os.RemoveAll(testDir + "2")
 			receiver.Http()
 		})
 	}
 }
 
-func ExampleParseInterface() {
-	svcfile := "/Users/wubin1989/workspace/cloud/comment-svc/svc.go"
-	ic := buildIc(svcfile)
-	fmt.Printf("%+v\n", ic)
-	// Output:
-
-}
-
 func Test_checkIc(t *testing.T) {
-	svcfile := "/Users/wubin1989/workspace/cloud/ordersvc/svc.go"
+	receiver := Svc{
+		Dir: testDir + "3",
+	}
+	receiver.Init()
+	defer os.RemoveAll(testDir + "3")
+	svcfile := testDir + "3" + "/svc.go"
 	ic := buildIc(svcfile)
 	type args struct {
 		ic astutils.InterfaceCollector

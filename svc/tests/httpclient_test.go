@@ -1,13 +1,21 @@
-package codegen
+package tests
 
 import (
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/svc"
+	. "github.com/unionj-cloud/go-doudou/svc/codegen"
+	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestGenGoClient(t *testing.T) {
-	dir := "/Users/wubin1989/workspace/cloud/usersvc"
+	dir := testDir + "client1"
+	receiver := svc.Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
 	svcfile := filepath.Join(dir, "svc.go")
 	ic := buildIc(svcfile)
 

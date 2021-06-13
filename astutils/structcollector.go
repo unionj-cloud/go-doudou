@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"bufio"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
 	"go/token"
 	"os"
@@ -162,7 +163,7 @@ func (sc *StructCollector) FlatEmbed() []StructMeta {
 		if sliceutils.IsEmpty(structMeta.Comments) {
 			continue
 		}
-		if structMeta.Comments[0] != "//dd:table" {
+		if !stringutils.Contains(structMeta.Comments[0], "dd:table") {
 			continue
 		}
 		_structMeta := StructMeta{

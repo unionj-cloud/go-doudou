@@ -1,8 +1,19 @@
-package codegen
+package tests
 
-import "testing"
+import (
+	"github.com/unionj-cloud/go-doudou/svc"
+	. "github.com/unionj-cloud/go-doudou/svc/codegen"
+	"os"
+	"testing"
+)
 
 func TestGenRouterMiddleware(t *testing.T) {
+	dir := testDir + "middleware1"
+	receiver := svc.Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
 	type args struct {
 		dir string
 	}
@@ -13,7 +24,7 @@ func TestGenRouterMiddleware(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				dir: "/Users/wubin1989/workspace/cloud/comment-svc",
+				dir: dir,
 			},
 		},
 	}
