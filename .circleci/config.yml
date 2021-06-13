@@ -25,3 +25,6 @@ jobs:
       - run:
           name: Upload coverage to Codecov
           command: bash <(curl -s https://codecov.io/bash)
+      - run:
+          name: Run install
+          command: go install ./...
