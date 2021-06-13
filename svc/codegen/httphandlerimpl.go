@@ -156,23 +156,30 @@ var appendHttpHandlerImplTmpl = `
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
 					if {{ $r.Name }} == context.Canceled {
-						_writer.WriteHeader(http.StatusBadRequest)
+						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
 					} else {
-						_writer.WriteHeader(http.StatusInternalServerError)
+						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
 					}
+					return
 				}
 			{{- end }}
 		{{- end }}
 		{{- $done := false }}
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "*os.File" }}
-				fi, err := {{$r.Name}}.Stat()
-				if err != nil {
-					_writer.WriteHeader(http.StatusInternalServerError)
+				if {{$r.Name}} == nil {
+					http.Error(_writer, "No file returned", http.StatusInternalServerError)
+					return
 				}
-				_writer.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
+				var _fi os.FileInfo
+				_fi, _err := {{$r.Name}}.Stat()
+				if _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusInternalServerError)
+					return
+				}
+				_writer.Header().Set("Content-Disposition", "attachment; filename="+_fi.Name())
 				_writer.Header().Set("Content-Type", "application/octet-stream")
-				_writer.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+				_writer.Header().Set("Content-Length", fmt.Sprintf("%d", _fi.Size()))
 				io.Copy(_writer, {{$r.Name}})
 				{{- $done = true }}	
 			{{- end }}
@@ -180,17 +187,13 @@ var appendHttpHandlerImplTmpl = `
 		{{- if not $done }}
 			if err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
-				{{- if eq $r.Type "error" }}
-				{{ $r.Name | toCamel }} string ` + "`" + `json:"{{ $r.Name | toLowerCamel }},omitempty"` + "`" + `
-				{{- else }}
+				{{- if ne $r.Type "error" }}
 				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }},omitempty"` + "`" + `
 				{{- end }}
 				{{- end }}
 			}{
 				{{- range $r := $m.Results }}
-				{{- if eq $r.Type "error" }}
-				{{ $r.Name | toCamel }}: {{ $r.Name }}.Error(),
-				{{- else }}
+				{{- if ne $r.Type "error" }}
 				{{ $r.Name | toCamel }}: {{ $r.Name }},
 				{{- end }}
 				{{- end }}
