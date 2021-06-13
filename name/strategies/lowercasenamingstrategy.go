@@ -28,13 +28,20 @@ package {{ .StructCollector.Package.Name }}
 import (
 	"encoding/json"
 	"github.com/unionj-cloud/go-doudou/name/strategies"
+	"reflect"
 )
 
 {{ range $struct := .StructCollector.Structs }}
 func (object {{$struct.Name}}) MarshalJSON() ([]byte, error) {
 	objectMap := make(map[string]interface{})
 	{{- range $field := $struct.Fields}}
+	{{- if $.Omitempty }}
+	if !reflect.ValueOf(object.{{$field.Name}}).IsZero() {
+		objectMap[strategies.LowerCaseConvert("{{$field.Name}}")] = object.{{$field.Name}}
+	}
+	{{- else }}
 	objectMap[strategies.LowerCaseConvert("{{$field.Name}}")] = object.{{$field.Name}}
+	{{- end }}
 	{{- end }}
 	return json.Marshal(objectMap)
 }

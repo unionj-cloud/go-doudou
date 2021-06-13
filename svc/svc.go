@@ -31,9 +31,10 @@ type SvcCmd interface {
 }
 
 type Svc struct {
-	Dir     string
-	Handler bool
-	Client  string
+	Dir       string
+	Handler   bool
+	Client    string
+	Omitempty bool
 }
 
 func buildIc(svcfile string) astutils.InterfaceCollector {
@@ -77,7 +78,7 @@ func (receiver Svc) Http() {
 		codegen.GenMain(dir, ic)
 		codegen.GenHttpHandler(dir, ic)
 		if receiver.Handler {
-			codegen.GenHttpHandlerImplWithImpl(dir, ic)
+			codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty)
 		} else {
 			codegen.GenHttpHandlerImpl(dir, ic)
 		}

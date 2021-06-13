@@ -28,6 +28,7 @@ import (
 
 var file string
 var strategy string
+var omitempty bool
 
 // nameCmd represents the name command
 var nameCmd = &cobra.Command{
@@ -40,7 +41,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		n := name.Name{file, strategy}
+		n := name.Name{file, strategy, omitempty}
 		n.Exec()
 	},
 }
@@ -58,4 +59,5 @@ func init() {
 	// is called directly, e.g.:
 	nameCmd.Flags().StringVar(&file, "file", "", "absolute path of vo file")
 	nameCmd.Flags().StringVar(&strategy, "strategy", "lowerCaseNamingStrategy", "name of strategy")
+	nameCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, "whether omit empty value or not")
 }

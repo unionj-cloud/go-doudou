@@ -1,6 +1,7 @@
 package name
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/name/strategies"
@@ -15,8 +16,9 @@ import (
 )
 
 type Name struct {
-	File     string
-	Strategy string
+	File      string
+	Strategy  string
+	Omitempty bool
 }
 
 func (receiver Name) Exec() {
@@ -40,11 +42,17 @@ func (receiver Name) Exec() {
 	}
 	defer f.Close()
 
-	strategies.Registry[receiver.Strategy].Execute(f, struct {
+	var sqlBuf bytes.Buffer
+	strategies.Registry[receiver.Strategy].Execute(&sqlBuf, struct {
 		StructCollector astutils.StructCollector
 		Timestamp       time.Time
+		Omitempty       bool
 	}{
 		StructCollector: sc,
 		Timestamp:       time.Now(),
+		Omitempty:       receiver.Omitempty,
 	})
+
+	source := strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), marshalers)
 }

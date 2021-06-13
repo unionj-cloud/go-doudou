@@ -93,10 +93,10 @@ type {{.Meta.Name}}Client struct {
 		_req.SetBody({{$p.Name}})
 		{{- else if contains $p.Type "["}}
 		for _, _item := range {{$p.Name}} {
-			_urlValues.Add("{{$p.Name}}", _item)
+			_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
 		}
 		{{- else }}
-		_urlValues.Set("{{$p.Name}}", {{$p.Name}})
+		_urlValues.Set("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
 		{{- end }}
 		{{- end }}
 

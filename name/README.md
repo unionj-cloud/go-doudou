@@ -19,7 +19,7 @@
 ### 命令行参数
 
 ```shell
-➜  ~ go-doudou name -h
+➜  go-doudou git:(main) ✗ go-doudou name -h
 A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -33,6 +33,7 @@ Usage:
 Flags:
       --file string       absolute path of vo file
   -h, --help              help for name
+  -o, --omitempty         whether omit empty value or not
       --strategy string   name of strategy (default "lowerCaseNamingStrategy")
 
 Global Flags:
@@ -142,7 +143,7 @@ func (object Company) MarshalJSON() ([]byte, error) {
 
 ### TODO
 
-+ [ ] 支持omitempty
++ [x] 支持omitempty
 + [ ] 蛇形命名策略
 + [ ] 只针对上方标注了`//go:generate name -file $GOFILE`的结构体生效，而不是对整个文件的结构体都生效
 

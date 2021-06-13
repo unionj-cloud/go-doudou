@@ -2,7 +2,7 @@ package ddhttp
 
 import "net/http"
 
-//go:generate go-doudou name --file $GOFILE
+//go:generate go-doudou name --file $GOFILE -o
 
 // POST /usersvc/pageusers HTTP/1.1
 //Host: localhost:6060

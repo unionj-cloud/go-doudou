@@ -142,9 +142,27 @@ var appendHttpHandlerImplTmpl = `
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
 		}
+		{{- if $p.Type | isSupport }}
+		if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
+			http.Error(_writer, err.Error(), http.StatusBadRequest)
+			return
+		} else {
+			{{$p.Name}} = casted
+		}
+		{{- else }}
 		{{$p.Name}} = _req.Form["{{$p.Name}}"]
+		{{- end }}
+		{{- else }}
+		{{- if $p.Type | isSupport }}
+		if casted, err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
+			http.Error(_writer, err.Error(), http.StatusBadRequest)
+			return
+		} else {
+			{{$p.Name}} = casted
+		}
 		{{- else }}
 		{{$p.Name}} = _req.FormValue("{{$p.Name}}")
+		{{- end }}
 		{{- end }}
 		{{- end }}
 		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
@@ -188,7 +206,7 @@ var appendHttpHandlerImplTmpl = `
 			if err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }},omitempty"` + "`" + `
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}{{if $.Omitempty}},omitempty{{end}}"` + "`" + `
 				{{- end }}
 				{{- end }}
 			}{
@@ -213,6 +231,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
@@ -230,10 +249,38 @@ func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{
 	}
 }
 `
+var castFuncMap = map[string]string{
+	"bool":          "ToBool",
+	"float64":       "ToFloat64",
+	"float32":       "ToFloat32",
+	"int64":         "ToInt64",
+	"int32":         "ToInt32",
+	"int16":         "ToInt16",
+	"int8":          "ToInt8",
+	"int":           "ToInt",
+	"uint":          "ToUint",
+	"uint8":         "ToUint8",
+	"uint16":        "ToUint16",
+	"uint32":        "ToUint32",
+	"uint64":        "ToUint64",
+	"[]interface{}": "ToSlice",
+	"[]bool":        "ToBoolSlice",
+	"[]string":      "ToStringSlice",
+	"[]int":         "ToIntSlice",
+}
+
+func isSupport(t string) bool {
+	_, exists := castFuncMap[t]
+	return exists
+}
+
+func castFunc(t string) string {
+	return castFuncMap[t]
+}
 
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
 // You may need to convert the type by yourself.
-func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
+func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omitempty bool) {
 	var (
 		err             error
 		modfile         string
@@ -324,6 +371,8 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
 	funcMap["isSimple"] = IsSimple
+	funcMap["isSupport"] = isSupport
+	funcMap["castFunc"] = castFunc
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
@@ -332,11 +381,13 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector) {
 		ServiceAlias   string
 		VoPackage      string
 		Meta           astutils.InterfaceMeta
+		Omitempty      bool
 	}{
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
 		VoPackage:      modName + "/vo",
 		Meta:           meta,
+		Omitempty:      omitempty,
 	}); err != nil {
 		panic(err)
 	}
