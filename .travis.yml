@@ -1,0 +1,15 @@
+language: go
+
+sudo: required
+services:
+  - docker
+
+env:
+  - CODECOV_TOKEN=d13aebe2-7368-47e7-9280-d0664086386f
+  - GO111MODULE=on
+
+script:
+  - go test $(go list ./... | grep -v /testfiles/) -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
