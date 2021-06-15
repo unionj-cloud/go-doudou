@@ -47,9 +47,10 @@ func SetupMySQLContainer(logger *logrus.Logger) (func(), string, int, error) {
 		}
 	}
 
-	host, _ := mysqlC.Host(ctx)
+	//host, _ := mysqlC.Host(ctx)
 	p, _ := mysqlC.MappedPort(ctx, "3306/tcp")
 	port := p.Int()
+	host, _ := mysqlC.Name(ctx)
 
 	return closeContainer, host, port, nil
 }
