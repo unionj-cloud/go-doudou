@@ -6,7 +6,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/codegen"
@@ -24,7 +23,7 @@ import (
 	"strings"
 )
 
-type dbConfig struct {
+type DbConfig struct {
 	Host    string
 	Port    string
 	User    string
@@ -39,17 +38,13 @@ type Ddl struct {
 	Dao     bool
 	Pre     string
 	Df      string
+	Conf    DbConfig
 }
 
 func (d Ddl) Exec() {
 	var db *sqlx.DB
 	var err error
-	var conf dbConfig
-	err = envconfig.Process("db", &conf)
-	if err != nil {
-		logrus.Panicln("Error processing env", err)
-	}
-
+	conf := d.Conf
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
 		conf.User,
 		conf.Passwd,
