@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 )
 
 type Name struct {
@@ -45,11 +44,9 @@ func (receiver Name) Exec() {
 	var sqlBuf bytes.Buffer
 	strategies.Registry[receiver.Strategy].Execute(&sqlBuf, struct {
 		StructCollector astutils.StructCollector
-		Timestamp       time.Time
 		Omitempty       bool
 	}{
 		StructCollector: sc,
-		Timestamp:       time.Now(),
 		Omitempty:       receiver.Omitempty,
 	})
 

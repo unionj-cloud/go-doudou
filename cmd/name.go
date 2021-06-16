@@ -57,7 +57,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	nameCmd.Flags().StringVar(&file, "file", "", "absolute path of vo file")
-	nameCmd.Flags().StringVar(&strategy, "strategy", "lowerCaseNamingStrategy", "name of strategy")
+	nameCmd.Flags().StringVarP(&file, "file", "f", "", "absolute path of vo file")
+	nameCmd.Flags().StringVarP(&strategy, "strategy", "s", "lowerCaseNamingStrategy", "name of strategy")
 	nameCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, "whether omit empty value or not")
 }
