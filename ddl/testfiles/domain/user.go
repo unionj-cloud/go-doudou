@@ -1,4 +1,4 @@
-package testfile
+package domain
 
 //dd:table
 type User struct {
