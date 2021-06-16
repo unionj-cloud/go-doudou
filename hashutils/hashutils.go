@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
 func Sha1(input string) string {
@@ -14,6 +15,9 @@ func Sha1(input string) string {
 }
 
 func Secret2Password(username, secret string) string {
+	if stringutils.IsEmpty(secret) {
+		return Sha1(Sha1(secret) + Sha1(username) + Sha1(secret))
+	}
 	return Sha1(Sha1(secret[:8]) + Sha1(username) + Sha1(secret[8:]))
 }
 

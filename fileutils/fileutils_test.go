@@ -23,6 +23,13 @@ func TestCreateDirectory(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "",
+			args: args{
+				dir: "/TestCreateDirectory",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

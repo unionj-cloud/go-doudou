@@ -2,3 +2,4 @@
 example/ddl/dao/
 example/doudou/dao/
 **/cover.out
+**/coverage.txt

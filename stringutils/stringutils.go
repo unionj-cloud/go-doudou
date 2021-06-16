@@ -19,10 +19,6 @@ func ContainsI(s string, substr string) bool {
 	return re.MatchString(s)
 }
 
-func Contains(s string, substr string) bool {
-	return strings.Contains(s, substr)
-}
-
 func HasPrefixI(s, prefix string) bool {
 	re := regexp.MustCompile(`(?i)^` + prefix)
 	return re.MatchString(s)

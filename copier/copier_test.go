@@ -114,9 +114,9 @@ func TestDeepCopy_ShouldHasError(t *testing.T) {
 			name: "TestDeepCopy",
 			args: args{
 				src:    src,
-				target: &target,
+				target: target,
 			},
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -124,7 +124,6 @@ func TestDeepCopy_ShouldHasError(t *testing.T) {
 			if err := DeepCopy(tt.args.src, tt.args.target); (err != nil) != tt.wantErr {
 				t.Errorf("DeepCopy() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			fmt.Printf("%#v\n", tt.args.target)
 		})
 	}
 }

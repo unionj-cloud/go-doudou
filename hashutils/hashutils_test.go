@@ -46,6 +46,14 @@ func TestSecret2Password(t *testing.T) {
 			},
 			want: "cff23c519b29a0e0c0304ff1a3d795f171b9c919",
 		},
+		{
+			name: "",
+			args: args{
+				username: "wubin",
+				secret:   "",
+			},
+			want: "f85610573ac9cda1a0e27e27406e9125e0e2403d",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

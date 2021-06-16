@@ -73,3 +73,69 @@ func TestHasPrefixI(t *testing.T) {
 		})
 	}
 }
+
+func TestIsEmpty(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "1",
+			args: args{
+				s: " abc ",
+			},
+			want: false,
+		},
+		{
+			name: "2",
+			args: args{
+				s: "      ",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsEmpty(tt.args.s); got != tt.want {
+				t.Errorf("IsEmpty() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsNotEmpty(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				s: " abc ",
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: "      ",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsNotEmpty(tt.args.s); got != tt.want {
+				t.Errorf("IsNotEmpty() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
