@@ -1,12 +1,19 @@
 package registry
 
 import (
+	"encoding/json"
 	"github.com/hashicorp/memberlist"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"os"
 	"sync"
 )
+
+type IRegistry interface {
+	Register() error
+	Discovery(svc string) ([]*Node, error)
+}
 
 type NodeMeta struct {
 	Service string `json:"service"`
@@ -17,13 +24,13 @@ type NodeConfig struct {
 }
 
 type Node struct {
-	conf        *NodeConfig
-	meta        NodeMeta
-	broadcasts  *memberlist.TransmitLimitedQueue
-	memberlist  *memberlist.Memberlist
-	lock        sync.Mutex
-	memberLock  sync.RWMutex
-	memberNode  *memberlist.Node
+	conf       *NodeConfig
+	meta       NodeMeta
+	broadcasts *memberlist.TransmitLimitedQueue
+	memberlist *memberlist.Memberlist
+	lock       sync.Mutex
+	memberLock sync.RWMutex
+	memberNode *memberlist.Node
 }
 
 func NewNode(conf *NodeConfig) (*Node, error) {
@@ -50,10 +57,42 @@ func NewNode(conf *NodeConfig) (*Node, error) {
 	return node, nil
 }
 
-func (s *Node) NumNodes() (numNodes int) {
-	s.memberLock.RLock()
-	numNodes = len(s.memberlist.Members())
-	s.memberLock.RUnlock()
+func (n *Node) NumNodes() (numNodes int) {
+	n.memberLock.RLock()
+	numNodes = len(n.memberlist.Members())
+	n.memberLock.RUnlock()
 
 	return numNodes
+}
+
+func (n *Node) Register() error {
+	seed := os.Getenv("SEED")
+	if stringutils.IsEmpty(seed) {
+		return errors.New("No seed found, register failed")
+	}
+	_, err := n.memberlist.Join([]string{seed})
+	if err != nil {
+		return errors.Wrap(err, "Failed to join cluster")
+	}
+	return nil
+}
+
+func (n *Node) Discovery(svc string) ([]*Node, error) {
+	var nodes []*Node
+	for _, member := range n.memberlist.Members() {
+		logrus.Infof("Member: %s %s\n", member.Name, member.Addr)
+		if member.State == memberlist.StateAlive {
+			var nmeta NodeMeta
+			if err := json.Unmarshal(member.Meta, &nmeta); err != nil {
+				return nil, errors.Wrap(err, "")
+			}
+			if nmeta.Service == svc {
+				nodes = append(nodes, &Node{
+					meta:       nmeta,
+					memberNode: member,
+				})
+			}
+		}
+	}
+	return nodes, nil
 }
