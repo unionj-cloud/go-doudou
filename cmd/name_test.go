@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 	"io/ioutil"
 	"os"
@@ -129,5 +130,41 @@ func (object UserVo) MarshalJSON() ([]byte, error) {
 	}
 	if string(content) != expect {
 		t.Errorf("want %s, got %s\n", expect, string(content))
+	}
+}
+
+func TestGetImportPath(t *testing.T) {
+	dir := testDir + "importpath"
+	receiver := svc.Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	type args struct {
+		file string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				file: dir + "/domain",
+			},
+			want: "testfilesimportpath/domain",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := astutils.GetImportPath(tt.args.file); got != tt.want {
+				t.Errorf("GetImportPath() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
