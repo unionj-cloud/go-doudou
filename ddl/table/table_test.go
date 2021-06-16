@@ -6,11 +6,15 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
+	"github.com/unionj-cloud/go-doudou/ddl/keyenum"
+	"github.com/unionj-cloud/go-doudou/ddl/nullenum"
+	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -286,6 +290,354 @@ func TestColumn_AddColumnSql(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("AddColumnSql() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_toColumnType(t *testing.T) {
+	type args struct {
+		goType string
+	}
+	tests := []struct {
+		name string
+		args args
+		want columnenum.ColumnType
+	}{
+		{
+			name: "1",
+			args: args{
+				goType: "float32",
+			},
+			want: columnenum.FloatType,
+		}, {
+			name: "2",
+			args: args{
+				goType: "int",
+			},
+			want: columnenum.IntType,
+		}, {
+			name: "3",
+			args: args{
+				goType: "bool",
+			},
+			want: columnenum.TinyintType,
+		}, {
+			name: "4",
+			args: args{
+				goType: "time.Time",
+			},
+			want: columnenum.DatetimeType,
+		}, {
+			name: "5",
+			args: args{
+				goType: "int64",
+			},
+			want: columnenum.BigintType,
+		}, {
+			name: "6",
+			args: args{
+				goType: "float64",
+			},
+			want: columnenum.DoubleType,
+		}, {
+			name: "7",
+			args: args{
+				goType: "string",
+			},
+			want: columnenum.VarcharType,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toColumnType(tt.args.goType); got != tt.want {
+				t.Errorf("toColumnType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_toGoType(t *testing.T) {
+	type args struct {
+		colType  columnenum.ColumnType
+		nullable bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				colType:  "int",
+				nullable: false,
+			},
+			want: "int",
+		},
+		{
+			name: "2",
+			args: args{
+				colType:  "bigint",
+				nullable: false,
+			},
+			want: "int64",
+		},
+		{
+			name: "3",
+			args: args{
+				colType:  "float",
+				nullable: false,
+			},
+			want: "float32",
+		},
+		{
+			name: "4",
+			args: args{
+				colType:  "double",
+				nullable: false,
+			},
+			want: "float64",
+		},
+		{
+			name: "5",
+			args: args{
+				colType:  "varchar",
+				nullable: false,
+			},
+			want: "string",
+		},
+		{
+			name: "6",
+			args: args{
+				colType:  "tinyint",
+				nullable: false,
+			},
+			want: "int8",
+		},
+		{
+			name: "7",
+			args: args{
+				colType:  "text",
+				nullable: false,
+			},
+			want: "string",
+		},
+		{
+			name: "8",
+			args: args{
+				colType:  "datetime",
+				nullable: false,
+			},
+			want: "time.Time",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toGoType(tt.args.colType, tt.args.nullable); got != tt.want {
+				t.Errorf("toGoType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewFieldFromColumn(t *testing.T) {
+	type args struct {
+		col Column
+	}
+	tests := []struct {
+		name string
+		args args
+		want astutils.FieldMeta
+	}{
+		{
+			name: "1",
+			args: args{
+				col: Column{
+					Table:         "users",
+					Name:          "school",
+					Type:          columnenum.VarcharType,
+					Default:       "'harvard'",
+					Pk:            false,
+					Nullable:      false,
+					Unsigned:      false,
+					Autoincrement: false,
+					Extra:         "comment '学校'",
+				},
+			},
+			want: astutils.FieldMeta{
+				Name:     "School",
+				Type:     "string",
+				Tag:      `dd:"type:VARCHAR(255);extra:comment '学校'"`,
+				Comments: nil,
+			},
+		}, {
+			name: "2",
+			args: args{
+				col: Column{
+					Table:         "users",
+					Name:          "favourite",
+					Type:          columnenum.VarcharType,
+					Default:       "'football'",
+					Pk:            false,
+					Nullable:      true,
+					Unsigned:      false,
+					Autoincrement: true,
+					Extra:         "comment '学校'",
+					Indexes: IndexItems{
+						{
+							Unique: false,
+							Name:   "my_index",
+							Column: "favourite",
+							Order:  1,
+							Sort:   sortenum.Asc,
+						},
+					},
+				},
+			},
+			want: astutils.FieldMeta{
+				Name:     "Favourite",
+				Type:     "*string",
+				Tag:      `dd:"auto;type:VARCHAR(255);extra:comment '学校';index:my_index,1,asc"`,
+				Comments: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewFieldFromColumn(tt.args.col); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewFieldFromColumn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckPk(t *testing.T) {
+	type args struct {
+		key keyenum.Key
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				key: keyenum.Pri,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckPk(tt.args.key); got != tt.want {
+				t.Errorf("CheckPk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckNull(t *testing.T) {
+	type args struct {
+		null nullenum.Null
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				null: nullenum.Yes,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckNull(tt.args.null); got != tt.want {
+				t.Errorf("CheckNull() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckUnsigned(t *testing.T) {
+	type args struct {
+		dbColType string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				dbColType: "int unsigned",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckUnsigned(tt.args.dbColType); got != tt.want {
+				t.Errorf("CheckUnsigned() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckAutoincrement(t *testing.T) {
+	type args struct {
+		extra string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				extra: "auto_increment",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckAutoincrement(tt.args.extra); got != tt.want {
+				t.Errorf("CheckAutoincrement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCheckAutoSet(t *testing.T) {
+	s := "CURRENT_TIMESTAMP"
+	type args struct {
+		defaultVal *string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				defaultVal: &s,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckAutoSet(tt.args.defaultVal); got != tt.want {
+				t.Errorf("CheckAutoSet() = %v, want %v", got, tt.want)
 			}
 		})
 	}

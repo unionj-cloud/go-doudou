@@ -27,6 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/ddl"
+	"github.com/unionj-cloud/go-doudou/ddl/config"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 )
@@ -61,7 +62,7 @@ to quickly create a Cobra application.`,
 		if dir, err = pathutils.FixPath(dir, "domain"); err != nil {
 			logrus.Panicln(err)
 		}
-		var conf ddl.DbConfig
+		var conf config.DbConfig
 		err = envconfig.Process("db", &conf)
 		if err != nil {
 			logrus.Panicln("Error processing env", err)

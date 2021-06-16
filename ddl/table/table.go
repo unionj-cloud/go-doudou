@@ -51,7 +51,7 @@ type Index struct {
 
 func toColumnType(goType string) columnenum.ColumnType {
 	switch goType {
-	case "int":
+	case "int", "int16", "int32":
 		return columnenum.IntType
 	case "int64":
 		return columnenum.BigintType
@@ -61,7 +61,7 @@ func toColumnType(goType string) columnenum.ColumnType {
 		return columnenum.DoubleType
 	case "string":
 		return columnenum.VarcharType
-	case "bool":
+	case "bool", "int8":
 		return columnenum.TinyintType
 	case "time.Time":
 		return columnenum.DatetimeType
@@ -74,21 +74,21 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 	if nullable {
 		goType += "*"
 	}
-	if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.IntType))) {
+	if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.IntType))) {
 		goType += "int"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.BigintType))) {
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.BigintType))) {
 		goType += "int64"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.FloatType))) {
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.FloatType))) {
 		goType += "float32"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DoubleType))) {
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DoubleType))) {
 		goType += "float64"
-	} else if strings.HasPrefix(string(colType), "varchar") {
+	} else if stringutils.HasPrefixI(string(colType), "varchar") {
 		goType += "string"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.TextType))) {
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.TextType))) {
 		goType += "string"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.TinyintType))) {
-		goType += "bool"
-	} else if strings.HasPrefix(string(colType), strings.ToLower(string(columnenum.DatetimeType))) {
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.TinyintType))) {
+		goType += "int8"
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DatetimeType))) {
 		goType += "time.Time"
 	} else {
 		panic(fmt.Sprintf("no available type %s", colType))

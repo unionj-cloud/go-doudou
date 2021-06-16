@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/codegen"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/ddl/config"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
@@ -23,22 +24,13 @@ import (
 	"strings"
 )
 
-type DbConfig struct {
-	Host    string
-	Port    string
-	User    string
-	Passwd  string
-	Schema  string
-	Charset string
-}
-
 type Ddl struct {
 	Dir     string
 	Reverse bool
 	Dao     bool
 	Pre     string
 	Df      string
-	Conf    DbConfig
+	Conf    config.DbConfig
 }
 
 func (d Ddl) Exec() {

@@ -49,9 +49,24 @@ func ExampleCriteria() {
 		Offset: 20,
 		Size:   10,
 	}
+	page = page.Order(Order{
+		Col:  "score",
+		Sort: sortenum.Asc,
+	})
+	page = page.Limit(30, 5)
 	fmt.Println(page.Sql())
 	pageRet := NewPageRet(page)
 	fmt.Println(pageRet.PageNo)
+
+	fmt.Println(P().Order(Order{
+		Col:  "score",
+		Sort: sortenum.Asc,
+	}).Limit(20, 10).Sql())
+
+	query = C().Col("name").Eq(Literal("wubin")).Or(C().Col("school").Eq(Literal("havard"))).
+		And(C().Col("age").Eq(Literal(18))).
+		Or(C().Col("score").Gte(Literal(90)))
+	fmt.Println(query.Sql())
 
 	// Output:
 	// ((`name` = 'wubin' or `school` = 'havard') and `age` = '18')
@@ -63,6 +78,8 @@ func ExampleCriteria() {
 	// (`name` != 'wubin' or `create_at` <= now())
 	// (`name` != 'wubin' or `create_at` > now())
 	// (`name` != 'wubin' or `create_at` >= now())
-	// order by create_at desc limit 20,10
-	// 3
+	// order by create_at desc,score asc limit 30,5
+	// 7
+	// order by score asc limit 20,10
+	// (((`name` = 'wubin' or `school` = 'havard') and `age` = '18') or `score` >= '90')
 }
