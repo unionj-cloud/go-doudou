@@ -1,8 +1,10 @@
 package svc
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"os"
 	"testing"
 )
@@ -67,13 +69,8 @@ func TestSvc_Http(t *testing.T) {
 }
 
 func Test_checkIc(t *testing.T) {
-	receiver := Svc{
-		Dir: testDir + "3",
-	}
-	receiver.Init()
-	defer os.RemoveAll(testDir + "3")
-	svcfile := testDir + "3" + "/svc.go"
-	ic := buildIc(svcfile)
+	svcfile := testDir + "/svc.go"
+	ic := codegen.BuildIc(svcfile)
 	type args struct {
 		ic astutils.InterfaceCollector
 	}
@@ -90,7 +87,35 @@ func Test_checkIc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checkIc(ic)
+			assert.NotPanics(t, func() {
+				checkIc(ic)
+			})
+		})
+	}
+}
+
+func Test_checkIc1(t *testing.T) {
+	svcfile := testDir + "/svcp.go"
+	ic := codegen.BuildIc(svcfile)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Panics(t, func() {
+				checkIc(ic)
+			})
 		})
 	}
 }

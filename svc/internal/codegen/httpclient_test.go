@@ -1,9 +1,7 @@
-package tests
+package codegen
 
 import (
 	"github.com/unionj-cloud/go-doudou/astutils"
-	"github.com/unionj-cloud/go-doudou/svc"
-	. "github.com/unionj-cloud/go-doudou/svc/codegen"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,13 +9,10 @@ import (
 
 func TestGenGoClient(t *testing.T) {
 	dir := testDir + "client1"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
-	receiver.Init()
+	InitSvc(dir)
 	defer os.RemoveAll(dir)
 	svcfile := filepath.Join(dir, "svc.go")
-	ic := buildIc(svcfile)
+	ic := BuildIc(svcfile)
 
 	type args struct {
 		dir string
