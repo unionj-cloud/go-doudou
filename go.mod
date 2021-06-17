@@ -29,7 +29,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/hashicorp/memberlist v0.2.4 // indirect
+	github.com/hashicorp/memberlist v0.2.4
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jmoiron/sqlx v1.3.1

@@ -1,6 +1,26 @@
-package svc
+package config
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+	"os"
+)
+
+type envVariable string
+
+const (
+	SvcName     envVariable = "SVC_NAME"
+	SvcHostname envVariable = "SVC_HOSTNAME"
+	SvcPort     envVariable = "SVC_PORT"
+	SvcMemPort  envVariable = "SVC_MEM_PORT"
+	SvcBaseUrl  envVariable = "SVC_BASE_URL"
+	SvcSeed     envVariable = "SVC_SEED"
+	// Accept 'mono' for monolith mode or 'micro' for microservice mode
+	SvcMode envVariable = "SVC_MODE"
+)
+
+func (receiver envVariable) Load() string {
+	return os.Getenv(string(receiver))
+}
 
 type Switch bool
 

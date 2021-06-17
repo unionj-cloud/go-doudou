@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	"io"
 	"net/http"
 	"os"
@@ -32,7 +33,7 @@ type Srv interface {
 
 func newServer(router http.Handler) *http.Server {
 	host := os.Getenv("SRV_HOST")
-	port := os.Getenv("SRV_PORT")
+	port := config.SvcPort.Load()
 	write, err := time.ParseDuration(os.Getenv("SRV_WRITETIMEOUT"))
 	if err != nil {
 		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "SRV_WRITETIMEOUT",

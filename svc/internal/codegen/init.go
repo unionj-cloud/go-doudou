@@ -113,10 +113,17 @@ DB_CHARSET=utf8mb4
 DB_DRIVER=mysql
 
 SRV_HOST=
-SRV_PORT=6060
 SRV_WRITETIMEOUT=15s
 SRV_READTIMEOUT=15s
-SRV_IDLETIMEOUT=60s`
+SRV_IDLETIMEOUT=60s
+
+SVC_NAME={{.SvcName}}
+SVC_PORT=6060
+SVC_MEM_PORT=
+SVC_BASE_URL=
+SVC_SEED=192.168.101.6:52634
+# Accept 'mono' for monolith mode or 'micro' for microservice mode
+SVC_MODE=micro`
 
 func InitSvc(dir string) {
 	var (
@@ -208,7 +215,11 @@ func InitSvc(dir string) {
 		if tpl, err = template.New(".env.tmpl").Parse(envTmpl); err != nil {
 			panic(err)
 		}
-		if err = tpl.Execute(f, nil); err != nil {
+		if err = tpl.Execute(f, struct {
+			SvcName string
+		}{
+			SvcName: modName,
+		}); err != nil {
 			panic(err)
 		}
 	} else {

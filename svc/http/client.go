@@ -4,12 +4,14 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -65,4 +67,37 @@ func NewClient() *resty.Client {
 		MaxConnsPerHost:       100,
 	})
 	return client
+}
+
+type MemberlistServiceProvider struct {
+	// Name of the service that dependent on
+	name     string
+	registry registry.IRegistry
+	current  uint64
+}
+
+func (m *MemberlistServiceProvider) SelectServer() (string, error) {
+	nodes, err := m.registry.Discover(m.name)
+	if err != nil {
+		return "", errors.Wrap(err, "SelectServer() fail")
+	}
+	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(nodes)))
+	m.current = uint64(next)
+	selected := nodes[next]
+	return selected.BaseUrl(), nil
+}
+
+type MemberlistProviderOption func(IServiceProvider)
+
+func NewMemberlistServiceProvider(name string, registry registry.IRegistry, opts ...MemberlistProviderOption) IServiceProvider {
+	provider := &MemberlistServiceProvider{
+		name:     name,
+		registry: registry,
+	}
+
+	for _, opt := range opts {
+		opt(provider)
+	}
+
+	return provider
 }

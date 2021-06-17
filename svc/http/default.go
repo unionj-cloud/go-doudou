@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	"net/http"
 	"os"
 	"os/signal"
@@ -52,7 +52,7 @@ func (srv *DefaultHttpSrv) Run() {
 	if isSet {
 		logptr = &logpath
 	}
-	var loglevel svc.LogLevel
+	var loglevel config.LogLevel
 	(&loglevel).Decode(os.Getenv("APP_LOGLEVEL"))
 
 	logFile := configureLogger(logrus.StandardLogger(), logptr, logrus.Level(loglevel))
@@ -62,7 +62,7 @@ func (srv *DefaultHttpSrv) Run() {
 		}
 	}()
 
-	var bannerSwitch svc.Switch
+	var bannerSwitch config.Switch
 	(&bannerSwitch).Decode(os.Getenv("APP_BANNER"))
 	if bannerSwitch {
 		banner := os.Getenv("APP_BANNERTEXT")
