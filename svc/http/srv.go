@@ -32,31 +32,30 @@ type Srv interface {
 }
 
 func newServer(router http.Handler) *http.Server {
-	host := os.Getenv("SRV_HOST")
-	port := config.SvcPort.Load()
-	write, err := time.ParseDuration(os.Getenv("SRV_WRITETIMEOUT"))
+	port := config.GddPort.Load()
+	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "SRV_WRITETIMEOUT",
-			os.Getenv("SRV_WRITETIMEOUT"), err.Error())
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITETIMEOUT",
+			config.GddWriteTimeout.Load(), err.Error())
 		write = 15 * time.Second
 	}
 
-	read, err := time.ParseDuration(os.Getenv("SRV_READTIMEOUT"))
+	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "SRV_READTIMEOUT",
-			os.Getenv("SRV_READTIMEOUT"), err.Error())
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READTIMEOUT",
+			config.GddReadTimeout.Load(), err.Error())
 		read = 15 * time.Second
 	}
 
-	idle, err := time.ParseDuration(os.Getenv("SRV_IDLETIMEOUT"))
+	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "SRV_IDLETIMEOUT",
-			os.Getenv("SRV_IDLETIMEOUT"), err.Error())
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLETIMEOUT",
+			config.GddIdleTimeout.Load(), err.Error())
 		idle = 60 * time.Second
 	}
 
 	server := &http.Server{
-		Addr: strings.Join([]string{host, port}, ":"),
+		Addr: strings.Join([]string{"", port}, ":"),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: write,
 		ReadTimeout:  read,

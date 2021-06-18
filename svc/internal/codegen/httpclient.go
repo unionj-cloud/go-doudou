@@ -138,7 +138,7 @@ type {{.Meta.Name}}Client struct {
 			{{- if eq $r.Type "*os.File" }}
 				_disp := _resp.Header().Get("Content-Disposition")
 				_file := strings.TrimPrefix(_disp, "attachment; filename=")
-				_output := os.Getenv("OUTPUT")
+				_output := config.GddOutput.Load()
 				if stringutils.IsNotEmpty(_output) {
 					_file = _output + string(filepath.Separator) + _file
 				}

@@ -8,18 +8,32 @@ import (
 type envVariable string
 
 const (
-	SvcName     envVariable = "SVC_NAME"
-	SvcHostname envVariable = "SVC_HOSTNAME"
-	SvcPort     envVariable = "SVC_PORT"
-	SvcMemPort  envVariable = "SVC_MEM_PORT"
-	SvcBaseUrl  envVariable = "SVC_BASE_URL"
-	SvcSeed     envVariable = "SVC_SEED"
+	GddBanner       envVariable = "GDD_BANNER"
+	GddBannerText   envVariable = "GDD_BANNERTEXT"
+	GddLogLevel     envVariable = "GDD_LOGLEVEL"
+	GddLogPath      envVariable = "GDD_LOGPATH"
+	GddGraceTimeout envVariable = "GDD_GRACETIMEOUT"
+	GddWriteTimeout envVariable = "GDD_WRITETIMEOUT"
+	GddReadTimeout  envVariable = "GDD_READTIMEOUT"
+	GddIdleTimeout  envVariable = "GDD_IDLETIMEOUT"
+	GddOutput       envVariable = "GDD_OUTPUT"
+
+	GddName     envVariable = "GDD_NAME"
+	GddHostname envVariable = "GDD_HOSTNAME"
+	GddPort     envVariable = "GDD_PORT"
+	GddMemPort  envVariable = "GDD_MEM_PORT"
+	GddBaseUrl  envVariable = "GDD_BASE_URL"
+	GddSeed     envVariable = "GDD_SEED"
 	// Accept 'mono' for monolith mode or 'micro' for microservice mode
-	SvcMode envVariable = "SVC_MODE"
+	GddMode envVariable = "GDD_MODE"
 )
 
 func (receiver envVariable) Load() string {
 	return os.Getenv(string(receiver))
+}
+
+func (receiver envVariable) String() string {
+	return string(receiver)
 }
 
 type Switch bool

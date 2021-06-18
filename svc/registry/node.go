@@ -31,7 +31,7 @@ func (r *registry) Register() error {
 	if r.memberlist == nil {
 		return errors.New("Memberlist is nil")
 	}
-	seed := config.SvcSeed.Load()
+	seed := config.GddSeed.Load()
 	if stringutils.IsEmpty(seed) {
 		logrus.Warnln("No seed found")
 		return nil
@@ -150,7 +150,7 @@ func getFreePort() (int, error) {
 
 func NewNode(opts ...NodeOption) (*Node, error) {
 	mconf := memberlist.DefaultWANConfig()
-	memport := cast.ToInt(config.SvcMemPort.Load())
+	memport := cast.ToInt(config.GddMemPort.Load())
 	if memport == 0 {
 		memport, _ = getFreePort()
 	}
@@ -158,13 +158,13 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		mconf.BindPort = memport
 		mconf.AdvertisePort = memport
 	}
-	hostname := config.SvcHostname.Load()
+	hostname := config.GddHostname.Load()
 	if stringutils.IsNotEmpty(hostname) {
 		mconf.Name = hostname
 	}
-	service := config.SvcName.Load()
+	service := config.GddName.Load()
 	if stringutils.IsEmpty(service) {
-		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.SvcName))
+		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddName))
 	}
 	node := &Node{
 		state: -1,
@@ -175,11 +175,11 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	for _, opt := range opts {
 		opt(node)
 	}
-	port := cast.ToInt(config.SvcPort.Load())
+	port := cast.ToInt(config.GddPort.Load())
 	if port == 0 {
 		port, _ = getFreePort()
 	}
-	baseUrl := config.SvcBaseUrl.Load()
+	baseUrl := config.GddBaseUrl.Load()
 	node.mmeta.Meta = nodeMeta{
 		Service: service,
 		Port:    port,

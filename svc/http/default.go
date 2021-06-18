@@ -48,12 +48,12 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
 	var logptr *string
-	logpath, isSet := os.LookupEnv("APP_LOGPATH")
+	logpath, isSet := os.LookupEnv(config.GddLogPath.String())
 	if isSet {
 		logptr = &logpath
 	}
 	var loglevel config.LogLevel
-	(&loglevel).Decode(os.Getenv("APP_LOGLEVEL"))
+	(&loglevel).Decode(config.GddLogLevel.Load())
 
 	logFile := configureLogger(logrus.StandardLogger(), logptr, logrus.Level(loglevel))
 	defer func() {
@@ -63,9 +63,9 @@ func (srv *DefaultHttpSrv) Run() {
 	}()
 
 	var bannerSwitch config.Switch
-	(&bannerSwitch).Decode(os.Getenv("APP_BANNER"))
+	(&bannerSwitch).Decode(config.GddBanner.Load())
 	if bannerSwitch {
-		banner := os.Getenv("APP_BANNERTEXT")
+		banner := config.GddBannerText.Load()
 		if stringutils.IsEmpty(banner) {
 			banner = "Go-doudou"
 		}
@@ -87,10 +87,10 @@ func (srv *DefaultHttpSrv) Run() {
 	<-c
 
 	// Create a deadline to wait for.
-	grace, err := time.ParseDuration(os.Getenv("APP_GRACETIMEOUT"))
+	grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "APP_GRACETIMEOUT",
-			os.Getenv("APP_GRACETIMEOUT"), err.Error())
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_GRACETIMEOUT",
+			config.GddGraceTimeout.Load(), err.Error())
 		grace = 15 * time.Second
 	}
 

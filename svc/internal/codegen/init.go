@@ -99,10 +99,10 @@ require (
 
 var gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
 
-var envTmpl = `APP_BANNER=on
-APP_BANNERTEXT=Go-doudou
-APP_LOGLEVEL=
-APP_GRACETIMEOUT=15s
+var envTmpl = `GDD_BANNER=on
+GDD_BANNERTEXT=Go-doudou
+GDD_LOGLEVEL=
+GDD_GRACETIMEOUT=15s
 
 DB_HOST=localhost
 DB_PORT=3306
@@ -112,18 +112,17 @@ DB_SCHEMA=test
 DB_CHARSET=utf8mb4
 DB_DRIVER=mysql
 
-SRV_HOST=
-SRV_WRITETIMEOUT=15s
-SRV_READTIMEOUT=15s
-SRV_IDLETIMEOUT=60s
+GDD_WRITETIMEOUT=15s
+GDD_READTIMEOUT=15s
+GDD_IDLETIMEOUT=60s
 
-SVC_NAME={{.SvcName}}
-SVC_PORT=6060
-SVC_MEM_PORT=
-SVC_BASE_URL=
-SVC_SEED=192.168.101.6:52634
+GDD_NAME={{.SvcName}}
+GDD_PORT=6060
+GDD_MEM_PORT=
+GDD_BASE_URL=
+GDD_SEED=192.168.101.6:52634
 # Accept 'mono' for monolith mode or 'micro' for microservice mode
-SVC_MODE=micro`
+GDD_MODE=micro`
 
 func InitSvc(dir string) {
 	var (
