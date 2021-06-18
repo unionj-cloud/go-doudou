@@ -131,7 +131,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- end}}
 		{{- else if eq $p.Type "context.Context" }}
 		{{$p.Name}} = _req.Context()
-		{{- else if not (isSimple $p)}}
+		{{- else if not (isBuiltin $p)}}
 		if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
@@ -370,7 +370,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
-	funcMap["isSimple"] = IsSimple
+	funcMap["isBuiltin"] = IsBuiltin
 	funcMap["isSupport"] = isSupport
 	funcMap["castFunc"] = castFunc
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {

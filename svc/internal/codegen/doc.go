@@ -26,29 +26,32 @@ import (
 
 var schemas map[string]v3.Schema
 
-/**
-bool
-
-string
-
-int  int8  int16  int32  int64
-uint uint8 uint16 uint32 uint64 uintptr
-
-byte // alias for uint8
-
-rune // alias for int32
-     // represents a Unicode code point
-
-float32 float64
-
-complex64 complex128
-
-TODO 支持匿名结构体
-*/
+// Reference https://golang.org/pkg/builtin/
+// type bool
+// type byte
+// type complex128
+// type complex64
+// type error
+// type float32
+// type float64
+// type int
+// type int16
+// type int32
+// type int64
+// type int8
+// type rune
+// type string
+// type uint
+// type uint16
+// type uint32
+// type uint64
+// type uint8
+// type uintptr
+//TODO 支持匿名结构体
 func schemaOf(field astutils.FieldMeta) *v3.Schema {
 	ft := strings.TrimPrefix(field.Type, "*")
 	switch ft {
-	case "int", "int8", "int16", "int32", "uint", "uint8", "uint16", "uint32", "byte", "rune":
+	case "int", "int8", "int16", "int32", "uint", "uint8", "uint16", "uint32", "byte", "rune", "complex64", "complex128":
 		return v3.Int
 	case "int64", "uint64", "uintptr":
 		return v3.Int64
@@ -60,8 +63,6 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 		return v3.Float32
 	case "float64":
 		return v3.Float64
-	case "complex64", "complex128":
-		return v3.Any
 	case "multipart.FileHeader":
 		return v3.File
 	case "":
@@ -151,7 +152,7 @@ const (
 	delete = "DELETE"
 )
 
-func IsSimple(field astutils.FieldMeta) bool {
+func IsBuiltin(field astutils.FieldMeta) bool {
 	simples := []interface{}{v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64}
 	pschema := schemaOf(field)
 	return sliceutils.Contains(simples, pschema) || (pschema.Type == v3.ArrayT && sliceutils.Contains(simples, pschema.Items))
@@ -168,7 +169,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	// Note: unionj-generator project hasn't support application/x-www-form-urlencoded yet
 	var simpleCnt int
 	for _, item := range method.Params {
-		if IsSimple(item) || item.Type == "context.Context" {
+		if IsBuiltin(item) || item.Type == "context.Context" {
 			simpleCnt++
 		}
 	}
@@ -223,7 +224,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 					Content:  &content,
 					Required: true,
 				}
-			} else if IsSimple(item) {
+			} else if IsBuiltin(item) {
 				params = append(params, v3.Parameter{
 					Name:   strcase.ToLowerCamel(item.Name),
 					In:     v3.InQuery,
@@ -302,7 +303,7 @@ func pathOf(method astutils.MethodMeta) v3.Path {
 }
 
 func pathsOf(ic astutils.InterfaceCollector) map[string]v3.Path {
-	if len(ic.Interfaces) <= 0 {
+	if len(ic.Interfaces) == 0 {
 		return nil
 	}
 	pathmap := make(map[string]v3.Path)

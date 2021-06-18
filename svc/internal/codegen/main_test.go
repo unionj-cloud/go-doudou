@@ -15,11 +15,14 @@ func TestGenMain(t *testing.T) {
 	expect := `package main
 
 import (
+	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/pathutils"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 	service "testfilesmain"
     "testfilesmain/config"
 	"testfilesmain/db"
@@ -44,6 +47,14 @@ func main() {
 			logrus.Warnln("Failed to close database connection")
 		}
 	}()
+
+	if ddconfig.SvcMode.Load() == "micro" {
+		node, err := registry.NewNode()
+		if err != nil {
+			logrus.Panicln(fmt.Sprintf("%+v", err))
+		}
+		logrus.Infof("Memberlist created. Local node is %s\n", node)
+	}
 
     svc := service.NewTestfilesmain(conf, conn)
 

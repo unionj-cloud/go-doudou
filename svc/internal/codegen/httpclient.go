@@ -89,7 +89,7 @@ type {{.Meta.Name}}Client struct {
 		{{- end}}
 		{{- else if eq $p.Type "context.Context" }}
 		_req.SetContext({{$p.Name}})
-		{{- else if not (isSimple $p)}}
+		{{- else if not (isBuiltin $p)}}
 		_req.SetBody({{$p.Name}})
 		{{- else if contains $p.Type "["}}
 		for _, _item := range {{$p.Name}} {
@@ -298,7 +298,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector) {
 	funcMap["pattern"] = pattern
 	funcMap["lower"] = strings.ToLower
 	funcMap["contains"] = strings.Contains
-	funcMap["isSimple"] = IsSimple
+	funcMap["isBuiltin"] = IsBuiltin
 	funcMap["restyMethod"] = restyMethod
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)

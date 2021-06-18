@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"bufio"
+	"fmt"
 	"go/ast"
 	"go/token"
 	"os"
@@ -64,6 +65,8 @@ func exprString(expr ast.Expr) string {
 		return "chan"
 	case *ast.FuncType: // TODO
 		return "func"
+	default:
+		panic(fmt.Sprintf("Unknown expression: %+v\n", expr))
 	}
 	return ""
 }

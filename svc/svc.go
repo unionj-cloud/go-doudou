@@ -65,32 +65,34 @@ func (receiver Svc) Http() {
 	}
 }
 
+// CheckIc is checking whether parameter types in each of service interface methods valid or not
+// Only support at most one golang non-built-in type as parameter in a service interface method
+// because go-doudou cannot put more than one parameter into request body except *multipart.FileHeader.
+// If there are *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
 func checkIc(ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
-		panic(errors.New("no service interface found!"))
+		panic(errors.New("no service interface found"))
 	}
 	svcInter := ic.Interfaces[0]
 	for _, method := range svcInter.Methods {
-		var complexParams []string
-		// Append *multipart.FileHeader value to complexTypes only once at most as multipart/form-data support multiple fields as file type
-		var complexTypes []string
+		// Append *multipart.FileHeader value to nonBasicTypes only once at most as multipart/form-data support multiple fields as file type
+		var nonBasicTypes []string
 		cpmap := make(map[string]int)
 		for _, param := range method.Params {
 			if param.Type == "context.Context" {
 				continue
 			}
 			if param.Type == "chan" || param.Type == "func" || stringutils.IsEmpty(param.Type) {
-				panic(errors.New(fmt.Sprintf("Error occur at %s %s. Support struct, map, string, bool, numberic and corresponding slice type only!", param.Name, param.Type)))
+				panic(fmt.Errorf("error occur at %s %s. Support struct, map, string, bool, numberic and corresponding slice type only", param.Name, param.Type))
 			}
-			if !codegen.IsSimple(param) {
-				complexParams = append(complexParams, param.Name)
+			if !codegen.IsBuiltin(param) {
 				ptype := param.Type
 				if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
 					elem := ptype[strings.Index(ptype, "]")+1:]
 					if elem == "*multipart.FileHeader" {
 						if _, exists := cpmap[elem]; !exists {
 							cpmap[elem]++
-							complexTypes = append(complexTypes, elem)
+							nonBasicTypes = append(nonBasicTypes, elem)
 						}
 						continue
 					}
@@ -98,15 +100,15 @@ func checkIc(ic astutils.InterfaceCollector) {
 				if ptype == "*multipart.FileHeader" {
 					if _, exists := cpmap[ptype]; !exists {
 						cpmap[ptype]++
-						complexTypes = append(complexTypes, ptype)
+						nonBasicTypes = append(nonBasicTypes, ptype)
 					}
 					continue
 				}
-				complexTypes = append(complexTypes, param.Type)
+				nonBasicTypes = append(nonBasicTypes, param.Type)
 			}
 		}
-		if len(complexTypes) > 1 {
-			panic("Too many struct/map/*multipart.FileHeader parameters, can't decide which one should be put into request body!")
+		if len(nonBasicTypes) > 1 {
+			panic("Too many golang non-built-in type parameters, can't decide which one should be put into request body!")
 		}
 	}
 }
