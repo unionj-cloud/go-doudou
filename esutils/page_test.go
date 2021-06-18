@@ -55,6 +55,7 @@ func TestPage(t *testing.T) {
 						"createAt": "2020-07-10T00:00:00Z",
 					},
 				},
+				HasNextPage: true,
 			},
 			wantErr: false,
 		},
