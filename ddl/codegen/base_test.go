@@ -51,9 +51,9 @@ type Base interface {
 	UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error)
 	UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error)
 	Get(ctx context.Context, id interface{}) (interface{}, error)
-	SelectMany(ctx context.Context, where query.Q) (interface{}, error)
-	CountMany(ctx context.Context, where query.Q) (int, error)
-	PageMany(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error)
+	SelectMany(ctx context.Context, where ...query.Q) (interface{}, error)
+	CountMany(ctx context.Context, where ...query.Q) (int, error)
+	PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
 }
 `
 			basefile := dir + "/dao/base.go"

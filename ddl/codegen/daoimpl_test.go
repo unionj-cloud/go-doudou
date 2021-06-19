@@ -52,7 +52,7 @@ func TestGenDaoImplGo(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
+			name: "",
 			args: args{
 				domainpath: dir,
 				t:          tables[0],
@@ -83,6 +83,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
+	"strings"
 	"math"
 )
 
@@ -285,46 +286,72 @@ func (receiver UserDaoImpl) Get(ctx context.Context, id interface{}) (interface{
 	return user, nil
 }
 
-func (receiver UserDaoImpl) SelectMany(ctx context.Context, where query.Q) (interface{}, error) {
+func (receiver UserDaoImpl) SelectMany(ctx context.Context, where ...query.Q) (interface{}, error) {
 	var (
-		statement string
+		statements []string
 		err       error
 		users     []domain.User
 	)
-	statement = fmt.Sprintf("select * from user where %s", where.Sql())
-	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
+    statements = append(statements, "select * from user")
+    if len(where) > 0 {
+        statements = append(statements, "where")
+        for _, item :=range where {
+            statements = append(statements, item.Sql())
+        }
+    }
+	if err = receiver.db.SelectContext(ctx, &users, strings.Join(statements, " ")); err != nil {
 		return nil, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 	return users, nil
 }
 
-func (receiver UserDaoImpl) CountMany(ctx context.Context, where query.Q) (int, error) {
+func (receiver UserDaoImpl) CountMany(ctx context.Context, where ...query.Q) (int, error) {
 	var (
-		statement string
+		statements []string
 		err       error
 		total     int
 	)
-	statement = fmt.Sprintf("select count(1) from user where %s", where.Sql())
-	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
+	statements = append(statements, "select count(1) from user")
+    if len(where) > 0 {
+        statements = append(statements, "where")
+        for _, item :=range where {
+            statements = append(statements, item.Sql())
+        }
+    }
+	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " ")); err != nil {
 		return 0, errors.Wrap(err, "error returned from calling db.GetContext")
 	}
 	return total, nil
 }
 
-func (receiver UserDaoImpl) PageMany(ctx context.Context, where query.Q, page query.Page) (query.PageRet, error) {
+func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error) {
 	var (
-		statement string
+		statements []string
 		err       error
 		users     []domain.User
 		total     int
 	)
-	statement = fmt.Sprintf("select * from user where %s %s;", where.Sql(), page.Sql())
-	if err = receiver.db.SelectContext(ctx, &users, statement); err != nil {
+	statements = append(statements, "select * from user")
+    if len(where) > 0 {
+        statements = append(statements, "where")
+        for _, item :=range where {
+            statements = append(statements, item.Sql())
+        }
+    }
+    statements = append(statements, page.Sql())
+	if err = receiver.db.SelectContext(ctx, &users, strings.Join(statements, " ")); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
 	}
 
-	statement = fmt.Sprintf("select count(1) from user where %s;", where.Sql())
-	if err = receiver.db.GetContext(ctx, &total, statement); err != nil {
+    statements = nil
+	statements = append(statements, "select count(1) from user")
+    if len(where) > 0 {
+        statements = append(statements, "where")
+        for _, item :=range where {
+            statements = append(statements, item.Sql())
+        }
+    }
+	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " ")); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
 	}
 
