@@ -22,7 +22,7 @@ import (
 	"text/template"
 )
 
-var svcTmpl = `package service
+const svcTmpl = `package service
 
 import (
 	"context"
@@ -35,7 +35,7 @@ type {{.SvcName}} interface {
 }
 `
 
-var voTmpl = `package vo
+const voTmpl = `package vo
 
 //go:generate go-doudou name --file $GOFILE
 
@@ -82,7 +82,7 @@ type UserVo struct {
 }
 `
 
-var modTmpl = `module {{.ModName}}
+const modTmpl = `module {{.ModName}}
 
 go {{.GoVersion}}
 
@@ -97,9 +97,9 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 )`
 
-var gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
+const gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
 
-var envTmpl = `GDD_BANNER=on
+const envTmpl = `GDD_BANNER=on
 GDD_BANNERTEXT=Go-doudou
 GDD_LOGLEVEL=
 GDD_GRACETIMEOUT=15s
@@ -123,6 +123,29 @@ GDD_BASE_URL=
 GDD_SEED=192.168.101.6:52634
 # Accept 'mono' for monolith mode or 'micro' for microservice mode
 GDD_MODE=micro`
+
+const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
+
+ENV GO111MODULE=on
+
+WORKDIR /repo
+
+ADD go.mod .
+ADD go.sum .
+
+ADD . ./
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN apk add --no-cache bash tzdata
+
+ENV TZ="Asia/Shanghai"
+
+EXPOSE 6060
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -o api cmd/main.go
+
+ENTRYPOINT ["/repo/api"]
+`
 
 func InitSvc(dir string) {
 	var (
@@ -278,6 +301,23 @@ func InitSvc(dir string) {
 		}
 	} else {
 		logrus.Warnf("file %s already exists", svcfile)
+	}
+
+	dockerfile := filepath.Join(dir, "Dockerfile")
+	if _, err = os.Stat(dockerfile); os.IsNotExist(err) {
+		if f, err = os.Create(dockerfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		if tpl, err = template.New("dockerfile.tmpl").Parse(dockerfileTmpl); err != nil {
+			panic(err)
+		}
+		if err = tpl.Execute(f, nil); err != nil {
+			panic(err)
+		}
+	} else {
+		logrus.Warnf("file %s already exists", dockerfile)
 	}
 }
 
