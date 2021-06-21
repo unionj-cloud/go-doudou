@@ -49,7 +49,7 @@ const (
 )
 
 type Es struct {
-	client *elastic.Client
+	client   *elastic.Client
 	esIndex  string
 	esType   string
 	username string
@@ -392,16 +392,16 @@ func prepareTestData(es *Es) {
 	createAt2, _ := time.Parse(constants.FORMAT2, data2)
 	createAt3, _ := time.Parse(constants.FORMAT2, data3)
 
-	err := es.BulkSaveOrUpdate(context.Background(), []map[string]interface{}{
-		{
+	err := es.BulkSaveOrUpdate(context.Background(), []interface{}{
+		map[string]interface{}{
 			"createAt": createAt1.UTC().Format(constants.FORMATES),
 			"text":     "2020年7月8日11时25分，高考文科综合/理科综合科目考试将要结束时，平顶山市一中考点一考生突然情绪失控，先后抓其右边、后边考生答题卡，造成两位考生答题卡损毁。",
 		},
-		{
+		map[string]interface{}{
 			"createAt": createAt2.UTC().Format(constants.FORMATES),
 			"text":     "考场两位监考教师及时制止，并稳定了考场秩序，市一中考点按程序启用备用答题卡，按规定补足答题卡被损毁的两位考生耽误的考试时间，两位考生将损毁卡的内容誊写在新答题卡上。",
 		},
-		{
+		map[string]interface{}{
 			"createAt": createAt3.UTC().Format(constants.FORMATES),
 			"text":     "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 		},
