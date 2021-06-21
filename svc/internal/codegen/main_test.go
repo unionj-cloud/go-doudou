@@ -48,7 +48,7 @@ func main() {
 		}
 	}()
 
-	if ddconfig.SvcMode.Load() == "micro" {
+	if ddconfig.GddMode.Load() == "micro" {
 		node, err := registry.NewNode()
 		if err != nil {
 			logrus.Panicln(fmt.Sprintf("%+v", err))
