@@ -86,6 +86,9 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 			structName := strings.TrimPrefix(exprString(spec.Recv.List[0].Type), "*")
 			methods, _ := sc.Methods[structName]
 			methods = append(methods, getMethodMeta(spec))
+			if sc.Methods == nil {
+				sc.Methods = make(map[string][]MethodMeta)
+			}
 			sc.Methods[structName] = methods
 		}
 	case *ast.GenDecl:
