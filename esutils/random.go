@@ -8,14 +8,14 @@ import (
 	"log"
 )
 
-func (es *Es) Random(ctx context.Context, paging *Paging) ([]interface{}, error) {
+func (es *Es) Random(ctx context.Context, paging *Paging) ([]map[string]interface{}, error) {
 	var (
 		err       error
 		boolQuery *elastic.BoolQuery
 		src       interface{}
 		data      []byte
 		sr        *elastic.SearchResult
-		rets      []interface{}
+		rets      []map[string]interface{}
 	)
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
 	if src, err = boolQuery.Source(); err != nil {

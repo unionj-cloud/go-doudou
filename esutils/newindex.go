@@ -7,8 +7,6 @@ import (
 )
 
 func (es *Es) NewIndex(ctx context.Context, mapping string) (exists bool, err error) {
-	lock.Lock()
-	defer lock.Unlock()
 	var (
 		res *elastic.IndicesCreateResult
 	)

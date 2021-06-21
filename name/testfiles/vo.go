@@ -21,3 +21,20 @@ type PageRet struct {
 	Total    int
 	HasNext  bool
 }
+
+type Field struct {
+	Name   string
+	Type   string
+	Format string
+}
+
+type Base struct {
+	Index string
+	Type  string
+}
+
+type MappingPayload struct {
+	Base
+	Fields []Field
+	Index  string
+}

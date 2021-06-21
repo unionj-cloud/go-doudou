@@ -1,12 +1,15 @@
 package strategies
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"text/template"
 	"unicode"
 )
 
-var LowerCaseNamingStrategyTemplate = template.Must(template.New("").Parse(templ))
+var LowerCaseNamingStrategyTemplate = template.Must(template.New("").Funcs(map[string]interface{}{
+	"toLowerCamel": strcase.ToLowerCamel,
+}).Parse(templ))
 
 func init() {
 	Registry["lowerCaseNamingStrategy"] = LowerCaseNamingStrategyTemplate
@@ -32,17 +35,20 @@ import (
 
 {{ range $struct := .StructCollector.Structs }}
 func (object {{$struct.Name}}) MarshalJSON() ([]byte, error) {
-	objectMap := make(map[string]interface{})
-	{{- range $field := $struct.Fields}}
-	{{- if $.Omitempty }}
-	if !reflect.ValueOf(object.{{$field.Name}}).IsZero() {
-		objectMap[strategies.LowerCaseConvert("{{$field.Name}}")] = object.{{$field.Name}}
+	anonymous := struct {
+		{{- range $field := $struct.Fields}}
+		{{- if $.Omitempty }}
+		{{$field.Name}} {{$field.Type}} ` + "`" + `json:"{{$field.Name | toLowerCamel}},omitempty"` + "`" + `
+		{{- else }}
+		{{$field.Name}} {{$field.Type}}	` + "`" + `json:"{{$field.Name | toLowerCamel}}"` + "`" + `
+		{{- end }}
+		{{- end }}	
+	} {
+		{{- range $field := $struct.Fields}}
+		object.{{$field.Name}},
+		{{- end }}	
 	}
-	{{- else }}
-	objectMap[strategies.LowerCaseConvert("{{$field.Name}}")] = object.{{$field.Name}}
-	{{- end }}
-	{{- end }}
-	return json.Marshal(objectMap)
+	return json.Marshal(anonymous)
 }
 {{ end }}
 `

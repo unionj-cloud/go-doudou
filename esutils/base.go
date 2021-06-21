@@ -10,11 +10,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/test"
 	"strings"
-	"sync"
 	"time"
 )
-
-var lock sync.Mutex
 
 type queryType int
 type queryLogic int

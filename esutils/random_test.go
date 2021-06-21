@@ -53,7 +53,7 @@ func TestRandom(t *testing.T) {
 				t.Error("got's length shouldn't be zero")
 				return
 			}
-			data := got[0].(map[string]interface{})
+			data := got[0]
 
 			origin := data["text"]
 
@@ -69,7 +69,7 @@ func TestRandom(t *testing.T) {
 					t.Error("got's length shouldn't be zero")
 					return
 				}
-				data := got[0].(map[string]interface{})
+				data := got[0]
 
 				current = data["text"]
 

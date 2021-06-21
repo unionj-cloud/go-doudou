@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/olivere/elastic"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/copier"
 	"github.com/ztrue/tracerr"
 	"log"
 )
 
-func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (interface{}, error) {
+func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (map[string]interface{}, error) {
 	var (
 		err          error
 		data         []byte
@@ -27,12 +29,12 @@ func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (inter
 	case map[string]interface{}:
 		statQueryMap = make(map[string]interface{})
 		if src != nil {
-			var query interface{}
-			query, err = src.Source()
+			var _query interface{}
+			_query, err = src.Source()
 			if err != nil {
 				return nil, err
 			}
-			statQueryMap["query"] = query
+			statQueryMap["query"] = _query
 		}
 		if aggr != nil {
 			statQueryMap["aggs"] = aggr
@@ -60,6 +62,9 @@ func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (inter
 			return nil, err
 		}
 	}
-
-	return sr.Aggregations, nil
+	var result map[string]interface{}
+	if err = copier.DeepCopy(sr.Aggregations, &result); err != nil {
+		return nil, errors.Wrap(err, "call DeepCopy() error")
+	}
+	return result, nil
 }

@@ -51,5 +51,6 @@ func (receiver Name) Exec() {
 	})
 
 	source := strings.TrimSpace(sqlBuf.String())
+	fmt.Println(source)
 	astutils.FixImport([]byte(source), marshalers)
 }
