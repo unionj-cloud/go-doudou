@@ -3,9 +3,14 @@ package codegen
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/iancoleman/strcase"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/copier"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -16,12 +21,6 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/iancoleman/strcase"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/astutils"
-	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
 var schemas map[string]v3.Schema
@@ -88,19 +87,20 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 				}),
 			}
 		}
-		ft = strings.TrimPrefix(ft, "embed:")
+		var title string
 		if !strings.Contains(ft, ".") {
-			title := ft
+			title = ft
+		}
+		if stringutils.IsEmpty(title) {
+			if strings.HasPrefix(ft, "vo.") {
+				title = strings.TrimPrefix(ft, "vo.")
+			}
+		}
+		if stringutils.IsNotEmpty(title) {
 			if unicode.IsUpper(rune(title[0])) {
 				return &v3.Schema{
 					Ref: "#/components/schemas/" + title,
 				}
-			}
-		}
-		if strings.HasPrefix(ft, "vo.") {
-			title := strings.TrimPrefix(ft, "vo.")
-			return &v3.Schema{
-				Ref: "#/components/schemas/" + title,
 			}
 		}
 		return v3.Any
@@ -124,16 +124,14 @@ func schemasOf(vofile string) []v3.Schema {
 	}
 	var sc astutils.StructCollector
 	ast.Walk(&sc, root)
+	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
-	for _, item := range sc.Structs {
-		if unicode.IsLower(rune(item.Name[0])) {
-			continue
-		}
+	for _, item := range structs {
 		properties := make(map[string]*v3.Schema)
 		for _, field := range item.Fields {
 			fschema := copySchema(field)
 			fschema.Description = strings.Join(field.Comments, "\n")
-			properties[strcase.ToLowerCamel(field.Name)] = &fschema
+			properties[field.DocName] = &fschema
 		}
 		ret = append(ret, v3.Schema{
 			Title:       item.Name,
@@ -155,6 +153,9 @@ const (
 func IsBuiltin(field astutils.FieldMeta) bool {
 	simples := []interface{}{v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64}
 	pschema := schemaOf(field)
+	if pschema == nil {
+		return false
+	}
 	return sliceutils.Contains(simples, pschema) || (pschema.Type == v3.ArrayT && sliceutils.Contains(simples, pschema.Items))
 }
 
@@ -211,9 +212,9 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if item.Type == "context.Context" {
 				continue
 			}
+			pschemaType := schemaOf(item)
 			pschema := copySchema(item)
 			pschema.Description = strings.Join(item.Comments, "\n")
-			pschemaType := schemaOf(item)
 			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
 				var content v3.Content
 				mt := &v3.MediaType{

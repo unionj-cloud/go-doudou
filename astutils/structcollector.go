@@ -3,14 +3,15 @@ package astutils
 import (
 	"bufio"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"go/ast"
 	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
-
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/sliceutils"
+	"unicode"
 )
 
 type PackageMeta struct {
@@ -22,6 +23,8 @@ type FieldMeta struct {
 	Type     string
 	Tag      string
 	Comments []string
+	IsExport bool
+	DocName  string
 }
 
 type StructMeta struct {
@@ -29,6 +32,7 @@ type StructMeta struct {
 	Fields   []FieldMeta
 	Comments []string
 	Methods  []MethodMeta
+	IsExport bool
 }
 
 type StructCollector struct {
@@ -99,6 +103,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 					comments = append(comments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 				}
 			}
+			re := regexp.MustCompile(`json:"(.*?)"`)
 			for _, item := range spec.Specs {
 				typeSpec := item.(*ast.TypeSpec)
 				typeName := typeSpec.Name.Name
@@ -107,11 +112,6 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 				case *ast.StructType:
 					var fields []FieldMeta
 					for _, field := range specType.Fields.List {
-						var tag string
-						if field.Tag != nil {
-							tag = strings.Trim(field.Tag.Value, "`")
-						}
-
 						var fieldComments []string
 						if field.Doc != nil {
 							for _, comment := range field.Doc.List {
@@ -119,34 +119,41 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 							}
 						}
 
-						var names []string
+						var name string
 						fieldType := exprString(field.Type)
 
-						if field.Names != nil {
-							for _, name := range field.Names {
-								names = append(names, name.Name)
-							}
+						if len(field.Names) > 0 {
+							name = field.Names[0].Name
 						} else {
 							splits := strings.Split(fieldType, ".")
-							names = append(names, splits[len(splits)-1])
+							name = splits[len(splits)-1]
 							fieldType = "embed:" + fieldType
 						}
 
-						for _, name := range names {
-							logrus.Printf("\tField: name=%s type=%s tag=%s\n", name, fieldType, tag)
-							fields = append(fields, FieldMeta{
-								Name:     name,
-								Type:     fieldType,
-								Tag:      tag,
-								Comments: fieldComments,
-							})
+						var tag string
+						docName := name
+						if field.Tag != nil {
+							tag = strings.Trim(field.Tag.Value, "`")
+							if re.MatchString(tag) {
+								docName = strings.TrimSuffix(re.FindStringSubmatch(tag)[1], ",omitempty")
+							}
 						}
+
+						fields = append(fields, FieldMeta{
+							Name:     name,
+							Type:     fieldType,
+							Tag:      tag,
+							Comments: fieldComments,
+							IsExport: unicode.IsUpper(rune(name[0])),
+							DocName:  docName,
+						})
 					}
 
 					sc.Structs = append(sc.Structs, StructMeta{
 						Name:     typeName,
 						Fields:   fields,
 						Comments: comments,
+						IsExport: unicode.IsUpper(rune(typeName[0])),
 					})
 				}
 			}
@@ -155,7 +162,6 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
-// Only for ddl tool
 func (sc *StructCollector) FlatEmbed() []StructMeta {
 	structMap := make(map[string]StructMeta)
 	for _, structMeta := range sc.Structs {
@@ -188,6 +194,67 @@ func (sc *StructCollector) FlatEmbed() []StructMeta {
 					}
 				}
 			} else {
+				_structMeta.Fields = append(_structMeta.Fields, fieldMeta)
+				fieldMap[fieldMeta.Name] = fieldMeta
+			}
+		}
+
+		for key, field := range embedFieldMap {
+			if _, exists := fieldMap[key]; !exists {
+				_structMeta.Fields = append(_structMeta.Fields, field)
+			}
+		}
+		result = append(result, _structMeta)
+	}
+
+	return result
+}
+
+func (sc *StructCollector) DocFlatEmbed() []StructMeta {
+	structMap := make(map[string]StructMeta)
+	for _, structMeta := range sc.Structs {
+		if _, exists := structMap[structMeta.Name]; !exists {
+			structMap[structMeta.Name] = structMeta
+		}
+	}
+
+	var exStructs []StructMeta
+	for _, structMeta := range sc.Structs {
+		if !structMeta.IsExport {
+			continue
+		}
+		exStructs = append(exStructs, structMeta)
+	}
+
+	re := regexp.MustCompile(`json:"(.*?)"`)
+	var result []StructMeta
+	for _, structMeta := range exStructs {
+		_structMeta := StructMeta{
+			Name:     structMeta.Name,
+			Fields:   make([]FieldMeta, 0),
+			Comments: make([]string, len(structMeta.Comments)),
+			IsExport: true,
+		}
+		copy(_structMeta.Comments, structMeta.Comments)
+		fieldMap := make(map[string]FieldMeta)
+		embedFieldMap := make(map[string]FieldMeta)
+		for _, fieldMeta := range structMeta.Fields {
+			if strings.HasPrefix(fieldMeta.Type, "embed") {
+				if re.MatchString(fieldMeta.Tag) {
+					fieldMeta.Type = strings.TrimPrefix(fieldMeta.Type, "embed:")
+					_structMeta.Fields = append(_structMeta.Fields, fieldMeta)
+					fieldMap[fieldMeta.Name] = fieldMeta
+				} else {
+					if embeded, exists := structMap[fieldMeta.Name]; exists {
+						for _, field := range embeded.Fields {
+							if !field.IsExport {
+								continue
+							}
+							embedFieldMap[field.Name] = field
+						}
+					}
+				}
+			} else if fieldMeta.IsExport {
 				_structMeta.Fields = append(_structMeta.Fields, fieldMeta)
 				fieldMap[fieldMeta.Name] = fieldMeta
 			}
