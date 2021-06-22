@@ -1,13 +1,16 @@
 package astutils
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"regexp"
 	"testing"
 )
 
@@ -235,4 +238,36 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields4(t *testing.T) {
 			assert.ElementsMatch(t, docFields, []string{"fields", "testBase"})
 		}
 	}
+}
+
+func TestStructCollector_Alias(t *testing.T) {
+	file := pathutils.Abs("testfiles/alias.go")
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	spew.Dump(root)
+	sc := NewStructCollector()
+	ast.Walk(sc, root)
+	structs := sc.DocFlatEmbed()
+	for _, item := range structs {
+		if item.Name == "TestAlias" {
+			fmt.Println(item)
+		}
+	}
+}
+
+func ExampleRegex() {
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
+	a := `[]anonystruct«{"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}»`
+	result := re.FindStringSubmatch(a)
+	fmt.Println(result[1])
+
+	j := result[1]
+	var structmeta StructMeta
+	json.Unmarshal([]byte(j), &structmeta)
+	fmt.Println(structmeta)
+	// Output:
+	// {"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}
 }

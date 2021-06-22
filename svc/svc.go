@@ -1,7 +1,6 @@
 package svc
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
@@ -69,6 +68,7 @@ func (receiver Svc) Http() {
 // Only support at most one golang non-built-in type as parameter in a service interface method
 // because go-doudou cannot put more than one parameter into request body except *multipart.FileHeader.
 // If there are *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
+// Support struct, map[string]ANY, built-in type and corresponding slice only
 func checkIc(ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
@@ -81,9 +81,6 @@ func checkIc(ic astutils.InterfaceCollector) {
 		for _, param := range method.Params {
 			if param.Type == "context.Context" {
 				continue
-			}
-			if param.Type == "chan" || param.Type == "func" || stringutils.IsEmpty(param.Type) {
-				panic(fmt.Errorf("error occur at %s %s. Support struct, map, string, bool, numberic and corresponding slice type only", param.Name, param.Type))
 			}
 			if !codegen.IsBuiltin(param) {
 				ptype := param.Type

@@ -10,6 +10,7 @@ require (
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/containerd/containerd v1.5.2 // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.7.1
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2

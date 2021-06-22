@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
@@ -35,10 +36,18 @@ type StructMeta struct {
 	IsExport bool
 }
 
+type NonStructTypeMeta struct {
+	Name     string
+	Type     string
+	Comments []string
+	IsExport bool
+}
+
 type StructCollector struct {
-	Structs []StructMeta
-	Methods map[string][]MethodMeta
-	Package PackageMeta
+	Structs          []StructMeta
+	Methods          map[string][]MethodMeta
+	Package          PackageMeta
+	NonStructTypeMap map[string]NonStructTypeMeta
 }
 
 func (sc *StructCollector) Visit(n ast.Node) ast.Visitor {
@@ -64,15 +73,62 @@ func exprString(expr ast.Expr) string {
 	case *ast.BasicLit:
 		return _expr.Value
 	case *ast.MapType:
-		return "map[" + exprString(_expr.Key) + "]" + exprString(_expr.Value)
-	case *ast.ChanType: // TODO
-		return "chan"
-	case *ast.FuncType: // TODO
-		return "func"
+		if exprString(_expr.Key) != "string" {
+			panic("support map key as string type only")
+		}
+		return "map[string]" + exprString(_expr.Value)
+	case *ast.StructType:
+		structmeta := newStructMeta(_expr)
+		b, _ := json.Marshal(structmeta)
+		return "anonystruct«" + string(b) + "»"
 	default:
-		panic(fmt.Sprintf("Unknown expression: %+v\n", expr))
+		panic(fmt.Sprintf("not support expression: %+v\n", expr))
 	}
-	return ""
+}
+
+func newStructMeta(structType *ast.StructType) StructMeta {
+	var fields []FieldMeta
+	re := regexp.MustCompile(`json:"(.*?)"`)
+	for _, field := range structType.Fields.List {
+		var fieldComments []string
+		if field.Doc != nil {
+			for _, comment := range field.Doc.List {
+				fieldComments = append(fieldComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+			}
+		}
+
+		var name string
+		fieldType := exprString(field.Type)
+
+		if len(field.Names) > 0 {
+			name = field.Names[0].Name
+		} else {
+			splits := strings.Split(fieldType, ".")
+			name = splits[len(splits)-1]
+			fieldType = "embed:" + fieldType
+		}
+
+		var tag string
+		docName := name
+		if field.Tag != nil {
+			tag = strings.Trim(field.Tag.Value, "`")
+			if re.MatchString(tag) {
+				docName = strings.TrimSuffix(re.FindStringSubmatch(tag)[1], ",omitempty")
+			}
+		}
+
+		fields = append(fields, FieldMeta{
+			Name:     name,
+			Type:     fieldType,
+			Tag:      tag,
+			Comments: fieldComments,
+			IsExport: unicode.IsUpper(rune(name[0])),
+			DocName:  docName,
+		})
+	}
+	return StructMeta{
+		Fields: fields,
+	}
 }
 
 func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
@@ -103,58 +159,24 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 					comments = append(comments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 				}
 			}
-			re := regexp.MustCompile(`json:"(.*?)"`)
 			for _, item := range spec.Specs {
 				typeSpec := item.(*ast.TypeSpec)
 				typeName := typeSpec.Name.Name
 				logrus.Printf("Type: name=%s\n", typeName)
 				switch specType := typeSpec.Type.(type) {
 				case *ast.StructType:
-					var fields []FieldMeta
-					for _, field := range specType.Fields.List {
-						var fieldComments []string
-						if field.Doc != nil {
-							for _, comment := range field.Doc.List {
-								fieldComments = append(fieldComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
-							}
-						}
-
-						var name string
-						fieldType := exprString(field.Type)
-
-						if len(field.Names) > 0 {
-							name = field.Names[0].Name
-						} else {
-							splits := strings.Split(fieldType, ".")
-							name = splits[len(splits)-1]
-							fieldType = "embed:" + fieldType
-						}
-
-						var tag string
-						docName := name
-						if field.Tag != nil {
-							tag = strings.Trim(field.Tag.Value, "`")
-							if re.MatchString(tag) {
-								docName = strings.TrimSuffix(re.FindStringSubmatch(tag)[1], ",omitempty")
-							}
-						}
-
-						fields = append(fields, FieldMeta{
-							Name:     name,
-							Type:     fieldType,
-							Tag:      tag,
-							Comments: fieldComments,
-							IsExport: unicode.IsUpper(rune(name[0])),
-							DocName:  docName,
-						})
-					}
-
-					sc.Structs = append(sc.Structs, StructMeta{
+					structmeta := newStructMeta(specType)
+					structmeta.Name = typeName
+					structmeta.Comments = comments
+					structmeta.IsExport = unicode.IsUpper(rune(typeName[0]))
+					sc.Structs = append(sc.Structs, structmeta)
+				default:
+					sc.NonStructTypeMap[typeName] = NonStructTypeMeta{
 						Name:     typeName,
-						Fields:   fields,
+						Type:     exprString(typeSpec.Type),
 						Comments: comments,
 						IsExport: unicode.IsUpper(rune(typeName[0])),
-					})
+					}
 				}
 			}
 		}
@@ -308,8 +330,9 @@ func GetImportPath(file string) string {
 
 func NewStructCollector() *StructCollector {
 	return &StructCollector{
-		Structs: nil,
-		Methods: make(map[string][]MethodMeta),
-		Package: PackageMeta{},
+		Structs:          nil,
+		Methods:          make(map[string][]MethodMeta),
+		Package:          PackageMeta{},
+		NonStructTypeMap: make(map[string]NonStructTypeMeta),
 	}
 }
