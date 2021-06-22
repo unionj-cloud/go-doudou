@@ -1,7 +1,6 @@
 package astutils
 
 import (
-	"bytes"
 	"go/ast"
 	"golang.org/x/tools/imports"
 	"io/ioutil"
@@ -22,17 +21,15 @@ func FixImport(src []byte, file string) {
 		panic(err)
 	}
 
-	if !bytes.Equal(src, res) {
-		// On Windows, we need to re-set the permissions from the file. See golang/go#38225.
-		var perms os.FileMode
-		var fi os.FileInfo
-		if fi, err = os.Stat(file); err == nil {
-			perms = fi.Mode() & os.ModePerm
-		}
-		err = ioutil.WriteFile(file, res, perms)
-		if err != nil {
-			panic(err)
-		}
+	// On Windows, we need to re-set the permissions from the file. See golang/go#38225.
+	var perms os.FileMode
+	var fi os.FileInfo
+	if fi, err = os.Stat(file); err == nil {
+		perms = fi.Mode() & os.ModePerm
+	}
+	err = ioutil.WriteFile(file, res, perms)
+	if err != nil {
+		panic(err)
 	}
 }
 

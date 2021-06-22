@@ -13,20 +13,20 @@ import "net/http"
 //
 //{"filter":{"dept":99,"name":"Jack"},"page":{"orders":null,"pageNo":2,"size":10}}
 type HttpLog struct {
-	ClientIp          string
-	HttpMethod        string
-	Uri               string
-	Proto             string
-	Host              string
-	ReqContentLength  int64
-	ReqHeader         http.Header
-	RequestId         string
-	RawReq            string
-	RespBody          string
-	StatusCode        int
-	RespHeader        http.Header
-	RespContentLength int
-	ElapsedTime       string
+	ClientIp          string      `json:"clientIp,omitempty"`
+	HttpMethod        string      `json:"httpMethod,omitempty"`
+	Uri               string      `json:"uri,omitempty"`
+	Proto             string      `json:"proto,omitempty"`
+	Host              string      `json:"host,omitempty"`
+	ReqContentLength  int64       `json:"reqContentLength,omitempty"`
+	ReqHeader         http.Header `json:"reqHeader,omitempty"`
+	RequestId         string      `json:"requestId,omitempty"`
+	RawReq            string      `json:"rawReq,omitempty"`
+	RespBody          string      `json:"respBody,omitempty"`
+	StatusCode        int         `json:"statusCode,omitempty"`
+	RespHeader        http.Header `json:"respHeader,omitempty"`
+	RespContentLength int         `json:"respContentLength,omitempty"`
+	ElapsedTime       string      `json:"elapsedTime,omitempty"`
 	// in ms
-	Elapsed int64
+	Elapsed int64 `json:"elapsed,omitempty"`
 }
