@@ -1,19 +1,11 @@
-package main
+package vo
 
 import (
 	"github.com/unionj-cloud/go-doudou/esutils"
 	"time"
 )
 
-// comment for alia age
-type age int
-
-type Event struct {
-	Name      string
-	EventType int
-}
-
-type TestAlias struct {
+type TestAlias1 struct {
 	esutils.Base
 	Age    age
 	School []struct {

@@ -74,4 +74,5 @@ func init() {
 	httpCmd.Flags().StringVarP(&client, "client", "c", "", `if empty, then no http client implementation will be generated. Only one value "go" supported currently`)
 	httpCmd.Flags().BoolVarP(&homitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
 	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
+	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)
 }

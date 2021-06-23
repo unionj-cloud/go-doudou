@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
@@ -33,7 +34,7 @@ func TestGenHttpHandlerImplWithImpl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true)
+			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true, strcase.ToLowerCamel)
 		})
 	}
 }
@@ -42,7 +43,7 @@ func TestGenHttpHandlerImpl(t *testing.T) {
 	dir := testDir + "handlerImpl12"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(dir + "/svc.go", astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
 	GenHttpHandlerImpl(dir, ic)
 	expect := `package httpsrv
 
@@ -167,7 +168,7 @@ func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true)
+			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true, strcase.ToLowerCamel)
 		})
 	}
 }
