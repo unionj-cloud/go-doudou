@@ -2,6 +2,7 @@ package svc
 
 import (
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
@@ -25,7 +26,15 @@ type Svc struct {
 
 func validateDataType(dir string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), codegen.ExprStringP)
-	astutils.BuildStructCollector(filepath.Join(dir, "vo/vo.go"), codegen.ExprStringP)
+	vodir := filepath.Join(dir, "vo")
+	var files []string
+	err := filepath.Walk(vodir, astutils.Visit(&files))
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	for _, file := range files {
+		astutils.BuildStructCollector(file, codegen.ExprStringP)
+	}
 }
 
 func (receiver Svc) Http() {

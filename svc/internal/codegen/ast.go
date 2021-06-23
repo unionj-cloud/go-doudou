@@ -13,7 +13,7 @@ import (
 // Support structs of vo package
 // Support slice of types mentioned above
 // Not support alias type (all alias type fields of a struct will be outputed as v3.Any in openapi 3.0 json document)
-// TODO support anonymous struct type
+// Support anonymous struct type
 // as struct field type in vo package
 // or as parameter type in method signature in svc.go file besides context.Context, multipart.FileHeader, os.File
 // when go-doudou command line flag doc is true

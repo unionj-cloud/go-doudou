@@ -54,15 +54,23 @@ func Test_schemasOf(t *testing.T) {
 		want int
 	}{
 		{
-			name: "Test_schemasOf",
+			name: "",
 			args: args{
 				vofile: pathutils.Abs("testfiles") + "/vo/vo.go",
 			},
 			want: 6,
 		},
+		{
+			name: "",
+			args: args{
+				vofile: pathutils.Abs("testfiles") + "/vo/vo1.go",
+			},
+			want: 2,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			schemaNames = getSchemaNames(tt.args.vofile)
 			if got := schemasOf(tt.args.vofile); len(got) != tt.want {
 				t.Errorf("schemasOf() = %v, want %v", len(got), tt.want)
 			}

@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -47,7 +48,6 @@ var schemaNames []string
 // type uint64
 // type uint8
 // type uintptr
-//TODO 支持匿名结构体
 func schemaOf(field astutils.FieldMeta) *v3.Schema {
 	ft := strings.TrimPrefix(field.Type, "*")
 	switch ft {
@@ -66,7 +66,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 	case "multipart.FileHeader":
 		return v3.File
 	default:
-		if strings.Contains(ft, "map[") {
+		if strings.HasPrefix(ft, "map[") {
 			elem := ft[strings.Index(ft, "]")+1:]
 			elem = strings.TrimPrefix(elem, "*")
 			return &v3.Schema{
@@ -76,7 +76,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 				}),
 			}
 		}
-		if strings.Contains(ft, "[") {
+		if strings.HasPrefix(ft, "[") {
 			elem := ft[strings.Index(ft, "]")+1:]
 			elem = strings.TrimPrefix(elem, "*")
 			return &v3.Schema{
@@ -86,18 +86,27 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 				}),
 			}
 		}
-		var title string
-		if !strings.Contains(ft, ".") {
-			title = ft
-		}
-		if stringutils.IsEmpty(title) {
-			title = ft[strings.LastIndex(ft, ".")+1:]
-		}
-		if stringutils.IsNotEmpty(title) {
-			if unicode.IsUpper(rune(title[0])) {
-				if sliceutils.StringContains(schemaNames, title) {
-					return &v3.Schema{
-						Ref: "#/components/schemas/" + title,
+		re := regexp.MustCompile(`anonystruct«(.*)»`)
+		if re.MatchString(ft) {
+			result := re.FindStringSubmatch(ft)
+			var structmeta astutils.StructMeta
+			json.Unmarshal([]byte(result[1]), &structmeta)
+			schema := newSchema(structmeta)
+			return &schema
+		} else {
+			var title string
+			if !strings.Contains(ft, ".") {
+				title = ft
+			}
+			if stringutils.IsEmpty(title) {
+				title = ft[strings.LastIndex(ft, ".")+1:]
+			}
+			if stringutils.IsNotEmpty(title) {
+				if unicode.IsUpper(rune(title[0])) {
+					if sliceutils.StringContains(schemaNames, title) {
+						return &v3.Schema{
+							Ref: "#/components/schemas/" + title,
+						}
 					}
 				}
 			}
@@ -131,6 +140,21 @@ func getSchemaNames(vofile string) []string {
 	return ret
 }
 
+func newSchema(structmeta astutils.StructMeta) v3.Schema {
+	properties := make(map[string]*v3.Schema)
+	for _, field := range structmeta.Fields {
+		fschema := copySchema(field)
+		fschema.Description = strings.Join(field.Comments, "\n")
+		properties[field.DocName] = &fschema
+	}
+	return v3.Schema{
+		Title:       structmeta.Name,
+		Type:        v3.ObjectT,
+		Properties:  properties,
+		Description: strings.Join(structmeta.Comments, "\n"),
+	}
+}
+
 func schemasOf(vofile string) []v3.Schema {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
@@ -142,18 +166,7 @@ func schemasOf(vofile string) []v3.Schema {
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
 	for _, item := range structs {
-		properties := make(map[string]*v3.Schema)
-		for _, field := range item.Fields {
-			fschema := copySchema(field)
-			fschema.Description = strings.Join(field.Comments, "\n")
-			properties[field.DocName] = &fschema
-		}
-		ret = append(ret, v3.Schema{
-			Title:       item.Name,
-			Type:        v3.ObjectT,
-			Properties:  properties,
-			Description: strings.Join(item.Comments, "\n"),
-		})
+		ret = append(ret, newSchema(item))
 	}
 	return ret
 }
@@ -338,7 +351,6 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		err     error
 		svcname string
 		docfile string
-		vofile  string
 		fi      os.FileInfo
 		api     v3.Api
 		data    []byte
@@ -355,9 +367,18 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	if fi != nil {
 		logrus.Warningln("file " + docfile + " will be overwrited")
 	}
-	vofile = filepath.Join(dir, "vo/vo.go")
-	schemaNames = getSchemaNames(vofile)
-	vos = schemasOf(vofile)
+	vodir := filepath.Join(dir, "vo")
+	var files []string
+	err = filepath.Walk(vodir, astutils.Visit(&files))
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	for _, file := range files {
+		schemaNames = append(schemaNames, getSchemaNames(file)...)
+	}
+	for _, file := range files {
+		vos = append(vos, schemasOf(file)...)
+	}
 	for _, item := range vos {
 		schemas[item.Title] = item
 	}
