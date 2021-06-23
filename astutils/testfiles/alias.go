@@ -28,7 +28,7 @@ type TestAlias struct {
 
 type ta TestAlias
 
-type tt time.Time
+type TT time.Time
 
 type mm map[string]interface{}
 

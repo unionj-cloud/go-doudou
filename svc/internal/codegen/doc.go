@@ -24,6 +24,7 @@ import (
 )
 
 var schemas map[string]v3.Schema
+var schemaNames []string
 
 // Reference https://golang.org/pkg/builtin/
 // type bool
@@ -94,8 +95,10 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 		}
 		if stringutils.IsNotEmpty(title) {
 			if unicode.IsUpper(rune(title[0])) {
-				return &v3.Schema{
-					Ref: "#/components/schemas/" + title,
+				if sliceutils.StringContains(schemaNames, title) {
+					return &v3.Schema{
+						Ref: "#/components/schemas/" + title,
+					}
 				}
 			}
 		}
@@ -110,6 +113,22 @@ func copySchema(field astutils.FieldMeta) v3.Schema {
 		panic(err)
 	}
 	return schema
+}
+
+func getSchemaNames(vofile string) []string {
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := astutils.NewStructCollector(ExprStringP)
+	ast.Walk(sc, root)
+	structs := sc.DocFlatEmbed()
+	var ret []string
+	for _, item := range structs {
+		ret = append(ret, item.Name)
+	}
+	return ret
 }
 
 func schemasOf(vofile string) []v3.Schema {
@@ -337,6 +356,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		logrus.Warningln("file " + docfile + " will be overwrited")
 	}
 	vofile = filepath.Join(dir, "vo/vo.go")
+	schemaNames = getSchemaNames(vofile)
 	vos = schemasOf(vofile)
 	for _, item := range vos {
 		schemas[item.Title] = item

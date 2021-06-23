@@ -14,7 +14,7 @@ type StructCollector struct {
 	Structs          []StructMeta
 	Methods          map[string][]MethodMeta
 	Package          PackageMeta
-	NonStructTypeMap map[string]NonStructTypeMeta
+	NonStructTypeMap map[string]ast.Expr
 	exprString       func(ast.Expr) string
 }
 
@@ -61,12 +61,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 					structmeta.IsExport = unicode.IsUpper(rune(typeName[0]))
 					sc.Structs = append(sc.Structs, structmeta)
 				default:
-					sc.NonStructTypeMap[typeName] = NonStructTypeMeta{
-						Name:     typeName,
-						Type:     sc.exprString(typeSpec.Type),
-						Comments: comments,
-						IsExport: unicode.IsUpper(rune(typeName[0])),
-					}
+					sc.NonStructTypeMap[typeName] = typeSpec.Type
 				}
 			}
 		}
@@ -140,7 +135,7 @@ func NewStructCollector(exprString func(ast.Expr) string) *StructCollector {
 		Structs:          nil,
 		Methods:          make(map[string][]MethodMeta),
 		Package:          PackageMeta{},
-		NonStructTypeMap: make(map[string]NonStructTypeMeta),
+		NonStructTypeMap: make(map[string]ast.Expr),
 		exprString:       exprString,
 	}
 }

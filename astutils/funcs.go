@@ -166,13 +166,6 @@ type StructMeta struct {
 	IsExport bool
 }
 
-type NonStructTypeMeta struct {
-	Name     string
-	Type     string
-	Comments []string
-	IsExport bool
-}
-
 func ExprString(expr ast.Expr) string {
 	switch _expr := expr.(type) {
 	case *ast.Ident:
