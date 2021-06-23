@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
@@ -17,11 +18,12 @@ type SvcCmd interface {
 }
 
 type Svc struct {
-	Dir       string
-	Handler   bool
-	Client    string
-	Omitempty bool
-	Doc       bool
+	Dir          string
+	Handler      bool
+	Client       string
+	Omitempty    bool
+	Doc          bool
+	Jsonattrcase string
 }
 
 func validateDataType(dir string) {
@@ -63,7 +65,14 @@ func (receiver Svc) Http() {
 	codegen.GenMain(dir, ic)
 	codegen.GenHttpHandler(dir, ic)
 	if receiver.Handler {
-		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty)
+		var caseconvertor func(string) string
+		switch receiver.Jsonattrcase {
+		case "snake":
+			caseconvertor = strcase.ToSnake
+		default:
+			caseconvertor = strcase.ToLowerCamel
+		}
+		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty, caseconvertor)
 	} else {
 		codegen.GenHttpHandlerImpl(dir, ic)
 	}

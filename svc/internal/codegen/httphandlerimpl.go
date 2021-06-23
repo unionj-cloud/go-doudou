@@ -205,7 +205,7 @@ var appendHttpHandlerImplTmpl = `
 			if err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}{{if $.Omitempty}},omitempty{{end}}"` + "`" + `
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Omitempty}},omitempty{{end}}"` + "`" + `
 				{{- end }}
 				{{- end }}
 			}{
@@ -279,7 +279,7 @@ func castFunc(t string) string {
 
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
 // You may need to convert the type by yourself.
-func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omitempty bool) {
+func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omitempty bool, caseconvertor func(string) string) {
 	var (
 		err             error
 		modfile         string
@@ -370,6 +370,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["isBuiltin"] = IsBuiltin
 	funcMap["isSupport"] = isSupport
 	funcMap["castFunc"] = castFunc
+	funcMap["convertCase"] = caseconvertor
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}

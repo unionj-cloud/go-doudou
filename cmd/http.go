@@ -33,6 +33,7 @@ var handler bool
 var client string
 var homitempty bool
 var doc bool
+var jsonattrcase string
 
 // httpCmd represents the http command
 var httpCmd = &cobra.Command{
@@ -53,7 +54,7 @@ to quickly create a Cobra application.`,
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{svcdir, handler, client, homitempty, doc}
+		s := svc.Svc{svcdir, handler, client, homitempty, doc, jsonattrcase}
 		s.Http()
 	},
 }
@@ -72,5 +73,5 @@ func init() {
 	httpCmd.Flags().BoolVarP(&handler, "handler", "", false, "Whether generate default handler implementation or not")
 	httpCmd.Flags().StringVarP(&client, "client", "c", "", `if empty, then no http client implementation will be generated. Only one value "go" supported currently`)
 	httpCmd.Flags().BoolVarP(&homitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
-	httpCmd.Flags().BoolVarP(&doc, "doc", "d", true, `if true, it will do corresponding data type validation for code in svc.go file and vo package and generate json format document file compatible with openapi 3.0 spec`)
+	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
 }
