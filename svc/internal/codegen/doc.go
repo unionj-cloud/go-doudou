@@ -64,8 +64,6 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 		return v3.Float64
 	case "multipart.FileHeader":
 		return v3.File
-	case "":
-		return v3.Any
 	default:
 		if strings.Contains(ft, "map[") {
 			elem := ft[strings.Index(ft, "]")+1:]
@@ -92,9 +90,7 @@ func schemaOf(field astutils.FieldMeta) *v3.Schema {
 			title = ft
 		}
 		if stringutils.IsEmpty(title) {
-			if strings.HasPrefix(ft, "vo.") {
-				title = strings.TrimPrefix(ft, "vo.")
-			}
+			title = ft[strings.LastIndex(ft, ".")+1:]
 		}
 		if stringutils.IsNotEmpty(title) {
 			if unicode.IsUpper(rune(title[0])) {
@@ -122,8 +118,8 @@ func schemasOf(vofile string) []v3.Schema {
 	if err != nil {
 		panic(err)
 	}
-	var sc astutils.StructCollector
-	ast.Walk(&sc, root)
+	sc := astutils.NewStructCollector(ExprStringP)
+	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
 	for _, item := range structs {

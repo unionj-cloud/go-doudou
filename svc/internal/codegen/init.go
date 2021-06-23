@@ -9,12 +9,8 @@ import (
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -319,18 +315,4 @@ func InitSvc(dir string) {
 	} else {
 		logrus.Warnf("file %s already exists", dockerfile)
 	}
-}
-
-func BuildIc(svcfile string) astutils.InterfaceCollector {
-	if _, err := os.Stat(svcfile); os.IsNotExist(err) {
-		logrus.Panicln(svcfile + " file cannot be found. Execute command go-doudou svc init first!")
-	}
-	var ic astutils.InterfaceCollector
-	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, svcfile, nil, parser.ParseComments)
-	if err != nil {
-		logrus.Panicln(err)
-	}
-	ast.Walk(&ic, root)
-	return ic
 }

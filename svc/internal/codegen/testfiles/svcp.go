@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/unionj-cloud/go-doudou/svc/testfiles/vo"
 	"mime/multipart"
 	"os"
+	"testfiles/vo"
 )
 
 // 用户服务接口

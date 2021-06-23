@@ -9,7 +9,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"path/filepath"
 	"regexp"
 	"testing"
 )
@@ -21,7 +20,7 @@ func ExampleStruct() {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	fmt.Println(sc.Structs)
 	// Output:
@@ -35,11 +34,11 @@ func ExampleInter() {
 	if err != nil {
 		panic(err)
 	}
-	var sc InterfaceCollector
-	ast.Walk(&sc, root)
+	sc := NewInterfaceCollector(ExprString)
+	ast.Walk(sc, root)
 	fmt.Println(sc.Interfaces)
 	// Output:
-	// [{Usersvc [{PageUsers [{ctx context.Context  [] false } {query PageQuery  [] false }] [{code int  [] false } {data PageRet  [] false } {msg error  [] false }] [You can define your service methods as your need. Below is an example.]} {GetUser [{ctx context.Context  [] false } {userId string  [] false } {photo string  [] false }] [{code int  [] false } {data string  [] false } {msg error  [] false }] [comment1 comment2]} {SignUp [{ctx context.Context  [] false } {username string  [] false } {password int  [] false } {actived bool  [] false } {score float64  [] false }] [{code int  [] false } {data string  [] false } {msg error  [] false }] [comment3]} {UploadAvatar [{pc context.Context  [] false } {pf []*multipart.FileHeader  [] false } {ps string  [] false }] [{ri int  [] false } {rs string  [] false } {re error  [] false }] [comment4]} {DownloadAvatar [{ctx context.Context  [] false } {userId string  [] false }] [{rf *os.File  [] false } {re error  [] false }] [comment5]}] [用户服务接口 v1版本]}]
+	// [{Usersvc [func PageUsers(ctx context.Context, query PageQuery) (code int, data PageRet, msg error) func GetUser(ctx context.Context, userId string, photo string) (code int, data string, msg error) func SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error) func UploadAvatar(pc context.Context, pf []*multipart.FileHeader, ps string) (ri int, rs string, re error) func DownloadAvatar(ctx context.Context, userId string) (rf *os.File, re error)] [用户服务接口 v1版本]}]
 }
 
 func TestStructFuncDecl(t *testing.T) {
@@ -49,7 +48,7 @@ func TestStructFuncDecl(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	methods, exists := sc.Methods["Cat"]
 	if !exists {
@@ -60,30 +59,17 @@ func TestStructFuncDecl(t *testing.T) {
 	}
 }
 
-func TestNewTableFromStruct(t *testing.T) {
-	var files []string
-	var err error
-	testDir := pathutils.Abs("testfiles/domain")
-	err = filepath.Walk(testDir, Visit(&files))
-	if err != nil {
-		panic(err)
-	}
-	var sc StructCollector
-	for _, file := range files {
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
-		ast.Walk(&sc, root)
-	}
-	flattened := sc.FlatEmbed()
+func ExampleRegex() {
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
+	a := `[]anonystruct«{"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}»`
+	result := re.FindStringSubmatch(a)
+	fmt.Println(result[1])
 
-	for _, sm := range flattened {
-		if len(sm.Fields) != 10 {
-			t.Errorf("want 10, got %d\n", len(sm.Fields))
-		}
-	}
+	j := result[1]
+	var structmeta StructMeta
+	json.Unmarshal([]byte(j), &structmeta)
+	// Output:
+	// {"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}
 }
 
 func TestStructCollector_DocFlatEmbed(t *testing.T) {
@@ -93,7 +79,7 @@ func TestStructCollector_DocFlatEmbed(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -117,7 +103,7 @@ func TestStructCollector_DocFlatEmbed1(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -141,7 +127,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -165,7 +151,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields2(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -189,7 +175,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields3(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -223,7 +209,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields4(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -248,7 +234,7 @@ func TestStructCollector_Alias(t *testing.T) {
 		panic(err)
 	}
 	spew.Dump(root)
-	sc := NewStructCollector()
+	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
 	for _, item := range structs {
@@ -256,18 +242,4 @@ func TestStructCollector_Alias(t *testing.T) {
 			fmt.Println(item)
 		}
 	}
-}
-
-func ExampleRegex() {
-	re := regexp.MustCompile(`anonystruct«(.*)»`)
-	a := `[]anonystruct«{"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}»`
-	result := re.FindStringSubmatch(a)
-	fmt.Println(result[1])
-
-	j := result[1]
-	var structmeta StructMeta
-	json.Unmarshal([]byte(j), &structmeta)
-	fmt.Println(structmeta)
-	// Output:
-	// {"Name":"","Fields":[{"Name":"Name","Type":"string","Tag":"","Comments":null,"IsExport":true,"DocName":"Name"},{"Name":"Addr","Type":"anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Zip\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Zip\"},{\"Name\":\"Block\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Block\"},{\"Name\":\"Full\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Full\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»","Tag":"","Comments":null,"IsExport":true,"DocName":"Addr"}],"Comments":null,"Methods":null,"IsExport":false}
 }

@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -76,7 +77,7 @@ func TestGenHttpHandler(t *testing.T) {
 	dir := testDir + "httphandler"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := BuildIc(dir + "/svc.go")
+	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
 	GenHttpHandler(dir, ic)
 	expect := `package httpsrv
 

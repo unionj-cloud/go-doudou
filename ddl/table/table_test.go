@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/ddl/keyenum"
 	"github.com/unionj-cloud/go-doudou/ddl/nullenum"
@@ -29,16 +30,16 @@ func TestNewTableFromStruct(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	var sc astutils.StructCollector
+	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
 		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 		if err != nil {
 			panic(err)
 		}
-		ast.Walk(&sc, root)
+		ast.Walk(sc, root)
 	}
-	flattened := sc.FlatEmbed()
+	flattened := ddlast.FlatEmbed(sc.Structs)
 
 	for _, sm := range flattened {
 		table := NewTableFromStruct(sm)

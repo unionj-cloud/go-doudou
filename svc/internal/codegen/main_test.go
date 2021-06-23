@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -10,7 +11,7 @@ func TestGenMain(t *testing.T) {
 	dir := testDir + "main"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := BuildIc(dir + "/svc.go")
+	ic := astutils.BuildInterfaceCollector(dir + "/svc.go", astutils.ExprString)
 	GenMain(dir, ic)
 	expect := `package main
 

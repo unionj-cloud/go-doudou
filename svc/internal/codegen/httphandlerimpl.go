@@ -3,7 +3,6 @@ package codegen
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
@@ -52,7 +51,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 		f               *os.File
 		tpl             *template.Template
 		source          string
-		sqlBuf          bytes.Buffer
+		buf             bytes.Buffer
 		httpDir         string
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
@@ -83,7 +82,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 		if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(httpHandlerImpl); err != nil {
 			panic(err)
 		}
-		if err = tpl.Execute(&sqlBuf, struct {
+		if err = tpl.Execute(&buf, struct {
 			ServicePackage string
 			ServiceAlias   string
 			VoPackage      string
@@ -97,7 +96,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 			panic(err)
 		}
 
-		source = strings.TrimSpace(sqlBuf.String())
+		source = strings.TrimSpace(buf.String())
 		astutils.FixImport([]byte(source), handlerimplfile)
 	} else {
 		logrus.Warnf("file %s already exists.", handlerimplfile)
@@ -290,7 +289,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		f               *os.File
 		modf            *os.File
 		tpl             *template.Template
-		sqlBuf          bytes.Buffer
+		buf             bytes.Buffer
 		httpDir         string
 		fi              os.FileInfo
 		tmpl            string
@@ -324,10 +323,8 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		if err != nil {
 			panic(err)
 		}
-		sc := astutils.NewStructCollector()
+		sc := astutils.NewStructCollector(astutils.ExprString)
 		ast.Walk(sc, root)
-		fmt.Println(sc.Structs)
-
 		if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
 			var notimplemented []astutils.MethodMeta
 			for _, item := range meta.Methods {
@@ -335,10 +332,10 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 					if len(handler.Params) != 2 {
 						continue
 					}
-					if handler.Params[0].Type == "http.ResponseWriter" && handler.Params[1].Type == "*http.Request" {
-						if item.Name == handler.Name {
-							goto L
-						}
+					if handler.Params[0].Type == "http.ResponseWriter" &&
+						handler.Params[1].Type == "*http.Request" &&
+						item.Name == handler.Name {
+						goto L
 					}
 				}
 				notimplemented = append(notimplemented, item)
@@ -376,7 +373,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
-	if err = tpl.Execute(&sqlBuf, struct {
+	if err = tpl.Execute(&buf, struct {
 		ServicePackage string
 		ServiceAlias   string
 		VoPackage      string
@@ -397,7 +394,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		panic(err)
 	}
 
-	original = append(original, sqlBuf.Bytes()...)
+	original = append(original, buf.Bytes()...)
 	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }

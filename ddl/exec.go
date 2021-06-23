@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/codegen"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/config"
+	"github.com/unionj-cloud/go-doudou/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
@@ -75,7 +76,7 @@ func (d Ddl) Exec() {
 			ast.Walk(&sc, root)
 		}
 
-		flattened := sc.FlatEmbed()
+		flattened := ddlast.FlatEmbed(sc.Structs)
 		for _, sm := range flattened {
 			tables = append(tables, table.NewTableFromStruct(sm, d.Pre))
 		}

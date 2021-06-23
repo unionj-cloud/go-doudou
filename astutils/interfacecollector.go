@@ -3,43 +3,33 @@ package astutils
 import (
 	"fmt"
 	"github.com/iancoleman/strcase"
+	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
+	"go/parser"
 	"go/token"
 	"strings"
 )
 
-type MethodMeta struct {
-	Name     string
-	Params   []FieldMeta
-	Results  []FieldMeta
-	Comments []string
-}
-
-type InterfaceMeta struct {
-	Name     string
-	Methods  []MethodMeta
-	Comments []string
-}
-
 type InterfaceCollector struct {
 	Interfaces []InterfaceMeta
 	Package    PackageMeta
+	exprString func(ast.Expr) string
 }
 
 func (ic *InterfaceCollector) Visit(n ast.Node) ast.Visitor {
 	return ic.Collect(n)
 }
 
-func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
+func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	switch spec := n.(type) {
 	case *ast.Package:
-		return sc
+		return ic
 	case *ast.File: // actually it is package name
-		sc.Package = PackageMeta{
+		ic.Package = PackageMeta{
 			Name: spec.Name.Name,
 		}
-		return sc
+		return ic
 	case *ast.GenDecl:
 		if spec.Tok == token.TYPE {
 			var comments []string
@@ -79,7 +69,7 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 							if len(param.Names) > 0 {
 								pn = param.Names[0].Name
 							}
-							pt := exprString(param.Type)
+							pt := ic.exprString(param.Type)
 							if stringutils.IsEmpty(pn) {
 								elemt := strings.TrimPrefix(pt, "*")
 								if stringutils.IsNotEmpty(elemt) {
@@ -118,7 +108,7 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 								if len(result.Names) > 0 {
 									rn = result.Names[0].Name
 								}
-								rt := exprString(result.Type)
+								rt := ic.exprString(result.Type)
 								if stringutils.IsEmpty(rn) {
 									elemt := strings.TrimPrefix(rt, "*")
 									if stringutils.IsNotEmpty(elemt) {
@@ -159,7 +149,7 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 						})
 					}
 
-					sc.Interfaces = append(sc.Interfaces, InterfaceMeta{
+					ic.Interfaces = append(ic.Interfaces, InterfaceMeta{
 						Name:     typeName,
 						Methods:  methods,
 						Comments: comments,
@@ -169,4 +159,21 @@ func (sc *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 		}
 	}
 	return nil
+}
+
+func NewInterfaceCollector(exprString func(ast.Expr) string) *InterfaceCollector {
+	return &InterfaceCollector{
+		exprString: exprString,
+	}
+}
+
+func BuildInterfaceCollector(file string, exprString func(ast.Expr) string) InterfaceCollector {
+	ic := NewInterfaceCollector(exprString)
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	ast.Walk(ic, root)
+	return *ic
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"os"
 	"testing"
 )
@@ -70,7 +69,7 @@ func TestSvc_Http(t *testing.T) {
 
 func Test_checkIc(t *testing.T) {
 	svcfile := testDir + "/svc.go"
-	ic := codegen.BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 	type args struct {
 		ic astutils.InterfaceCollector
 	}
@@ -88,7 +87,7 @@ func Test_checkIc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				checkIc(ic)
+				validateRestApi(ic)
 			})
 		})
 	}
@@ -96,7 +95,7 @@ func Test_checkIc(t *testing.T) {
 
 func Test_checkIc1(t *testing.T) {
 	svcfile := testDir + "/svcp.go"
-	ic := codegen.BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 	type args struct {
 		ic astutils.InterfaceCollector
 	}
@@ -114,7 +113,7 @@ func Test_checkIc1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				checkIc(ic)
+				validateRestApi(ic)
 			})
 		})
 	}

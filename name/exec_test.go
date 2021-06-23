@@ -56,9 +56,10 @@ func TestName_Exec(t *testing.T) {
 		Omitempty bool
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   string
+		name     string
+		fields   fields
+		want     string
+		initCode string
 	}{
 		{
 			name: "",
@@ -66,6 +67,7 @@ func TestName_Exec(t *testing.T) {
 				File:     pathutils.Abs("testfiles/vo.go"),
 				Strategy: lowerCamelStrategy,
 			},
+			initCode: initCode,
 			want: `package testfiles
 
 // 筛选条件
@@ -115,6 +117,7 @@ type MappingPayload struct {
 				Strategy:  lowerCamelStrategy,
 				Omitempty: true,
 			},
+			initCode: initCode,
 			want: `package testfiles
 
 // 筛选条件
@@ -164,6 +167,7 @@ type MappingPayload struct {
 				Strategy:  snakeStrategy,
 				Omitempty: false,
 			},
+			initCode: initCode,
 			want: `package testfiles
 
 // 筛选条件
@@ -206,6 +210,94 @@ type MappingPayload struct {
 }
 `,
 		},
+		{
+			name: "",
+			fields: fields{
+				File:      pathutils.Abs("testfiles/vo1.go"),
+				Strategy:  snakeStrategy,
+				Omitempty: false,
+			},
+			initCode: `package testfiles
+
+import "time"
+
+// comment for alia age
+type age int
+
+type Event struct {
+	Name      string
+	EventType int
+}
+
+type TestAlias struct {
+	Age    age
+	School []struct {
+		Name string
+		Addr struct {
+			Zip   string
+			Block string
+			Full  string
+		}
+	}
+	EventChan chan Event
+	SigChan   chan int
+	Callback  func(string) bool
+	CallbackN func(param string) bool
+}
+
+type ta TestAlias
+
+type tt time.Time
+
+type mm map[string]interface{}
+
+type MyInter interface {
+	Speak() error
+}
+
+type starM *time.Time
+`,
+			want: `package testfiles
+
+import "time"
+
+// comment for alia age
+type age int
+
+type Event struct {
+	Name      string ` + "`" + `json:"name"` + "`" + `
+	EventType int    ` + "`" + `json:"event_type"` + "`" + `
+}
+
+type TestAlias struct {
+	Age    age ` + "`" + `json:"age"` + "`" + `
+	School []struct {
+		Name string ` + "`" + `json:"name"` + "`" + `
+		Addr struct {
+			Zip   string ` + "`" + `json:"zip"` + "`" + `
+			Block string ` + "`" + `json:"block"` + "`" + `
+			Full  string ` + "`" + `json:"full"` + "`" + `
+		} ` + "`" + `json:"addr"` + "`" + `
+	} ` + "`" + `json:"school"` + "`" + `
+	EventChan chan Event              ` + "`" + `json:"event_chan"` + "`" + `
+	SigChan   chan int                ` + "`" + `json:"sig_chan"` + "`" + `
+	Callback  func(string) bool       ` + "`" + `json:"callback"` + "`" + `
+	CallbackN func(param string) bool ` + "`" + `json:"callback_n"` + "`" + `
+}
+
+type ta TestAlias
+
+type tt time.Time
+
+type mm map[string]interface{}
+
+type MyInter interface {
+	Speak() error
+}
+
+type starM *time.Time
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -226,7 +318,7 @@ type MappingPayload struct {
 			if string(content) != tt.want {
 				t.Errorf("want %s, got %s\n", tt.want, string(content))
 			}
-			ioutil.WriteFile(tt.fields.File, []byte(initCode), os.ModePerm)
+			ioutil.WriteFile(tt.fields.File, []byte(tt.initCode), os.ModePerm)
 		})
 	}
 }

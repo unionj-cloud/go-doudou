@@ -23,7 +23,7 @@ func TestGenDoc(t *testing.T) {
 		ic  astutils.InterfaceCollector
 	}
 	svcfile := filepath.Join(dir, "svc.go")
-	ic := BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, ExprStringP)
 
 	tests := []struct {
 		name string

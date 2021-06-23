@@ -12,7 +12,7 @@ func TestGenGoClient(t *testing.T) {
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
 	svcfile := filepath.Join(dir, "svc.go")
-	ic := BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 	type args struct {
 		dir string

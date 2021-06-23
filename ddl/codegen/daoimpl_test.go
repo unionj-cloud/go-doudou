@@ -3,6 +3,7 @@ package codegen
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
@@ -26,18 +27,18 @@ func TestGenDaoImplGo(t *testing.T) {
 	if err != nil {
 		logrus.Panicln(err)
 	}
-	var sc astutils.StructCollector
+	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
 		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 		if err != nil {
 			logrus.Panicln(err)
 		}
-		ast.Walk(&sc, root)
+		ast.Walk(sc, root)
 	}
 
 	var tables []table.Table
-	flattened := sc.FlatEmbed()
+	flattened := ddlast.FlatEmbed(sc.Structs)
 	for _, sm := range flattened {
 		tables = append(tables, table.NewTableFromStruct(sm, ""))
 	}

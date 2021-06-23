@@ -13,7 +13,7 @@ func TestGenHttpHandlerImplWithImpl(t *testing.T) {
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
 	svcfile := filepath.Join(dir, "svc.go")
-	ic := BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 	type args struct {
 		dir string
@@ -42,7 +42,7 @@ func TestGenHttpHandlerImpl(t *testing.T) {
 	dir := testDir + "handlerImpl12"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := BuildIc(dir + "/svc.go")
+	ic := astutils.BuildInterfaceCollector(dir + "/svc.go", astutils.ExprString)
 	GenHttpHandlerImpl(dir, ic)
 	expect := `package httpsrv
 
@@ -140,7 +140,7 @@ func Test_castFunc(t *testing.T) {
 
 func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
 	svcfile := testDir + "/svc.go"
-	ic := BuildIc(svcfile)
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 	defer os.RemoveAll(testDir + "/transport")
 	type args struct {
 		dir string
