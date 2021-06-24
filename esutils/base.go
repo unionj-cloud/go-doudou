@@ -3,15 +3,18 @@ package esutils
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/olivere/elastic"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/test"
-	"strings"
-	"time"
 )
+
+//go:generate go-doudou name --file $GOFILE
 
 type queryType int
 type queryLogic int
@@ -46,13 +49,13 @@ const (
 )
 
 type Es struct {
-	client   *elastic.Client
-	esIndex  string
-	esType   string
-	username string
-	password string
-	urls     []string
-	logger   *logrus.Logger
+	client   *elastic.Client `json:"client"`
+	esIndex  string          `json:"esIndex"`
+	esType   string          `json:"esType"`
+	username string          `json:"username"`
+	password string          `json:"password"`
+	urls     []string        `json:"urls"`
+	logger   *logrus.Logger  `json:"logger"`
 }
 
 func (e *Es) newDefaultClient() {
@@ -101,9 +104,13 @@ func WithUrls(urls []string) EsOption {
 }
 
 func NewEs(esIndex, esType string, opts ...EsOption) *Es {
+	_esType := esType
+	if stringutils.IsEmpty(_esType) {
+		_esType = esIndex
+	}
 	es := &Es{
 		esIndex: esIndex,
-		esType:  esType,
+		esType:  _esType,
 	}
 	for _, opt := range opts {
 		opt(es)
@@ -151,21 +158,21 @@ type Field struct {
 
 type QueryCond struct {
 	Pair       map[string][]interface{} `json:"pair"`
-	QueryLogic queryLogic               `json:"query_logic"`
-	QueryType  queryType                `json:"query_type"`
+	QueryLogic queryLogic               `json:"queryLogic"`
+	QueryType  queryType                `json:"queryType"`
 	Children   []QueryCond              `json:"children"`
 }
 
 type Sort struct {
-	Field     string
-	Ascending bool
+	Field     string `json:"field"`
+	Ascending bool   `json:"ascending"`
 }
 
 type Paging struct {
-	StartDate  string      `json:"start_date"`
-	EndDate    string      `json:"end_date"`
-	DateField  string      `json:"date_field"`
-	QueryConds []QueryCond `json:"query_conds"`
+	StartDate  string      `json:"startDate"`
+	EndDate    string      `json:"endDate"`
+	DateField  string      `json:"dateField"`
+	QueryConds []QueryCond `json:"queryConds"`
 	Skip       int         `json:"skip"`
 	Limit      int         `json:"limit"`
 	Sortby     []Sort      `json:"sortby"`
