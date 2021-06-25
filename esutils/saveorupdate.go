@@ -3,20 +3,25 @@ package esutils
 import (
 	"context"
 	"github.com/olivere/elastic"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/ztrue/tracerr"
 )
 
-func (es *Es) SaveOrUpdate(ctx context.Context, doc map[string]interface{}) (string, error) {
+func (es *Es) SaveOrUpdate(ctx context.Context, doc interface{}) (string, error) {
 	var (
 		indexRes *elastic.IndexResponse
 		err      error
 	)
 
 	indexRequest := es.client.Index().Index(es.esIndex).Type(es.esType)
-	if id, exists := doc["id"]; exists {
-		if idstr, ok := id.(string); ok {
-			indexRequest = indexRequest.Id(idstr)
-		}
+
+	id, err := getId(doc)
+	if err != nil {
+		return "", errors.Wrap(err, "method SaveOrUpdate() error")
+	}
+	if stringutils.IsNotEmpty(id) {
+		indexRequest = indexRequest.Id(id)
 	}
 
 	if indexRes, err = indexRequest.BodyJson(&doc).Do(ctx); err != nil {

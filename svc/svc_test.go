@@ -1,8 +1,14 @@
 package svc
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/olivere/elastic"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/esutils"
+	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"testing"
@@ -117,4 +123,31 @@ func Test_checkIc1(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestSvc_Deploy(t *testing.T) {
+	esaddr, terminator := prepareTestEnvironment()
+	defer terminator()
+
+	esclient, err := elastic.NewSimpleClient(
+		elastic.SetErrorLog(logutils.NewLogger()),
+		elastic.SetURL([]string{esaddr}...),
+		elastic.SetGzip(true),
+	)
+	if err != nil {
+		t.Errorf("call NewSimpleClient() error: %+v\n", err)
+	}
+	es := esutils.NewEs("doc", "", esutils.WithClient(esclient))
+
+	svc := Svc{
+		DocPath: testDir + "/testfilesdoc1_openapi3.json",
+		Es:      es,
+	}
+
+	doc, err := es.GetByID(context.Background(), svc.Deploy())
+	if err != nil {
+		t.Error(err)
+	}
+	jsonrs, _ := json.MarshalIndent(doc, "", "  ")
+	fmt.Println(string(jsonrs))
 }

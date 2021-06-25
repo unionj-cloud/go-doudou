@@ -27,7 +27,7 @@ func (s *ServiceProvider) SelectServer() (string, error) {
 	re := regexp.MustCompile(`\s+`)
 	address := os.Getenv(strings.ToUpper(re.ReplaceAllString(s.Name, "_")))
 	if stringutils.IsEmpty(address) {
-		return "", errors.New("No service address for Usersvc found!")
+		return "", errors.Errorf("No service address for %s found!", s.Name)
 	}
 	return address, nil
 }
