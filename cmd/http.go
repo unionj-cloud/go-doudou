@@ -54,7 +54,14 @@ to quickly create a Cobra application.`,
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{svcdir, handler, client, homitempty, doc, jsonattrcase}
+		s := svc.Svc{
+			Dir:          svcdir,
+			Handler:      handler,
+			Client:       client,
+			Omitempty:    homitempty,
+			Doc:          doc,
+			Jsonattrcase: jsonattrcase,
+		}
 		s.Http()
 	},
 }
