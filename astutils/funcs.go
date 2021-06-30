@@ -55,19 +55,26 @@ func GetMethodMeta(spec *ast.FuncDecl) MethodMeta {
 func NewMethodMeta(ft *ast.FuncType, exprString func(ast.Expr) string) MethodMeta {
 	var params, results []FieldMeta
 	for _, param := range ft.Params.List {
-		var pn string
-		if len(param.Names) > 0 {
-			pn = param.Names[0].Name
-		}
-		pt := exprString(param.Type)
 		var pComments []string
 		if param.Comment != nil {
 			for _, comment := range param.Comment.List {
 				pComments = append(pComments, comment.Text)
 			}
 		}
+		pt := exprString(param.Type)
+		if len(param.Names) > 0 {
+			for _, name := range param.Names {
+				params = append(params, FieldMeta{
+					Name:     name.Name,
+					Type:     pt,
+					Tag:      "",
+					Comments: pComments,
+				})
+			}
+			continue
+		}
 		params = append(params, FieldMeta{
-			Name:     pn,
+			Name:     "",
 			Type:     pt,
 			Tag:      "",
 			Comments: pComments,
@@ -75,19 +82,26 @@ func NewMethodMeta(ft *ast.FuncType, exprString func(ast.Expr) string) MethodMet
 	}
 	if ft.Results != nil {
 		for _, result := range ft.Results.List {
-			var rn string
-			if len(result.Names) > 0 {
-				rn = result.Names[0].Name
-			}
-			rt := exprString(result.Type)
 			var rComments []string
 			if result.Comment != nil {
 				for _, comment := range result.Comment.List {
 					rComments = append(rComments, comment.Text)
 				}
 			}
+			rt := exprString(result.Type)
+			if len(result.Names) > 0 {
+				for _, name := range result.Names {
+					results = append(results, FieldMeta{
+						Name:     name.Name,
+						Type:     rt,
+						Tag:      "",
+						Comments: rComments,
+					})
+				}
+				continue
+			}
 			results = append(results, FieldMeta{
-				Name:     rn,
+				Name:     "",
 				Type:     rt,
 				Tag:      "",
 				Comments: rComments,
@@ -111,19 +125,10 @@ func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string)
 			}
 		}
 
-		var name string
 		fieldType := exprString(field.Type)
 
-		if len(field.Names) > 0 {
-			name = field.Names[0].Name
-		} else {
-			splits := strings.Split(fieldType, ".")
-			name = splits[len(splits)-1]
-			fieldType = "embed:" + fieldType
-		}
-
 		var tag string
-		docName := name
+		var docName string
 		if field.Tag != nil {
 			tag = strings.Trim(field.Tag.Value, "`")
 			if re.MatchString(tag) {
@@ -131,14 +136,38 @@ func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string)
 			}
 		}
 
-		fields = append(fields, FieldMeta{
-			Name:     name,
-			Type:     fieldType,
-			Tag:      tag,
-			Comments: fieldComments,
-			IsExport: unicode.IsUpper(rune(name[0])),
-			DocName:  docName,
-		})
+		if len(field.Names) > 0 {
+			for _, name := range field.Names {
+				_docName := docName
+				if stringutils.IsEmpty(_docName) {
+					_docName = name.Name
+				}
+				fields = append(fields, FieldMeta{
+					Name:     name.Name,
+					Type:     fieldType,
+					Tag:      tag,
+					Comments: fieldComments,
+					IsExport: unicode.IsUpper(rune(name.Name[0])),
+					DocName:  _docName,
+				})
+			}
+		} else {
+			splits := strings.Split(fieldType, ".")
+			name := splits[len(splits)-1]
+			fieldType = "embed:" + fieldType
+			_docName := docName
+			if stringutils.IsEmpty(_docName) {
+				_docName = name
+			}
+			fields = append(fields, FieldMeta{
+				Name:     name,
+				Type:     fieldType,
+				Tag:      tag,
+				Comments: fieldComments,
+				IsExport: unicode.IsUpper(rune(name[0])),
+				DocName:  _docName,
+			})
+		}
 	}
 	return StructMeta{
 		Fields: fields,

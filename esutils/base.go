@@ -406,6 +406,7 @@ func prepareTestData(es *Es) {
 			"text":     "考场两位监考教师及时制止，并稳定了考场秩序，市一中考点按程序启用备用答题卡，按规定补足答题卡被损毁的两位考生耽误的考试时间，两位考生将损毁卡的内容誊写在新答题卡上。",
 		},
 		map[string]interface{}{
+			"id":       "9seTXHoBNx091WJ2QCh7",
 			"createAt": createAt3.UTC().Format(constants.FORMATES),
 			"text":     "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 		},

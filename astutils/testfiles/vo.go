@@ -5,29 +5,29 @@ package main
 // 筛选条件
 type PageFilter struct {
 	// 真实姓名，前缀匹配
-	Name string
+	Name string `json:"name,omitempty"`
 	// 所属部门ID
-	Dept int
+	Dept int `json:"dept,omitempty"`
 }
 
 //排序条件
 type Order struct {
-	Col  string
-	Sort string
+	Col                string `json:"col,omitempty"`
+	Sort, Name, Banana string
 }
 
 // 分页筛选条件
 type PageQuery struct {
-	Filter PageFilter
-	Page   Page
+	Filter PageFilter `json:"filter,omitempty"`
+	Page   Page       `json:"page,omitempty"`
 }
 
 type PageRet struct {
-	Items    interface{}
-	PageNo   int
-	PageSize int
-	Total    int
-	HasNext  bool
+	Items    interface{} `json:"items,omitempty"`
+	PageNo   int         `json:"pageNo,omitempty"`
+	PageSize int         `json:"pageSize,omitempty"`
+	Total    int         `json:"total,omitempty"`
+	HasNext  bool        `json:"hasNext,omitempty"`
 }
 
 type queryType int
@@ -63,45 +63,45 @@ const (
 )
 
 type Base struct {
-	Index string
-	Type  string
+	Index string `json:"index,omitempty"`
+	Type  string `json:"type,omitempty"`
 }
 
 type QueryCond struct {
-	Pair       map[string][]interface{}
-	QueryLogic queryLogic
-	QueryType  queryType
-	Children   []QueryCond
+	Pair       map[string][]interface{} `json:"pair,omitempty"`
+	QueryLogic queryLogic               `json:"queryLogic,omitempty"`
+	QueryType  queryType                `json:"queryType,omitempty"`
+	Children   []QueryCond              `json:"children,omitempty"`
 }
 
 type Sort struct {
-	Field     string
-	Ascending bool
+	Field     string `json:"field,omitempty"`
+	Ascending bool   `json:"ascending,omitempty"`
 }
 
 type Paging struct {
-	StartDate  string
-	EndDate    string
-	DateField  string
-	QueryConds []QueryCond
-	Skip       int
-	Limit      int
-	Sortby     []Sort
+	StartDate  string      `json:"startDate,omitempty"`
+	EndDate    string      `json:"endDate,omitempty"`
+	DateField  string      `json:"dateField,omitempty"`
+	QueryConds []QueryCond `json:"queryConds,omitempty"`
+	Skip       int         `json:"skip,omitempty"`
+	Limit      int         `json:"limit,omitempty"`
+	Sortby     []Sort      `json:"sortby,omitempty"`
 }
 
 type BulkSavePayload struct {
 	Base
-	Docs []map[string]interface{}
+	Docs []map[string]interface{} `json:"docs,omitempty"`
 }
 
 type SavePayload struct {
 	Base
-	Doc map[string]interface{}
+	Doc map[string]interface{} `json:"doc,omitempty"`
 }
 
 type BulkDeletePayload struct {
 	Base
-	DocIds []string
+	DocIds []string `json:"docIds,omitempty"`
 }
 
 type PagePayload struct {
@@ -110,17 +110,17 @@ type PagePayload struct {
 }
 
 type PageResult struct {
-	Page        int
-	PageSize    int
-	Total       int
-	Docs        []map[string]interface{}
-	HasNextPage bool
+	Page        int                      `json:"page,omitempty"`
+	PageSize    int                      `json:"pageSize,omitempty"`
+	Total       int                      `json:"total,omitempty"`
+	Docs        []map[string]interface{} `json:"docs,omitempty"`
+	HasNextPage bool                     `json:"hasNextPage,omitempty"`
 }
 
 type StatPayload struct {
 	Base
 	Paging
-	Aggr interface{}
+	Aggr interface{} `json:"aggr,omitempty"`
 }
 
 type RandomPayload struct {
@@ -134,12 +134,12 @@ type CountPayload struct {
 }
 
 type Field struct {
-	Name   string
-	Type   esFieldType
-	Format string
+	Name   string      `json:"name,omitempty"`
+	Type   esFieldType `json:"type,omitempty"`
+	Format string      `json:"format,omitempty"`
 }
 
 type MappingPayload struct {
 	Base
-	Fields []Field
+	Fields []Field `json:"fields,omitempty"`
 }

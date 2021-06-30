@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"mime/multipart"
-	"os"
 )
 
 // 用户服务接口
@@ -28,5 +27,7 @@ type Usersvc interface {
 	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)
 
 	// comment5
-	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)
+	DownloadAvatar(ctx context.Context, userId, userType, userNo string) (a, b string)
+
+	BulkSaveOrUpdate(context.Context, int) error
 }

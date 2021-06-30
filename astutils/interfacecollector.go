@@ -65,33 +65,39 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 						var params, results []FieldMeta
 						pkeymap := make(map[string]int)
 						for _, param := range ft.Params.List {
-							var pn string
-							if len(param.Names) > 0 {
-								pn = param.Names[0].Name
-							}
-							pt := ic.exprString(param.Type)
-							if stringutils.IsEmpty(pn) {
-								elemt := strings.TrimPrefix(pt, "*")
-								if stringutils.IsNotEmpty(elemt) {
-									if strings.Contains(elemt, "[") {
-										elemt = elemt[strings.Index(elemt, "]")+1:]
-										elemt = strings.TrimPrefix(elemt, "*")
-									}
-									splits := strings.Split(elemt, ".")
-									_key := "p" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
-									if _, exists := pkeymap[_key]; exists {
-										pkeymap[_key]++
-										pn = _key + fmt.Sprintf("%d", pkeymap[_key])
-									} else {
-										pkeymap[_key]++
-										pn = _key
-									}
-								}
-							}
 							var pComments []string
 							if param.Doc != nil {
 								for _, comment := range param.Doc.List {
 									pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+								}
+							}
+							pt := ic.exprString(param.Type)
+							if len(param.Names) > 0 {
+								for _, name := range param.Names {
+									params = append(params, FieldMeta{
+										Name:     name.Name,
+										Type:     pt,
+										Tag:      "",
+										Comments: pComments,
+									})
+								}
+								continue
+							}
+							var pn string
+							elemt := strings.TrimPrefix(pt, "*")
+							if stringutils.IsNotEmpty(elemt) {
+								if strings.Contains(elemt, "[") {
+									elemt = elemt[strings.Index(elemt, "]")+1:]
+									elemt = strings.TrimPrefix(elemt, "*")
+								}
+								splits := strings.Split(elemt, ".")
+								_key := "p" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
+								if _, exists := pkeymap[_key]; exists {
+									pkeymap[_key]++
+									pn = _key + fmt.Sprintf("%d", pkeymap[_key])
+								} else {
+									pkeymap[_key]++
+									pn = _key
 								}
 							}
 							params = append(params, FieldMeta{
@@ -104,33 +110,39 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 						if ft.Results != nil {
 							rkeymap := make(map[string]int)
 							for _, result := range ft.Results.List {
-								var rn string
-								if len(result.Names) > 0 {
-									rn = result.Names[0].Name
-								}
-								rt := ic.exprString(result.Type)
-								if stringutils.IsEmpty(rn) {
-									elemt := strings.TrimPrefix(rt, "*")
-									if stringutils.IsNotEmpty(elemt) {
-										if strings.Contains(elemt, "[") {
-											elemt = elemt[strings.Index(elemt, "]")+1:]
-											elemt = strings.TrimPrefix(elemt, "*")
-										}
-										splits := strings.Split(elemt, ".")
-										_key := "r" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
-										if _, exists := rkeymap[_key]; exists {
-											rkeymap[_key]++
-											rn = _key + fmt.Sprintf("%d", rkeymap[_key])
-										} else {
-											rkeymap[_key]++
-											rn = _key
-										}
-									}
-								}
 								var rComments []string
 								if result.Doc != nil {
 									for _, comment := range result.Doc.List {
 										rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+									}
+								}
+								rt := ic.exprString(result.Type)
+								if len(result.Names) > 0 {
+									for _, name := range result.Names {
+										results = append(results, FieldMeta{
+											Name:     name.Name,
+											Type:     rt,
+											Tag:      "",
+											Comments: rComments,
+										})
+									}
+									continue
+								}
+								var rn string
+								elemt := strings.TrimPrefix(rt, "*")
+								if stringutils.IsNotEmpty(elemt) {
+									if strings.Contains(elemt, "[") {
+										elemt = elemt[strings.Index(elemt, "]")+1:]
+										elemt = strings.TrimPrefix(elemt, "*")
+									}
+									splits := strings.Split(elemt, ".")
+									_key := "r" + strcase.ToLowerCamel(splits[len(splits)-1][0:1])
+									if _, exists := rkeymap[_key]; exists {
+										rkeymap[_key]++
+										rn = _key + fmt.Sprintf("%d", rkeymap[_key])
+									} else {
+										rkeymap[_key]++
+										rn = _key
 									}
 								}
 								results = append(results, FieldMeta{
