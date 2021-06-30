@@ -66,6 +66,7 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 			err = tracerr.Wrap(err)
 			return pr, err
 		}
+		p["_id"] = hit.Id
 		rets = append(rets, p)
 	}
 

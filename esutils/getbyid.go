@@ -16,6 +16,7 @@ func (es *Es) GetByID(ctx context.Context, id string) (map[string]interface{}, e
 			err = tracerr.Wrap(err)
 			return nil, err
 		}
+		p["_id"] = getResult.Id
 		return p, nil
 	}
 }

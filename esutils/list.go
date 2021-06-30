@@ -43,7 +43,7 @@ func (es *Es) List(ctx context.Context, paging *Paging, callback func(message js
 	var rets []interface{}
 
 	if paging.Limit < 0 || paging.Limit > 10000 {
-		hits := make(chan json.RawMessage)
+		hits := make(chan *elastic.SearchHit)
 		g, ctx := errgroup.WithContext(context.Background())
 		g.Go(func() error {
 			defer close(hits)
@@ -62,7 +62,7 @@ func (es *Es) List(ctx context.Context, paging *Paging, callback func(message js
 					case <-ctx.Done():
 						return ctx.Err()
 					default:
-						hits <- *hit.Source
+						hits <- hit
 					}
 				}
 			}
@@ -80,14 +80,15 @@ func (es *Es) List(ctx context.Context, paging *Paging, callback func(message js
 						var ret interface{}
 						if callback == nil {
 							var p map[string]interface{}
-							err := json.Unmarshal(hit, &p)
+							err := json.Unmarshal(*hit.Source, &p)
 							if err != nil {
 								err = tracerr.Wrap(err)
 								return err
 							}
+							p["_id"] = hit.Id
 							ret = p
 						} else {
-							if ret, err = callback(hit); err != nil {
+							if ret, err = callback(*hit.Source); err != nil {
 								err = tracerr.Wrap(err)
 								return err
 							}
@@ -133,6 +134,7 @@ func (es *Es) List(ctx context.Context, paging *Paging, callback func(message js
 					err = tracerr.Wrap(err)
 					return nil, err
 				}
+				p["_id"] = hit.Id
 				ret = p
 			} else {
 				if ret, err = callback(*hit.Source); err != nil {

@@ -25,13 +25,11 @@ import (
 	"fmt"
 	"github.com/olivere/elastic"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/esutils"
 	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
-	"path/filepath"
-
-	"github.com/spf13/cobra"
 )
 
 // save generated openapi 3.0 compatible json document to elasticsearch for further use
@@ -72,7 +70,7 @@ to quickly create a Cobra application.`,
 			DocPath: docpath,
 			Es:      es,
 		}
-		logrus.Infof("doc %s indexed. es doc id: %s\n", filepath.Base(docpath), s.Deploy())
+		logrus.Infof("doc indexed. es doc id: %s\n", s.Deploy())
 	},
 }
 
@@ -88,6 +86,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	deployCmd.Flags().StringVarP(&esaddr, "esaddr", "", "", `elasticsearch instance connection address, save generated openapi 3.0 compatible json document to elasticsearch for further use`)
-	deployCmd.Flags().StringVarP(&docpath, "esindex", "", "", `elasticsearch index name for saving openapi 3.0 compatible json documents`)
+	deployCmd.Flags().StringVarP(&esindex, "esindex", "", "", `elasticsearch index name for saving openapi 3.0 compatible json documents`)
 	deployCmd.Flags().StringVarP(&docpath, "docpath", "", "", `openapi 3.0 compatible json document path`)
 }

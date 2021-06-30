@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type SvcCmd interface {
@@ -148,11 +149,29 @@ func (receiver Svc) Init() {
 }
 
 func (receiver Svc) Deploy() string {
-	container, err := gabs.ParseJSONFile(receiver.DocPath)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	validateRestApi(ic)
+	svcname := strings.ToLower(ic.Interfaces[0].Name)
+	docpath := receiver.DocPath
+	if stringutils.IsEmpty(docpath) {
+		docpath = svcname + "_openapi3.json"
+	}
+	container, err := gabs.ParseJSONFile(docpath)
 	if err != nil {
 		panic(err)
 	}
-	result, err := receiver.Es.SaveOrUpdate(context.Background(), container.Data())
+	version := container.Path("info.version").Data().(string)
+	result, err := receiver.Es.SaveOrUpdate(context.Background(), struct {
+		Api      string    `json:"api,omitempty"`
+		CreateAt time.Time `json:"createAt,omitempty"`
+		Service  string    `json:"service,omitempty"`
+		Version  string    `json:"version,omitempty"`
+	}{
+		Api:      container.String(),
+		CreateAt: time.Now().UTC(),
+		Service:  svcname,
+		Version:  version,
+	})
 	if err != nil {
 		panic(err)
 	}
