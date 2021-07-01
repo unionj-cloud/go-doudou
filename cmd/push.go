@@ -28,9 +28,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
-// initCmd represents the init command
-var initCmd = &cobra.Command{
-	Use:   "init",
+// pushCmd represents the http command
+var pushCmd = &cobra.Command{
+	Use:   "push",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -48,22 +48,22 @@ to quickly create a Cobra application.`,
 			logrus.Panicln(err)
 		}
 		s := svc.Svc{
-			Dir: svcdir,
+			Dir:       svcdir,
+			ImageRepo: imageRepo,
 		}
-		s.Init()
+		s.Push()
 	},
 }
 
 func init() {
-	svcCmd.AddCommand(initCmd)
+	svcCmd.AddCommand(pushCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// pushCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

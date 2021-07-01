@@ -28,9 +28,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
-// initCmd represents the init command
-var initCmd = &cobra.Command{
-	Use:   "init",
+var replica int
+
+// scaleCmd represents the http command
+var scaleCmd = &cobra.Command{
+	Use:   "scale",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -49,21 +51,22 @@ to quickly create a Cobra application.`,
 		}
 		s := svc.Svc{
 			Dir: svcdir,
+			N:   replica,
 		}
-		s.Init()
+		s.Scale()
 	},
 }
 
 func init() {
-	svcCmd.AddCommand(initCmd)
+	svcCmd.AddCommand(scaleCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// scaleCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	scaleCmd.Flags().IntVarP(&replica, "replica", "n", 3, `replica number you want to scale to`)
 }

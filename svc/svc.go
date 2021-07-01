@@ -8,12 +8,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/esutils"
 	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"github.com/unionj-cloud/go-doudou/test"
-	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,8 +33,12 @@ type Svc struct {
 	Doc          bool
 	Jsonattrcase string
 
-	DocPath string
-	Es      *esutils.Es
+	DocPath   string
+	Es        *esutils.Es
+	ImageRepo string
+
+	K8sfile string
+	N       int
 }
 
 func validateDataType(dir string) {
@@ -50,16 +55,7 @@ func validateDataType(dir string) {
 }
 
 func (receiver Svc) Http() {
-	var (
-		err error
-		dir string
-	)
-	dir = receiver.Dir
-	if stringutils.IsEmpty(dir) {
-		if dir, err = os.Getwd(); err != nil {
-			panic(err)
-		}
-	}
+	dir := receiver.Dir
 	if receiver.Doc {
 		validateDataType(dir)
 	}
@@ -148,7 +144,84 @@ func (receiver Svc) Init() {
 	codegen.InitSvc(receiver.Dir)
 }
 
-func (receiver Svc) Deploy() string {
+func (receiver Svc) Push() {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	validateRestApi(ic)
+	svcname := strings.ToLower(ic.Interfaces[0].Name)
+
+	cmd := exec.Command("docker", "build", "-t", svcname, ".")
+	_, err := cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+
+	if stringutils.IsEmpty(receiver.ImageRepo) {
+		logrus.Warnln("stopped as no private docker image repository address provided")
+		return
+	}
+	image := fmt.Sprintf("%s/%s:%s", receiver.ImageRepo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
+	cmd = exec.Command("docker", "tag", svcname, image)
+	_, err = cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+
+	cmd = exec.Command("docker", "push", image)
+	_, err = cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+	logrus.Infof("image %s has been pushed successfully\n", image)
+
+	codegen.GenK8s(receiver.Dir, svcname, image)
+	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
+}
+
+func (receiver Svc) Deploy() {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	validateRestApi(ic)
+	svcname := strings.ToLower(ic.Interfaces[0].Name)
+	k8sfile := receiver.K8sfile
+	if stringutils.IsEmpty(k8sfile) {
+		k8sfile = svcname + "_k8s.yaml"
+	}
+	cmd := exec.Command("kubectl", "apply", "-f", k8sfile)
+	stdout, err := cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+	logrus.Infoln(string(stdout))
+}
+
+func (receiver Svc) Shutdown() {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	validateRestApi(ic)
+	svcname := strings.ToLower(ic.Interfaces[0].Name)
+	k8sfile := receiver.K8sfile
+	if stringutils.IsEmpty(k8sfile) {
+		k8sfile = svcname + "_k8s.yaml"
+	}
+	cmd := exec.Command("kubectl", "delete", "-f", k8sfile)
+	stdout, err := cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+	logrus.Infoln(string(stdout))
+}
+
+func (receiver Svc) Scale() {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	validateRestApi(ic)
+	svcname := strings.ToLower(ic.Interfaces[0].Name)
+	cmd := exec.Command("kubectl", "scale", fmt.Sprintf("--replicas=%d", receiver.N), fmt.Sprintf("deployment/%s-deployment", svcname))
+	stdout, err := cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+	logrus.Infoln(string(stdout))
+}
+
+func (receiver Svc) Publish() string {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	validateRestApi(ic)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)

@@ -22,15 +22,23 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+	"github.com/olivere/elastic"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/esutils"
+	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
-// initCmd represents the init command
-var initCmd = &cobra.Command{
-	Use:   "init",
+// save generated openapi 3.0 compatible json document to elasticsearch for further use
+var esaddr string
+var esindex string
+
+// publishCmd represents the http command
+var publishCmd = &cobra.Command{
+	Use:   "publish",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -47,23 +55,35 @@ to quickly create a Cobra application.`,
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{
-			Dir: svcdir,
+		esclient, err := elastic.NewSimpleClient(
+			elastic.SetErrorLog(logutils.NewLogger()),
+			elastic.SetURL([]string{esaddr}...),
+			elastic.SetGzip(true),
+		)
+		if err != nil {
+			panic(fmt.Errorf("call NewSimpleClient() error: %+v\n", err))
 		}
-		s.Init()
+		es := esutils.NewEs(esindex, esindex, esutils.WithClient(esclient))
+		s := svc.Svc{
+			Dir:     svcdir,
+			DocPath: docpath,
+			Es:      es,
+		}
+		logrus.Infof("doc indexed. es doc id: %s\n", s.Publish())
 	},
 }
 
 func init() {
-	svcCmd.AddCommand(initCmd)
+	svcCmd.AddCommand(publishCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// publishCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	publishCmd.Flags().StringVarP(&esaddr, "esaddr", "", "", `elasticsearch instance connection address, save generated openapi 3.0 compatible json document to elasticsearch for further use`)
+	publishCmd.Flags().StringVarP(&esindex, "esindex", "", "", `elasticsearch index name for saving openapi 3.0 compatible json documents`)
 }

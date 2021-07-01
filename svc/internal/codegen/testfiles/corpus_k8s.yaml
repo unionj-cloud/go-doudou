@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: corpus-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: corpus
+  template:
+    metadata:
+      labels:
+        app: corpus
+    spec:
+      containers:
+      - image: google.com/corpus:v2.0.0
+        imagePullPolicy: Always
+        name: corpus
+        ports:
+        - containerPort: 6060
+          name: http-port
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: corpus-service
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  selector:
+    app: corpus
+  ports:
+    - protocol: TCP
+      port: 6060
+      targetPort: 6060
