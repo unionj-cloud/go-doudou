@@ -16,6 +16,7 @@ const FORMAT8 = "2006-01-02T15:04:05-0700" // 2020-07-12T15:31:50+0800
 const FORMAT9 = "2006年01月02日15时04分"        // "2019年1月04日09时04分"
 const FORMAT10 = "20060102"
 const FORMAT11 = "20060102150405"
+const FORMAT12 = "2006/1/2"
 
 var (
 	Loc *time.Location

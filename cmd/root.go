@@ -36,16 +36,13 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "go-doudou",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
+	Long: `go-doudou works like a scaffolding tool but more than that. 
+it lets api providers design their apis and help them code less. 
+it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
+consumers can import it into postman to debug and test, or upload it into some code generators to download client sdk.
+it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
+load balancing and so on. it just begins, more features will come out soon.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

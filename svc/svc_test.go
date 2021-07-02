@@ -144,7 +144,7 @@ func TestSvc_Deploy(t *testing.T) {
 		Es:      es,
 	}
 
-	doc, err := es.GetByID(context.Background(), svc.Deploy())
+	doc, err := es.GetByID(context.Background(), svc.Publish())
 	if err != nil {
 		t.Error(err)
 	}
