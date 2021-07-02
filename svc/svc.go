@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -105,6 +106,7 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 		panic(errors.New("no service interface found"))
 	}
 	svcInter := ic.Interfaces[0]
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
 	for _, method := range svcInter.Methods {
 		// Append *multipart.FileHeader value to nonBasicTypes only once at most as multipart/form-data support multiple fields as file type
 		var nonBasicTypes []string
@@ -112,6 +114,9 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 		for _, param := range method.Params {
 			if param.Type == "context.Context" {
 				continue
+			}
+			if re.MatchString(param.Type) {
+				panic("not support anonymous struct as parameter")
 			}
 			if !codegen.IsBuiltin(param) {
 				ptype := param.Type
@@ -137,6 +142,11 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 		}
 		if len(nonBasicTypes) > 1 {
 			panic("Too many golang non-built-in type parameters, can't decide which one should be put into request body!")
+		}
+		for _, param := range method.Results {
+			if re.MatchString(param.Type) {
+				panic("not support anonymous struct as parameter")
+			}
 		}
 	}
 }
