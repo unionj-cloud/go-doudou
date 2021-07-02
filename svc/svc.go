@@ -14,6 +14,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"github.com/unionj-cloud/go-doudou/test"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -150,8 +151,9 @@ func (receiver Svc) Push() {
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 
 	cmd := exec.Command("docker", "build", "-t", svcname, ".")
-	_, err := cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 
@@ -161,14 +163,16 @@ func (receiver Svc) Push() {
 	}
 	image := fmt.Sprintf("%s/%s:%s", receiver.ImageRepo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
 	cmd = exec.Command("docker", "tag", svcname, image)
-	_, err = cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 
 	cmd = exec.Command("docker", "push", image)
-	_, err = cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 	logrus.Infof("image %s has been pushed successfully\n", image)
@@ -186,11 +190,11 @@ func (receiver Svc) Deploy() {
 		k8sfile = svcname + "_k8s.yaml"
 	}
 	cmd := exec.Command("kubectl", "apply", "-f", k8sfile)
-	stdout, err := cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-	logrus.Infoln(string(stdout))
 }
 
 func (receiver Svc) Shutdown() {
@@ -202,11 +206,11 @@ func (receiver Svc) Shutdown() {
 		k8sfile = svcname + "_k8s.yaml"
 	}
 	cmd := exec.Command("kubectl", "delete", "-f", k8sfile)
-	stdout, err := cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-	logrus.Infoln(string(stdout))
 }
 
 func (receiver Svc) Scale() {
@@ -214,11 +218,11 @@ func (receiver Svc) Scale() {
 	validateRestApi(ic)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	cmd := exec.Command("kubectl", "scale", fmt.Sprintf("--replicas=%d", receiver.N), fmt.Sprintf("deployment/%s-deployment", svcname))
-	stdout, err := cmd.Output()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-	logrus.Infoln(string(stdout))
 }
 
 func (receiver Svc) Publish() string {
