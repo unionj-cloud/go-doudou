@@ -8,7 +8,7 @@ go-doudou（doudou发音/dəudəu/）是基于gossip协议做服务注册与发�
 go-doudou通过一组命令行工具可以帮助开发者快速初始化一个或一组restful服务，通过在接口类中定义方法，即相当于设计了一组api，然后通过命令可以
 生成启动服务的main方法，路由和相应的handler，以及go客户端代码。  
 go-doudou主张设计优先，通过预先设计和定义接口，来生成代码，修改定义后，重新覆盖或者增量生成代码的方式来实现快速开发。  
-go-doudou推崇契约精神，通过openapi 3.0协议来描述接口，规范服务提供方和消费方的合作，促使研发团队整体提高交付效率。
+go-doudou推崇契约精神，通过openapi 3.0协议来描述接口，规范服务提供方和消费方的合作，促使研发团队整体提高交付效率。  
 go-doudou致力于帮助开发者打造去中心化的微服务体系，通过gossip协议将集群内的服务连接起来，采用客户端负载均衡的方式调用其他服务，
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -26,6 +26,7 @@ go-doudou致力于帮助开发者打造去中心化的微服务体系，通过go
 - [工具箱](#%E5%B7%A5%E5%85%B7%E7%AE%B1)
   - [name](#name)
   - [ddl](#ddl)
+- [Help](#help)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -58,7 +59,7 @@ drwxr-xr-x  3 wubin1989  staff    96B  7  2 17:20 vo
 - vo文件夹：里面定义struct，作为接口的入参和出参，也用于生成openapi3.0规范里的schema
 
 
-2. 在svc.go文件里的interface里定义接口方法，在vo包里定义入参和出参结构体
+2. 在svc.go文件里的interface里定义接口方法，在vo包里定义入参和出参结构体  
    此处略，见下文的[接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
    
 
