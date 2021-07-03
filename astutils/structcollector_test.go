@@ -243,3 +243,16 @@ func TestStructCollector_Alias(t *testing.T) {
 		}
 	}
 }
+
+func TestStructCollector_Domain(t *testing.T) {
+	file := pathutils.Abs("testfiles/domain/purchase.go")
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	spew.Dump(root)
+	sc := NewStructCollector(ExprString)
+	ast.Walk(sc, root)
+	fmt.Println(sc)
+}

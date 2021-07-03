@@ -66,14 +66,14 @@ func (d Ddl) Exec() {
 		if err != nil {
 			logrus.Panicln(err)
 		}
-		var sc astutils.StructCollector
+		sc := astutils.NewStructCollector(astutils.ExprString)
 		for _, file := range files {
 			fset := token.NewFileSet()
 			root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 			if err != nil {
 				logrus.Panicln(err)
 			}
-			ast.Walk(&sc, root)
+			ast.Walk(sc, root)
 		}
 
 		flattened := ddlast.FlatEmbed(sc.Structs)

@@ -176,7 +176,8 @@ type User struct {
 
 ##### extra
 
-表示其他字段信息，比如"on update CURRENT_TIMESTAMP"，"comment '手机号'"
+表示其他字段信息，比如"on update CURRENT_TIMESTAMP"，"comment '手机号'"  
+**注意：因为ddl工具使用英文";"和":"来解析标签，所以comment中请勿使用英文";"和":"**
 
 ##### index
 

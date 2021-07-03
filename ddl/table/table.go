@@ -90,6 +90,10 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 		goType += "int8"
 	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DatetimeType))) {
 		goType += "time.Time"
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.MediumtextType))) {
+		goType += "string"
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DecimalType))) {
+		goType += "float32"
 	} else {
 		panic(fmt.Sprintf("no available type %s", colType))
 	}
