@@ -10,8 +10,8 @@ import (
 )
 
 func TestEs_Stat(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_stat")
+
 	jaggr := `{
         "groupBy": {
             "terms": {
@@ -32,8 +32,8 @@ func TestEs_Stat(t *testing.T) {
 }
 
 func TestEs_Stat2(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_stat1")
+
 	aggr := elastic.NewTermsAggregation().Field("type.keyword").Size(9999).ExecutionHint("map").MinDocCount(1)
 	ret, _ := es.Stat(context.Background(), nil, aggr)
 	expectj := `[{"doc_count":1,"key":"culture"},{"doc_count":1,"key":"education"},{"doc_count":1,"key":"sport"}]`

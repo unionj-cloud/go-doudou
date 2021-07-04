@@ -6,15 +6,13 @@ import (
 )
 
 func TestClearIndex(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
-
+	es := setupSubTest("test_clearindex")
 	tests := []struct {
 		name    string
 		wantErr bool
 	}{
 		{
-			name: "1",
+			name:    "1",
 			wantErr: false,
 		},
 	}

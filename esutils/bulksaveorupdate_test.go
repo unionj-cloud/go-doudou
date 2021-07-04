@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
-func TestBulkSaveOrUpdate(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+func init() {
+	_, esHost, esPort = prepareTestEnvironment()
+}
 
+func TestBulkSaveOrUpdate(t *testing.T) {
+	es := setupSubTest("test_bulksaveorupdate")
 	type args struct {
 		docs []interface{}
 	}

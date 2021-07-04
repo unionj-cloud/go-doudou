@@ -6,9 +6,7 @@ import (
 )
 
 func TestRandom(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
-
+	es := setupSubTest("test_random")
 	type args struct {
 		paging *Paging
 	}

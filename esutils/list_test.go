@@ -7,9 +7,7 @@ import (
 )
 
 func TestList(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
-
+	es := setupSubTest("test_list")
 	type args struct {
 		paging   *Paging
 		esIndex  string

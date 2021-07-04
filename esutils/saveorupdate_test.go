@@ -9,8 +9,8 @@ import (
 )
 
 func TestEs_SaveOrUpdate(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_saveorupdate")
+
 	id, _ := es.SaveOrUpdate(context.Background(), map[string]interface{}{
 		"id":       "9seTXHoBNx091WJ2QCh8",
 		"createAt": time.Now().UTC().Format(constants.FORMATES),

@@ -7,8 +7,7 @@ import (
 )
 
 func TestEs_GetByID(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_getbyid")
 	doc, _ := es.GetByID(context.Background(), "9seTXHoBNx091WJ2QCh5")
 	assert.NotZero(t, doc)
 }

@@ -7,8 +7,7 @@ import (
 )
 
 func TestNewMapping(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_newmapping")
 
 	type args struct {
 		mp MappingPayload
@@ -68,8 +67,7 @@ func TestNewMapping(t *testing.T) {
 }
 
 func TestCheckTypeExists(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_checktypeexists")
 
 	tests := []struct {
 		name    string
@@ -97,8 +95,7 @@ func TestCheckTypeExists(t *testing.T) {
 }
 
 func TestCheckTypeExists2(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_checktypeexists1")
 	es.esType = "not_exists"
 
 	tests := []struct {
@@ -127,8 +124,7 @@ func TestCheckTypeExists2(t *testing.T) {
 }
 
 func TestPutMapping(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_putmapping")
 
 	type args struct {
 		mp MappingPayload

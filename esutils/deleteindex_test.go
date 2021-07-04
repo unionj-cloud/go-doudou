@@ -6,8 +6,7 @@ import (
 )
 
 func TestDeleteIndex(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
+	es := setupSubTest("test_deleteindex")
 
 	tests := []struct {
 		name    string
@@ -28,9 +27,7 @@ func TestDeleteIndex(t *testing.T) {
 }
 
 func TestDeleteIndex1(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
-
+	es := setupSubTest("test_deleteindex1")
 	es.SetIndex("notexistsindex")
 
 	tests := []struct {

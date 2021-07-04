@@ -352,14 +352,17 @@ func query(startDate string, endDate string, dateField string, queryConds []Quer
 	return boolQuery
 }
 
-func setupSubTest() (*Es, func()) {
-	es, terminator := prepareTestEnvironment()
+var esHost string
+var esPort int
+
+func setupSubTest(esindex string) *Es {
+	es := NewEs(esindex, esindex, WithLogger(logutils.NewLogger()), WithUrls([]string{fmt.Sprintf("http://%s:%d", esHost, esPort)}))
 	prepareTestIndex(es)
 	prepareTestData(es)
-	return es, terminator
+	return es
 }
 
-func prepareTestEnvironment() (*Es, func()) {
+func prepareTestEnvironment() (func(), string, int) {
 	logger := logutils.NewLogger()
 	var terminateContainer func() // variable to store function to terminate container
 	var host string
@@ -369,7 +372,7 @@ func prepareTestEnvironment() (*Es, func()) {
 	if err != nil {
 		logger.Panicln("failed to setup Elasticsearch container")
 	}
-	return NewEs("test", "test", WithLogger(logger), WithUrls([]string{fmt.Sprintf("http://%s:%d", host, port)})), terminateContainer
+	return terminateContainer, host, port
 }
 
 func prepareTestIndex(es *Es) {

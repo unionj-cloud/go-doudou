@@ -6,10 +6,8 @@ import (
 )
 
 func TestNewIndex(t *testing.T) {
-	es, terminator := setupSubTest()
-	defer terminator()
-	es.esIndex = "test1"
-	es.esType = "test1"
+	es := setupSubTest("test_newindex")
+	es.esIndex = "notexists"
 
 	type args struct {
 		mapping string
