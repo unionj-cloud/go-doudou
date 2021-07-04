@@ -17,6 +17,11 @@ func (es *Es) List(ctx context.Context, paging *Paging, callback func(message js
 		src       interface{}
 		data      []byte
 	)
+	if paging == nil {
+		paging = &Paging{
+			Limit: -1,
+		}
+	}
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
 	if src, err = boolQuery.Source(); err != nil {
 		err = tracerr.Wrap(err)

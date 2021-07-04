@@ -8,6 +8,7 @@ import (
 	"log"
 )
 
+// if paging is nil, randomly return 10 pcs of documents as default
 func (es *Es) Random(ctx context.Context, paging *Paging) ([]map[string]interface{}, error) {
 	var (
 		err       error
@@ -17,6 +18,11 @@ func (es *Es) Random(ctx context.Context, paging *Paging) ([]map[string]interfac
 		sr        *elastic.SearchResult
 		rets      []map[string]interface{}
 	)
+	if paging == nil {
+		paging = &Paging{
+			Limit: 10,
+		}
+	}
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
 	if src, err = boolQuery.Source(); err != nil {
 		err = tracerr.Wrap(err)
@@ -27,18 +33,6 @@ func (es *Es) Random(ctx context.Context, paging *Paging) ([]map[string]interfac
 		return nil, err
 	}
 	log.Println(string(data))
-
-	//_, err = es.client.Refresh().Index(esIndex).Do(ctx)
-	//if err != nil {
-	//	err = tracerr.Wrap(err)
-	//	return 0, err
-	//}
-	//
-	//_, err = es.client.Flush().Index(esIndex).Do(ctx)
-	//if err != nil {
-	//	err = tracerr.Wrap(err)
-	//	return 0, err
-	//}
 
 	fsq := elastic.NewFunctionScoreQuery().Query(boolQuery).AddScoreFunc(elastic.NewScriptFunction(elastic.NewScriptInline("Math.random()")))
 

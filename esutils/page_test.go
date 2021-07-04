@@ -54,6 +54,7 @@ func TestPage(t *testing.T) {
 						"_id":      "9seTXHoBNx091WJ2QCh7",
 						"id":       "9seTXHoBNx091WJ2QCh7",
 						"text":     "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
+						"type":     "culture",
 						"createAt": "2020-07-10T00:00:00Z",
 					},
 				},

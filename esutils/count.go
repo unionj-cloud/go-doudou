@@ -15,6 +15,9 @@ func (es *Es) Count(ctx context.Context, paging *Paging) (int64, error) {
 		src       interface{}
 		data      []byte
 	)
+	if paging == nil {
+		paging = &Paging{}
+	}
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
 	if src, err = boolQuery.Source(); err != nil {
 		err = tracerr.Wrap(err)

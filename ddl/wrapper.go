@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// https://github.com/jmoiron/sqlx/issues/344#issuecomment-318372779
 type DB interface {
 	Querier
 	BeginTxx(ctx context.Context, opts *sql.TxOptions) (Tx, error)

@@ -10,6 +10,7 @@ import (
 	"log"
 )
 
+// aggr only accept map[string]interface{} or elastic.Aggregation
 func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (map[string]interface{}, error) {
 	var (
 		err          error

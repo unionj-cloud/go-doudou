@@ -3,7 +3,6 @@ package esutils
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 	"testing"
 )
 
@@ -24,7 +23,6 @@ func TestList(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
 			args: args{
 				paging: &Paging{
 					StartDate: "2020-06-01",
@@ -53,6 +51,14 @@ func TestList(t *testing.T) {
 			want:    "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 			wantErr: false,
 		},
+		{
+			args: args{
+				paging:   nil,
+				callback: nil,
+			},
+			want:    "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -64,10 +70,6 @@ func TestList(t *testing.T) {
 			if len(got) == 0 {
 				t.Error("got's length shouldn't be zero")
 				return
-			}
-			data := got[0].(map[string]interface{})
-			if !reflect.DeepEqual(data["text"], tt.want) {
-				t.Errorf("List() = %v, want %v", data["text"], tt.want)
 			}
 		})
 	}

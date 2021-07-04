@@ -17,7 +17,18 @@ type PageResult struct {
 }
 
 func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
-	var pr PageResult
+	var (
+		err       error
+		boolQuery *elastic.BoolQuery
+		src       interface{}
+		data      []byte
+		pr        PageResult
+	)
+	if paging == nil {
+		paging = &Paging{
+			Limit: -1,
+		}
+	}
 	if paging.Limit < 0 || paging.Limit > 10000 {
 		docs, err := es.List(ctx, paging, nil)
 		if err != nil {
@@ -28,13 +39,6 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 		pr.Docs = docs
 		return pr, nil
 	}
-
-	var (
-		err       error
-		boolQuery *elastic.BoolQuery
-		src       interface{}
-		data      []byte
-	)
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
 	if src, err = boolQuery.Source(); err != nil {
 		err = tracerr.Wrap(err)
