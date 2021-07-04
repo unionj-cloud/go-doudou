@@ -28,14 +28,21 @@ func TestGenDaoImplGo(t *testing.T) {
 		logrus.Panicln(err)
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
-	for _, file := range files {
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-		if err != nil {
-			logrus.Panicln(err)
-		}
-		ast.Walk(sc, root)
+	usergo := dir + "/user.go"
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, usergo, nil, parser.ParseComments)
+	if err != nil {
+		logrus.Panicln(err)
 	}
+	ast.Walk(sc, root)
+
+	basego := dir + "/base.go"
+	fset = token.NewFileSet()
+	root, err = parser.ParseFile(fset, basego, nil, parser.ParseComments)
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	ast.Walk(sc, root)
 
 	var tables []table.Table
 	flattened := ddlast.FlatEmbed(sc.Structs)
@@ -77,9 +84,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"testfiles/domain"
+	"github.com/unionj-cloud/go-doudou/ddl"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
@@ -89,12 +96,12 @@ import (
 )
 
 type UserDaoImpl struct {
-	db *sqlx.DB
+	db ddl.Querier
 }
 
-func NewUserDao(db *sqlx.DB) UserDao {
+func NewUserDao(querier ddl.Querier) UserDao {
 	return UserDaoImpl{
-		db: db,
+		db: querier,
 	}
 }
 

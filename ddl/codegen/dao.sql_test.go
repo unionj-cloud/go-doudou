@@ -11,26 +11,29 @@ import (
 	"go/token"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
 func TestGenDaoSql(t *testing.T) {
-	dir := pathutils.Abs("../testfiles/domain")
-	var files []string
-	err := filepath.Walk(dir, astutils.Visit(&files))
+	domain := "../testfiles/domain"
+
+	sc := astutils.NewStructCollector(astutils.ExprString)
+
+	usergo := pathutils.Abs(domain + "/user.go")
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, usergo, nil, parser.ParseComments)
 	if err != nil {
 		logrus.Panicln(err)
 	}
-	sc := astutils.NewStructCollector(astutils.ExprString)
-	for _, file := range files {
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-		if err != nil {
-			logrus.Panicln(err)
-		}
-		ast.Walk(sc, root)
+	ast.Walk(sc, root)
+
+	basego := pathutils.Abs(domain + "/base.go")
+	fset = token.NewFileSet()
+	root, err = parser.ParseFile(fset, basego, nil, parser.ParseComments)
+	if err != nil {
+		logrus.Panicln(err)
 	}
+	ast.Walk(sc, root)
 
 	var tables []table.Table
 	flattened := ddlast.FlatEmbed(sc.Structs)
@@ -50,7 +53,7 @@ func TestGenDaoSql(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				domainpath: dir,
+				domainpath: pathutils.Abs(domain),
 				t:          tables[0],
 				folder:     nil,
 			},
@@ -62,8 +65,8 @@ func TestGenDaoSql(t *testing.T) {
 			if err := GenDaoSql(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			defer os.RemoveAll(filepath.Join(dir, "../dao"))
-			daofile := filepath.Join(dir, "../dao/userdao.sql")
+			defer os.RemoveAll(pathutils.Abs("../testfiles/dao"))
+			daofile := pathutils.Abs("../testfiles/dao/userdao.sql")
 			f, err := os.Open(daofile)
 			if err != nil {
 				t.Fatal(err)
