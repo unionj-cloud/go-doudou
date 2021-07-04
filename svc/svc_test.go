@@ -151,3 +151,15 @@ func TestSvc_Deploy(t *testing.T) {
 	jsonrs, _ := json.MarshalIndent(doc, "", "  ")
 	fmt.Println(string(jsonrs))
 }
+
+func Test_validateDataType(t *testing.T) {
+	assert.NotPanics(t, func() {
+		validateDataType(testDir)
+	})
+}
+
+func Test_validateDataType_shouldpanic(t *testing.T) {
+	assert.Panics(t, func() {
+		validateDataType(pathutils.Abs("testfiles1"))
+	})
+}

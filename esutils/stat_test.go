@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/Jeffail/gabs/v2"
+	"github.com/olivere/elastic"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -28,4 +29,15 @@ func TestEs_Stat(t *testing.T) {
 	var expect interface{}
 	json.Unmarshal([]byte(expectj), &expect)
 	assert.ElementsMatch(t, expect, gabs.Wrap(ret).Path("groupBy.buckets").Data())
+}
+
+func TestEs_Stat2(t *testing.T) {
+	es, terminator := setupSubTest()
+	defer terminator()
+	aggr := elastic.NewTermsAggregation().Field("type.keyword").Size(9999).ExecutionHint("map").MinDocCount(1)
+	ret, _ := es.Stat(context.Background(), nil, aggr)
+	expectj := `[{"doc_count":1,"key":"culture"},{"doc_count":1,"key":"education"},{"doc_count":1,"key":"sport"}]`
+	var expect interface{}
+	json.Unmarshal([]byte(expectj), &expect)
+	assert.ElementsMatch(t, expect, gabs.Wrap(ret).Path("volume.buckets").Data())
 }
