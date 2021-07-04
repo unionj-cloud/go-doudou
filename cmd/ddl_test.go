@@ -45,7 +45,7 @@ func TestDdlCmd(t *testing.T) {
 	var terminateContainer func() // variable to store function to terminate container
 	var host string
 	var port int
-	terminateContainer, host, port, err = test.SetupMySQLContainer(logger)
+	terminateContainer, host, port, err = test.SetupMySQLContainer(logger, pathutils.Abs("../test/sql"), "")
 	defer terminateContainer() // make sure container will be terminated at the end
 	if err != nil {
 		logger.Error("failed to setup MySQL container")

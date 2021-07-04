@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/config"
+	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/test"
 	"os"
 	"testing"
@@ -21,7 +22,7 @@ func setup() (func(), *sqlx.DB, error) {
 	var host string
 	var port int
 	var err error
-	terminateContainer, host, port, err = test.SetupMySQLContainer(logger)
+	terminateContainer, host, port, err = test.SetupMySQLContainer(logger, pathutils.Abs("../../test/sql"), "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to setup MySQL container")
 	}

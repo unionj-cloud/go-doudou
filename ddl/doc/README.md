@@ -1,7 +1,7 @@
 ## ddl
 
 基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。暂不支持索引的更新，不支持外键。
-
+**dao层代码新增transaction支持**，在sqlx.Tx和sqlx.DB外包了一层抽象。
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -252,7 +252,88 @@ Count多条记录
 
 分页
 
-
+##### Transaction
+示例：
+```go
+func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, sheet string) (err error) {
+	types := []string{"食品", "用具"}
+	var (
+		xlsx *excelize.File
+		rows [][]string
+		tx   ddl.Tx
+	)
+	xlsx, err = excelize.OpenReader(f)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	rows, err = xlsx.GetRows(sheet)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	colNum := len(rows[0])
+	rows = rows[1:]
+	gdddb := ddl.GddDB{receiver.db}
+	// 开启事务
+	tx, err = gdddb.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			if _err := tx.Rollback(); _err != nil {
+				err = errors.Wrap(_err, "")
+				return
+			}
+			if e, ok := r.(error); ok {
+				err = errors.Wrap(e, "")
+			} else {
+				err = errors.New(fmt.Sprint(r))
+			}
+		}
+	}()
+	// 将tx作为ddl.Querier接口的实例传入dao层实现类
+	mdao := dao.NewMaterialDao(tx)
+	for _, item := range rows {
+		if len(item) == 0 {
+			goto END
+		}
+		row := make([]string, colNum)
+		copy(row, item)
+		name := row[0]
+		price := cast.ToFloat32(row[1])
+		spec := row[2]
+		pieces := cast.ToInt(row[3])
+		amount := cast.ToInt(row[4])
+		note := row[5]
+		totalMount := pieces * amount
+		if _, err = mdao.Upsert(ctx, domain.Material{
+			Name:        name,
+			Amount:      amount,
+			Price:       price,
+			TotalAmount: totalMount,
+			Spec:        spec,
+			Pieces:      pieces,
+			Type:        int8(sliceutils.IndexOf(sheet, types)),
+			Note:        note,
+		}); err != nil {
+			// 报错rollback
+			if _err := tx.Rollback(); _err != nil {
+				return errors.Wrap(_err, "")
+			}
+			return errors.Wrap(err, "")
+		}
+	}
+END:
+	// 最后commit
+	if err = tx.Commit(); err != nil {
+		if _err := tx.Rollback(); _err != nil {
+			return errors.Wrap(_err, "")
+		}
+		return errors.Wrap(err, "")
+	}
+	return err
+}
+```
 
 #### 查询Dsl
 
@@ -433,9 +514,9 @@ type PageRet struct {
 - HasNext表示是否有下一页
 
 
-
 ### TODO
 
++ [x] dao层支持transaction
 + [ ] 支持索引的更新
 + [ ] 支持外键
 

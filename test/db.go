@@ -7,23 +7,24 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
-func SetupMySQLContainer(logger *logrus.Logger) (func(), string, int, error) {
+func SetupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (func(), string, int, error) {
 	logger.Info("setup MySQL Container")
 	ctx := context.Background()
-	mountPath := pathutils.Abs("sql")
-
+	if stringutils.IsEmpty(dbname) {
+		dbname = "test"
+	}
 	req := testcontainers.ContainerRequest{
 		Image:        "mysql:latest",
 		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: map[string]string{
 			"MYSQL_ROOT_PASSWORD": "1234",
-			"MYSQL_DATABASE":      "test",
+			"MYSQL_DATABASE":      dbname,
 		},
 		BindMounts: map[string]string{
-			mountPath: "/docker-entrypoint-initdb.d",
+			initdb: "/docker-entrypoint-initdb.d",
 		},
 		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL"),
 	}
