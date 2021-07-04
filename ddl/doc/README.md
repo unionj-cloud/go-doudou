@@ -35,6 +35,7 @@
     - [SelectXXXs](#selectxxxs)
     - [CountXXXs](#countxxxs)
     - [PageXXXs](#pagexxxs)
+    - [Transaction](#transaction)
   - [查询Dsl](#%E6%9F%A5%E8%AF%A2dsl)
     - [示例](#%E7%A4%BA%E4%BE%8B-1)
     - [API](#api-1)
