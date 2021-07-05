@@ -3,7 +3,7 @@ package esutils
 import (
 	"context"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
+	"github.com/pkg/errors"
 )
 
 func (es *Es) ClearIndex(ctx context.Context) error {
@@ -13,12 +13,10 @@ func (es *Es) ClearIndex(ctx context.Context) error {
 	)
 
 	if res, err = es.client.DeleteByQuery(es.esIndex).Query(elastic.NewMatchAllQuery()).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return err
+		return errors.Wrap(err, "call DeleteByQuery() error")
 	}
 	if len(res.Failures) > 0 {
-		err = tracerr.New("failed to clear index " + es.esIndex)
-		return err
+		return errors.New("failed to clear index " + es.esIndex)
 	}
 	return nil
 }

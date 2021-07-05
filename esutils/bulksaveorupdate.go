@@ -6,7 +6,6 @@ import (
 	"github.com/olivere/elastic"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/ztrue/tracerr"
 	"reflect"
 )
 
@@ -51,14 +50,12 @@ func (es *Es) BulkSaveOrUpdate(ctx context.Context, docs []interface{}) error {
 	)
 
 	if bulkRes, err = bulkRequest.Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return err
+		return errors.Wrap(err, "call Bulk() error")
 	}
 	if bulkRes.Errors {
 		for _, item := range bulkRes.Items {
 			if item["index"].Error != nil {
-				err = tracerr.Wrap(errors.New(item["index"].Error.Reason))
-				return err
+				return errors.New(item["index"].Error.Reason)
 			}
 		}
 	}

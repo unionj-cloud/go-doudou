@@ -41,3 +41,30 @@ func TestEs_Stat2(t *testing.T) {
 	json.Unmarshal([]byte(expectj), &expect)
 	assert.ElementsMatch(t, expect, gabs.Wrap(ret).Path("volume.buckets").Data())
 }
+
+func TestEs_Stat3(t *testing.T) {
+	es := setupSubTest("test_stat")
+
+	jaggr := `{
+        "groupBy": {
+            "terms": {
+                "field": "type.keyword",
+                "size": 9999,
+                "execution_hint": "map",
+                "min_doc_count": 1
+            }
+        }
+    }`
+	aggr := make(map[string]interface{})
+	json.Unmarshal([]byte(jaggr), &aggr)
+	ret, _ := es.Stat(context.Background(), &Paging{
+		StartDate:  "2020-06-01",
+		EndDate:    "2020-07-01",
+		DateField:  "createAt",
+		QueryConds: nil,
+	}, aggr)
+	expectj := `[{"doc_count":1,"key":"education"},{"doc_count":1,"key":"sport"}]`
+	var expect interface{}
+	json.Unmarshal([]byte(expectj), &expect)
+	assert.ElementsMatch(t, expect, gabs.Wrap(ret).Path("groupBy.buckets").Data())
+}

@@ -3,7 +3,7 @@ package esutils
 import (
 	"context"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
+	"github.com/pkg/errors"
 )
 
 func (es *Es) DeleteIndex(ctx context.Context) error {
@@ -15,12 +15,10 @@ func (es *Es) DeleteIndex(ctx context.Context) error {
 		if elastic.IsNotFound(err) {
 			return nil
 		}
-		err = tracerr.Wrap(err)
-		return err
+		return errors.Wrap(err, "call DeleteIndex() error")
 	}
 	if !res.Acknowledged {
-		err = tracerr.New("failed to delete index" + es.esIndex)
-		return err
+		return errors.New("failed to delete index" + es.esIndex)
 	}
 	return nil
 }

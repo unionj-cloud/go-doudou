@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Jeffail/gabs/v2"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
+	"github.com/pkg/errors"
 )
 
 type MappingPayload struct {
@@ -47,19 +47,17 @@ func (es *Es) PutMapping(ctx context.Context, mp MappingPayload) error {
 	}
 	mapping.Set(properties, "properties")
 	if res, err = es.client.PutMapping().Index(mp.Index).Type(mp.Type).BodyString(mapping.String()).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return err
+		return errors.Wrap(err, "call PutMapping() error")
 	}
 	if !res.Acknowledged {
-		err = tracerr.New("putmapping failed!!!")
-		return err
+		return errors.New("putmapping failed!!!")
 	}
 	return nil
 }
 
 func (es *Es) CheckTypeExists(ctx context.Context) (b bool, err error) {
 	if b, err = es.client.TypeExists().Index(es.esIndex).Type(es.esType).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
+		return false, errors.Wrap(err, "call TypeExists() error")
 	}
 	return
 }

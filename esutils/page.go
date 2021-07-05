@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
-	"log"
+	"github.com/pkg/errors"
 )
 
 type PageResult struct {
@@ -20,8 +19,6 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 	var (
 		err       error
 		boolQuery *elastic.BoolQuery
-		src       interface{}
-		data      []byte
 		pr        PageResult
 	)
 	if paging == nil {
@@ -32,24 +29,13 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 	if paging.Limit < 0 || paging.Limit > 10000 {
 		docs, err := es.List(ctx, paging, nil)
 		if err != nil {
-			err = tracerr.Wrap(err)
-			return pr, err
+			return pr, errors.Wrap(err, "call List() error")
 		}
 		pr.Total = len(docs)
 		pr.Docs = docs
 		return pr, nil
 	}
 	boolQuery = query(paging.StartDate, paging.EndDate, paging.DateField, paging.QueryConds)
-	if src, err = boolQuery.Source(); err != nil {
-		err = tracerr.Wrap(err)
-		return pr, err
-	}
-	if data, err = json.Marshal(src); err != nil {
-		err = tracerr.Wrap(err)
-		return pr, err
-	}
-	log.Println(string(data))
-
 	var rets []interface{}
 
 	var searchResult *elastic.SearchResult
@@ -60,16 +46,11 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 		}
 	}
 	if searchResult, err = ss.From(paging.Skip).Size(paging.Limit).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return pr, err
+		return pr, errors.Wrap(err, "call Search() error")
 	}
 	for _, hit := range searchResult.Hits.Hits {
 		var p map[string]interface{}
-		err := json.Unmarshal(*hit.Source, &p)
-		if err != nil {
-			err = tracerr.Wrap(err)
-			return pr, err
-		}
+		json.Unmarshal(*hit.Source, &p)
 		p["_id"] = hit.Id
 		rets = append(rets, p)
 	}

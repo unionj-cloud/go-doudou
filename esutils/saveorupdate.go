@@ -5,7 +5,6 @@ import (
 	"github.com/olivere/elastic"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/ztrue/tracerr"
 )
 
 func (es *Es) SaveOrUpdate(ctx context.Context, doc interface{}) (string, error) {
@@ -25,8 +24,7 @@ func (es *Es) SaveOrUpdate(ctx context.Context, doc interface{}) (string, error)
 	}
 
 	if indexRes, err = indexRequest.BodyJson(&doc).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return "", err
+		return "", errors.Wrap(err, "call Index() error")
 	}
 
 	es.client.Flush(es.esIndex).Do(ctx)

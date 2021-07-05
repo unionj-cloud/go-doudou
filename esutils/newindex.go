@@ -3,7 +3,7 @@ package esutils
 import (
 	"context"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
+	"github.com/pkg/errors"
 )
 
 func (es *Es) NewIndex(ctx context.Context, mapping string) (exists bool, err error) {
@@ -11,18 +11,15 @@ func (es *Es) NewIndex(ctx context.Context, mapping string) (exists bool, err er
 		res *elastic.IndicesCreateResult
 	)
 	if exists, err = es.client.IndexExists(es.esIndex).Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return
+		return false, errors.Wrap(err, "call IndexExists() error")
 	}
 	if !exists {
 		// Create a new index.
 		if res, err = es.client.CreateIndex(es.esIndex).BodyString(mapping).Do(ctx); err != nil {
-			err = tracerr.Wrap(err)
-			return
+			return false, errors.Wrap(err, "call CreateIndex() error")
 		}
 		if !res.Acknowledged {
-			err = tracerr.New("create index failed!!!")
-			return
+			return false, errors.Wrap(err, "call CreateIndex() failed")
 		}
 	}
 	return

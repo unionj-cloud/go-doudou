@@ -3,7 +3,7 @@ package esutils
 import (
 	"context"
 	"github.com/olivere/elastic"
-	"github.com/ztrue/tracerr"
+	"github.com/pkg/errors"
 )
 
 func (es *Es) BulkDelete(ctx context.Context, ids []string) error {
@@ -19,12 +19,10 @@ func (es *Es) BulkDelete(ctx context.Context, ids []string) error {
 	)
 
 	if bulkRes, err = bulkRequest.Do(ctx); err != nil {
-		err = tracerr.Wrap(err)
-		return err
+		return errors.Wrap(err, "call Bulk() error")
 	}
 	if bulkRes.Errors {
-		err = tracerr.New("bulk partially failed")
-		return err
+		return errors.New("bulk partially failed")
 	}
 
 	es.client.Flush(es.esIndex).Do(ctx)
