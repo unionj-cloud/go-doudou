@@ -3,12 +3,18 @@ package esutils
 import (
 	"context"
 	"github.com/unionj-cloud/go-doudou/constants"
+	"github.com/unionj-cloud/go-doudou/test"
+	"os"
 	"testing"
 	"time"
 )
 
-func init() {
-	_, esHost, esPort = prepareTestEnvironment()
+func TestMain(m *testing.M) {
+	var terminator func()
+	terminator, esHost, esPort = test.PrepareTestEnvironment()
+	code := m.Run()
+	terminator()
+	os.Exit(code)
 }
 
 func TestBulkSaveOrUpdate(t *testing.T) {

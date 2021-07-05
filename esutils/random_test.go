@@ -17,7 +17,7 @@ func TestRandom(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
+			name: "",
 			args: args{
 				paging: &Paging{
 					StartDate: "2020-06-01",
@@ -35,6 +35,14 @@ func TestRandom(t *testing.T) {
 						},
 					},
 				},
+			},
+			want:    "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				paging: nil,
 			},
 			want:    "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
 			wantErr: false,

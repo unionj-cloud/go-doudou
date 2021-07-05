@@ -3,6 +3,7 @@ package esutils
 import (
 	"context"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -51,10 +52,15 @@ func TestList(t *testing.T) {
 		},
 		{
 			args: args{
-				paging:   nil,
-				callback: nil,
+				paging: nil,
+				callback: func(message json.RawMessage) (interface{}, error) {
+					var p map[string]interface{}
+					json.Unmarshal(message, &p)
+					p["text"] = "fixed content"
+					return p, nil
+				},
 			},
-			want:    "目前，我办已将损毁其他考生答题卡的考生违规情况上报河南省招生办公室，将依规对该考生进行处理。平顶山市招生考试委员会办公室",
+			want:    "fixed content",
 			wantErr: false,
 		},
 	}
@@ -69,6 +75,7 @@ func TestList(t *testing.T) {
 				t.Error("got's length shouldn't be zero")
 				return
 			}
+			assert.Equal(t, tt.want, got[0].(map[string]interface{})["text"])
 		})
 	}
 }

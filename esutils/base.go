@@ -11,7 +11,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/unionj-cloud/go-doudou/test"
 )
 
 //go:generate go-doudou name --file $GOFILE
@@ -362,19 +361,6 @@ func setupSubTest(esindex string) *Es {
 	prepareTestIndex(es)
 	prepareTestData(es)
 	return es
-}
-
-func prepareTestEnvironment() (func(), string, int) {
-	logger := logutils.NewLogger()
-	var terminateContainer func() // variable to store function to terminate container
-	var host string
-	var port int
-	var err error
-	terminateContainer, host, port, err = test.SetupEs6Container(logger)
-	if err != nil {
-		logger.Panicln("failed to setup Elasticsearch container")
-	}
-	return terminateContainer, host, port
 }
 
 func prepareTestIndex(es *Es) {
