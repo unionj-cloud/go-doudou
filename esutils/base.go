@@ -30,7 +30,9 @@ const (
 	MATCHPHRASE
 	RANGE
 	PREFIX
+	// https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-wildcard-query.html
 	WILDCARD
+	// https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-prefix-query.html
 	EXISTS
 )
 

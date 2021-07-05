@@ -1,7 +1,10 @@
 package esutils
 
 import (
-	"encoding/json"
+	"fmt"
+	"github.com/Jeffail/gabs/v2"
+	"github.com/olivere/elastic"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -19,7 +22,7 @@ func Test_query(t *testing.T) {
 		want string
 	}{
 		{
-			name: "1",
+			name: "",
 			args: args{
 				startDate: "2020-06-01",
 				endDate:   "2020-07-10",
@@ -28,9 +31,9 @@ func Test_query(t *testing.T) {
 					{
 						Pair: map[string][]interface{}{
 							"text":    {"考生"},
-							"school":  {"西安理工"},
-							"address": {"北京"},
-							"company": {"清研"},
+							"school":  {"西安理工+西安交大"},
+							"address": {"北京+-西安"},
+							"company": {"unionj"},
 						},
 						QueryLogic: SHOULD,
 						QueryType:  MATCHPHRASE,
@@ -38,14 +41,48 @@ func Test_query(t *testing.T) {
 					{
 						Pair: map[string][]interface{}{
 							"content":      {"北京"},
-							"content_full": {"清研"},
+							"content_full": {"unionj"},
 						},
 						QueryLogic: MUST,
 						QueryType:  TERMS,
 					},
 				},
 			},
-			want: `{"bool":{"minimum_should_match":"1","must":[{"range":{"createAt":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-10"}}},{"terms":{"content_full":["清研"]}},{"terms":{"content":["北京"]}}],"should":[{"bool":{"should":{"match_phrase":{"address":{"query":"北京"}}}}},{"bool":{"should":{"match_phrase":{"company":{"query":"清研"}}}}},{"bool":{"should":{"match_phrase":{"text":{"query":"考生"}}}}},{"bool":{"should":{"match_phrase":{"school":{"query":"西安理工"}}}}}]}}`,
+			want: `{"bool":{"minimum_should_match":"1","must":[{"range":{"createAt":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-10"}}},{"terms":{"content_full":["unionj"]}},{"terms":{"content":["北京"]}}],"should":[{"bool":{"should":{"bool":{"must":{"match_phrase":{"address":{"query":"北京"}}},"must_not":{"match_phrase":{"address":{"query":"西安"}}}}}}},{"bool":{"should":{"match_phrase":{"company":{"query":"unionj"}}}}},{"bool":{"should":{"match_phrase":{"text":{"query":"考生"}}}}},{"bool":{"should":{"bool":{"must":[{"match_phrase":{"school":{"query":"西安理工"}}},{"match_phrase":{"school":{"query":"西安交大"}}}]}}}}]}}`,
+		},
+		{
+			name: "",
+			args: args{
+				startDate: "2020-06-01",
+				endDate:   "2020-07-10",
+				dateField: "createAt",
+				queryConds: []QueryCond{
+					{
+						Pair: map[string][]interface{}{
+							"type.keyword": {"education"},
+							"status":       {float64(200)},
+						},
+						QueryLogic: MUST,
+						QueryType:  TERMS,
+					},
+					{
+						Pair: map[string][]interface{}{
+							"dept.keyword":     {"unionj*"},
+							"position.keyword": {"dev*"},
+						},
+						QueryLogic: SHOULD,
+						QueryType:  WILDCARD,
+					},
+					{
+						Pair: map[string][]interface{}{
+							"dept.keyword": {"unionj"},
+						},
+						QueryLogic: SHOULD,
+						QueryType:  PREFIX,
+					},
+				},
+			},
+			want: `{"bool":{"minimum_should_match":"1","must":[{"range":{"createAt":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-10"}}},{"terms":{"type.keyword":["education"]}},{"terms":{"status":[200]}}],"should":[{"wildcard":{"dept.keyword":{"wildcard":"unionj*"}}},{"wildcard":{"position.keyword":{"wildcard":"dev*"}}},{"prefix":{"dept.keyword":"unionj"}}]}}`,
 		},
 	}
 	for _, tt := range tests {
@@ -56,14 +93,14 @@ func Test_query(t *testing.T) {
 			if src, err = bq.Source(); err != nil {
 				panic(err)
 			}
-			want := make(map[string]interface{})
-			json.Unmarshal([]byte(tt.want), &want)
-			_src := src.(map[string]interface{})
-			if !assert.ElementsMatch(t, _src["must"], want["must"]) {
-				t.Errorf("query() = %v, want %v", _src["must"], want["must"])
+			want, _ := gabs.ParseJSON([]byte(tt.want))
+			_src := gabs.Wrap(src)
+			fmt.Println(_src.String())
+			if !assert.ElementsMatch(t, _src.Path("bool.must").Data(), want.Path("bool.must").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.must").Data(), want.Path("bool.must").Data())
 			}
-			if !assert.ElementsMatch(t, _src["should"], want["should"]) {
-				t.Errorf("query() = %v, want %v", _src["should"], want["should"])
+			if !assert.ElementsMatch(t, _src.Path("bool.should").Data(), want.Path("bool.should").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.should").Data(), want.Path("bool.should").Data())
 			}
 		})
 	}
@@ -72,11 +109,11 @@ func Test_query(t *testing.T) {
 func Test_range_query(t *testing.T) {
 	param1 := make(map[string]interface{})
 	param1["to"] = 0.4
-	param1["includeUpper"] = true
+	param1["include_upper"] = true
 
 	param2 := make(map[string]interface{})
 	param2["from"] = 0.6
-	param2["includeLower"] = true
+	param2["include_lower"] = true
 
 	type args struct {
 		startDate  string
@@ -106,7 +143,7 @@ func Test_range_query(t *testing.T) {
 					},
 					{
 						Pair: map[string][]interface{}{
-							"orderPhrase": {300},
+							"orderPhrase": {float64(300)},
 						},
 						QueryLogic: MUST,
 						QueryType:  TERMS,
@@ -124,14 +161,14 @@ func Test_range_query(t *testing.T) {
 			if src, err = bq.Source(); err != nil {
 				panic(err)
 			}
-			want := make(map[string]interface{})
-			json.Unmarshal([]byte(tt.want), &want)
-			_src := src.(map[string]interface{})
-			if !assert.ElementsMatch(t, _src["must"], want["must"]) {
-				t.Errorf("query() = %v, want %v", _src["must"], want["must"])
+			want, _ := gabs.ParseJSON([]byte(tt.want))
+			_src := gabs.Wrap(src)
+			fmt.Println(_src.String())
+			if !assert.ElementsMatch(t, _src.Path("bool.must").Data(), want.Path("bool.must").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.must").Data(), want.Path("bool.must").Data())
 			}
-			if !assert.ElementsMatch(t, _src["should"], want["should"]) {
-				t.Errorf("query() = %v, want %v", _src["should"], want["should"])
+			if !assert.ElementsMatch(t, _src.Path("bool.should").Data(), want.Path("bool.should").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.should").Data(), want.Path("bool.should").Data())
 			}
 		})
 	}
@@ -166,7 +203,7 @@ func Test_exists_query(t *testing.T) {
 					},
 					{
 						Pair: map[string][]interface{}{
-							"orderPhrase": {300},
+							"orderPhrase": {float64(300)},
 						},
 						QueryLogic: MUST,
 						QueryType:  TERMS,
@@ -184,14 +221,14 @@ func Test_exists_query(t *testing.T) {
 			if src, err = bq.Source(); err != nil {
 				panic(err)
 			}
-			want := make(map[string]interface{})
-			json.Unmarshal([]byte(tt.want), &want)
-			_src := src.(map[string]interface{})
-			if !assert.ElementsMatch(t, _src["must"], want["must"]) {
-				t.Errorf("query() = %v, want %v", _src["must"], want["must"])
+			want, _ := gabs.ParseJSON([]byte(tt.want))
+			_src := gabs.Wrap(src)
+			fmt.Println(_src.String())
+			if !assert.ElementsMatch(t, _src.Path("bool.must").Data(), want.Path("bool.must").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.must").Data(), want.Path("bool.must").Data())
 			}
-			if !assert.ElementsMatch(t, _src["should"], want["should"]) {
-				t.Errorf("query() = %v, want %v", _src["should"], want["should"])
+			if !assert.ElementsMatch(t, _src.Path("bool.should").Data(), want.Path("bool.should").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.should").Data(), want.Path("bool.should").Data())
 			}
 		})
 	}
@@ -225,7 +262,7 @@ func Test_children_query(t *testing.T) {
 					},
 					{
 						Pair: map[string][]interface{}{
-							"status": {100, 300},
+							"status": {float64(100), float64(300)},
 						},
 						QueryLogic: MUSTNOT,
 						QueryType:  TERMS,
@@ -242,7 +279,7 @@ func Test_children_query(t *testing.T) {
 							},
 							{
 								Pair: map[string][]interface{}{
-									"price": {0},
+									"price": {float64(0)},
 								},
 								QueryLogic: MUST,
 								QueryType:  TERMS,
@@ -251,7 +288,7 @@ func Test_children_query(t *testing.T) {
 					},
 				},
 			},
-			want: `{"bool":{"must":[{"range":{"acceptDate":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-01"}}},{"terms":{"orderPhrase":[300]}}],"must_not":[{"exists":{"field":"delete_at"}},{"exists":{"field":"flag"}}]}}`,
+			want: `{"bool":{"must":{"range":{"acceptDate":{"format":"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis","from":"2020-06-01","include_lower":true,"include_upper":true,"time_zone":"Asia/Shanghai","to":"2020-07-01"}}},"must_not":[{"exists":{"field":"delete_at"}},{"terms":{"status":[100,300]}},{"bool":{"must":[{"terms":{"type":["网络调查"]}},{"terms":{"price":[0]}}]}}]}}`,
 		},
 	}
 	for _, tt := range tests {
@@ -262,15 +299,72 @@ func Test_children_query(t *testing.T) {
 			if src, err = bq.Source(); err != nil {
 				panic(err)
 			}
-			want := make(map[string]interface{})
-			json.Unmarshal([]byte(tt.want), &want)
-			_src := src.(map[string]interface{})
-			if !assert.ElementsMatch(t, _src["must"], want["must"]) {
-				t.Errorf("query() = %v, want %v", _src["must"], want["must"])
+			want, _ := gabs.ParseJSON([]byte(tt.want))
+			_src := gabs.Wrap(src)
+			fmt.Println(_src.String())
+			if !assert.Equal(t, _src.Path("bool.must").Data(), want.Path("bool.must").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.must").Data(), want.Path("bool.must").Data())
 			}
-			if !assert.ElementsMatch(t, _src["should"], want["should"]) {
-				t.Errorf("query() = %v, want %v", _src["should"], want["should"])
+			if !assert.ElementsMatch(t, _src.Path("bool.must_not").Data(), want.Path("bool.must_not").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.must_not").Data(), want.Path("bool.must_not").Data())
 			}
+			if !assert.ElementsMatch(t, _src.Path("bool.should").Data(), want.Path("bool.should").Data()) {
+				t.Errorf("query() = %v, want %v", _src.Path("bool.should").Data(), want.Path("bool.should").Data())
+			}
+		})
+	}
+}
+
+func TestNewEs(t *testing.T) {
+	url := "http://test.com"
+	username := "unionj"
+	password := "unionj"
+	client, err := elastic.NewSimpleClient(
+		elastic.SetErrorLog(logrus.New()),
+		elastic.SetURL(url),
+		elastic.SetBasicAuth(username, password),
+		elastic.SetGzip(true),
+	)
+	if err != nil {
+		panic(fmt.Errorf("NewSimpleClient() error: %+v\n", err))
+	}
+	type args struct {
+		esIndex string
+		esType  string
+		opts    []EsOption
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Es
+	}{
+		{
+			name: "",
+			args: args{
+				esIndex: "test1",
+				opts: []EsOption{
+					WithUsername(username),
+					WithPassword(password),
+					WithUrls([]string{url}),
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "",
+			args: args{
+				esIndex: "test2",
+				opts: []EsOption{
+					WithClient(client),
+				},
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		assert.NotPanics(t, func() {
+			got := NewEs(tt.args.esIndex, tt.args.esType, tt.args.opts...)
+			got.SetType(got.esIndex)
 		})
 	}
 }
