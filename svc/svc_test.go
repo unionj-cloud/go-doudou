@@ -42,7 +42,7 @@ func TestSvc_Create(t *testing.T) {
 				Dir: tt.fields.Dir,
 			}
 			receiver.Init()
-			defer os.RemoveAll(testDir + "1")
+			defer os.RemoveAll(tt.fields.Dir)
 		})
 	}
 }
@@ -85,11 +85,20 @@ func TestSvc_Http(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			receiver := Svc{
-				Dir: tt.fields.Dir,
+				Dir:          tt.fields.Dir,
+				Handler:      tt.fields.Handler,
+				Client:       tt.fields.Client,
+				Omitempty:    tt.fields.Omitempty,
+				Doc:          tt.fields.Doc,
+				Jsonattrcase: tt.fields.Jsonattrcase,
 			}
-			receiver.Init()
-			defer os.RemoveAll(testDir + "2")
-			receiver.Http()
+			assert.NotPanics(t, func() {
+				receiver.Init()
+			})
+			defer os.RemoveAll(tt.fields.Dir)
+			assert.NotPanics(t, func() {
+				receiver.Http()
+			})
 		})
 	}
 }
