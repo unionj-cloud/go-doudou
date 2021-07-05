@@ -2,7 +2,6 @@ package esutils
 
 import (
 	"context"
-	"reflect"
 	"testing"
 )
 
@@ -19,7 +18,7 @@ func TestPage(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
+			name: "",
 			args: args{
 				paging: &Paging{
 					StartDate: "2020-06-01",
@@ -61,16 +60,20 @@ func TestPage(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "",
+			args: args{
+				paging: nil,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := es.Page(context.Background(), tt.args.paging)
+			_, err := es.Page(context.Background(), tt.args.paging)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Page() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Page() = %+v, want %v", got, tt.want)
 			}
 		})
 	}
