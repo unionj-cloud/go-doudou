@@ -10,10 +10,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/esutils"
-	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
-	"github.com/unionj-cloud/go-doudou/test"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -263,17 +261,4 @@ func (receiver Svc) Publish() string {
 		panic(err)
 	}
 	return result
-}
-
-func prepareTestEnvironment() (string, func()) {
-	logger := logutils.NewLogger()
-	var terminateContainer func() // variable to store function to terminate container
-	var host string
-	var port int
-	var err error
-	terminateContainer, host, port, err = test.SetupEs6Container(logger)
-	if err != nil {
-		logger.Panicln("failed to setup Elasticsearch container")
-	}
-	return fmt.Sprintf("http://%s:%d", host, port), terminateContainer
 }

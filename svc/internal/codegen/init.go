@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.3.5
+	github.com/unionj-cloud/go-doudou v0.3.6
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -160,23 +160,16 @@ func InitSvc(dir string) {
 		envfile       string
 	)
 	if stringutils.IsEmpty(dir) {
-		if dir, err = os.Getwd(); err != nil {
-			panic(err)
-		}
+		dir, _ = os.Getwd()
 	}
-
-	if err = os.MkdirAll(dir, os.ModePerm); err != nil {
-		panic(err)
-	}
+	_ = os.MkdirAll(dir, os.ModePerm)
 
 	// git init
 	fs := osfs.New(dir)
 	dot, _ := fs.Chroot(".git")
 	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
 
-	if _, err = git.Init(storage, fs); err != nil {
-		panic("git init error")
-	}
+	_, _ = git.Init(storage, fs)
 
 	// add .gitignore file
 	gitignorefile = filepath.Join(dir, ".gitignore")
@@ -186,12 +179,8 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New(".gitignore.tmpl").Parse(gitignoreTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			panic(err)
-		}
+		tpl, _ = template.New(".gitignore.tmpl").Parse(gitignoreTmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", ".gitignore")
 	}
@@ -207,18 +196,14 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("go.mod.tmpl").Parse(modTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, struct {
+		tpl, _ = template.New("go.mod.tmpl").Parse(modTmpl)
+		_ = tpl.Execute(f, struct {
 			ModName   string
 			GoVersion string
 		}{
 			ModName:   modName,
 			GoVersion: goVersion,
-		}); err != nil {
-			panic(err)
-		}
+		})
 	} else {
 		logrus.Warnf("file %s already exists", "go.mod")
 	}
@@ -230,16 +215,12 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New(".env.tmpl").Parse(envTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, struct {
+		tpl, _ = template.New(".env.tmpl").Parse(envTmpl)
+		_ = tpl.Execute(f, struct {
 			SvcName string
 		}{
 			SvcName: modName,
-		}); err != nil {
-			panic(err)
-		}
+		})
 	} else {
 		logrus.Warnf("file %s already exists", vofile)
 	}
@@ -255,12 +236,8 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("vo.go.tmpl").Parse(voTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			panic(err)
-		}
+		tpl, _ = template.New("vo.go.tmpl").Parse(voTmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", vofile)
 	}
@@ -283,18 +260,14 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("svc.go.tmpl").Parse(svcTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, struct {
+		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
+		_ = tpl.Execute(f, struct {
 			VoPackage string
 			SvcName   string
 		}{
 			VoPackage: modName + "/vo",
 			SvcName:   svcName,
-		}); err != nil {
-			panic(err)
-		}
+		})
 	} else {
 		logrus.Warnf("file %s already exists", svcfile)
 	}
@@ -306,12 +279,8 @@ func InitSvc(dir string) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("dockerfile.tmpl").Parse(dockerfileTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			panic(err)
-		}
+		tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", dockerfile)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/esutils"
 	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
+	"github.com/unionj-cloud/go-doudou/test"
 	"os"
 	"testing"
 )
@@ -48,16 +49,36 @@ func TestSvc_Create(t *testing.T) {
 
 func TestSvc_Http(t *testing.T) {
 	type fields struct {
-		Dir string
+		Dir          string
+		Handler      bool
+		Client       string
+		Omitempty    bool
+		Doc          bool
+		Jsonattrcase string
 	}
 	tests := []struct {
 		name   string
 		fields fields
 	}{
 		{
-			name: "2",
+			name: "",
 			fields: fields{
-				Dir: testDir + "2",
+				Dir:          testDir + "2",
+				Handler:      true,
+				Client:       "go",
+				Omitempty:    true,
+				Doc:          true,
+				Jsonattrcase: "snake",
+			},
+		},
+		{
+			name: "",
+			fields: fields{
+				Dir:       testDir + "3",
+				Handler:   true,
+				Client:    "go",
+				Omitempty: false,
+				Doc:       false,
 			},
 		},
 	}
@@ -125,13 +146,13 @@ func Test_checkIc1(t *testing.T) {
 	}
 }
 
-func TestSvc_Deploy(t *testing.T) {
-	esaddr, terminator := prepareTestEnvironment()
+func TestSvc_Publish(t *testing.T) {
+	terminator, host, port := test.PrepareTestEnvironment()
 	defer terminator()
 
 	esclient, err := elastic.NewSimpleClient(
 		elastic.SetErrorLog(logutils.NewLogger()),
-		elastic.SetURL([]string{esaddr}...),
+		elastic.SetURL([]string{fmt.Sprintf("http://%s:%d", host, port)}...),
 		elastic.SetGzip(true),
 	)
 	if err != nil {
@@ -150,6 +171,70 @@ func TestSvc_Deploy(t *testing.T) {
 	}
 	jsonrs, _ := json.MarshalIndent(doc, "", "  ")
 	fmt.Println(string(jsonrs))
+}
+
+func TestSvc_Push(t *testing.T) {
+	dir := testDir + "push"
+	receiver := Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Panics(t, func() {
+		receiver.Push()
+	})
+}
+
+func TestSvc_Deploy(t *testing.T) {
+	dir := testDir + "deploy"
+	receiver := Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Panics(t, func() {
+		receiver.Deploy()
+	})
+}
+
+func TestSvc_Shutdown(t *testing.T) {
+	dir := testDir + "shutdown"
+	receiver := Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Panics(t, func() {
+		receiver.Shutdown()
+	})
+}
+
+func TestSvc_Scale(t *testing.T) {
+	dir := testDir + "scale"
+	receiver := Svc{
+		Dir: dir,
+	}
+	receiver.Init()
+	defer os.RemoveAll(dir)
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Panics(t, func() {
+		receiver.Scale()
+	})
 }
 
 func Test_validateDataType(t *testing.T) {

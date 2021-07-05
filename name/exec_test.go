@@ -1,6 +1,7 @@
 package name
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"io/ioutil"
 	"os"
@@ -321,4 +322,26 @@ type starM *time.Time
 			ioutil.WriteFile(tt.fields.File, []byte(tt.initCode), os.ModePerm)
 		})
 	}
+}
+
+func TestPanic(t *testing.T) {
+	receiver := Name{
+		File:      pathutils.Abs("testfiles/vo1.go"),
+		Strategy:  "unknownstrategy",
+		Omitempty: false,
+	}
+	assert.Panics(t, func() {
+		receiver.Exec()
+	})
+}
+
+func TestPanic2(t *testing.T) {
+	receiver := Name{
+		File:      pathutils.Abs("testfiles/vo2"),
+		Strategy:  lowerCamelStrategy,
+		Omitempty: false,
+	}
+	assert.Panics(t, func() {
+		receiver.Exec()
+	})
 }
