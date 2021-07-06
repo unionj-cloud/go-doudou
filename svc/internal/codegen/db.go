@@ -51,7 +51,7 @@ func GenDb(dir string) {
 		firstLine string
 	)
 	dbDir = filepath.Join(dir, "db")
-	if err = os.MkdirAll(dbDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(dbDir, 0644); err != nil {
 		panic(err)
 	}
 

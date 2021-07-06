@@ -59,7 +59,7 @@ func GenK8s(dir string, svcname, image string) {
 		tpl *template.Template
 	)
 	k8sfile := filepath.Join(dir, svcname+"_k8s.yaml")
-	if fi, err := os.Stat(k8sfile); os.IsNotExist(err) {
+	if _, err := os.Stat(k8sfile); os.IsNotExist(err) {
 		if f, err = os.Create(k8sfile); err != nil {
 			panic(err)
 		}
@@ -79,7 +79,7 @@ func GenK8s(dir string, svcname, image string) {
 		}
 	} else {
 		logrus.Warnf("file %s will be overwrite", k8sfile)
-		err = ioutil.WriteFile(k8sfile, modifyVersion(k8sfile, image), fi.Mode()&os.ModePerm)
+		err = ioutil.WriteFile(k8sfile, modifyVersion(k8sfile, image), 0644)
 		if err != nil {
 			panic(err)
 		}

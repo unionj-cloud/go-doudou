@@ -1,19 +1,37 @@
-package codegen
+package client
 
 import (
-	"bufio"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
-	"github.com/unionj-cloud/go-doudou/copier"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/stringutils"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 )
 
-var tmpl = `package client
+var votmpl = `package client
+
+//go:generate go-doudou name --file $GOFILE
+
+{{- range $k, $v := .Schemas }}
+{{ $v.Description | toComment }}
+type {{$k | toCamel}} struct {
+{{- range $pk, $pv := $v.Properties }}
+	{{ $pv.Description | toComment }}
+	{{ $pk | toCamel}} {{$pv | toGoType }}
+{{- end }}
+}
+{{- end }}
+`
+
+var httptmpl = `package client
 
 import (
 	"context"
@@ -29,8 +47,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	{{.ServiceAlias}} "{{.ServicePackage}}"
-	"{{.VoPackage}}"
 )
 
 type {{.Meta.Name}}Client struct {
@@ -221,7 +237,7 @@ func WithClient(client *resty.Client) {{.Meta.Name}}ClientOption {
 	}
 }
 
-func New{{.Meta.Name}}(opts ...{{.Meta.Name}}ClientOption) {{.ServiceAlias}}.{{.Meta.Name}} {
+func New{{.Meta.Name}}(opts ...{{.Meta.Name}}ClientOption) *{{.Meta.Name}}Client {
 	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name}}")
 	defaultClient := ddhttp.NewClient()
 
@@ -238,85 +254,235 @@ func New{{.Meta.Name}}(opts ...{{.Meta.Name}}ClientOption) {{.ServiceAlias}}.{{.
 }
 `
 
-func restyMethod(method string) string {
-	return strings.Title(strings.ToLower(httpMethod(method)))
+func toMethod(endpoint string) string {
+	ret := strings.ReplaceAll(strings.ReplaceAll(endpoint, "{", ""), "}", "")
+	ret = strings.ReplaceAll(strings.Trim(ret, "/"), "/", "_")
+	return strcase.ToCamel(ret)
 }
 
-func GenGoClient(dir string, ic astutils.InterfaceCollector) {
+func genGoHttp(api v3.Api, output, svcname string) {
+	funcMap := make(map[string]interface{})
+	funcMap["toMethod"] = toMethod
+	funcMap["toLowerCamel"] = strcase.ToLowerCamel
+	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["lower"] = strings.ToLower
+	funcMap["contains"] = strings.Contains
+	tpl, _ := template.New("http.go.tmpl").Funcs(funcMap).Parse(httptmpl)
+	var sqlBuf bytes.Buffer
+	_ = tpl.Execute(&sqlBuf, struct {
+		Meta astutils.InterfaceMeta
+	}{
+		Meta: api2Interface(api, svcname),
+	})
+	source := strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), output)
+}
+
+func api2Interface(api v3.Api, svcname string) astutils.InterfaceMeta {
+	var meta astutils.InterfaceMeta
+	meta.Name = svcname
+	for endpoint, path := range api.Paths {
+		if path.Get != nil {
+			meta.Methods = append(meta.Methods, operation2Method("Get"+toMethod(endpoint), path.Get))
+		}
+		if path.Post != nil {
+			meta.Methods = append(meta.Methods, operation2Method("Post"+toMethod(endpoint), path.Post))
+		}
+		if path.Put != nil {
+			meta.Methods = append(meta.Methods, operation2Method("Put"+toMethod(endpoint), path.Put))
+		}
+		if path.Delete != nil {
+			meta.Methods = append(meta.Methods, operation2Method("Delete"+toMethod(endpoint), path.Delete))
+		}
+	}
+	return meta
+}
+
+func operation2Method(name string, operation *v3.Operation) astutils.MethodMeta {
+	//var params, results, pathvars []astutils.FieldMeta
+	var comments []string
+	//if stringutils.IsNotEmpty(operation.Summary) {
+	//	comments = append(comments, strings.Split(operation.Summary, "\n")...)
+	//}
+	//if stringutils.IsNotEmpty(operation.Description) {
+	//	comments = append(comments, strings.Split(operation.Description, "\n")...)
+	//}
+	//
+	//for _, item :=range operation.Parameters {
+	//
+	//}
+
+	return astutils.MethodMeta{
+		Name:     name,
+		Params:   nil,
+		Results:  nil,
+		PathVars: nil,
+		Comments: comments,
+	}
+}
+
+func toGoType(schema *v3.Schema) string {
+	if stringutils.IsNotEmpty(schema.Ref) {
+		return strings.TrimPrefix(schema.Ref, "#/components/schemas/")
+	}
+	// IntegerT Type = "integer"
+	//	StringT  Type = "string"
+	//	BooleanT Type = "boolean"
+	//	NumberT  Type = "number"
+	//	ObjectT  Type = "object"
+	//	ArrayT   Type = "array"
+	switch schema.Type {
+	case v3.IntegerT:
+		// Int32F    Format = "int32"
+		//	Int64F    Format = "int64"
+		//	FloatF    Format = "float"
+		//	DoubleF   Format = "double"
+		//	DateTimeF Format = "date-time"
+		//	BinaryF   Format = "binary"
+		switch schema.Format {
+		case v3.Int32F:
+			return "int"
+		case v3.Int64F:
+			return "int64"
+		default:
+			return "int"
+		}
+	case v3.StringT:
+		switch schema.Format {
+		case v3.DateTimeF:
+			return "*time.Time"
+		case v3.BinaryF:
+			return "*os.File"
+		default:
+			return "string"
+		}
+	case v3.BooleanT:
+		return "bool"
+	case v3.NumberT:
+		switch schema.Format {
+		case v3.FloatF:
+			return "float32"
+		case v3.DoubleF:
+			return "float64"
+		default:
+			return "float64"
+		}
+	case v3.ObjectT:
+		if stringutils.IsNotEmpty(schema.Title) {
+			return schema.Title
+		}
+		if schema.AdditionalProperties != nil {
+			return "map[string]" + toGoType(schema.AdditionalProperties)
+		}
+		b := new(strings.Builder)
+		b.WriteString("struct {\n")
+		for k, v := range schema.Properties {
+			if stringutils.IsNotEmpty(v.Description) {
+				descs := strings.Split(v.Description, "\n")
+				for _, desc := range descs {
+					b.WriteString(fmt.Sprintf("  // %s\n", desc))
+				}
+			}
+			b.WriteString(fmt.Sprintf("  %s %s\n", strcase.ToCamel(k), toGoType(v)))
+		}
+		b.WriteString("}")
+		return b.String()
+	case v3.ArrayT:
+		return "[]" + toGoType(schema.Items)
+	default:
+		return "interface{}"
+	}
+}
+
+func toComment(comment string) string {
+	if stringutils.IsEmpty(comment) {
+		return ""
+	}
+	b := new(strings.Builder)
+	lines := strings.Split(comment, "\n")
+	for _, line := range lines {
+		b.WriteString(fmt.Sprintf("// %s\n", line))
+	}
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+func genGoVo(schemas map[string]v3.Schema, output string) {
+	funcMap := make(map[string]interface{})
+	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["toGoType"] = toGoType
+	funcMap["toComment"] = toComment
+	tpl, _ := template.New("vo.go.tmpl").Funcs(funcMap).Parse(votmpl)
+	var sqlBuf bytes.Buffer
+	_ = tpl.Execute(&sqlBuf, struct {
+		Schemas map[string]v3.Schema
+	}{
+		Schemas: schemas,
+	})
+	source := strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), output)
+}
+
+func GenGoClient(dir string, file string, svcname string) {
 	var (
-		err        error
-		clientfile string
-		f          *os.File
-		tpl        *template.Template
-		sqlBuf     bytes.Buffer
-		clientDir  string
-		fi         os.FileInfo
-		source     string
-		modfile    string
-		modName    string
-		firstLine  string
-		modf       *os.File
-		meta       astutils.InterfaceMeta
+		err       error
+		httpfile  string
+		f         *os.File
+		clientDir string
+		fi        os.FileInfo
+		api       v3.Api
+		vofile    string
 	)
 	clientDir = filepath.Join(dir, "client")
 	if err = os.MkdirAll(clientDir, 0644); err != nil {
 		panic(err)
 	}
 
-	clientfile = filepath.Join(clientDir, "client.go")
-	fi, err = os.Stat(clientfile)
+	httpfile = filepath.Join(clientDir, "http.go")
+	fi, err = os.Stat(httpfile)
 	if err != nil && !os.IsNotExist(err) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file client.go will be overwrited")
+		logrus.Warningln("file http.go will be overwrited")
 	}
-	if f, err = os.Create(clientfile); err != nil {
+	if f, err = os.Create(httpfile); err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	err = copier.DeepCopy(ic.Interfaces[0], &meta)
-	if err != nil {
-		panic(err)
-	}
+	api = loadApi(file)
 
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	genGoHttp(api, httpfile, svcname)
 
-	funcMap := make(map[string]interface{})
-	funcMap["toLowerCamel"] = strcase.ToLowerCamel
-	funcMap["toCamel"] = strcase.ToCamel
-	funcMap["httpMethod"] = httpMethod
-	funcMap["pattern"] = pattern
-	funcMap["lower"] = strings.ToLower
-	funcMap["contains"] = strings.Contains
-	funcMap["isBuiltin"] = IsBuiltin
-	funcMap["restyMethod"] = restyMethod
-	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
+	vofile = filepath.Join(clientDir, "vo.go")
+	fi, err = os.Stat(vofile)
+	if err != nil && !os.IsNotExist(err) {
 		panic(err)
 	}
-	if err = tpl.Execute(&sqlBuf, struct {
-		ServicePackage string
-		ServiceAlias   string
-		VoPackage      string
-		Meta           astutils.InterfaceMeta
-	}{
-		ServicePackage: modName,
-		ServiceAlias:   ic.Package.Name,
-		VoPackage:      modName + "/vo",
-		Meta:           meta,
-	}); err != nil {
+	if fi != nil {
+		logrus.Warningln("file vo.go will be overwrited")
+	}
+	if f, err = os.Create(vofile); err != nil {
 		panic(err)
 	}
+	defer f.Close()
+	genGoVo(api.Components.Schemas, vofile)
+}
 
-	source = strings.TrimSpace(sqlBuf.String())
-	astutils.FixImport([]byte(source), clientfile)
+func loadApi(file string) v3.Api {
+	var (
+		docfile *os.File
+		err     error
+		docraw  []byte
+		api     v3.Api
+	)
+	if docfile, err = os.Open(file); err != nil {
+		panic(err)
+	}
+	defer docfile.Close()
+	if docraw, err = ioutil.ReadAll(docfile); err != nil {
+		panic(err)
+	}
+	json.Unmarshal(docraw, &api)
+	return api
 }

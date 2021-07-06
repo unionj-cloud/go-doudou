@@ -162,7 +162,7 @@ func InitSvc(dir string) {
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
-	_ = os.MkdirAll(dir, os.ModePerm)
+	_ = os.MkdirAll(dir, 0644)
 
 	// git init
 	fs := osfs.New(dir)
@@ -226,7 +226,7 @@ func InitSvc(dir string) {
 	}
 
 	vodir = filepath.Join(dir, "vo")
-	if err = os.MkdirAll(vodir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(vodir, 0644); err != nil {
 		panic(err)
 	}
 	vofile = filepath.Join(vodir, "vo.go")

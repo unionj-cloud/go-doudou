@@ -92,13 +92,13 @@ func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) 
 			logger.Errorln(fmt.Sprintf("%+v\n", err))
 		}
 		if stringutils.IsNotEmpty(logpath) {
-			err = os.MkdirAll(logpath, os.ModePerm)
+			err = os.MkdirAll(logpath, 0644)
 			if err != nil {
 				logger.Errorln(err)
 				return nil
 			}
 		}
-		f, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		f, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			logger.Errorf("error opening file: %v\n", err)
 			return nil

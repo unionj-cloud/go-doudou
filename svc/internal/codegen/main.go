@@ -78,7 +78,7 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 		alias     string
 	)
 	cmdDir = filepath.Join(dir, "cmd")
-	if err = os.MkdirAll(cmdDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(cmdDir, 0644); err != nil {
 		panic(err)
 	}
 

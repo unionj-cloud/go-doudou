@@ -143,6 +143,7 @@ type Path struct {
 	Post       *Operation  `json:"post,omitempty"`
 	Put        *Operation  `json:"put,omitempty"`
 	Delete     *Operation  `json:"delete,omitempty"`
+	// TODO
 	Parameters []Parameter `json:"parameters,omitempty"`
 }
 

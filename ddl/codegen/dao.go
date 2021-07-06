@@ -24,7 +24,7 @@ func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(daopath, 0644); err != nil {
 		return errors.Wrap(err, "error")
 	}
 	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"dao.go")

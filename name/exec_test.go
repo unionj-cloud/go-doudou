@@ -319,7 +319,7 @@ type starM *time.Time
 			if string(content) != tt.want {
 				t.Errorf("want %s, got %s\n", tt.want, string(content))
 			}
-			ioutil.WriteFile(tt.fields.File, []byte(tt.initCode), os.ModePerm)
+			ioutil.WriteFile(tt.fields.File, []byte(tt.initCode), 0644)
 		})
 	}
 }

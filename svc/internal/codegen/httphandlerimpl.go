@@ -55,7 +55,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 		httpDir         string
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
-	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(httpDir, 0644); err != nil {
 		panic(err)
 	}
 
@@ -296,7 +296,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		meta            astutils.InterfaceMeta
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
-	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(httpDir, 0644); err != nil {
 		panic(err)
 	}
 
@@ -312,7 +312,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	}
 	if fi != nil {
 		logrus.Warningln("New content will be append to file handlerimpl.go")
-		if f, err = os.OpenFile(handlerimplfile, os.O_APPEND, 0666); err != nil {
+		if f, err = os.OpenFile(handlerimplfile, os.O_APPEND, 0644); err != nil {
 			panic(err)
 		}
 		defer f.Close()

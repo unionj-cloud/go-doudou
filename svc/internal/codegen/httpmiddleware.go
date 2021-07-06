@@ -18,7 +18,7 @@ func GenHttpMiddleware(dir string) {
 		httpDir string
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
-	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(httpDir, 0644); err != nil {
 		panic(err)
 	}
 

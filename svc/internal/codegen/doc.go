@@ -399,7 +399,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		},
 	}
 	data, err = json.Marshal(api)
-	err = ioutil.WriteFile(docfile, data, os.ModePerm)
+	err = ioutil.WriteFile(docfile, data, 0644)
 	if err != nil {
 		panic(err)
 	}

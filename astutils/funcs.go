@@ -32,14 +32,7 @@ func FixImport(src []byte, file string) {
 	}); err != nil {
 		panic(err)
 	}
-
-	// On Windows, we need to re-set the permissions from the file. See golang/go#38225.
-	var perms os.FileMode
-	var fi os.FileInfo
-	if fi, err = os.Stat(file); err == nil {
-		perms = fi.Mode() & os.ModePerm
-	}
-	err = ioutil.WriteFile(file, res, perms)
+	err = ioutil.WriteFile(file, res, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -241,6 +234,7 @@ type MethodMeta struct {
 	Name     string
 	Params   []FieldMeta
 	Results  []FieldMeta
+	PathVars []FieldMeta
 	Comments []string
 }
 
