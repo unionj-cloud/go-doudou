@@ -8,9 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"regexp"
 	"runtime"
-	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -39,23 +37,22 @@ type IServiceProvider interface {
 }
 
 type ServiceProvider struct {
-	Name string
+	Env string
 }
 
 func (s *ServiceProvider) SelectServer() (string, error) {
-	re := regexp.MustCompile(`\s+`)
-	address := os.Getenv(strings.ToUpper(re.ReplaceAllString(s.Name, "_")))
+	address := os.Getenv(s.Env)
 	if stringutils.IsEmpty(address) {
-		return "", errors.Errorf("No service address for %s found!", s.Name)
+		return "", errors.Errorf("no service address found from environment variable %s", s.Env)
 	}
 	return address, nil
 }
 
 type ServiceProviderOption func(IServiceProvider)
 
-func NewServiceProvider(name string, opts ...ServiceProviderOption) IServiceProvider {
+func NewServiceProvider(env string, opts ...ServiceProviderOption) IServiceProvider {
 	provider := &ServiceProvider{
-		Name: name,
+		Env: env,
 	}
 
 	for _, opt := range opts {

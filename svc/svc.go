@@ -280,6 +280,6 @@ func (receiver Svc) GenClient() {
 		panic("openapi 3.0 spec json file path is empty")
 	}
 	if receiver.Client == "go" {
-		client.GenGoClient(receiver.Dir, docpath)
+		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty)
 	}
 }

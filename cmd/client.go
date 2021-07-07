@@ -31,6 +31,7 @@ import (
 
 var docfile string
 var lang string
+var omit bool
 
 // clientCmd represents the http command
 var clientCmd = &cobra.Command{
@@ -47,9 +48,10 @@ var clientCmd = &cobra.Command{
 			logrus.Panicln(err)
 		}
 		s := svc.Svc{
-			Dir:     svcdir,
-			DocPath: docfile,
-			Client:  lang,
+			Dir:       svcdir,
+			DocPath:   docfile,
+			Client:    lang,
+			Omitempty: omit,
 		}
 		s.GenClient()
 	},
@@ -60,4 +62,5 @@ func init() {
 
 	clientCmd.Flags().StringVarP(&lang, "lang", "l", "go", `client language`)
 	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path`)
+	clientCmd.Flags().BoolVarP(&omit, "omit", "o", false, `json tag omitempty`)
 }

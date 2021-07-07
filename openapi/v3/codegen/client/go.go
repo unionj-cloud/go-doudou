@@ -13,20 +13,19 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"text/template"
 )
 
 var votmpl = `package client
 
-//go:generate go-doudou name --file $GOFILE
-
 {{- range $k, $v := .Schemas }}
 {{ $v.Description | toComment }}
 type {{$k | toCamel}} struct {
 {{- range $pk, $pv := $v.Properties }}
 	{{ $pv.Description | toComment }}
-	{{ $pk | toCamel}} {{$pv | toGoType }}
+	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}"` + "`" + `
 {{- end }}
 }
 {{- end }}
@@ -65,6 +64,9 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 }
 
 {{- range $m := .Meta.Methods }}
+	{{- range $c := $m.Comments }}
+	// {{$c}}
+	{{- end }}
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, {{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
     {{- $p.Name}} {{$p.Type}}
@@ -171,12 +173,11 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- end }}
 		{{- end }}
 		{{- if not $done }}
-			var _result {{(index $m.Results 0).Type}}
-			if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
+			if _err = json.Unmarshal(_resp.Body(), &{{(index $m.Results 0).Name}}); _err != nil {
 				err = errors.Wrap(_err, "")
 				return
 			}
-			return _result, nil
+			return
 		{{- end }}  
 	}
 {{- end }}
@@ -252,7 +253,7 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir string) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file http.go will be overwrited")
+		logrus.Warningln("file " + svcname + "client.go will be overwrited")
 	}
 	var f *os.File
 	if f, err = os.Create(output); err != nil {
@@ -503,10 +504,7 @@ func schema2Field(schema *v3.Schema, name string) *astutils.FieldMeta {
 	return &astutils.FieldMeta{
 		Name:     name,
 		Type:     toGoType(schema),
-		Tag:      "",
-		Comments: nil,
-		IsExport: false,
-		DocName:  "",
+		Comments: strings.Split(schema.Description, "\n"),
 	}
 }
 
@@ -570,7 +568,7 @@ func toGoType(schema *v3.Schema) string {
 				return schema.Title
 			}
 		}
-		if schema.AdditionalProperties != nil {
+		if schema.AdditionalProperties != nil && !reflect.ValueOf(*schema.AdditionalProperties).IsZero() {
 			return "map[string]" + toGoType(schema.AdditionalProperties)
 		}
 		b := new(strings.Builder)
@@ -582,7 +580,11 @@ func toGoType(schema *v3.Schema) string {
 					b.WriteString(fmt.Sprintf("  // %s\n", desc))
 				}
 			}
-			b.WriteString(fmt.Sprintf("  %s %s\n", strcase.ToCamel(k), toGoType(v)))
+			jsontag := k
+			if omitempty {
+				jsontag += ",omitempty"
+			}
+			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag))
 		}
 		b.WriteString("}")
 		return b.String()
@@ -614,8 +616,10 @@ func genGoVo(schemas map[string]v3.Schema, output string) {
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
 		Schemas map[string]v3.Schema
+		Omit    bool
 	}{
 		Schemas: schemas,
+		Omit:    omitempty,
 	})
 	source := strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), output)
@@ -624,8 +628,9 @@ func genGoVo(schemas map[string]v3.Schema, output string) {
 var schemas map[string]v3.Schema
 var requestBodies map[string]v3.RequestBody
 var responses map[string]v3.Response
+var omitempty bool
 
-func GenGoClient(dir string, file string) {
+func GenGoClient(dir string, file string, omit bool) {
 	var (
 		err       error
 		f         *os.File
@@ -643,6 +648,7 @@ func GenGoClient(dir string, file string) {
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	responses = api.Components.Responses
+	omitempty = omit
 	svcmap := make(map[string]map[string]v3.Path)
 	for endpoint, path := range api.Paths {
 		svcname := strings.Split(strings.Trim(endpoint, "/"), "/")[0]
