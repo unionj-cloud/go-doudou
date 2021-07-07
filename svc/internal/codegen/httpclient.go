@@ -259,7 +259,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector) {
 		meta       astutils.InterfaceMeta
 	)
 	clientDir = filepath.Join(dir, "client")
-	if err = os.MkdirAll(clientDir, 0644); err != nil {
+	if err = os.MkdirAll(clientDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 

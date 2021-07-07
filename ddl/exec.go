@@ -110,7 +110,7 @@ func (d Ddl) Exec() {
 			}
 		}
 	} else {
-		if err = os.MkdirAll(d.Dir, 0644); err != nil {
+		if err = os.MkdirAll(d.Dir, os.ModePerm); err != nil {
 			logrus.Panicln(err)
 		}
 		for _, t := range existTables {

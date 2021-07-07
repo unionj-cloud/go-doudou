@@ -18,7 +18,7 @@ func GenDomainGo(dpath string, domain astutils.StructMeta) error {
 		f       *os.File
 	)
 
-	if err = os.MkdirAll(dpath, 0644); err != nil {
+	if err = os.MkdirAll(dpath, os.ModePerm); err != nil {
 		return errors.Wrap(err, "error")
 	}
 

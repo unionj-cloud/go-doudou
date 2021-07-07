@@ -36,9 +36,13 @@ type Tag struct {
 type In string
 
 const (
-	InQuery  In = "query"
+	InQuery In = "query"
+	// TODO
+	InPath In = "path"
+	// TODO
 	InHeader In = "header"
-	InPath   In = "path"
+	// TODO
+	InCookie In = "cookie"
 )
 
 type Example struct {
@@ -62,27 +66,29 @@ type Content struct {
 	FormUrl   *MediaType `json:"application/x-www-form-urlencoded,omitempty"`
 	Stream    *MediaType `json:"application/octet-stream,omitempty"`
 	FormData  *MediaType `json:"multipart/form-data,omitempty"`
+	Default   *MediaType `json:"*/*,omitempty"`
 }
 
 type Parameter struct {
-	Ref           string      `json:"$ref,omitempty"`
-	Name          string      `json:"name,omitempty"`
-	In            In          `json:"in,omitempty"`
-	Description   string      `json:"description,omitempty"`
-	Required      bool        `json:"required,omitempty"`
-	Deprecated    bool        `json:"deprecated,omitempty"`
-	Example       interface{} `json:"example,omitempty"`
-	Schema        *Schema     `json:"schema,omitempty"`
-	Style         string      `json:"style,omitempty"`
-	Explode       bool        `json:"explode,omitempty"`
-	AllowReserved bool        `json:"allowReserved,omitempty"`
-	Content       *Content    `json:"content,omitempty"`
+	Name            string      `json:"name,omitempty"`
+	In              In          `json:"in,omitempty"`
+	Description     string      `json:"description,omitempty"`
+	Required        bool        `json:"required,omitempty"`
+	Deprecated      bool        `json:"deprecated,omitempty"`
+	Example         interface{} `json:"example,omitempty"`
+	Schema          *Schema     `json:"schema,omitempty"`
+	Style           string      `json:"style,omitempty"`
+	Explode         bool        `json:"explode,omitempty"`
+	AllowReserved   bool        `json:"allowReserved,omitempty"`
+	Content         *Content    `json:"content,omitempty"`
+	AllowEmptyValue bool        `json:"allowEmptyValue,omitempty"`
 }
 
 type RequestBody struct {
 	Description string   `json:"description,omitempty"`
 	Content     *Content `json:"content,omitempty"`
 	Required    bool     `json:"required,omitempty"`
+	Ref         string   `json:"$ref,omitempty"`
 }
 
 type Header struct {
@@ -103,6 +109,7 @@ type Response struct {
 	Content     *Content          `json:"content,omitempty"`
 	Headers     map[string]Header `json:"headers,omitempty"`
 	Links       map[string]Link   `json:"links,omitempty"`
+	Ref         string            `json:"$ref,omitempty"`
 }
 
 type Responses struct {
@@ -139,10 +146,10 @@ type Operation struct {
 }
 
 type Path struct {
-	Get        *Operation  `json:"get,omitempty"`
-	Post       *Operation  `json:"post,omitempty"`
-	Put        *Operation  `json:"put,omitempty"`
-	Delete     *Operation  `json:"delete,omitempty"`
+	Get    *Operation `json:"get,omitempty"`
+	Post   *Operation `json:"post,omitempty"`
+	Put    *Operation `json:"put,omitempty"`
+	Delete *Operation `json:"delete,omitempty"`
 	// TODO
 	Parameters []Parameter `json:"parameters,omitempty"`
 }
@@ -186,15 +193,21 @@ type Schema struct {
 }
 
 type Components struct {
-	Schemas         map[string]Schema         `json:"schemas,omitempty"`
-	Responses       map[string]Response       `json:"responses,omitempty"`
-	Parameters      map[string]Parameter      `json:"parameters,omitempty"`
-	Examples        map[string]Example        `json:"examples,omitempty"`
-	RequestBodies   map[string]RequestBody    `json:"requestBodies,omitempty"`
-	Headers         map[string]Header         `json:"headers,omitempty"`
+	Schemas       map[string]Schema      `json:"schemas,omitempty"`
+	RequestBodies map[string]RequestBody `json:"requestBodies,omitempty"`
+	Responses     map[string]Response    `json:"responses,omitempty"`
+	// TODO
+	Parameters map[string]Parameter `json:"parameters,omitempty"`
+	// TODO
+	Examples map[string]Example `json:"examples,omitempty"`
+	// TODO
+	Headers map[string]Header `json:"headers,omitempty"`
+	// TODO
 	SecuritySchemes map[string]SecurityScheme `json:"securitySchemes,omitempty"`
-	Links           map[string]Link           `json:"links,omitempty"`
-	Callbacks       map[string]Callback       `json:"callbacks,omitempty"`
+	// TODO
+	Links map[string]Link `json:"links,omitempty"`
+	// TODO
+	Callbacks map[string]Callback `json:"callbacks,omitempty"`
 }
 
 type Api struct {

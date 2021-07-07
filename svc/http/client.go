@@ -15,6 +15,25 @@ import (
 	"time"
 )
 
+type DdClient interface {
+	SetProvider(provider IServiceProvider)
+	SetClient(client *resty.Client)
+}
+
+type DdClientOption func(DdClient)
+
+func WithProvider(provider IServiceProvider) DdClientOption {
+	return func(c DdClient) {
+		c.SetProvider(provider)
+	}
+}
+
+func WithClient(client *resty.Client) DdClientOption {
+	return func(c DdClient) {
+		c.SetClient(client)
+	}
+}
+
 type IServiceProvider interface {
 	SelectServer() (string, error)
 }

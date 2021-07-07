@@ -79,7 +79,7 @@ func GenK8s(dir string, svcname, image string) {
 		}
 	} else {
 		logrus.Warnf("file %s will be overwrite", k8sfile)
-		err = ioutil.WriteFile(k8sfile, modifyVersion(k8sfile, image), 0644)
+		err = ioutil.WriteFile(k8sfile, modifyVersion(k8sfile, image), os.ModePerm)
 		if err != nil {
 			panic(err)
 		}

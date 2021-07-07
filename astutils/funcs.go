@@ -32,7 +32,7 @@ func FixImport(src []byte, file string) {
 	}); err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile(file, res, 0644)
+	err = ioutil.WriteFile(file, res, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -229,13 +229,40 @@ func ExprString(expr ast.Expr) string {
 	}
 }
 
+// MethodMeta represented a api
 type MethodMeta struct {
-	Recv     string
-	Name     string
-	Params   []FieldMeta
-	Results  []FieldMeta
+	Recv string
+	Name string
+	// when generate client code from openapi3 spec json file, Params holds all method input parameters.
+	// when generate client code from service interface in svc.go file, if there is struct type param, this struct type param will put into request body,
+	// then others will be put into url as query string. if there is no struct type param and the api is a get request, all will be put into url as query string.
+	// if there is no struct type param and the api is Not a get request, all will be put into request body as application/x-www-form-urlencoded data.
+	// specailly, if there is one or more *multipart.FileHeader or []*multipart.FileHeader params, all will be put into request body as multipart/form-data data.
+	Params []FieldMeta
+	// response
+	Results []FieldMeta
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, PathVars is parameters in url as path variable.
 	PathVars []FieldMeta
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, HeaderVars is parameters in header.
+	HeaderVars []FieldMeta
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, BodyParams is parameters in request body as query string.
+	BodyParams *FieldMeta
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, BodyJson is parameters in request body as json.
+	BodyJson *FieldMeta
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, Files is parameters in request body as multipart file.
+	Files    []FieldMeta
 	Comments []string
+	// api path
+	// not support when generate client code from service interface in svc.go file
+	Path string
+	// not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, QueryParams is parameters in url as query string.
+	QueryParams *FieldMeta
 }
 
 const methodTmpl = `func {{ if .Recv }}(receiver {{.Recv}}){{ end }} {{.Name}}({{- range $i, $p := .Params}}

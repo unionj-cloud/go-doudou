@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.3.6
+	github.com/unionj-cloud/go-doudou v0.3.7
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -162,7 +162,7 @@ func InitSvc(dir string) {
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
-	_ = os.MkdirAll(dir, 0644)
+	_ = os.MkdirAll(dir, os.ModePerm)
 
 	// git init
 	fs := osfs.New(dir)
@@ -226,7 +226,7 @@ func InitSvc(dir string) {
 	}
 
 	vodir = filepath.Join(dir, "vo")
-	if err = os.MkdirAll(vodir, 0644); err != nil {
+	if err = os.MkdirAll(vodir, os.ModePerm); err != nil {
 		panic(err)
 	}
 	vofile = filepath.Join(vodir, "vo.go")

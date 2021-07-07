@@ -22,7 +22,7 @@ func GenBaseGo(domainpath string, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, 0644); err != nil {
+	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
 		return errors.Wrap(err, "error")
 	}
 

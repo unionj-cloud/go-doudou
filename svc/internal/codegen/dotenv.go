@@ -57,7 +57,7 @@ func GenDotenv(dir string) {
 		configDir  string
 	)
 	configDir = filepath.Join(dir, "config")
-	if err = os.MkdirAll(configDir, 0644); err != nil {
+	if err = os.MkdirAll(configDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 

@@ -54,25 +54,7 @@
         "description": "Update an existing pet by Id",
         "operationId": "updatePet",
         "requestBody": {
-          "description": "Update an existent pet in the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Pet"
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/Pet"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Pet"
-              }
-            }
-          },
-          "required": true
+          "$ref": "#/components/requestBodies/Pet"
         },
         "responses": {
           "200": {

@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/esutils"
+	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"os"
@@ -99,6 +100,7 @@ func (receiver Svc) Http() {
 // because go-doudou cannot put more than one parameter into request body except *multipart.FileHeader.
 // If there are *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
+// Not not support anonymous struct as parameter
 func validateRestApi(ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
@@ -261,4 +263,23 @@ func (receiver Svc) Publish() string {
 		panic(err)
 	}
 	return result
+}
+
+func (receiver Svc) GenClient() {
+	docpath := receiver.DocPath
+	if stringutils.IsEmpty(docpath) {
+		matches, err := filepath.Glob(filepath.Join(receiver.Dir, "*_openapi3.json"))
+		if err != nil {
+			panic(err)
+		}
+		if len(matches) > 0 {
+			docpath = matches[0]
+		}
+	}
+	if stringutils.IsEmpty(docpath) {
+		panic("openapi 3.0 spec json file path is empty")
+	}
+	if receiver.Client == "go" {
+		client.GenGoClient(receiver.Dir, docpath)
+	}
 }
