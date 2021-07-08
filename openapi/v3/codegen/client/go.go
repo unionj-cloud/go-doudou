@@ -238,6 +238,9 @@ func restyMethod(method string) string {
 }
 
 func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		panic(err)
+	}
 	output := filepath.Join(dir, svcname+"client.go")
 	fi, err := os.Stat(output)
 	if err != nil && !os.IsNotExist(err) {
@@ -629,6 +632,9 @@ func toComment(comment string) string {
 }
 
 func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
+	if err := os.MkdirAll(filepath.Dir(output), os.ModePerm); err != nil {
+		panic(err)
+	}
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["toGoType"] = toGoType

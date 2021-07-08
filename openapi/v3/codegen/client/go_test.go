@@ -14,14 +14,14 @@ import (
 func Test_genGoVo(t *testing.T) {
 	testdir := pathutils.Abs("../testfiles")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "client", "vo.go"), "client")
+	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoVo_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testfiles")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
 	omitempty = true
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "client", "vo.go"), "client")
+	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoHttp(t *testing.T) {
@@ -41,7 +41,7 @@ func Test_genGoHttp(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "client"), "", "client")
+		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
@@ -62,7 +62,7 @@ func Test_genGoHttp1(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "client"), "", "client")
+		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
@@ -83,7 +83,7 @@ func Test_genGoHttp2(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "client"), "", "client")
+		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
@@ -105,7 +105,7 @@ func Test_genGoHttp_Omit(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "client"), "", "client")
+		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
