@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"io/ioutil"
 	"os"
@@ -25,6 +26,9 @@ var votmpl = `package client
 type {{$k | toCamel}} struct {
 {{- range $pk, $pv := $v.Properties }}
 	{{ $pv.Description | toComment }}
+	{{- if stringContains $v.Required $pk }}
+	// required
+	{{- end }}
 	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}"` + "`" + `
 {{- end }}
 }
@@ -67,9 +71,12 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	{{- range $c := $m.Comments }}
 	// {{$c}}
 	{{- end }}
-	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, {{- range $i, $p := $m.Params}}
+	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, {{ range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
-    {{- $p.Name}} {{$p.Type}}
+	{{- range $c := $p.Comments }}
+	// {{$c}}
+	{{- end }}
+    {{ $p.Name}} {{$p.Type}}
     {{- end }}) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, err error) {
 		var (
 			_server string
@@ -173,17 +180,25 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- end }}
 		{{- end }}
 		{{- if not $done }}
+			{{- if eq (index $m.Results 0).Type "string" }}
+			{{(index $m.Results 0).Name}} = _resp.String()
+			{{- else }}
 			if _err = json.Unmarshal(_resp.Body(), &{{(index $m.Results 0).Name}}); _err != nil {
 				err = errors.Wrap(_err, "")
 				return
 			}
+			{{- end }}
 			return
 		{{- end }}  
 	}
 {{- end }}
 
 func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
-	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name}}")
+	{{- if .Env }}
+	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
+	{{- else }}
+	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name | toUpper}}")
+	{{- end }}
 	defaultClient := ddhttp.NewClient()
 
 	svcClient := &{{.Meta.Name}}Client{
@@ -205,30 +220,6 @@ func toMethod(endpoint string) string {
 	return strcase.ToCamel(ret)
 }
 
-var castFuncMap = map[string]string{
-	"bool":          "ToBool",
-	"float64":       "ToFloat64",
-	"float32":       "ToFloat32",
-	"int64":         "ToInt64",
-	"int32":         "ToInt32",
-	"int16":         "ToInt16",
-	"int8":          "ToInt8",
-	"int":           "ToInt",
-	"uint":          "ToUint",
-	"uint8":         "ToUint8",
-	"uint16":        "ToUint16",
-	"uint32":        "ToUint32",
-	"uint64":        "ToUint64",
-	"[]interface{}": "ToSlice",
-	"[]bool":        "ToBoolSlice",
-	"[]string":      "ToStringSlice",
-	"[]int":         "ToIntSlice",
-}
-
-func castFunc(t string) string {
-	return castFuncMap[t]
-}
-
 func httpMethod(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	snake := strcase.ToSnake(method)
@@ -246,7 +237,7 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func genGoHttp(paths map[string]v3.Path, svcname, dir string) {
+func genGoHttp(paths map[string]v3.Path, svcname, dir, env string) {
 	output := filepath.Join(dir, svcname+"client.go")
 	fi, err := os.Stat(output)
 	if err != nil && !os.IsNotExist(err) {
@@ -264,8 +255,8 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir string) {
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
-	funcMap["castFunc"] = castFunc
 	funcMap["restyMethod"] = restyMethod
+	funcMap["toUpper"] = strings.ToUpper
 	tpl, err := template.New("http.go.tmpl").Funcs(funcMap).Parse(httptmpl)
 	if err != nil {
 		panic(err)
@@ -273,8 +264,10 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir string) {
 	var sqlBuf bytes.Buffer
 	err = tpl.Execute(&sqlBuf, struct {
 		Meta astutils.InterfaceMeta
+		Env  string
 	}{
 		Meta: api2Interface(paths, svcname),
+		Env:  env,
 	})
 	if err != nil {
 		panic(err)
@@ -338,6 +331,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		switch item.In {
 		case v3.InQuery:
 			qSchema.Properties[item.Name] = item.Schema
+			if item.Required {
+				qSchema.Required = append(qSchema.Required, item.Name)
+			}
 		case v3.InPath:
 			pathvars = append(pathvars, parameter2Field(item))
 		case v3.InHeader:
@@ -351,6 +347,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		switch item.In {
 		case v3.InQuery:
 			qSchema.Properties[item.Name] = item.Schema
+			if item.Required {
+				qSchema.Required = append(qSchema.Required, item.Name)
+			}
 		case v3.InPath:
 			pathvars = append(pathvars, parameter2Field(item))
 		case v3.InHeader:
@@ -360,7 +359,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		}
 	}
 
-	if httpMethod != "Get" {
+	if httpMethod != "Get" || operation.RequestBody == nil {
 		if len(qSchema.Properties) > 0 {
 			qparams = schema2Field(&qSchema, "queryParams")
 		}
@@ -388,6 +387,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 				}
 				for k, v := range schema.Properties {
 					qSchema.Properties[k] = v
+					if sliceutils.StringContains(schema.Required, k) {
+						qSchema.Required = append(qSchema.Required, k)
+					}
 				}
 				if len(qSchema.Properties) > 0 {
 					qparams = schema2Field(&qSchema, "queryParams")
@@ -421,6 +423,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 					continue
 				}
 				aSchema.Properties[k] = v
+				if sliceutils.StringContains(schema.Required, k) {
+					aSchema.Required = append(aSchema.Required, k)
+				}
 			}
 			if len(aSchema.Properties) > 0 {
 				bodyParams = schema2Field(&aSchema, "bodyParams")
@@ -501,18 +506,29 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 }
 
 func schema2Field(schema *v3.Schema, name string) *astutils.FieldMeta {
+	var comments []string
+	if stringutils.IsNotEmpty(schema.Description) {
+		comments = append(comments, strings.Split(schema.Description, "\n")...)
+	}
 	return &astutils.FieldMeta{
 		Name:     name,
 		Type:     toGoType(schema),
-		Comments: strings.Split(schema.Description, "\n"),
+		Comments: comments,
 	}
 }
 
 func parameter2Field(param v3.Parameter) astutils.FieldMeta {
+	var comments []string
+	if stringutils.IsNotEmpty(param.Description) {
+		comments = append(comments, strings.Split(param.Description, "\n")...)
+	}
+	if param.Required {
+		comments = append(comments, "required")
+	}
 	return astutils.FieldMeta{
 		Name:     param.Name,
 		Type:     toGoType(param.Schema),
-		Comments: strings.Split(param.Description, "\n"),
+		Comments: comments,
 	}
 }
 
@@ -580,6 +596,9 @@ func toGoType(schema *v3.Schema) string {
 					b.WriteString(fmt.Sprintf("  // %s\n", desc))
 				}
 			}
+			if sliceutils.StringContains(schema.Required, k) {
+				b.WriteString("  // required\n")
+			}
 			jsontag := k
 			if omitempty {
 				jsontag += ",omitempty"
@@ -612,6 +631,7 @@ func genGoVo(schemas map[string]v3.Schema, output string) {
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["toGoType"] = toGoType
 	funcMap["toComment"] = toComment
+	funcMap["stringContains"] = sliceutils.StringContains
 	tpl, _ := template.New("vo.go.tmpl").Funcs(funcMap).Parse(votmpl)
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
@@ -630,7 +650,7 @@ var requestBodies map[string]v3.RequestBody
 var responses map[string]v3.Response
 var omitempty bool
 
-func GenGoClient(dir string, file string, omit bool) {
+func GenGoClient(dir string, file string, omit bool, env string) {
 	var (
 		err       error
 		f         *os.File
@@ -661,7 +681,7 @@ func GenGoClient(dir string, file string, omit bool) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, clientDir)
+		genGoHttp(paths, svcname, clientDir, env)
 	}
 
 	vofile = filepath.Join(clientDir, "vo.go")

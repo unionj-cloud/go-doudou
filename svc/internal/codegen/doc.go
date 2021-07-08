@@ -7,9 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
-	"github.com/unionj-cloud/go-doudou/copier"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"go/ast"
 	"go/parser"
@@ -18,111 +16,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
-	"unicode"
 )
-
-var schemas map[string]v3.Schema
-var schemaNames []string
-
-// Reference https://golang.org/pkg/builtin/
-// type bool
-// type byte
-// type complex128
-// type complex64
-// type error
-// type float32
-// type float64
-// type int
-// type int16
-// type int32
-// type int64
-// type int8
-// type rune
-// type string
-// type uint
-// type uint16
-// type uint32
-// type uint64
-// type uint8
-// type uintptr
-func schemaOf(field astutils.FieldMeta) *v3.Schema {
-	ft := strings.TrimPrefix(field.Type, "*")
-	switch ft {
-	case "int", "int8", "int16", "int32", "uint", "uint8", "uint16", "uint32", "byte", "rune", "complex64", "complex128":
-		return v3.Int
-	case "int64", "uint64", "uintptr":
-		return v3.Int64
-	case "bool":
-		return v3.Bool
-	case "string", "error":
-		return v3.String
-	case "float32":
-		return v3.Float32
-	case "float64":
-		return v3.Float64
-	case "multipart.FileHeader":
-		return v3.File
-	default:
-		if strings.HasPrefix(ft, "map[") {
-			elem := ft[strings.Index(ft, "]")+1:]
-			elem = strings.TrimPrefix(elem, "*")
-			return &v3.Schema{
-				Type: v3.ObjectT,
-				AdditionalProperties: schemaOf(astutils.FieldMeta{
-					Type: elem,
-				}),
-			}
-		}
-		if strings.HasPrefix(ft, "[") {
-			elem := ft[strings.Index(ft, "]")+1:]
-			elem = strings.TrimPrefix(elem, "*")
-			return &v3.Schema{
-				Type: v3.ArrayT,
-				Items: schemaOf(astutils.FieldMeta{
-					Type: elem,
-				}),
-			}
-		}
-		re := regexp.MustCompile(`anonystruct«(.*)»`)
-		if re.MatchString(ft) {
-			result := re.FindStringSubmatch(ft)
-			var structmeta astutils.StructMeta
-			json.Unmarshal([]byte(result[1]), &structmeta)
-			schema := newSchema(structmeta)
-			return &schema
-		} else {
-			var title string
-			if !strings.Contains(ft, ".") {
-				title = ft
-			}
-			if stringutils.IsEmpty(title) {
-				title = ft[strings.LastIndex(ft, ".")+1:]
-			}
-			if stringutils.IsNotEmpty(title) {
-				if unicode.IsUpper(rune(title[0])) {
-					if sliceutils.StringContains(schemaNames, title) {
-						return &v3.Schema{
-							Ref: "#/components/schemas/" + title,
-						}
-					}
-				}
-			}
-		}
-		return v3.Any
-	}
-}
-
-func copySchema(field astutils.FieldMeta) v3.Schema {
-	var schema v3.Schema
-	err := copier.DeepCopy(schemaOf(field), &schema)
-	if err != nil {
-		panic(err)
-	}
-	return schema
-}
 
 func getSchemaNames(vofile string) []string {
 	fset := token.NewFileSet()
@@ -140,21 +36,6 @@ func getSchemaNames(vofile string) []string {
 	return ret
 }
 
-func newSchema(structmeta astutils.StructMeta) v3.Schema {
-	properties := make(map[string]*v3.Schema)
-	for _, field := range structmeta.Fields {
-		fschema := copySchema(field)
-		fschema.Description = strings.Join(field.Comments, "\n")
-		properties[field.DocName] = &fschema
-	}
-	return v3.Schema{
-		Title:       structmeta.Name,
-		Type:        v3.ObjectT,
-		Properties:  properties,
-		Description: strings.Join(structmeta.Comments, "\n"),
-	}
-}
-
 func schemasOf(vofile string) []v3.Schema {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
@@ -166,7 +47,7 @@ func schemasOf(vofile string) []v3.Schema {
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
 	for _, item := range structs {
-		ret = append(ret, newSchema(item))
+		ret = append(ret, v3.NewSchema(item))
 	}
 	return ret
 }
@@ -177,15 +58,6 @@ const (
 	put    = "PUT"
 	delete = "DELETE"
 )
-
-func IsBuiltin(field astutils.FieldMeta) bool {
-	simples := []interface{}{v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64}
-	pschema := schemaOf(field)
-	if pschema == nil {
-		return false
-	}
-	return sliceutils.Contains(simples, pschema) || (pschema.Type == v3.ArrayT && sliceutils.Contains(simples, pschema.Items))
-}
 
 func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	var ret v3.Operation
@@ -198,7 +70,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	// Note: unionj-generator project hasn't support application/x-www-form-urlencoded yet
 	var simpleCnt int
 	for _, item := range method.Params {
-		if IsBuiltin(item) || item.Type == "context.Context" {
+		if v3.IsBuiltin(item) || item.Type == "context.Context" {
 			simpleCnt++
 		}
 	}
@@ -214,11 +86,11 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				continue
 			}
 			key := item.Name
-			pschema := copySchema(item)
+			pschema := v3.CopySchema(item)
 			pschema.Description = strings.Join(item.Comments, "\n")
 			reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
 		}
-		schemas[title] = reqSchema
+		v3.Schemas[title] = reqSchema
 		mt := &v3.MediaType{
 			Schema: &v3.Schema{
 				Ref: "#/components/schemas/" + title,
@@ -240,8 +112,8 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if item.Type == "context.Context" {
 				continue
 			}
-			pschemaType := schemaOf(item)
-			pschema := copySchema(item)
+			pschemaType := v3.SchemaOf(item)
+			pschema := v3.CopySchema(item)
 			pschema.Description = strings.Join(item.Comments, "\n")
 			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
 				var content v3.Content
@@ -253,7 +125,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 					Content:  &content,
 					Required: true,
 				}
-			} else if IsBuiltin(item) {
+			} else if v3.IsBuiltin(item) {
 				params = append(params, v3.Parameter{
 					Name:   strcase.ToLowerCamel(item.Name),
 					In:     v3.InQuery,
@@ -304,11 +176,11 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if stringutils.IsEmpty(key) {
 				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
 			}
-			rschema := copySchema(item)
+			rschema := v3.CopySchema(item)
 			rschema.Description = strings.Join(item.Comments, "\n")
 			respSchema.Properties[strcase.ToLowerCamel(key)] = &rschema
 		}
-		schemas[title] = respSchema
+		v3.Schemas[title] = respSchema
 		respContent.Json = &v3.MediaType{
 			Schema: &v3.Schema{
 				Ref: "#/components/schemas/" + title,
@@ -357,7 +229,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		vos     []v3.Schema
 		paths   map[string]v3.Path
 	)
-	schemas = make(map[string]v3.Schema)
+	v3.Schemas = make(map[string]v3.Schema)
 	svcname = ic.Interfaces[0].Name
 	docfile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.json")
 	fi, err = os.Stat(docfile)
@@ -374,13 +246,13 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		logrus.Panicln(err)
 	}
 	for _, file := range files {
-		schemaNames = append(schemaNames, getSchemaNames(file)...)
+		v3.SchemaNames = append(v3.SchemaNames, getSchemaNames(file)...)
 	}
 	for _, file := range files {
 		vos = append(vos, schemasOf(file)...)
 	}
 	for _, item := range vos {
-		schemas[item.Title] = item
+		v3.Schemas[item.Title] = item
 	}
 	paths = pathsOf(ic)
 	api = v3.Api{
@@ -395,7 +267,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 		},
 		Paths: paths,
 		Components: &v3.Components{
-			Schemas: schemas,
+			Schemas: v3.Schemas,
 		},
 	}
 	data, err = json.Marshal(api)

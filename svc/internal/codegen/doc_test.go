@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"github.com/unionj-cloud/go-doudou/astutils"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"path/filepath"
@@ -70,7 +71,7 @@ func Test_schemasOf(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			schemaNames = getSchemaNames(tt.args.vofile)
+			v3.SchemaNames = getSchemaNames(tt.args.vofile)
 			if got := schemasOf(tt.args.vofile); len(got) != tt.want {
 				t.Errorf("schemasOf() = %v, want %v", len(got), tt.want)
 			}

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/copier"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"os"
 	"path/filepath"
 	"strings"
@@ -222,7 +223,11 @@ func WithClient(client *resty.Client) {{.Meta.Name}}ClientOption {
 }
 
 func New{{.Meta.Name}}(opts ...{{.Meta.Name}}ClientOption) {{.ServiceAlias}}.{{.Meta.Name}} {
-	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name}}")
+	{{- if .Env }}
+	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
+	{{- else }}
+	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name | toUpper}}")
+	{{- end }}
 	defaultClient := ddhttp.NewClient()
 
 	svcClient := &{{.Meta.Name}}Client{
@@ -242,7 +247,7 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func GenGoClient(dir string, ic astutils.InterfaceCollector) {
+func GenGoClient(dir string, ic astutils.InterfaceCollector, env string) {
 	var (
 		err        error
 		clientfile string
@@ -298,8 +303,9 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector) {
 	funcMap["pattern"] = pattern
 	funcMap["lower"] = strings.ToLower
 	funcMap["contains"] = strings.Contains
-	funcMap["isBuiltin"] = IsBuiltin
+	funcMap["isBuiltin"] = v3.IsBuiltin
 	funcMap["restyMethod"] = restyMethod
+	funcMap["toUpper"] = strings.ToUpper
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
@@ -308,11 +314,13 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector) {
 		ServiceAlias   string
 		VoPackage      string
 		Meta           astutils.InterfaceMeta
+		Env            string
 	}{
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
 		VoPackage:      modName + "/vo",
 		Meta:           meta,
+		Env:            env,
 	}); err != nil {
 		panic(err)
 	}

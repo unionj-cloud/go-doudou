@@ -31,7 +31,6 @@ import (
 
 var handler bool
 var client string
-var homitempty bool
 var doc bool
 var jsonattrcase string
 
@@ -39,7 +38,7 @@ var jsonattrcase string
 var httpCmd = &cobra.Command{
 	Use:   "http",
 	Short: "generate http routes and handlers",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var svcdir string
 		if len(args) > 0 {
@@ -53,9 +52,10 @@ var httpCmd = &cobra.Command{
 			Dir:          svcdir,
 			Handler:      handler,
 			Client:       client,
-			Omitempty:    homitempty,
+			Omitempty:    omitempty,
 			Doc:          doc,
 			Jsonattrcase: jsonattrcase,
+			Env:          baseUrlEnv,
 		}
 		s.Http()
 	},
@@ -74,7 +74,8 @@ func init() {
 	// is called directly, e.g.:
 	httpCmd.Flags().BoolVarP(&handler, "handler", "", false, "Whether generate default handler implementation or not")
 	httpCmd.Flags().StringVarP(&client, "client", "c", "", `if empty, then no http client implementation will be generated. Only one value "go" supported currently`)
-	httpCmd.Flags().BoolVarP(&homitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
+	httpCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
 	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
 	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)
+	httpCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
 }

@@ -172,7 +172,7 @@ func WithClient(client *resty.Client) TestfileshttpcmdClientOption {
 }
 
 func NewTestfileshttpcmd(opts ...TestfileshttpcmdClientOption) service.Testfileshttpcmd {
-	defaultProvider := ddhttp.NewServiceProvider("Testfileshttpcmd")
+	defaultProvider := ddhttp.NewServiceProvider("TESTFILESHTTPCMD")
 	defaultClient := ddhttp.NewClient()
 
 	svcClient := &TestfileshttpcmdClient{

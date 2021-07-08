@@ -68,8 +68,10 @@ type Pet struct {
 
 	Id int64 `json:"id,omitempty"`
 
+	// required
 	Name string `json:"name,omitempty"`
 
+	// required
 	PhotoUrls []string `json:"photoUrls,omitempty"`
 	// pet status in the store
 	// this is another line for test use

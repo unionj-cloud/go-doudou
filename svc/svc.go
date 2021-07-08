@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/esutils"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
@@ -40,6 +41,7 @@ type Svc struct {
 
 	K8sfile string
 	N       int
+	Env     string
 }
 
 func validateDataType(dir string) {
@@ -86,7 +88,7 @@ func (receiver Svc) Http() {
 	if stringutils.IsNotEmpty(receiver.Client) {
 		switch receiver.Client {
 		case "go":
-			codegen.GenGoClient(dir, ic)
+			codegen.GenGoClient(dir, ic, receiver.Env)
 		}
 	}
 	codegen.GenSvcImpl(dir, ic)
@@ -118,7 +120,7 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 			if re.MatchString(param.Type) {
 				panic("not support anonymous struct as parameter")
 			}
-			if !codegen.IsBuiltin(param) {
+			if !v3.IsBuiltin(param) {
 				ptype := param.Type
 				if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
 					elem := ptype[strings.Index(ptype, "]")+1:]
@@ -280,6 +282,6 @@ func (receiver Svc) GenClient() {
 		panic("openapi 3.0 spec json file path is empty")
 	}
 	if receiver.Client == "go" {
-		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty)
+		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env)
 	}
 }

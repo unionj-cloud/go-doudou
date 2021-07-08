@@ -105,11 +105,12 @@ type Link struct {
 }
 
 type Response struct {
-	Description string            `json:"description,omitempty"`
-	Content     *Content          `json:"content,omitempty"`
-	Headers     map[string]Header `json:"headers,omitempty"`
-	Links       map[string]Link   `json:"links,omitempty"`
-	Ref         string            `json:"$ref,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Content     *Content `json:"content,omitempty"`
+	// TODO
+	Headers map[string]Header `json:"headers,omitempty"`
+	Links   map[string]Link   `json:"links,omitempty"`
+	Ref     string            `json:"$ref,omitempty"`
 }
 
 type Responses struct {

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/copier"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -142,7 +143,7 @@ var appendHttpHandlerImplTmpl = `
 			return
 		}
 		{{- if $p.Type | isSupport }}
-		if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
+		if casted, err := _cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
 		} else {
@@ -153,7 +154,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- end }}
 		{{- else }}
 		{{- if $p.Type | isSupport }}
-		if casted, err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
+		if casted, err := _cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
 		} else {
@@ -230,7 +231,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cast"
+	_cast "github.com/unionj-cloud/go-doudou/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
@@ -367,7 +368,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
-	funcMap["isBuiltin"] = IsBuiltin
+	funcMap["isBuiltin"] = v3.IsBuiltin
 	funcMap["isSupport"] = isSupport
 	funcMap["castFunc"] = castFunc
 	funcMap["convertCase"] = caseconvertor
