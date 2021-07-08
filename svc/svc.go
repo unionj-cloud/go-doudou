@@ -39,9 +39,10 @@ type Svc struct {
 	Es        *esutils.Es
 	ImageRepo string
 
-	K8sfile string
-	N       int
-	Env     string
+	K8sfile   string
+	N         int
+	Env       string
+	ClientPkg string
 }
 
 func validateDataType(dir string) {
@@ -282,6 +283,6 @@ func (receiver Svc) GenClient() {
 		panic("openapi 3.0 spec json file path is empty")
 	}
 	if receiver.Client == "go" {
-		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env)
+		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
 	}
 }

@@ -19,7 +19,7 @@ import (
 	"text/template"
 )
 
-var votmpl = `package client
+var votmpl = `package {{.Pkg}}
 
 {{- range $k, $v := .Schemas }}
 {{ $v.Description | toComment }}
@@ -35,7 +35,7 @@ type {{$k | toCamel}} struct {
 {{- end }}
 `
 
-var httptmpl = `package client
+var httptmpl = `package {{.Pkg}}
 
 import (
 	"context"
@@ -237,7 +237,7 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func genGoHttp(paths map[string]v3.Path, svcname, dir, env string) {
+func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 	output := filepath.Join(dir, svcname+"client.go")
 	fi, err := os.Stat(output)
 	if err != nil && !os.IsNotExist(err) {
@@ -265,9 +265,11 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir, env string) {
 	err = tpl.Execute(&sqlBuf, struct {
 		Meta astutils.InterfaceMeta
 		Env  string
+		Pkg  string
 	}{
 		Meta: api2Interface(paths, svcname),
 		Env:  env,
+		Pkg:  pkg,
 	})
 	if err != nil {
 		panic(err)
@@ -626,7 +628,7 @@ func toComment(comment string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func genGoVo(schemas map[string]v3.Schema, output string) {
+func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["toGoType"] = toGoType
@@ -637,9 +639,11 @@ func genGoVo(schemas map[string]v3.Schema, output string) {
 	_ = tpl.Execute(&sqlBuf, struct {
 		Schemas map[string]v3.Schema
 		Omit    bool
+		Pkg     string
 	}{
 		Schemas: schemas,
 		Omit:    omitempty,
+		Pkg:     pkg,
 	})
 	source := strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), output)
@@ -650,7 +654,7 @@ var requestBodies map[string]v3.RequestBody
 var responses map[string]v3.Response
 var omitempty bool
 
-func GenGoClient(dir string, file string, omit bool, env string) {
+func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 	var (
 		err       error
 		f         *os.File
@@ -659,7 +663,7 @@ func GenGoClient(dir string, file string, omit bool, env string) {
 		api       v3.Api
 		vofile    string
 	)
-	clientDir = filepath.Join(dir, "client")
+	clientDir = filepath.Join(dir, pkg)
 	if err = os.MkdirAll(clientDir, os.ModePerm); err != nil {
 		panic(err)
 	}
@@ -681,7 +685,7 @@ func GenGoClient(dir string, file string, omit bool, env string) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, clientDir, env)
+		genGoHttp(paths, svcname, clientDir, env, pkg)
 	}
 
 	vofile = filepath.Join(clientDir, "vo.go")
@@ -696,7 +700,7 @@ func GenGoClient(dir string, file string, omit bool, env string) {
 		panic(err)
 	}
 	defer f.Close()
-	genGoVo(api.Components.Schemas, vofile)
+	genGoVo(api.Components.Schemas, vofile, pkg)
 }
 
 func loadApi(file string) v3.Api {

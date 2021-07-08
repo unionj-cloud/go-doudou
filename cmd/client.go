@@ -32,6 +32,7 @@ import (
 var docfile string
 var lang string
 var baseUrlEnv string
+var clientpkg string
 
 // clientCmd represents the http command
 var clientCmd = &cobra.Command{
@@ -53,6 +54,7 @@ var clientCmd = &cobra.Command{
 			Client:    lang,
 			Omitempty: omitempty,
 			Env:       baseUrlEnv,
+			ClientPkg: clientpkg,
 		}
 		s.GenClient()
 	},
@@ -64,5 +66,6 @@ func init() {
 	clientCmd.Flags().StringVarP(&lang, "lang", "l", "go", `client language`)
 	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path`)
 	clientCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
+	clientCmd.Flags().StringVarP(&clientpkg, "pkg", "p", "client", `client package name`)
 	clientCmd.Flags().BoolVarP(&omitempty, "omit", "o", false, `json tag omitempty`)
 }
