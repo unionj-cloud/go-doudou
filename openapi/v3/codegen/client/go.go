@@ -29,7 +29,7 @@ type {{$k | toCamel}} struct {
 	{{- if stringContains $v.Required $pk }}
 	// required
 	{{- end }}
-	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}"` + "`" + `
+	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
 {{- end }}
 }
 {{- end }}
@@ -590,7 +590,7 @@ func toGoType(schema *v3.Schema) string {
 			if omitempty {
 				jsontag += ",omitempty"
 			}
-			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag))
+			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag, k))
 		}
 		b.WriteString("}")
 		return b.String()
