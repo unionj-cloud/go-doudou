@@ -45,12 +45,8 @@
     }
   ],
   "paths": {
-    "/customer/checkTokenAvailable": {
+    "/customer/validateToken": {
       "get": {
-        "tags": [
-          "普通用户"
-        ],
-        "summary": "检测token是否失效",
         "parameters": [
           {
             "name": "token",
