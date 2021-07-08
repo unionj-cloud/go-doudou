@@ -114,6 +114,13 @@ type TestfileshttpcmdClient struct {
 	client   *resty.Client
 }
 
+func (receiver *TestfileshttpcmdClient) SetProvider(provider ddhttp.IServiceProvider) {
+	receiver.provider = provider
+}
+
+func (receiver *TestfileshttpcmdClient) SetClient(client *resty.Client) {
+	receiver.client = client
+}
 func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
 	var (
 		_server string
@@ -157,21 +164,7 @@ func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.
 	return _result.Code, _result.Data, nil
 }
 
-type TestfileshttpcmdClientOption func(*TestfileshttpcmdClient)
-
-func WithProvider(provider ddhttp.IServiceProvider) TestfileshttpcmdClientOption {
-	return func(a *TestfileshttpcmdClient) {
-		a.provider = provider
-	}
-}
-
-func WithClient(client *resty.Client) TestfileshttpcmdClientOption {
-	return func(a *TestfileshttpcmdClient) {
-		a.client = client
-	}
-}
-
-func NewTestfileshttpcmd(opts ...TestfileshttpcmdClientOption) service.Testfileshttpcmd {
+func NewTestfileshttpcmd(opts ...ddhttp.DdClientOption) service.Testfileshttpcmd {
 	defaultProvider := ddhttp.NewServiceProvider("TESTFILESHTTPCMD")
 	defaultClient := ddhttp.NewClient()
 
