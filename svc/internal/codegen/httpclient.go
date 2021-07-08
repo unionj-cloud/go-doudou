@@ -39,6 +39,14 @@ type {{.Meta.Name}}Client struct {
 	client   *resty.Client
 }
 
+func (receiver *{{.Meta.Name}}Client) SetProvider(provider ddhttp.IServiceProvider) {
+	receiver.provider = provider
+}
+
+func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
+	receiver.client = client
+}
+
 {{- range $m := .Meta.Methods }}
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
@@ -208,21 +216,7 @@ type {{.Meta.Name}}Client struct {
 	}
 {{- end }}
 
-type {{.Meta.Name}}ClientOption func(*{{.Meta.Name}}Client)
-
-func WithProvider(provider ddhttp.IServiceProvider) {{.Meta.Name}}ClientOption {
-	return func(a *{{.Meta.Name}}Client) {
-		a.provider = provider
-	}
-}
-
-func WithClient(client *resty.Client) {{.Meta.Name}}ClientOption {
-	return func(a *{{.Meta.Name}}Client) {
-		a.client = client
-	}
-}
-
-func New{{.Meta.Name}}(opts ...{{.Meta.Name}}ClientOption) {{.ServiceAlias}}.{{.Meta.Name}} {
+func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) {{.ServiceAlias}}.{{.Meta.Name}} {
 	{{- if .Env }}
 	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
 	{{- else }}
