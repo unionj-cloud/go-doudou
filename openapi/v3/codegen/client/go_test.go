@@ -87,6 +87,27 @@ func Test_genGoHttp2(t *testing.T) {
 	}
 }
 
+func Test_genGoHttp3(t *testing.T) {
+	testdir := pathutils.Abs("../testfiles")
+	api := loadApi(path.Join(testdir, "test3.json"))
+	schemas = api.Components.Schemas
+	requestBodies = api.Components.RequestBodies
+	svcmap := make(map[string]map[string]v3.Path)
+	for endpoint, path := range api.Paths {
+		svcname := strings.Split(strings.Trim(endpoint, "/"), "/")[0]
+		if value, exists := svcmap[svcname]; exists {
+			value[endpoint] = path
+		} else {
+			svcmap[svcname] = make(map[string]v3.Path)
+			svcmap[svcname][endpoint] = path
+		}
+	}
+
+	for svcname, paths := range svcmap {
+		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+	}
+}
+
 func Test_genGoHttp_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testfiles")
 	api := loadApi(path.Join(testdir, "petstore3.json"))

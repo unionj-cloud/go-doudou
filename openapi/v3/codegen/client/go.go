@@ -364,13 +364,11 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		}
 	}
 
-	if httpMethod != "Get" || operation.RequestBody == nil {
-		if len(qSchema.Properties) > 0 {
-			qparams = schema2Field(&qSchema, "queryParams")
-		}
+	if len(qSchema.Properties) > 0 {
+		qparams = schema2Field(&qSchema, "queryParams")
 	}
 
-	if operation.RequestBody != nil {
+	if httpMethod != "Get" && operation.RequestBody != nil {
 		if stringutils.IsNotEmpty(operation.RequestBody.Ref) {
 			// #/components/requestBodies/Raw3
 			key := strings.TrimPrefix(operation.RequestBody.Ref, "#/components/requestBodies/")
@@ -385,23 +383,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		if content.Json != nil {
 			bodyJson = schema2Field(content.Json.Schema, "bodyJson")
 		} else if content.FormUrl != nil {
-			if httpMethod == "Get" {
-				schema := *content.FormUrl.Schema
-				if stringutils.IsNotEmpty(schema.Ref) {
-					schema = schemas[strings.TrimPrefix(content.FormData.Schema.Ref, "#/components/schemas/")]
-				}
-				for k, v := range schema.Properties {
-					qSchema.Properties[k] = v
-					if sliceutils.StringContains(schema.Required, k) {
-						qSchema.Required = append(qSchema.Required, k)
-					}
-				}
-				if len(qSchema.Properties) > 0 {
-					qparams = schema2Field(&qSchema, "queryParams")
-				}
-			} else {
-				bodyParams = schema2Field(content.FormUrl.Schema, "bodyParams")
-			}
+			bodyParams = schema2Field(content.FormUrl.Schema, "bodyParams")
 		} else if content.FormData != nil {
 			schema := *content.FormData.Schema
 			if stringutils.IsNotEmpty(schema.Ref) {
