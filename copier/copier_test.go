@@ -1,6 +1,7 @@
 package copier
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -126,4 +127,29 @@ func TestDeepCopy_ShouldHasError(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeepCopy2(t *testing.T) {
+	t1 := `{"name":"jack", "age": 18.0}`
+	type Person struct {
+		Name string
+		Age  float64
+	}
+	var p Person
+	json.Unmarshal([]byte(t1), &p)
+
+	type Student struct {
+		Name string
+		Age  int
+	}
+	var s Student
+	DeepCopy(p, &s)
+
+	fmt.Println(p)
+	fmt.Println(s)
+
+	// Output:
+	// {jack 18}
+	//{jack 18}
+
 }

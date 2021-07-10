@@ -100,7 +100,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	service "testfileshttpcmd"
 	"testfileshttpcmd/vo"
 
 	"github.com/go-resty/resty/v2"
@@ -164,7 +163,7 @@ func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.
 	return _result.Code, _result.Data, nil
 }
 
-func NewTestfileshttpcmd(opts ...ddhttp.DdClientOption) service.Testfileshttpcmd {
+func NewTestfileshttpcmd(opts ...ddhttp.DdClientOption) *TestfileshttpcmdClient {
 	defaultProvider := ddhttp.NewServiceProvider("TESTFILESHTTPCMD")
 	defaultClient := ddhttp.NewClient()
 

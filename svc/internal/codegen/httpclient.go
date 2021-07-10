@@ -30,7 +30,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"{{.VoPackage}}"
 )
 
@@ -216,7 +215,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	}
 {{- end }}
 
-func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) {{.ServiceAlias}}.{{.Meta.Name}} {
+func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 	{{- if .Env }}
 	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
 	{{- else }}
@@ -304,17 +303,13 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string) {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		ServicePackage string
-		ServiceAlias   string
-		VoPackage      string
-		Meta           astutils.InterfaceMeta
-		Env            string
+		VoPackage string
+		Meta      astutils.InterfaceMeta
+		Env       string
 	}{
-		ServicePackage: modName,
-		ServiceAlias:   ic.Package.Name,
-		VoPackage:      modName + "/vo",
-		Meta:           meta,
-		Env:            env,
+		VoPackage: modName + "/vo",
+		Meta:      meta,
+		Env:       env,
 	}); err != nil {
 		panic(err)
 	}
