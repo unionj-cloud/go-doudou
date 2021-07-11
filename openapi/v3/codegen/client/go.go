@@ -449,13 +449,15 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 
 	if content.Json != nil {
 		results = append(results, *schema2Field(content.Json.Schema, "ret"))
-	} else if content.Default != nil {
-		results = append(results, *schema2Field(content.Default.Schema, "ret"))
 	} else if content.Stream != nil {
 		results = append(results, astutils.FieldMeta{
 			Name: "_downloadFile",
 			Type: "*os.File",
 		})
+	} else if content.TextPlain != nil {
+		results = append(results, *schema2Field(content.TextPlain.Schema, "ret"))
+	} else if content.Default != nil {
+		results = append(results, *schema2Field(content.Default.Schema, "ret"))
 	} else {
 		return astutils.MethodMeta{}, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
 	}
