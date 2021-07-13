@@ -8,15 +8,16 @@ import (
 type envVariable string
 
 const (
-	GddBanner       envVariable = "GDD_BANNER"
-	GddBannerText   envVariable = "GDD_BANNERTEXT"
-	GddLogLevel     envVariable = "GDD_LOGLEVEL"
-	GddLogPath      envVariable = "GDD_LOGPATH"
-	GddGraceTimeout envVariable = "GDD_GRACETIMEOUT"
-	GddWriteTimeout envVariable = "GDD_WRITETIMEOUT"
-	GddReadTimeout  envVariable = "GDD_READTIMEOUT"
-	GddIdleTimeout  envVariable = "GDD_IDLETIMEOUT"
-	GddOutput       envVariable = "GDD_OUTPUT"
+	GddBanner        envVariable = "GDD_BANNER"
+	GddBannerText    envVariable = "GDD_BANNERTEXT"
+	GddLogLevel      envVariable = "GDD_LOGLEVEL"
+	GddLogPath       envVariable = "GDD_LOGPATH"
+	GddGraceTimeout  envVariable = "GDD_GRACETIMEOUT"
+	GddWriteTimeout  envVariable = "GDD_WRITETIMEOUT"
+	GddReadTimeout   envVariable = "GDD_READTIMEOUT"
+	GddIdleTimeout   envVariable = "GDD_IDLETIMEOUT"
+	GddOutput        envVariable = "GDD_OUTPUT"
+	GddRouteRootPath envVariable = "GDD_ROUTE_ROOT_PATH"
 
 	GddName     envVariable = "GDD_NAME"
 	GddHostname envVariable = "GDD_HOSTNAME"

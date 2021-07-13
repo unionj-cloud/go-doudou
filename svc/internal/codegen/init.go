@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.4.6
+	github.com/unionj-cloud/go-doudou v0.4.7
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -112,12 +112,15 @@ GDD_WRITETIMEOUT=15s
 GDD_READTIMEOUT=15s
 GDD_IDLETIMEOUT=60s
 
+# add prefix path to all routes
+GDD_ROUTE_ROOT_PATH=
+
 GDD_NAME={{.SvcName}}
 GDD_PORT=6060
 GDD_MEM_PORT=
 GDD_BASE_URL=
 GDD_SEED=192.168.101.6:52634
-# Accept 'mono' for monolith mode or 'micro' for microservice mode
+# accept 'mono' for monolith mode or 'micro' for microservice mode
 GDD_MODE=micro`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder

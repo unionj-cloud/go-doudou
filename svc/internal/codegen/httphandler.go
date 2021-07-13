@@ -15,8 +15,10 @@ import (
 var httpHandlerTmpl = `package httpsrv
 
 import (
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"net/http"
+	"os"
 )
 
 type {{.Name}}Handler interface {
@@ -26,12 +28,13 @@ type {{.Name}}Handler interface {
 }
 
 func Routes(handler {{.Name}}Handler) []ddhttp.Route {
+	rootPath := config.GddRouteRootPath.Load()
 	return []ddhttp.Route{
 		{{- range $m := .Methods }}
 		{
 			"{{$m.Name | routeName}}",
 			"{{$m.Name | httpMethod}}",
-			"/{{$.Name | lower}}/{{$m.Name | pattern}}",
+			rootPath + "/{{$.Name | lower}}/{{$m.Name | pattern}}",
 			handler.{{$m.Name}},
 		},
 		{{- end }}
