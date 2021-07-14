@@ -250,8 +250,12 @@ kit包有一些命令行工具，执行上面👆的安装命令后，就可以�
 
 
 ### Help
-希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。
-![qrcode.png](qrcode.png)
+希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
+![qrcode.png](qrcode.png) 
+
+社区钉钉群二维码，群号：31405977
+
+![dingtalk.png](dingtalk.png)
 
 
 
