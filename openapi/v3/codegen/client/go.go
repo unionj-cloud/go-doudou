@@ -422,6 +422,10 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 				Name: "_uploadFile",
 				Type: "*multipart.FileHeader",
 			})
+		} else if content.TextPlain != nil {
+			bodyJson = schema2Field(content.TextPlain.Schema, "bodyJson")
+		} else if content.Default != nil {
+			bodyJson = schema2Field(content.Default.Schema, "bodyJson")
 		}
 	}
 
