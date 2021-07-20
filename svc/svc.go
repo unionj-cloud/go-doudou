@@ -6,6 +6,7 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
+	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
@@ -14,6 +15,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
+	"golang.org/x/tools/imports"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,6 +45,8 @@ type Svc struct {
 	N         int
 	Env       string
 	ClientPkg string
+
+	Watch bool
 }
 
 func validateDataType(dir string) {
@@ -284,5 +288,63 @@ func (receiver Svc) GenClient() {
 	}
 	if receiver.Client == "go" {
 		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
+	}
+}
+
+func (receiver Svc) Run() {
+	if receiver.Watch {
+		w := watcher.New()
+
+		// SetMaxEvents to 1 to allow at most 1 event's to be received
+		// on the Event channel per watching cycle.
+		//
+		// If SetMaxEvents is not set, the default is to send all events.
+		w.SetMaxEvents(1)
+
+		// Only notify write events.
+		w.FilterOps(watcher.Write)
+
+		// Only files that match the regular expression during file listings
+		// will be watched.
+		r := regexp.MustCompile("\\.go$")
+		w.AddFilterHook(watcher.RegexFilterHook(r, false))
+
+		go func() {
+			for {
+				select {
+				case event := <-w.Event:
+					fmt.Println(event) // Print the event's info.
+					if _, err := imports.Process(event.Path, nil, &imports.Options{
+						TabWidth:  8,
+						TabIndent: true,
+						Comments:  true,
+						Fragment:  true,
+					}); err != nil {
+						continue
+					}
+					fmt.Println("编译没问题") // Print the event's info.
+				case err := <-w.Error:
+					logrus.Panicln(err)
+				case <-w.Closed:
+					return
+				}
+			}
+		}()
+
+		// Watch this folder for changes.
+		if err := w.AddRecursive(receiver.Dir); err != nil {
+			logrus.Panicln(err)
+		}
+
+		// Print a list of all of the files and folders currently
+		// being watched and their paths.
+		for path, f := range w.WatchedFiles() {
+			logrus.Printf("%s: %s\n", path, f.Name())
+		}
+
+		// Start the watching process - it'll check for changes every 100ms.
+		if err := w.Start(time.Millisecond * 100); err != nil {
+			logrus.Panicln(err)
+		}
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/negroni"
+	"github.com/urfave/negroni"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
