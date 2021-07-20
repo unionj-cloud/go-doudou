@@ -46,8 +46,9 @@ var runCmd = &cobra.Command{
 			logrus.Panicln(err)
 		}
 		s := svc.Svc{
-			Dir:   svcdir,
-			Watch: watch,
+			Dir:        svcdir,
+			Watch:      watch,
+			RestartSig: make(chan int),
 		}
 		s.Run()
 	},
