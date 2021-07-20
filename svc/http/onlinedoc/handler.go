@@ -1,8 +1,7 @@
 package onlinedoc
 
 import (
-	"github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"net/http"
 )
 
@@ -11,20 +10,19 @@ type OnlineDocHandler interface {
 	GetOpenAPI(w http.ResponseWriter, r *http.Request)
 }
 
-func Routes() []ddhttp.Route {
-	rootPath := config.GddRouteRootPath.Load()
+func Routes() []model.Route {
 	handler := NewOnlineDocHandler()
-	return []ddhttp.Route{
+	return []model.Route{
 		{
 			"GetDoc",
 			"GET",
-			rootPath + "/go-doudou/doc",
+			"/go-doudou/doc",
 			handler.GetDoc,
 		},
 		{
 			"GetOpenAPI",
 			"GET",
-			rootPath + "/go-doudou/openapi.json",
+			"/go-doudou/openapi.json",
 			handler.GetOpenAPI,
 		},
 	}

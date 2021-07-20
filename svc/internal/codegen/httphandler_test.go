@@ -86,21 +86,19 @@ func TestGenHttpHandler(t *testing.T) {
 import (
 	"net/http"
 
-	"github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	ddmodel "github.com/unionj-cloud/go-doudou/svc/http/model"
 )
 
 type TestfileshttphandlerHandler interface {
 	PageUsers(w http.ResponseWriter, r *http.Request)
 }
 
-func Routes(handler TestfileshttphandlerHandler) []ddhttp.Route {
-	rootPath := config.GddRouteRootPath.Load()
-	return []ddhttp.Route{
+func Routes(handler TestfileshttphandlerHandler) []ddmodel.Route {
+	return []ddmodel.Route{
 		{
 			"PageUsers",
 			"POST",
-			rootPath + "/testfileshttphandler/pageusers",
+			"/testfileshttphandler/pageusers",
 			handler.PageUsers,
 		},
 	}

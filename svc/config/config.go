@@ -27,6 +27,12 @@ const (
 	GddSeed     envVariable = "GDD_SEED"
 	// Accept 'mono' for monolith mode or 'micro' for microservice mode
 	GddMode envVariable = "GDD_MODE"
+	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
+	GddManage envVariable = "GDD_MANAGE_ENABLE"
+	// GddManageUser manage api endpoint http basic auth user
+	GddManageUser envVariable = "GDD_MANAGE_USER"
+	// GddManagePass manage api endpoint http basic auth password
+	GddManagePass envVariable = "GDD_MANAGE_PASS"
 )
 
 func (receiver envVariable) Load() string {

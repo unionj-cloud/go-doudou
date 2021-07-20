@@ -115,6 +115,14 @@ GDD_IDLETIMEOUT=60s
 # add prefix path to all routes
 GDD_ROUTE_ROOT_PATH=
 
+# if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
+# if you don't' need the feature, just set it false or remove it
+GDD_MANAGE_ENABLE=true
+# if you want to disable http basic auth for management api endpoints, just set GDD_MANAGE_USER and GDD_MANAGE_PASS empty 
+# or remove them
+GDD_MANAGE_USER=admin
+GDD_MANAGE_PASS=admin
+
 GDD_NAME={{.SvcName}}
 GDD_PORT=6060
 GDD_MEM_PORT=

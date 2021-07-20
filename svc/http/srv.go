@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"io"
 	"net/http"
 	"os"
@@ -15,18 +16,11 @@ import (
 	"time"
 )
 
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
-
 type Srv interface {
 	// Run the service
 	Run()
 	// Register routes
-	AddRoute(route ...Route)
+	AddRoute(route ...model.Route)
 	// Use middleware
 	AddMiddleware(mwf ...func(http.Handler) http.Handler)
 }
@@ -111,11 +105,11 @@ func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) 
 	return nil
 }
 
-func printRoutes(routes []Route) {
+func printRoutes(routes []model.Route) {
 	logrus.Infoln("================ Registered Routes ================")
 	data := [][]string{}
 	for _, r := range routes {
-		data = append(data, []string{r.Name, r.Method, r.Pattern})
+		data = append(data, []string{r.Name, r.Method, config.GddRouteRootPath.Load() + r.Pattern})
 	}
 
 	tableString := &strings.Builder{}

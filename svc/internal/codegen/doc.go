@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/iancoleman/strcase"
@@ -17,6 +18,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -217,17 +219,30 @@ func pathsOf(ic astutils.InterfaceCollector) map[string]v3.Path {
 	return pathmap
 }
 
+var gofileTmpl = `package {{.SvcPackage}}
+
+import "github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
+
+func init() {
+	onlinedoc.Oas = ` + "`" + `{{.Doc}}` + "`" + `
+}
+`
+
 // Currently not suport alias type in vo file. TODO
 func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err     error
 		svcname string
 		docfile string
+		gofile  string
 		fi      os.FileInfo
 		api     v3.Api
 		data    []byte
 		vos     []v3.Schema
 		paths   map[string]v3.Path
+		tpl     *template.Template
+		sqlBuf  bytes.Buffer
+		source  string
 	)
 	v3.Schemas = make(map[string]v3.Schema)
 	svcname = ic.Interfaces[0].Name
@@ -238,6 +253,14 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	}
 	if fi != nil {
 		logrus.Warningln("file " + docfile + " will be overwrited")
+	}
+	gofile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.go")
+	fi, err = os.Stat(gofile)
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	if fi != nil {
+		logrus.Warningln("file " + gofile + " will be overwrited")
 	}
 	vodir := filepath.Join(dir, "vo")
 	var files []string
@@ -275,4 +298,19 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	if err != nil {
 		panic(err)
 	}
+
+	if tpl, err = template.New("doc.go.tmpl").Parse(gofileTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&sqlBuf, struct {
+		SvcPackage string
+		Doc        string
+	}{
+		SvcPackage: ic.Package.Name,
+		Doc:        string(data),
+	}); err != nil {
+		panic(err)
+	}
+	source = strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), gofile)
 }
