@@ -364,7 +364,7 @@ func (receiver Svc) watch() {
 	// Print a list of all of the files and folders currently
 	// being watched and their paths.
 	for path, f := range w.WatchedFiles() {
-		logrus.Printf("%s: %s\n", path, f.Name())
+		logrus.Tracef("%s: %s\n", path, f.Name())
 	}
 
 	// Start the watching process - it'll check for changes every 100ms.
