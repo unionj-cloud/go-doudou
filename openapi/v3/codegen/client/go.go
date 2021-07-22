@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/go-resty/resty/v2"
+	"github.com/goccy/go-yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -704,6 +706,22 @@ func loadApi(file string) v3.Api {
 		docraw  []byte
 		api     v3.Api
 	)
+	if strings.HasPrefix(file, "http") {
+		link := file
+		client := resty.New()
+		client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(15))
+		root, _ := os.Getwd()
+		client.SetOutputDirectory(root)
+		filename := ".openapi3"
+		_, err := client.R().
+			SetOutput(filename).
+			Get(link)
+		if err != nil {
+			panic(err)
+		}
+		file = filepath.Join(root, filename)
+		defer os.Remove(file)
+	}
 	if docfile, err = os.Open(file); err != nil {
 		panic(err)
 	}
@@ -711,6 +729,10 @@ func loadApi(file string) v3.Api {
 	if docraw, err = ioutil.ReadAll(docfile); err != nil {
 		panic(err)
 	}
-	json.Unmarshal(docraw, &api)
+	if err = json.Unmarshal(docraw, &api); err != nil {
+		if err = yaml.Unmarshal(docraw, &api); err != nil {
+			panic(err)
+		}
+	}
 	return api
 }

@@ -64,7 +64,7 @@ func init() {
 	httpCmd.AddCommand(clientCmd)
 
 	clientCmd.Flags().StringVarP(&lang, "lang", "l", "go", `client language`)
-	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path`)
+	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path or download link`)
 	clientCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
 	clientCmd.Flags().StringVarP(&clientpkg, "pkg", "p", "client", `client package name`)
 	clientCmd.Flags().BoolVarP(&omitempty, "omit", "o", false, `json tag omitempty`)
