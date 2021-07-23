@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -16,7 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -217,9 +216,18 @@ func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 `
 
 func toMethod(endpoint string) string {
-	ret := strings.ReplaceAll(strings.ReplaceAll(endpoint, "{", ""), "}", "")
-	ret = strings.ReplaceAll(strings.Trim(ret, "/"), "/", "_")
-	return strcase.ToCamel(ret)
+	endpoint = strings.ReplaceAll(strings.ReplaceAll(endpoint, "{", ""), "}", "")
+	endpoint = strings.ReplaceAll(strings.Trim(endpoint, "/"), "/", "_")
+	nosymbolreg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
+	endpoint = nosymbolreg.ReplaceAllLiteralString(endpoint, "")
+	endpoint = strcase.ToCamel(endpoint)
+	numberstartreg := regexp.MustCompile(`^[0-9]+`)
+	if numberstartreg.MatchString(endpoint) {
+		startNumbers := numberstartreg.FindStringSubmatch(endpoint)
+		endpoint = numberstartreg.ReplaceAllLiteralString(endpoint, "")
+		endpoint += startNumbers[0]
+	}
+	return endpoint
 }
 
 func httpMethod(method string) string {
@@ -280,6 +288,7 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 		panic(err)
 	}
 	source := strings.TrimSpace(sqlBuf.String())
+	fmt.Println(source)
 	astutils.FixImport([]byte(source), output)
 }
 
@@ -521,7 +530,8 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 		comments = append(comments, "required")
 	}
 	return astutils.FieldMeta{
-		Name:     param.Name,
+		Name: param.Name,
+		//Var:      param.Name,  TODO header param name may has incorrect symbols that should be removed
 		Type:     toGoType(param.Schema),
 		Comments: comments,
 	}
@@ -579,8 +589,10 @@ func toGoType(schema *v3.Schema) string {
 				return schema.Title
 			}
 		}
-		if schema.AdditionalProperties != nil && !reflect.ValueOf(*schema.AdditionalProperties).IsZero() {
-			return "map[string]" + toGoType(schema.AdditionalProperties)
+		if schema.AdditionalProperties != nil {
+			if ap, ok := schema.AdditionalProperties.(*v3.Schema); ok {
+				return "map[string]" + toGoType(ap)
+			}
 		}
 		b := new(strings.Builder)
 		b.WriteString("struct {\n")
@@ -730,9 +742,7 @@ func loadApi(file string) v3.Api {
 		panic(err)
 	}
 	if err = json.Unmarshal(docraw, &api); err != nil {
-		if err = yaml.Unmarshal(docraw, &api); err != nil {
-			panic(err)
-		}
+		panic(err)
 	}
 	return api
 }
