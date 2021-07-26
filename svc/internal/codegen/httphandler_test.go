@@ -1,6 +1,8 @@
 package codegen
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
@@ -84,15 +86,15 @@ func TestGenHttpHandler(t *testing.T) {
 import (
 	"net/http"
 
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	ddmodel "github.com/unionj-cloud/go-doudou/svc/http/model"
 )
 
 type TestfileshttphandlerHandler interface {
 	PageUsers(w http.ResponseWriter, r *http.Request)
 }
 
-func Routes(handler TestfileshttphandlerHandler) []ddhttp.Route {
-	return []ddhttp.Route{
+func Routes(handler TestfileshttphandlerHandler) []ddmodel.Route {
+	return []ddmodel.Route{
 		{
 			"PageUsers",
 			"POST",
@@ -112,6 +114,7 @@ func Routes(handler TestfileshttphandlerHandler) []ddhttp.Route {
 		t.Fatal(err)
 	}
 	if string(content) != expect {
-		t.Errorf("want %s, got %s\n", expect, string(content))
+		fmt.Printf("want %s, got %s\n", expect, string(content))
 	}
+	assert.Equal(t, expect, string(content))
 }

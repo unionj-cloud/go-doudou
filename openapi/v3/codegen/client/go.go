@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,7 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -215,9 +216,18 @@ func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 `
 
 func toMethod(endpoint string) string {
-	ret := strings.ReplaceAll(strings.ReplaceAll(endpoint, "{", ""), "}", "")
-	ret = strings.ReplaceAll(strings.Trim(ret, "/"), "/", "_")
-	return strcase.ToCamel(ret)
+	endpoint = strings.ReplaceAll(strings.ReplaceAll(endpoint, "{", ""), "}", "")
+	endpoint = strings.ReplaceAll(strings.Trim(endpoint, "/"), "/", "_")
+	nosymbolreg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
+	endpoint = nosymbolreg.ReplaceAllLiteralString(endpoint, "")
+	endpoint = strcase.ToCamel(endpoint)
+	numberstartreg := regexp.MustCompile(`^[0-9]+`)
+	if numberstartreg.MatchString(endpoint) {
+		startNumbers := numberstartreg.FindStringSubmatch(endpoint)
+		endpoint = numberstartreg.ReplaceAllLiteralString(endpoint, "")
+		endpoint += startNumbers[0]
+	}
+	return endpoint
 }
 
 func httpMethod(method string) string {
@@ -278,6 +288,7 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 		panic(err)
 	}
 	source := strings.TrimSpace(sqlBuf.String())
+	fmt.Println(source)
 	astutils.FixImport([]byte(source), output)
 }
 
@@ -422,6 +433,10 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 				Name: "_uploadFile",
 				Type: "*multipart.FileHeader",
 			})
+		} else if content.TextPlain != nil {
+			bodyJson = schema2Field(content.TextPlain.Schema, "bodyJson")
+		} else if content.Default != nil {
+			bodyJson = schema2Field(content.Default.Schema, "bodyJson")
 		}
 	}
 
@@ -449,13 +464,15 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 
 	if content.Json != nil {
 		results = append(results, *schema2Field(content.Json.Schema, "ret"))
-	} else if content.Default != nil {
-		results = append(results, *schema2Field(content.Default.Schema, "ret"))
 	} else if content.Stream != nil {
 		results = append(results, astutils.FieldMeta{
 			Name: "_downloadFile",
 			Type: "*os.File",
 		})
+	} else if content.TextPlain != nil {
+		results = append(results, *schema2Field(content.TextPlain.Schema, "ret"))
+	} else if content.Default != nil {
+		results = append(results, *schema2Field(content.Default.Schema, "ret"))
 	} else {
 		return astutils.MethodMeta{}, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
 	}
@@ -513,7 +530,8 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 		comments = append(comments, "required")
 	}
 	return astutils.FieldMeta{
-		Name:     param.Name,
+		Name: param.Name,
+		//Var:      param.Name,  TODO header param name may has incorrect symbols that should be removed
 		Type:     toGoType(param.Schema),
 		Comments: comments,
 	}
@@ -571,8 +589,10 @@ func toGoType(schema *v3.Schema) string {
 				return schema.Title
 			}
 		}
-		if schema.AdditionalProperties != nil && !reflect.ValueOf(*schema.AdditionalProperties).IsZero() {
-			return "map[string]" + toGoType(schema.AdditionalProperties)
+		if schema.AdditionalProperties != nil {
+			if ap, ok := schema.AdditionalProperties.(*v3.Schema); ok {
+				return "map[string]" + toGoType(ap)
+			}
 		}
 		b := new(strings.Builder)
 		b.WriteString("struct {\n")
@@ -698,6 +718,22 @@ func loadApi(file string) v3.Api {
 		docraw  []byte
 		api     v3.Api
 	)
+	if strings.HasPrefix(file, "http") {
+		link := file
+		client := resty.New()
+		client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(15))
+		root, _ := os.Getwd()
+		client.SetOutputDirectory(root)
+		filename := ".openapi3"
+		_, err := client.R().
+			SetOutput(filename).
+			Get(link)
+		if err != nil {
+			panic(err)
+		}
+		file = filepath.Join(root, filename)
+		defer os.Remove(file)
+	}
 	if docfile, err = os.Open(file); err != nil {
 		panic(err)
 	}
@@ -705,6 +741,8 @@ func loadApi(file string) v3.Api {
 	if docraw, err = ioutil.ReadAll(docfile); err != nil {
 		panic(err)
 	}
-	json.Unmarshal(docraw, &api)
+	if err = json.Unmarshal(docraw, &api); err != nil {
+		panic(err)
+	}
 	return api
 }

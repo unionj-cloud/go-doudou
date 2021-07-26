@@ -29,15 +29,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var docfile string
-var lang string
-var baseUrlEnv string
-var clientpkg string
+var watch bool
 
-// clientCmd represents the http command
-var clientCmd = &cobra.Command{
-	Use:   "client",
-	Short: "generate http client from openapi 3.0 spec json file",
+// runCmd represents the run command
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "run go-doudou program",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var svcdir string
@@ -49,23 +46,24 @@ var clientCmd = &cobra.Command{
 			logrus.Panicln(err)
 		}
 		s := svc.Svc{
-			Dir:       svcdir,
-			DocPath:   docfile,
-			Client:    lang,
-			Omitempty: omitempty,
-			Env:       baseUrlEnv,
-			ClientPkg: clientpkg,
+			Dir:        svcdir,
+			Watch:      watch,
+			RestartSig: make(chan int),
 		}
-		s.GenClient()
+		s.Run()
 	},
 }
 
 func init() {
-	httpCmd.AddCommand(clientCmd)
+	svcCmd.AddCommand(runCmd)
 
-	clientCmd.Flags().StringVarP(&lang, "lang", "l", "go", `client language`)
-	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path or download link`)
-	clientCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
-	clientCmd.Flags().StringVarP(&clientpkg, "pkg", "p", "client", `client package name`)
-	clientCmd.Flags().BoolVarP(&omitempty, "omit", "o", false, `json tag omitempty`)
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// runCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	runCmd.Flags().BoolVarP(&watch, "watch", "w", true, "enable watch mode")
 }

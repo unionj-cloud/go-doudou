@@ -15,8 +15,10 @@ import (
 var httpHandlerTmpl = `package httpsrv
 
 import (
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/config"
+	ddmodel "github.com/unionj-cloud/go-doudou/svc/http/model"
 	"net/http"
+	"os"
 )
 
 type {{.Name}}Handler interface {
@@ -25,8 +27,8 @@ type {{.Name}}Handler interface {
 {{- end }}
 }
 
-func Routes(handler {{.Name}}Handler) []ddhttp.Route {
-	return []ddhttp.Route{
+func Routes(handler {{.Name}}Handler) []ddmodel.Route {
+	return []ddmodel.Route{
 		{{- range $m := .Methods }}
 		{
 			"{{$m.Name | routeName}}",

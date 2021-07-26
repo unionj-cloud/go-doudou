@@ -8,15 +8,16 @@ import (
 type envVariable string
 
 const (
-	GddBanner       envVariable = "GDD_BANNER"
-	GddBannerText   envVariable = "GDD_BANNERTEXT"
-	GddLogLevel     envVariable = "GDD_LOGLEVEL"
-	GddLogPath      envVariable = "GDD_LOGPATH"
-	GddGraceTimeout envVariable = "GDD_GRACETIMEOUT"
-	GddWriteTimeout envVariable = "GDD_WRITETIMEOUT"
-	GddReadTimeout  envVariable = "GDD_READTIMEOUT"
-	GddIdleTimeout  envVariable = "GDD_IDLETIMEOUT"
-	GddOutput       envVariable = "GDD_OUTPUT"
+	GddBanner        envVariable = "GDD_BANNER"
+	GddBannerText    envVariable = "GDD_BANNERTEXT"
+	GddLogLevel      envVariable = "GDD_LOGLEVEL"
+	GddLogPath       envVariable = "GDD_LOGPATH"
+	GddGraceTimeout  envVariable = "GDD_GRACETIMEOUT"
+	GddWriteTimeout  envVariable = "GDD_WRITETIMEOUT"
+	GddReadTimeout   envVariable = "GDD_READTIMEOUT"
+	GddIdleTimeout   envVariable = "GDD_IDLETIMEOUT"
+	GddOutput        envVariable = "GDD_OUTPUT"
+	GddRouteRootPath envVariable = "GDD_ROUTE_ROOT_PATH"
 
 	GddName     envVariable = "GDD_NAME"
 	GddHostname envVariable = "GDD_HOSTNAME"
@@ -26,6 +27,12 @@ const (
 	GddSeed     envVariable = "GDD_SEED"
 	// Accept 'mono' for monolith mode or 'micro' for microservice mode
 	GddMode envVariable = "GDD_MODE"
+	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
+	GddManage envVariable = "GDD_MANAGE_ENABLE"
+	// GddManageUser manage api endpoint http basic auth user
+	GddManageUser envVariable = "GDD_MANAGE_USER"
+	// GddManagePass manage api endpoint http basic auth password
+	GddManagePass envVariable = "GDD_MANAGE_PASS"
 )
 
 func (receiver envVariable) Load() string {

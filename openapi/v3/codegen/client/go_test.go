@@ -215,3 +215,36 @@ func Example5() {
 	// ["a normal string"]
 	//[a normal string]
 }
+
+func Test_toMethod(t *testing.T) {
+	type args struct {
+		endpoint string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				endpoint: "/apps/a32(34/~name/{id}",
+			},
+			want: "AppsA3234NameId",
+		},
+		{
+			name: "",
+			args: args{
+				endpoint: "/678/9apps/a32(34/~name/{id}",
+			},
+			want: "AppsA3234NameId6789",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := toMethod(tt.args.endpoint); got != tt.want {
+				t.Errorf("toMethod() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

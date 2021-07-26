@@ -165,32 +165,33 @@ type Discriminator struct {
 }
 
 type Schema struct {
-	Ref                  string             `json:"$ref,omitempty"`
-	Title                string             `json:"title,omitempty"`
-	Type                 Type               `json:"type,omitempty"`
-	Properties           map[string]*Schema `json:"properties,omitempty"`
-	Format               Format             `json:"format,omitempty"`
-	Items                *Schema            `json:"items,omitempty"`
-	Description          string             `json:"description,omitempty"`
-	Default              interface{}        `json:"default,omitempty"`
-	Example              interface{}        `json:"example,omitempty"`
-	Deprecated           bool               `json:"deprecated,omitempty"`
-	Discriminator        *Discriminator     `json:"discriminator,omitempty"`
-	Nullable             bool               `json:"nullable,omitempty"`
-	Maximum              interface{}        `json:"maximum,omitempty"`
-	Minimum              interface{}        `json:"minimum,omitempty"`
-	ExclusiveMaximum     interface{}        `json:"exclusiveMaximum,omitempty"`
-	ExclusiveMinimum     interface{}        `json:"exclusiveMinimum,omitempty"`
-	MaxLength            int                `json:"maxLength,omitempty"`
-	MinLength            int                `json:"minLength,omitempty"`
-	Required             []string           `json:"required,omitempty"`
-	Enum                 []string           `json:"enum,omitempty"`
-	AllOf                []*Schema          `json:"allOf,omitempty"`
-	OneOf                []*Schema          `json:"oneOf,omitempty"`
-	AnyOf                []*Schema          `json:"anyOf,omitempty"`
-	Not                  []*Schema          `json:"not,omitempty"`
-	AdditionalProperties *Schema            `json:"additionalProperties,omitempty"`
-	Pattern              interface{}        `json:"pattern,omitempty"`
+	Ref              string             `json:"$ref,omitempty"`
+	Title            string             `json:"title,omitempty"`
+	Type             Type               `json:"type,omitempty"`
+	Properties       map[string]*Schema `json:"properties,omitempty"`
+	Format           Format             `json:"format,omitempty"`
+	Items            *Schema            `json:"items,omitempty"`
+	Description      string             `json:"description,omitempty"`
+	Default          interface{}        `json:"default,omitempty"`
+	Example          interface{}        `json:"example,omitempty"`
+	Deprecated       bool               `json:"deprecated,omitempty"`
+	Discriminator    *Discriminator     `json:"discriminator,omitempty"`
+	Nullable         bool               `json:"nullable,omitempty"`
+	Maximum          interface{}        `json:"maximum,omitempty"`
+	Minimum          interface{}        `json:"minimum,omitempty"`
+	ExclusiveMaximum interface{}        `json:"exclusiveMaximum,omitempty"`
+	ExclusiveMinimum interface{}        `json:"exclusiveMinimum,omitempty"`
+	MaxLength        int                `json:"maxLength,omitempty"`
+	MinLength        int                `json:"minLength,omitempty"`
+	Required         []string           `json:"required,omitempty"`
+	Enum             []interface{}      `json:"enum,omitempty"`
+	AllOf            []*Schema          `json:"allOf,omitempty"`
+	OneOf            []*Schema          `json:"oneOf,omitempty"`
+	AnyOf            []*Schema          `json:"anyOf,omitempty"`
+	Not              []*Schema          `json:"not,omitempty"`
+	// AdditionalProperties *Schema or bool
+	AdditionalProperties interface{} `json:"additionalProperties,omitempty"`
+	Pattern              interface{} `json:"pattern,omitempty"`
 }
 
 type Components struct {

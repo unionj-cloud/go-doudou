@@ -6,6 +6,7 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
+	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
@@ -19,6 +20,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -43,6 +45,11 @@ type Svc struct {
 	N         int
 	Env       string
 	ClientPkg string
+
+	Watch bool
+
+	*exec.Cmd
+	RestartSig chan int
 }
 
 func validateDataType(dir string) {
@@ -284,5 +291,103 @@ func (receiver Svc) GenClient() {
 	}
 	if receiver.Client == "go" {
 		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
+	}
+}
+
+func (receiver Svc) run() *exec.Cmd {
+	cmd := exec.Command("go", "build", "-o", "cmd/cmd", "cmd/main.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	cmd = exec.Command("cmd/cmd")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	return cmd
+}
+
+func (receiver Svc) restart() *exec.Cmd {
+	pid := receiver.Cmd.Process.Pid
+	if err := syscall.Kill(pid, syscall.SIGINT); err != nil {
+		panic(err)
+	}
+	return receiver.run()
+}
+
+func (receiver Svc) watch() {
+	w := watcher.New()
+
+	// SetMaxEvents to 1 to allow at most 1 event's to be received
+	// on the Event channel per watching cycle.
+	//
+	// If SetMaxEvents is not set, the default is to send all events.
+	w.SetMaxEvents(1)
+
+	// Only notify write events.
+	w.FilterOps(watcher.Write)
+
+	// Only files that match the regular expression during file listings
+	// will be watched.
+	r := regexp.MustCompile("\\.go$")
+	w.AddFilterHook(watcher.RegexFilterHook(r, false))
+
+	go func() {
+		for {
+			select {
+			case event := <-w.Event:
+				fmt.Println(event) // Print the event's info.
+				bcmd := exec.Command("go", "build")
+				bcmd.Stdout = os.Stdout
+				bcmd.Stderr = os.Stderr
+				if err := bcmd.Run(); err != nil {
+					logrus.Warnln(err)
+					continue
+				}
+				receiver.RestartSig <- 1
+			case err := <-w.Error:
+				logrus.Panicln(err)
+			case <-w.Closed:
+				return
+			}
+		}
+	}()
+
+	// Watch this folder for changes.
+	if err := w.AddRecursive(receiver.Dir); err != nil {
+		logrus.Panicln(err)
+	}
+
+	// Print a list of all of the files and folders currently
+	// being watched and their paths.
+	for path, f := range w.WatchedFiles() {
+		logrus.Tracef("%s: %s\n", path, f.Name())
+	}
+
+	// Start the watching process - it'll check for changes every 100ms.
+	if err := w.Start(time.Millisecond * 100); err != nil {
+		logrus.Panicln(err)
+	}
+}
+
+func (receiver Svc) Run() {
+	receiver.Cmd = receiver.run()
+	if receiver.Watch {
+		go receiver.watch()
+		for {
+			select {
+			case <-receiver.RestartSig:
+				receiver.Cmd = receiver.restart()
+			default:
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+	} else {
+		if err := receiver.Cmd.Wait(); err != nil {
+			panic(err)
+		}
 	}
 }
