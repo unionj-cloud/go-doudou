@@ -3,18 +3,6 @@
 Generate the `json`tag behind the struct field according to the specified naming rules. The default strategy is **camel case with lowercase first letter**, and also supports snake case.  
 
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-### TOC
-
-- [Command line flags](#command line flags)
-- [Usage](#usage)
-- [TODO](#todo)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
-
 ### Command line flags
 
 ```shell
