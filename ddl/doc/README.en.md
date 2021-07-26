@@ -3,50 +3,6 @@
 A tool for synchronizing database table struct and Go struct based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). Does not support index update, and does not support foreign keys.
 **Add transaction support for dao layer code**, outsourcing a layer of abstraction in sqlx.Tx and sqlx.DB.
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-### TOC
-
-- [Quick start](#Quick start)
-- [Command line flags](#Command line flags)
-- [API](#api)
-    - [Example](#Example)
-    - [Struct tag](#Struct tag)
-        - [pk](#pk)
-        - [auto](#auto)
-        - [type](#type)
-        - [default](#default)
-        - [extra](#extra)
-        - [index](#index)
-        - [unique](#unique)
-        - [null](#null)
-        - [unsigned](#unsigned)
-    - [dao layer interface](#dao layer interface)
-        - [InsertXXX](#insertxxx)
-        - [UpsertXXX](#upsertxxx)
-        - [UpsertXXXNoneZero](#upsertxxxnonezero)
-        - [DeleteXXXs](#deletexxxs)
-        - [UpdateXXX](#updatexxx)
-        - [UpdateXXXNoneZero](#updatexxxnonezero)
-        - [UpdateXXXs](#updatexxxs)
-        - [UpdateXXXsNoneZero](#updatexxxsnonezero)
-        - [GetXXX](#getxxx)
-        - [SelectXXXs](#selectxxxs)
-        - [CountXXXs](#countxxxs)
-        - [PageXXXs](#pagexxxs)
-        - [Transaction](#transaction)
-    - [Query Dsl](#Query Dsl)
-        - [Example](#Example)
-        - [API](#api-1)
-            - [Q interface](#Q interface)
-            - [criteria struct](#criteria struct)
-            - [where struct](#where struct)
-            - [Page struct](#Page struct)
-- [TODO](#todo)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 
 ### Quick start
 
