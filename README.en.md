@@ -1,3 +1,5 @@
+
+
 ## go-doudou
 [![GoDoc](https://godoc.org/github.com/unionj-cloud/go-doudou?status.png)](https://godoc.org/github.com/unionj-cloud/go-doudou)
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
@@ -10,6 +12,25 @@ go-doudou advocates design first,by pre-designing and definition interfaces to g
 go-doudou canonizes the spirit of contract, statement the interface, regulates the cooperation between service providers and consumers, and prompts the whole develop team to improve delivery efficiency through openapi3.0 protocol.  
 go-doudou works for helping developers build a decentralized microservice system, connecting services in the cluster through the gossip protocol, and using client load balancing to call other services.  
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+### TOC
+
+- [go-doudou](#go-doudou)
+  - [Install](#install)
+  - [Usage](#usage)
+  - [Notice](#notice)
+  - [Interface design specification](#interface-design-specification)
+  - [Package vo design specification](#package-vo-design-specification)
+  - [Service registration and discovery](#service-registration-and-discovery)
+  - [Client load balancing](#client-load-balancing)
+  - [Demo](#demo)
+  - [Kit](#kit)
+    - [name](#name)
+    - [ddl](#ddl)
+  - [Help](#help)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ### Install
 
