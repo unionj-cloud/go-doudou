@@ -1,5 +1,3 @@
-
-
 ## go-doudou
 [![GoDoc](https://godoc.org/github.com/unionj-cloud/go-doudou?status.png)](https://godoc.org/github.com/unionj-cloud/go-doudou)
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
@@ -234,12 +232,12 @@ The kit package has some command line tools, which can be used after executing t
 
 #### name
 
-Generate the `json`tag behind the struct field according to the specified naming rules. [View document](./name/README.md)
+Generate the `json`tag behind the struct field according to the specified naming rules. [View document](./name/README.en.md)
 
 #### ddl
 
 A tool for synchronizing database table struct and Go struct based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). You can also generate DAO layer code.
-[View document](./ddl/doc/README.md)
+[View document](./ddl/doc/README.en.md)
 
 ### Help
 Welcome to mention pull request and issue, and welcome to scan the QR code and add author's WeChat for comments and demands. Help me，hopefully work with me,to improve go-doudou.
