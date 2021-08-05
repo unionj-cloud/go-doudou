@@ -27,6 +27,7 @@ go-doudou致力于帮助开发者打造去中心化的微服务体系，通过go
 - [工具箱](#%E5%B7%A5%E5%85%B7%E7%AE%B1)
   - [name](#name)
   - [ddl](#ddl)
+- [TODO](#todo)
 - [Help](#help)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -249,6 +250,8 @@ kit包有一些命令行工具，执行上面👆的安装命令后，就可以�
 基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 实现的同步数据库表结构和Go结构体的工具。还可以生成dao层代码。
 [查看文档](./ddl/doc/README.md)
 
+### TODO
+Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
 
 ### Help
 希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
