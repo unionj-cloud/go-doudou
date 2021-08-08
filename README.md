@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
 [![codecov](https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885)](https://codecov.io/gh/unionj-cloud/go-doudou)
 [![Go Report Card](https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou)](https://goreportcard.com/report/github.com/unionj-cloud/go-doudou)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_shield)
 
 go-doudou（doudou发音/dəudəu/）是基于gossip协议做服务注册与发现，基于openapi 3.0规范做接口定义的go语言去中心化微服务敏捷开发框架。  
 go-doudou通过一组命令行工具可以帮助开发者快速初始化一个或一组restful服务，通过在接口类中定义方法，即相当于设计了一组api，然后通过命令可以
@@ -26,6 +27,7 @@ go-doudou致力于帮助开发者打造去中心化的微服务体系，通过go
 - [工具箱](#%E5%B7%A5%E5%85%B7%E7%AE%B1)
   - [name](#name)
   - [ddl](#ddl)
+- [TODO](#todo)
 - [Help](#help)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -248,6 +250,8 @@ kit包有一些命令行工具，执行上面👆的安装命令后，就可以�
 基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 实现的同步数据库表结构和Go结构体的工具。还可以生成dao层代码。
 [查看文档](./ddl/doc/README.md)
 
+### TODO
+Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
 
 ### Help
 希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
@@ -259,3 +263,7 @@ kit包有一些命令行工具，执行上面👆的安装命令后，就可以�
 
 
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_large)
