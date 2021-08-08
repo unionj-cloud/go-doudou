@@ -80,9 +80,9 @@ func Logger(inner http.Handler) http.Handler {
 
 func Rest(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		inner.ServeHTTP(w, r)
 		if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		}
-		inner.ServeHTTP(w, r)
 	})
 }
