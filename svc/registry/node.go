@@ -13,6 +13,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
 type IRegistry interface {
@@ -161,6 +162,8 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		MinLevel: logutils.LogLevel(minLevel),
 		Writer:   logrus.StandardLogger().Writer(),
 	}
+	mconf.GossipToTheDeadTime = 3 * time.Second
+	mconf.PushPullInterval = 5 * time.Second
 	memport := cast.ToInt(config.GddMemPort.Load())
 	if memport == 0 {
 		memport, _ = getFreePort()
