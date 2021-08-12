@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.5.2
+	github.com/unionj-cloud/go-doudou v0.5.3
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -97,6 +97,7 @@ const gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll
 
 const envTmpl = `GDD_BANNER=on
 GDD_BANNERTEXT=Go-doudou
+# GddLogLevel accept values are panic, fatal, error, warn, warning, info, debug, trace
 GDD_LOGLEVEL=
 GDD_GRACETIMEOUT=15s
 
@@ -112,24 +113,29 @@ GDD_WRITETIMEOUT=15s
 GDD_READTIMEOUT=15s
 GDD_IDLETIMEOUT=60s
 
-# add prefix path to all routes
+# GDD_ROUTE_ROOT_PATH add prefix path to all routes
 GDD_ROUTE_ROOT_PATH=
 
-# if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
+# GDD_MANAGE_ENABLE if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
 # if you don't' need the feature, just set it false or remove it
 GDD_MANAGE_ENABLE=true
-# if you want to disable http basic auth for management api endpoints, just set GDD_MANAGE_USER and GDD_MANAGE_PASS empty 
+# GDD_MANAGE_USER if you want to disable http basic auth for management api endpoints, just set GDD_MANAGE_USER and GDD_MANAGE_PASS empty 
 # or remove them
 GDD_MANAGE_USER=admin
 GDD_MANAGE_PASS=admin
 
-GDD_NAME={{.SvcName}}
+GDD_SERVICE_NAME={{.SvcName}}
 GDD_PORT=6060
 GDD_MEM_PORT=
 GDD_BASE_URL=
-GDD_SEED=192.168.101.6:52634
-# accept 'mono' for monolith mode or 'micro' for microservice mode
-GDD_MODE=micro`
+GDD_SEED=192.168.101.6:56199
+# GDD_MODE accept 'mono' for monolith mode or 'micro' for microservice mode
+GDD_MODE=micro
+
+# GDD_NODE_NAME if not provided, hostname will be used instead
+GDD_NODE_NAME=
+# GDD_DEP_SERVICES dependent service list
+GDD_DEP_SERVICES=`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 

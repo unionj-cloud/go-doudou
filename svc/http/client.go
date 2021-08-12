@@ -1,6 +1,7 @@
 package ddhttp
 
 import (
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/stringutils"
@@ -96,6 +97,9 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 	nodes, err := m.registry.Discover(m.name)
 	if err != nil {
 		return "", errors.Wrap(err, "SelectServer() fail")
+	}
+	if len(nodes) == 0 {
+		return "", errors.Wrap(errors.New(fmt.Sprintf("no service %s supplier found, please check whether environment variable GDD_DEP_SERVICES properly set or not", m.name)), "SelectServer() fail")
 	}
 	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(nodes)))
 	m.current = uint64(next)

@@ -158,13 +158,13 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		mconf.BindPort = memport
 		mconf.AdvertisePort = memport
 	}
-	hostname := config.GddHostname.Load()
-	if stringutils.IsNotEmpty(hostname) {
-		mconf.Name = hostname
+	nodeName := config.GddNodeName.Load()
+	if stringutils.IsNotEmpty(nodeName) {
+		mconf.Name = nodeName
 	}
-	service := config.GddName.Load()
+	service := config.GddServiceName.Load()
 	if stringutils.IsEmpty(service) {
-		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddName))
+		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))
 	}
 	node := &Node{
 		state: -1,

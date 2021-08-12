@@ -26,7 +26,6 @@ type Srv interface {
 }
 
 func newServer(router http.Handler) *http.Server {
-	port := config.GddPort.Load()
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
 		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITETIMEOUT",
@@ -49,7 +48,7 @@ func newServer(router http.Handler) *http.Server {
 	}
 
 	server := &http.Server{
-		Addr: strings.Join([]string{"", port}, ":"),
+		Addr: strings.Join([]string{config.GddHost.Load(), config.GddPort.Load()}, ":"),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: write,
 		ReadTimeout:  read,
