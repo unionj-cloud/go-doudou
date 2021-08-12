@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/logutils"
 	"github.com/hashicorp/memberlist"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -10,7 +11,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"net"
+	"strings"
 	"sync"
+	"time"
 )
 
 type IRegistry interface {
@@ -49,21 +52,19 @@ func (r *registry) Discover(svc string) ([]*Node, error) {
 		return nil, errors.New("Memberlist is nil")
 	}
 	var nodes []*Node
-	for _, member := range r.members {
-		logrus.Infof("Member: %s %s\n", member.Name, member.Addr)
-		if member.State == memberlist.StateAlive {
-			var mmeta mergedMeta
-			if err := json.Unmarshal(member.Meta, &mmeta); err != nil {
-				return nil, errors.Wrap(err, "")
-			}
-			if mmeta.Meta.Service == svc {
-				nodes = append(nodes, &Node{
-					mmeta:      mmeta,
-					state:      Alive,
-					memberNode: member,
-					remote:     true,
-				})
-			}
+	for _, member := range r.memberlist.Members() {
+		logrus.Debugf("Member: %s %s\n", member.Name, member.Addr)
+		var mmeta mergedMeta
+		if err := json.Unmarshal(member.Meta, &mmeta); err != nil {
+			return nil, errors.Wrap(err, "")
+		}
+		if mmeta.Meta.Service == svc {
+			nodes = append(nodes, &Node{
+				mmeta:      mmeta,
+				state:      Alive,
+				memberNode: member,
+				remote:     true,
+			})
 		}
 	}
 	return nodes, nil
@@ -150,6 +151,20 @@ func getFreePort() (int, error) {
 
 func NewNode(opts ...NodeOption) (*Node, error) {
 	mconf := memberlist.DefaultWANConfig()
+	minLevel := strings.ToUpper(config.GddLogLevel.Load())
+	if minLevel == "ERROR" {
+		minLevel = "ERR"
+	} else if minLevel == "WARNING" {
+		minLevel = "WARN"
+	}
+	mconf.LogOutput = &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERR", "INFO"},
+		MinLevel: logutils.LogLevel(minLevel),
+		Writer:   logrus.StandardLogger().Writer(),
+	}
+	mconf.PushPullInterval = 10 * time.Second
+	//mconf.ProbeTimeout = 3 * time.Second
+	//mconf.ProbeInterval = 5 * time.Second
 	memport := cast.ToInt(config.GddMemPort.Load())
 	if memport == 0 {
 		memport, _ = getFreePort()

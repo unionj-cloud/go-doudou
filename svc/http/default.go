@@ -109,21 +109,6 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 
 func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
-	var logptr *string
-	logpath, isSet := os.LookupEnv(config.GddLogPath.String())
-	if isSet {
-		logptr = &logpath
-	}
-	var loglevel config.LogLevel
-	(&loglevel).Decode(config.GddLogLevel.Load())
-
-	logFile := configureLogger(logrus.StandardLogger(), logptr, logrus.Level(loglevel))
-	defer func() {
-		if logFile != nil {
-			logFile.Close()
-		}
-	}()
-
 	var bannerSwitch config.Switch
 	(&bannerSwitch).Decode(config.GddBanner.Load())
 	if bannerSwitch {

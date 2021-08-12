@@ -1,9 +1,23 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
+	"path/filepath"
 )
+
+func init() {
+	wd, _ := os.Getwd()
+	err := godotenv.Load(filepath.Join(wd, ".env"))
+	if err != nil {
+		err = godotenv.Load(filepath.Join(wd, "../.env"))
+		if err != nil {
+			logrus.Warnln(errors.Wrap(err, "Error loading .env file"))
+		}
+	}
+}
 
 type envVariable string
 
@@ -30,8 +44,6 @@ const (
 	GddMemPort envVariable = "GDD_MEM_PORT"
 	GddBaseUrl envVariable = "GDD_BASE_URL"
 	GddSeed    envVariable = "GDD_SEED"
-	// GddDepServices dependent service list
-	GddDepServices envVariable = "GDD_DEP_SERVICES"
 	// Accept 'mono' for monolith mode or 'micro' for microservice mode
 	GddMode envVariable = "GDD_MODE"
 	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.

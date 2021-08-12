@@ -16,6 +16,14 @@ import (
 	"time"
 )
 
+var (
+	logFile *os.File
+)
+
+func init() {
+	configureLogger()
+}
+
 type Srv interface {
 	// Run the service
 	Run()
@@ -67,18 +75,25 @@ func newServer(router http.Handler) *http.Server {
 	return server
 }
 
-func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) *os.File {
+func configureLogger() {
+	var logptr *string
+	logpath, isSet := os.LookupEnv(config.GddLogPath.String())
+	if isSet {
+		logptr = &logpath
+	}
+	var loglevel config.LogLevel
+	(&loglevel).Decode(config.GddLogLevel.Load())
+
 	formatter := new(logrus.TextFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	formatter.FullTimestamp = true
+
+	logger := logrus.StandardLogger()
 	logger.SetFormatter(formatter)
-	logger.SetLevel(level)
+	logger.SetLevel(logrus.Level(loglevel))
 
 	if logptr != nil {
-		var (
-			err error
-			f   *os.File
-		)
+		var err error
 		logpath := *logptr
 		logpath, err = pathutils.FixPath(logpath, "")
 		if err != nil {
@@ -88,20 +103,15 @@ func configureLogger(logger *logrus.Logger, logptr *string, level logrus.Level) 
 			err = os.MkdirAll(logpath, os.ModePerm)
 			if err != nil {
 				logger.Errorln(err)
-				return nil
 			}
 		}
-		f, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm)
+		logFile, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm)
 		if err != nil {
 			logger.Errorf("error opening file: %v\n", err)
-			return nil
 		}
-		mw := io.MultiWriter(os.Stdout, f)
+		mw := io.MultiWriter(os.Stdout, logFile)
 		logger.SetOutput(mw)
-		return f
 	}
-
-	return nil
 }
 
 func printRoutes(routes []model.Route) {

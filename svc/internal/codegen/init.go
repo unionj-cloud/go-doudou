@@ -133,9 +133,7 @@ GDD_SEED=192.168.101.6:56199
 GDD_MODE=micro
 
 # GDD_NODE_NAME if not provided, hostname will be used instead
-GDD_NODE_NAME=
-# GDD_DEP_SERVICES dependent service list
-GDD_DEP_SERVICES=`
+GDD_NODE_NAME=`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 
