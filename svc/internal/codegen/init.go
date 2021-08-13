@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.5.4
+	github.com/unionj-cloud/go-doudou v0.5.5
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -96,10 +96,10 @@ require (
 const gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
 
 const envTmpl = `GDD_BANNER=on
-GDD_BANNERTEXT=Go-doudou
+GDD_BANNER_TEXT=Go-doudou
 # GddLogLevel accept values are panic, fatal, error, warn, warning, info, debug, trace
-GDD_LOGLEVEL=
-GDD_GRACETIMEOUT=15s
+GDD_LOG_LEVEL=info
+GDD_LOG_PATH=
 
 DB_HOST=localhost
 DB_PORT=3306
@@ -109,9 +109,10 @@ DB_SCHEMA=test
 DB_CHARSET=utf8mb4
 DB_DRIVER=mysql
 
-GDD_WRITETIMEOUT=15s
-GDD_READTIMEOUT=15s
-GDD_IDLETIMEOUT=60s
+GDD_GRACE_TIMEOUT=15s
+GDD_WRITE_TIMEOUT=15s
+GDD_READ_TIMEOUT=15s
+GDD_IDLE_TIMEOUT=60s
 
 # GDD_ROUTE_ROOT_PATH add prefix path to all routes
 GDD_ROUTE_ROOT_PATH=
@@ -126,14 +127,21 @@ GDD_MANAGE_PASS=admin
 
 GDD_SERVICE_NAME={{.SvcName}}
 GDD_PORT=6060
-GDD_MEM_PORT=
 GDD_BASE_URL=
-GDD_SEED=192.168.101.6:56199
 # GDD_MODE accept 'mono' for monolith mode or 'micro' for microservice mode
 GDD_MODE=micro
 
-# GDD_NODE_NAME if not provided, hostname will be used instead
-GDD_NODE_NAME=`
+# GDD_MEM_NODE_NAME if not provided, hostname will be used instead
+GDD_MEM_NODE_NAME=
+# GDD_MEM_PORT if empty or not set, an available port will be chosen randomly. recommend specifying a port
+GDD_MEM_PORT=
+GDD_MEM_SEED=localhost:56199
+# GDD_MEM_DEAD_TIMEOUT dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT second
+GDD_MEM_DEAD_TIMEOUT=30
+# GDD_MEM_SYNC_INTERVAL local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL second
+GDD_MEM_SYNC_INTERVAL=5
+# GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT second
+GDD_MEM_RECLAIM_TIMEOUT=3`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 

@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,7 +35,7 @@ func (r *registry) Register() error {
 	if r.memberlist == nil {
 		return errors.New("Memberlist is nil")
 	}
-	seed := config.GddSeed.Load()
+	seed := config.GddMemSeed.Load()
 	if stringutils.IsEmpty(seed) {
 		logrus.Warnln("No seed found")
 		return nil
@@ -162,8 +163,27 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		MinLevel: logutils.LogLevel(minLevel),
 		Writer:   logrus.StandardLogger().Writer(),
 	}
-	mconf.GossipToTheDeadTime = 3 * time.Second
+	mconf.GossipToTheDeadTime = 30 * time.Second
+	deadTimeoutStr := config.GddMemDeadTimeout.Load()
+	if stringutils.IsNotEmpty(deadTimeoutStr) {
+		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {
+			mconf.GossipToTheDeadTime = time.Duration(deadTimeout) * time.Second
+		}
+	}
 	mconf.PushPullInterval = 5 * time.Second
+	syncIntervalStr := config.GddMemSyncInterval.Load()
+	if stringutils.IsNotEmpty(syncIntervalStr) {
+		if syncInterval, err := strconv.Atoi(syncIntervalStr); err == nil {
+			mconf.PushPullInterval = time.Duration(syncInterval) * time.Second
+		}
+	}
+	mconf.DeadNodeReclaimTime = 3 * time.Second
+	reclaimTimeoutStr := config.GddMemReclaimTimeout.Load()
+	if stringutils.IsNotEmpty(reclaimTimeoutStr) {
+		if reclaimTimeout, err := strconv.Atoi(reclaimTimeoutStr); err == nil {
+			mconf.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
+		}
+	}
 	memport := cast.ToInt(config.GddMemPort.Load())
 	if memport == 0 {
 		memport, _ = getFreePort()
@@ -172,7 +192,7 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		mconf.BindPort = memport
 		mconf.AdvertisePort = memport
 	}
-	nodeName := config.GddNodeName.Load()
+	nodeName := config.GddMemNodeName.Load()
 	if stringutils.IsNotEmpty(nodeName) {
 		mconf.Name = nodeName
 	}
