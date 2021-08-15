@@ -70,4 +70,4 @@ require (
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 )
 
-replace github.com/unionj-cloud/memberlist v0.2.6 => /Users/wubin1989/workspace/cloud/memberlist
+//replace github.com/unionj-cloud/memberlist v0.2.6 => /Users/wubin1989/workspace/cloud/memberlist
