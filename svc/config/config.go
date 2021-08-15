@@ -47,7 +47,8 @@ const (
 	// GddManagePass manage api endpoint http basic auth password
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
-	GddMemSeed     envVariable = "GDD_MEM_SEED"
+	GddMemSeed envVariable = "GDD_MEM_SEED"
+	GddMemName envVariable = "GDD_MEM_NAME"
 	GddMemHost envVariable = "GDD_MEM_HOST"
 	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
 	GddMemPort envVariable = "GDD_MEM_PORT"

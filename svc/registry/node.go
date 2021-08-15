@@ -184,6 +184,10 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 			mconf.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
 		}
 	}
+	nodename := config.GddMemName.Load()
+	if stringutils.IsNotEmpty(nodename) {
+		mconf.Name = nodename
+	}
 	memport := cast.ToInt(config.GddMemPort.Load())
 	if memport == 0 {
 		memport, _ = getFreePort()

@@ -139,7 +139,8 @@ GDD_MEM_DEAD_TIMEOUT=30
 # GDD_MEM_SYNC_INTERVAL local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL second
 GDD_MEM_SYNC_INTERVAL=5
 # GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT second
-GDD_MEM_RECLAIM_TIMEOUT=3`
+GDD_MEM_RECLAIM_TIMEOUT=3
+GDD_MEM_NAME=`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 
