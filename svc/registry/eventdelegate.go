@@ -2,7 +2,7 @@ package registry
 
 import (
 	"fmt"
-	"github.com/hashicorp/memberlist"
+	"github.com/unionj-cloud/memberlist"
 	"github.com/sirupsen/logrus"
 )
 

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/logutils"
-	"github.com/hashicorp/memberlist"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cast"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/memberlist"
 	"net"
 	"strconv"
 	"strings"
@@ -192,9 +192,9 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		mconf.BindPort = memport
 		mconf.AdvertisePort = memport
 	}
-	nodeName := config.GddMemNodeName.Load()
-	if stringutils.IsNotEmpty(nodeName) {
-		mconf.Name = nodeName
+	memhost := config.GddMemHost.Load()
+	if stringutils.IsNotEmpty(memhost) {
+		mconf.AdvertiseAddr = memhost
 	}
 	service := config.GddServiceName.Load()
 	if stringutils.IsEmpty(service) {
@@ -251,7 +251,7 @@ func (n *Node) BaseUrl() string {
 	if stringutils.IsNotEmpty(n.mmeta.Meta.BaseUrl) {
 		return n.mmeta.Meta.BaseUrl
 	}
-	return fmt.Sprintf("http://%s:%d", n.memberNode.Addr.String(), n.mmeta.Meta.Port)
+	return fmt.Sprintf("http://%s:%d", n.memberNode.Addr, n.mmeta.Meta.Port)
 }
 
 func (n *Node) String() string {

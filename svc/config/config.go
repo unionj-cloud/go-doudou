@@ -47,9 +47,8 @@ const (
 	// GddManagePass manage api endpoint http basic auth password
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
-	// GddMemNodeName if not provided, hostname will be used instead
-	GddMemNodeName envVariable = "GDD_MEM_NODE_NAME"
 	GddMemSeed     envVariable = "GDD_MEM_SEED"
+	GddMemHost envVariable = "GDD_MEM_HOST"
 	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
 	GddMemPort envVariable = "GDD_MEM_PORT"
 	// GddMemDeadTimeout dead node will be removed from node map if not received refute messages from it in GddMemDeadTimeout second

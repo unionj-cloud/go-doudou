@@ -34,7 +34,6 @@ require (
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/logutils v1.0.0
-	github.com/hashicorp/memberlist v0.2.4
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jmoiron/sqlx v1.3.1
@@ -60,6 +59,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.11.0
+	github.com/unionj-cloud/memberlist v0.2.6
 	github.com/urfave/negroni v1.0.0
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
@@ -69,3 +69,5 @@ require (
 	golang.org/x/tools v0.1.3
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 )
+
+replace github.com/unionj-cloud/memberlist v0.2.6 => /Users/wubin1989/workspace/cloud/memberlist

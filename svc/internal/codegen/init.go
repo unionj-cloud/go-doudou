@@ -131,8 +131,6 @@ GDD_BASE_URL=
 # GDD_MODE accept 'mono' for monolith mode or 'micro' for microservice mode
 GDD_MODE=micro
 
-# GDD_MEM_NODE_NAME if not provided, hostname will be used instead
-GDD_MEM_NODE_NAME=
 # GDD_MEM_PORT if empty or not set, an available port will be chosen randomly. recommend specifying a port
 GDD_MEM_PORT=
 GDD_MEM_SEED=localhost:56199
