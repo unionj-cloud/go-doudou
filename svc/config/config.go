@@ -48,6 +48,7 @@ const (
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
 	GddMemSeed envVariable = "GDD_MEM_SEED"
+	// GddMemName unique name of this node in cluster. if not provided, hostname will be used instead
 	GddMemName envVariable = "GDD_MEM_NAME"
 	GddMemHost envVariable = "GDD_MEM_HOST"
 	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
