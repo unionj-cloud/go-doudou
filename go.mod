@@ -59,7 +59,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.11.0
-	github.com/unionj-cloud/memberlist v0.2.7-0.20210815155431-00bb4c33a849
+	github.com/unionj-cloud/memberlist v0.2.7
 	github.com/urfave/negroni v1.0.0
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
@@ -70,4 +70,4 @@ require (
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 )
 
-//replace github.com/unionj-cloud/memberlist v0.2.6 => /Users/wubin1989/workspace/cloud/memberlist
+//replace github.com/unionj-cloud/memberlist v0.2.7 => /Users/wubin1989/workspace/cloud/memberlist
