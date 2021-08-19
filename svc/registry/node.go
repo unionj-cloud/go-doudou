@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/memberlist"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -198,7 +199,12 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	}
 	memhost := config.GddMemHost.Load()
 	if stringutils.IsNotEmpty(memhost) {
-		mconf.AdvertiseAddr = memhost
+		if strings.HasPrefix(memhost, ".") {
+			hostname, _ := os.Hostname()
+			mconf.AdvertiseAddr = hostname + memhost
+		} else {
+			mconf.AdvertiseAddr = memhost
+		}
 	}
 	service := config.GddServiceName.Load()
 	if stringutils.IsEmpty(service) {
