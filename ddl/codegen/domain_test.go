@@ -41,7 +41,9 @@ func TestGenDomainGo(t *testing.T) {
 			defer os.RemoveAll(dir)
 			expect := `package domain
 
-import "time"
+import (
+	"time"
+)
 
 //dd:table
 type User struct {

@@ -64,7 +64,9 @@ func TestDdlCmd(t *testing.T) {
 	}
 	expect := `package domain
 
-import "time"
+import (
+	"time"
+)
 
 //dd:table
 type User struct {
