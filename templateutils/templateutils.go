@@ -56,3 +56,26 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	}
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
+
+func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, error) {
+	var (
+		sqlBuf  bytes.Buffer
+		err     error
+		tpl     *template.Template
+		funcMap map[string]interface{}
+	)
+	tpl = template.New(tmplname)
+	funcMap = make(map[string]interface{})
+	funcMap["FormatTime"] = FormatTime
+	funcMap["BoolToInt"] = BoolToInt
+	funcMap["Eval"] = Eval(tpl)
+	funcMap["TrimSuffix"] = TrimSuffix
+	funcMap["isNil"] = func(t interface{}) bool {
+		return t != nil
+	}
+	tpl = template.Must(tpl.Funcs(funcMap).Parse(tmpl))
+	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
+		return "", errors.Wrap(err, "error returned from calling tpl.ExecuteTemplate")
+	}
+	return strings.TrimSpace(sqlBuf.String()), nil
+}
