@@ -65,6 +65,8 @@ func toColumnType(goType string) columnenum.ColumnType {
 		return columnenum.TinyintType
 	case "time.Time":
 		return columnenum.DatetimeType
+	case "decimal.Decimal":
+		return "decimal(6,2)"
 	}
 	panic(fmt.Sprintf("no available type %s", goType))
 }
@@ -93,7 +95,7 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.MediumtextType))) {
 		goType += "string"
 	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DecimalType))) {
-		goType += "float32"
+		goType += "decimal.Decimal"
 	} else {
 		panic(fmt.Sprintf("no available type %s", colType))
 	}
@@ -206,8 +208,8 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 			tags := strings.Split(field.Tag, `" `)
 			var ddTag string
 			for _, tag := range tags {
-				if trimedTag := strings.TrimPrefix(tag, "dd:"); len(trimedTag) < len(tag) {
-					ddTag = strings.Trim(trimedTag, `"`)
+				if strings.HasPrefix(tag, "dd:") {
+					ddTag = strings.Trim(strings.TrimPrefix(tag, "dd:"), `"`)
 					break
 				}
 			}

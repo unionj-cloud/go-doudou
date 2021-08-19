@@ -1,5 +1,11 @@
 package domain
 
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
+
 //dd:table
 type {{.Name}} struct {
 {{- range $f := .Fields }}
