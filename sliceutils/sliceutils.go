@@ -48,6 +48,16 @@ func StringContains(src []string, test string) bool {
 	return false
 }
 
+func StringFilter(src []string, fn func(item string) bool) []string {
+	var ret []string
+	for _, item := range src {
+		if fn(item) {
+			ret = append(ret, item)
+		}
+	}
+	return ret
+}
+
 func IndexOf(element string, data []string) int {
 	for k, v := range data {
 		if element == v {

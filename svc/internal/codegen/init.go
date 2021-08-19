@@ -127,7 +127,6 @@ GDD_MANAGE_PASS=admin
 
 GDD_SERVICE_NAME={{.SvcName}}
 GDD_PORT=6060
-GDD_BASE_URL=
 # GDD_MODE accept 'mono' for monolith mode or 'micro' for microservice mode
 GDD_MODE=micro
 
@@ -141,7 +140,12 @@ GDD_MEM_SYNC_INTERVAL=5
 # GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT second
 GDD_MEM_RECLAIM_TIMEOUT=3
 # GDD_MEM_NAME unique name of this node in cluster. if not provided, hostname will be used instead
-GDD_MEM_NAME=`
+GDD_MEM_NAME=
+# GDD_MEM_HOST specify AdvertiseAddr attribute of memberlist config struct.
+# if GDD_MEM_HOST starts with dot such as .seed-svc-headless.default.svc.cluster.local,
+# it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
+# for supporting k8s stateful service
+GDD_MEM_HOST=`
 
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 

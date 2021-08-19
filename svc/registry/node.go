@@ -73,10 +73,9 @@ func (r *registry) Discover(svc string) ([]*Node, error) {
 }
 
 type nodeMeta struct {
-	Service string `json:"service"`
-	BaseUrl string `json:"baseUrl"`
-	Port    int    `json:"port"`
-	Host    string `json:"host"`
+	Service       string `json:"service"`
+	RouteRootPath string `json:"routeRootPath"`
+	Port          int    `json:"port"`
 }
 
 func newMeta(mnode *memberlist.Node) (mergedMeta, error) {
@@ -223,11 +222,10 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	if port == 0 {
 		port, _ = getFreePort()
 	}
-	baseUrl := config.GddBaseUrl.Load()
 	node.mmeta.Meta = nodeMeta{
-		Service: service,
-		Port:    port,
-		BaseUrl: baseUrl,
+		Service:       service,
+		Port:          port,
+		RouteRootPath: config.GddRouteRootPath.Load(),
 	}
 	mconf.Delegate = &delegate{node}
 	mconf.Events = &eventDelegate{node}
@@ -258,16 +256,13 @@ func (n *Node) NumNodes() (numNodes int) {
 }
 
 func (n *Node) BaseUrl() string {
-	if stringutils.IsNotEmpty(n.mmeta.Meta.BaseUrl) {
-		return n.mmeta.Meta.BaseUrl
-	}
-	return fmt.Sprintf("http://%s:%d", n.memberNode.Addr, n.mmeta.Meta.Port)
+	return fmt.Sprintf("http://%s:%d%s", n.memberNode.Addr, n.mmeta.Meta.Port, n.mmeta.Meta.RouteRootPath)
 }
 
 func (n *Node) String() string {
 	if stringutils.IsNotEmpty(n.mmeta.Meta.Service) {
-		return fmt.Sprintf("Node %s, providing %s service at %s, memberlist port %s, service port %d",
-			n.memberNode.Name, n.mmeta.Meta.Service, n.memberNode.Addr, fmt.Sprint(n.memberNode.Port), n.mmeta.Meta.Port)
+		return fmt.Sprintf("Node %s, providing %s service at %s, memberlist port %s",
+			n.memberNode.Name, n.mmeta.Meta.Service, n.BaseUrl(), fmt.Sprint(n.memberNode.Port))
 	}
 	return fmt.Sprintf("Node %s", n.memberNode.Name)
 }

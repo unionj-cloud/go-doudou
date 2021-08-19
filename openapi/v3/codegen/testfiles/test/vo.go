@@ -42,14 +42,14 @@ type Order struct {
 	// 客户信息结构体
 	// 用于描述客户相关的信息
 	Customer struct {
-		// 用户ID
-		Id int64 `json:"id,omitempty" url:"id"`
-		// 用户名
-		Username string `json:"username,omitempty" url:"username"`
 		// 用户地址
 		// 例如：北京海淀区xxx街道
 		// 某某小区
 		Address []Address `json:"address,omitempty" url:"address"`
+		// 用户ID
+		Id int64 `json:"id,omitempty" url:"id"`
+		// 用户名
+		Username string `json:"username,omitempty" url:"username"`
 	} `json:"customer,omitempty" url:"customer"`
 
 	Id int64 `json:"id,omitempty" url:"id"`
@@ -87,9 +87,11 @@ type Tag struct {
 }
 
 type User struct {
-	Additional1 map[string]string `json:"additional1,omitempty" url:"additional1"`
+	Additional1 struct {
+	} `json:"additional1,omitempty" url:"additional1"`
 
-	Additional2 map[string]Tag `json:"additional2,omitempty" url:"additional2"`
+	Additional2 struct {
+	} `json:"additional2,omitempty" url:"additional2"`
 
 	Avatar *os.File `json:"avatar,omitempty" url:"avatar"`
 

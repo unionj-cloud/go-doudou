@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/constants"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -205,7 +206,7 @@ func pathOf(method astutils.MethodMeta) v3.Path {
 	return ret
 }
 
-func pathsOf(ic astutils.InterfaceCollector) map[string]v3.Path {
+func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[string]v3.Path {
 	if len(ic.Interfaces) == 0 {
 		return nil
 	}
@@ -213,7 +214,10 @@ func pathsOf(ic astutils.InterfaceCollector) map[string]v3.Path {
 	inter := ic.Interfaces[0]
 	for _, method := range inter.Methods {
 		v3path := pathOf(method)
-		endpoint := fmt.Sprintf("/%s/%s", strings.ToLower(inter.Name), pattern(method.Name))
+		endpoint := fmt.Sprintf("/%s", pattern(method.Name))
+		if routePatternStrategy == 1 {
+			endpoint = fmt.Sprintf("/%s/%s", strings.ToLower(inter.Name), noSplitPattern(method.Name))
+		}
 		pathmap[endpoint] = v3path
 	}
 	return pathmap
@@ -229,7 +233,7 @@ func init() {
 `
 
 // Currently not suport alias type in vo file. TODO
-func GenDoc(dir string, ic astutils.InterfaceCollector) {
+func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
 		err     error
 		svcname string
@@ -277,7 +281,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 	for _, item := range vos {
 		v3.Schemas[item.Title] = item
 	}
-	paths = pathsOf(ic)
+	paths = pathsOf(ic, routePatternStrategy)
 	api = v3.Api{
 		Openapi: "3.0.2",
 		Info: &v3.Info{
@@ -287,6 +291,11 @@ func GenDoc(dir string, ic astutils.InterfaceCollector) {
 			Contact:        nil,
 			License:        nil,
 			Version:        fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
+		},
+		Servers: []v3.Server{
+			{
+				Url: config.GddRouteRootPath.Load(),
+			},
 		},
 		Paths: paths,
 		Components: &v3.Components{

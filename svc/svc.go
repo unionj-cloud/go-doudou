@@ -1,9 +1,7 @@
 package svc
 
 import (
-	"context"
 	"fmt"
-	"github.com/Jeffail/gabs/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
@@ -29,6 +27,11 @@ type SvcCmd interface {
 	Http()
 }
 
+const (
+	split = iota
+	nosplit
+)
+
 type Svc struct {
 	Dir          string
 	Handler      bool
@@ -50,6 +53,8 @@ type Svc struct {
 
 	*exec.Cmd
 	RestartSig chan int
+
+	RoutePatternStrategy int
 }
 
 func validateDataType(dir string) {
@@ -80,7 +85,7 @@ func (receiver Svc) Http() {
 	codegen.GenHttpMiddleware(dir)
 
 	codegen.GenMain(dir, ic)
-	codegen.GenHttpHandler(dir, ic)
+	codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
 	if receiver.Handler {
 		var caseconvertor func(string) string
 		switch receiver.Jsonattrcase {
@@ -96,12 +101,12 @@ func (receiver Svc) Http() {
 	if stringutils.IsNotEmpty(receiver.Client) {
 		switch receiver.Client {
 		case "go":
-			codegen.GenGoClient(dir, ic, receiver.Env)
+			codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy)
 		}
 	}
 	codegen.GenSvcImpl(dir, ic)
 	if receiver.Doc {
-		codegen.GenDoc(dir, ic)
+		codegen.GenDoc(dir, ic, receiver.RoutePatternStrategy)
 	}
 }
 
@@ -243,36 +248,6 @@ func (receiver Svc) Scale() {
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-}
-
-func (receiver Svc) Publish() string {
-	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
-	svcname := strings.ToLower(ic.Interfaces[0].Name)
-	docpath := receiver.DocPath
-	if stringutils.IsEmpty(docpath) {
-		docpath = svcname + "_openapi3.json"
-	}
-	container, err := gabs.ParseJSONFile(docpath)
-	if err != nil {
-		panic(err)
-	}
-	version := container.Path("info.version").Data().(string)
-	result, err := receiver.Es.SaveOrUpdate(context.Background(), struct {
-		Api      string    `json:"api,omitempty"`
-		CreateAt time.Time `json:"createAt,omitempty"`
-		Service  string    `json:"service,omitempty"`
-		Version  string    `json:"version,omitempty"`
-	}{
-		Api:      container.String(),
-		CreateAt: time.Now().UTC(),
-		Service:  svcname,
-		Version:  version,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return result
 }
 
 func (receiver Svc) GenClient() {

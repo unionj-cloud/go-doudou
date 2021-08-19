@@ -40,7 +40,7 @@ func TestGenDoc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenDoc(tt.args.dir, tt.args.ic)
+			GenDoc(tt.args.dir, tt.args.ic, 1)
 		})
 	}
 }

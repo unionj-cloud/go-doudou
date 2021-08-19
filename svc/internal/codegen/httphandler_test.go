@@ -30,7 +30,14 @@ func Test_pattern(t *testing.T) {
 			args: args{
 				method: "PageUsers",
 			},
-			want: "pageusers",
+			want: "page/users",
+		},
+		{
+			name: "3",
+			args: args{
+				method: "PostSelect_Books",
+			},
+			want: "select/books",
 		},
 	}
 	for _, tt := range tests {
@@ -80,7 +87,7 @@ func TestGenHttpHandler(t *testing.T) {
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
 	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
-	GenHttpHandler(dir, ic)
+	GenHttpHandler(dir, ic, 1)
 	expect := `package httpsrv
 
 import (

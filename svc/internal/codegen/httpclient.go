@@ -114,16 +114,22 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- end }}
 		{{- end }}
 
+		{{- if eq $.RoutePatternStrategy 1}}
+		_path := "/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}"
+		{{- else }}
+		_path := "/{{$m.Name | pattern}}"
+		{{- end }}
+
 		{{- if eq ($m.Name | httpMethod) "GET" }}
 		_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
-			Get(_server + "/{{$.Meta.Name | lower}}/{{$m.Name | pattern}}")
+			Get(_server + _path)
 		{{- else }}
 		if _req.Body != nil {
 			_req.SetQueryParamsFromValues(_urlValues)
 		} else {
 			_req.SetFormDataFromValues(_urlValues)
 		}
-		_resp, _err := _req.{{$m.Name | restyMethod}}(_server + "/{{$.Meta.Name | lower}}/{{$m.Name | pattern}}")
+		_resp, _err := _req.{{$m.Name | restyMethod}}(_server + _path)
 		{{- end }}
 		if _err != nil {
 			{{- range $r := $m.Results }}
@@ -240,7 +246,11 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func GenGoClient(dir string, ic astutils.InterfaceCollector, env string) {
+func getPath() {
+
+}
+
+func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePatternStrategy int) {
 	var (
 		err        error
 		clientfile string
@@ -299,17 +309,20 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string) {
 	funcMap["isBuiltin"] = v3.IsBuiltin
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
+	funcMap["noSplitPattern"] = noSplitPattern
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		VoPackage string
-		Meta      astutils.InterfaceMeta
-		Env       string
+		VoPackage            string
+		Meta                 astutils.InterfaceMeta
+		Env                  string
+		RoutePatternStrategy int
 	}{
-		VoPackage: modName + "/vo",
-		Meta:      meta,
-		Env:       env,
+		VoPackage:            modName + "/vo",
+		Meta:                 meta,
+		Env:                  env,
+		RoutePatternStrategy: routePatternStrategy,
 	}); err != nil {
 		panic(err)
 	}

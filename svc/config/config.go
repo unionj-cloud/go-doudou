@@ -36,8 +36,7 @@ const (
 	GddServiceName   envVariable = "GDD_SERVICE_NAME"
 	GddHost          envVariable = "GDD_HOST"
 	// GddPort http port
-	GddPort    envVariable = "GDD_PORT"
-	GddBaseUrl envVariable = "GDD_BASE_URL"
+	GddPort envVariable = "GDD_PORT"
 	// Accept 'mono' for monolith mode or 'micro' for microservice mode
 	GddMode envVariable = "GDD_MODE"
 	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
@@ -50,6 +49,10 @@ const (
 	GddMemSeed envVariable = "GDD_MEM_SEED"
 	// GddMemName unique name of this node in cluster. if not provided, hostname will be used instead
 	GddMemName envVariable = "GDD_MEM_NAME"
+	// GddMemHost specify AdvertiseAddr attribute of memberlist config struct.
+	// if GddMemHost starts with dot such as .seed-svc-headless.default.svc.cluster.local,
+	// it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
+	// for supporting k8s stateful service
 	GddMemHost envVariable = "GDD_MEM_HOST"
 	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
 	GddMemPort envVariable = "GDD_MEM_PORT"

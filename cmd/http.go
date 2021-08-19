@@ -33,6 +33,7 @@ var handler bool
 var client string
 var doc bool
 var jsonattrcase string
+var routePatternStrategy int
 
 // httpCmd represents the http command
 var httpCmd = &cobra.Command{
@@ -49,13 +50,14 @@ var httpCmd = &cobra.Command{
 			logrus.Panicln(err)
 		}
 		s := svc.Svc{
-			Dir:          svcdir,
-			Handler:      handler,
-			Client:       client,
-			Omitempty:    omitempty,
-			Doc:          doc,
-			Jsonattrcase: jsonattrcase,
-			Env:          baseUrlEnv,
+			Dir:                  svcdir,
+			Handler:              handler,
+			Client:               client,
+			Omitempty:            omitempty,
+			Doc:                  doc,
+			Jsonattrcase:         jsonattrcase,
+			Env:                  baseUrlEnv,
+			RoutePatternStrategy: routePatternStrategy,
 		}
 		s.Http()
 	},
@@ -78,4 +80,5 @@ func init() {
 	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
 	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)
 	httpCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
+	httpCmd.Flags().IntVarP(&routePatternStrategy, "routePattern", "r", 0, "route pattern generate strategy. 0 means splitting each methods of service interface by slash / after converting to snake case. 1 means no splitting, only lowercase. recommend default value.")
 }

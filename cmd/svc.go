@@ -27,13 +27,12 @@ import (
 
 var k8sfile string
 var imageRepo string
-var docpath string
 
 // svcCmd represents the svc command
 var svcCmd = &cobra.Command{
 	Use:   "svc",
 	Short: "generate or update service",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
@@ -53,5 +52,4 @@ func init() {
 	deployCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	shutdownCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	pushCmd.Flags().StringVarP(&imageRepo, "repo", "r", "", `your private docker image repository`)
-	publishCmd.Flags().StringVarP(&docpath, "docpath", "", "", `openapi 3.0 compatible json document path`)
 }

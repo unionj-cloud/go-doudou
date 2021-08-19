@@ -1,16 +1,9 @@
 package svc
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/olivere/elastic"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
-	"github.com/unionj-cloud/go-doudou/esutils"
-	"github.com/unionj-cloud/go-doudou/logutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/test"
 	"os"
 	"testing"
 )
@@ -153,33 +146,6 @@ func Test_checkIc1(t *testing.T) {
 			})
 		})
 	}
-}
-
-func TestSvc_Publish(t *testing.T) {
-	terminator, host, port := test.PrepareTestEnvironment()
-	defer terminator()
-
-	esclient, err := elastic.NewSimpleClient(
-		elastic.SetErrorLog(logutils.NewLogger()),
-		elastic.SetURL([]string{fmt.Sprintf("http://%s:%d", host, port)}...),
-		elastic.SetGzip(true),
-	)
-	if err != nil {
-		t.Errorf("call NewSimpleClient() error: %+v\n", err)
-	}
-	es := esutils.NewEs("doc", "", esutils.WithClient(esclient))
-
-	svc := Svc{
-		DocPath: testDir + "/testfilesdoc1_openapi3.json",
-		Es:      es,
-	}
-
-	doc, err := es.GetByID(context.Background(), svc.Publish())
-	if err != nil {
-		t.Error(err)
-	}
-	jsonrs, _ := json.MarshalIndent(doc, "", "  ")
-	fmt.Println(string(jsonrs))
 }
 
 func TestSvc_Push(t *testing.T) {
