@@ -133,12 +133,13 @@ func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetBody(query)
+	_path := "/page/users"
 	if _req.Body != nil {
 		_req.SetQueryParamsFromValues(_urlValues)
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + "/testfileshttpcmd/pageusers")
+	_resp, _err := _req.Post(_server + _path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "")
 		return
