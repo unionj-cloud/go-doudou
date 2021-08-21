@@ -9,7 +9,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/keyenum"
 	"github.com/unionj-cloud/go-doudou/ddl/nullenum"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
 	"reflect"
@@ -141,12 +140,23 @@ type Column struct {
 	Indexes       []IndexItem
 }
 
+var altersqltmpl = `{{define "change"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + `
+CHANGE COLUMN ` + "`" + `{{.Name}}` + "`" + ` ` + "`" + `{{.Name}}` + "`" + ` {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}}{{if .Autoincrement}} AUTO_INCREMENT{{end}}{{if .Default}} DEFAULT {{.Default}}{{end}}{{if .Extra}} {{.Extra}}{{end}};
+{{end}}
+
+{{define "add"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + `
+ADD COLUMN ` + "`" + `{{.Name}}` + "`" + ` {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}}{{if .Autoincrement}} AUTO_INCREMENT{{end}}{{if .Default}} DEFAULT {{.Default}}{{end}}{{if .Extra}} {{.Extra}}{{end}};
+{{end}}
+`
+
 func (c *Column) ChangeColumnSql() (string, error) {
-	return templateutils.StringBlock(pathutils.Abs("alter.tmpl"), "change", c)
+	return templateutils.StringBlock("alter.tmpl", altersqltmpl, "change", c)
 }
 
 func (c *Column) AddColumnSql() (string, error) {
-	return templateutils.StringBlock(pathutils.Abs("alter.tmpl"), "add", c)
+	return templateutils.StringBlock("alter.tmpl", altersqltmpl, "add", c)
 }
 
 type DbColumn struct {
@@ -471,6 +481,16 @@ func NewFieldFromColumn(col Column) astutils.FieldMeta {
 	}
 }
 
+var createsqltmpl = `CREATE TABLE ` + "`" + `{{.Name}}` + "`" + ` (
+{{- range $co := .Columns }}
+` + "`" + `{{$co.Name}}` + "`" + ` {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Autoincrement}} AUTO_INCREMENT{{end}}{{if $co.Default}} DEFAULT {{$co.Default}}{{end}}{{if $co.Extra}} {{$co.Extra}}{{end}},
+{{- end }}
+PRIMARY KEY (` + "`" + `{{.Pk}}` + "`" + `){{if .Indexes}},{{end}}
+{{- range $i, $ind := .Indexes}}
+{{- if $i}},{{end}}
+{{if $ind.Unique}}UNIQUE {{end}}INDEX ` + "`" + `{{$ind.Name}}` + "`" + ` ({{ range $j, $it := $ind.Items }}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{ end }})
+{{- end }});`
+
 func (t *Table) CreateSql() (string, error) {
-	return templateutils.String(pathutils.Abs("create.tmpl"), t)
+	return templateutils.String("create.sql.tmpl", createsqltmpl, t)
 }

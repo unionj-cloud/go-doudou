@@ -66,7 +66,7 @@ func TestGenDaoSql(t *testing.T) {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			defer os.RemoveAll(pathutils.Abs("../testfiles/dao"))
-			daofile := pathutils.Abs("../testfiles/dao/userdao.sql")
+			daofile := pathutils.Abs("../testfiles/dao/userdaosql.go")
 			f, err := os.Open(daofile)
 			if err != nil {
 				t.Fatal(err)

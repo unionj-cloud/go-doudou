@@ -88,7 +88,6 @@ import (
 	"testfiles/domain"
 	"github.com/unionj-cloud/go-doudou/ddl"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
 	"strings"
@@ -112,7 +111,7 @@ func (receiver UserDaoImpl) Insert(ctx context.Context, data interface{}) (int64
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "InsertUser", nil); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "InsertUser", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
@@ -141,7 +140,7 @@ func (receiver UserDaoImpl) Upsert(ctx context.Context, data interface{}) (int64
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpsertUser", nil); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpsertUser", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
@@ -165,7 +164,7 @@ func (receiver UserDaoImpl) UpsertNoneZero(ctx context.Context, data interface{}
 		result       sql.Result
 		lastInsertID int64
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpsertUserNoneZero", data); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpsertUserNoneZero", data); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
@@ -201,7 +200,7 @@ func (receiver UserDaoImpl) Update(ctx context.Context, data interface{}) (int64
 		err       error
 		result    sql.Result
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUser", nil); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUser", nil); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
@@ -216,7 +215,7 @@ func (receiver UserDaoImpl) UpdateNoneZero(ctx context.Context, data interface{}
 		err       error
 		result    sql.Result
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUserNoneZero", data); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUserNoneZero", data); err != nil {
 		return 0, err
 	}
 	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
@@ -237,7 +236,7 @@ func (receiver UserDaoImpl) UpdateMany(ctx context.Context, data interface{}, wh
 	if user, ok = value.(domain.User); !ok {
 		return 0, errors.New("incorrect type of parameter data")
 	}
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsers", struct {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUsers", struct {
 		domain.User
 		Where string
 	}{
@@ -264,7 +263,7 @@ func (receiver UserDaoImpl) UpdateManyNoneZero(ctx context.Context, data interfa
 	if user, ok = value.(domain.User); !ok {
 		return 0, errors.New("incorrect type of parameter data")
 	}
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "UpdateUsersNoneZero", struct {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUsersNoneZero", struct {
 		domain.User
 		Where string
 	}{
@@ -285,7 +284,7 @@ func (receiver UserDaoImpl) Get(ctx context.Context, id interface{}) (interface{
 		err       error
 		user      domain.User
 	)
-	if statement, err = templateutils.StringBlockMysql(pathutils.Abs("userdao.sql"), "GetUser", nil); err != nil {
+	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "GetUser", nil); err != nil {
 		return domain.User{}, err
 	}
 	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {
@@ -372,8 +371,7 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 	}
 
 	return pageRet, nil
-}
-`
+}`
 			daofile := filepath.Join(dir, "../dao/userdaoimpl.go")
 			f, err := os.Open(daofile)
 			if err != nil {

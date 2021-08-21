@@ -4,12 +4,17 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 )
+
+var daotmpl = `package dao
+
+type {{.DomainName}}Dao interface {
+	Base
+}`
 
 func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 	var (
@@ -34,7 +39,7 @@ func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("dao.go.tmpl").ParseFiles(pathutils.Abs("dao.go.tmpl")); err != nil {
+		if tpl, err = template.New("dao.go.tmpl").Parse(daotmpl); err != nil {
 			return errors.Wrap(err, "error")
 		}
 		if err = tpl.Execute(f, struct {

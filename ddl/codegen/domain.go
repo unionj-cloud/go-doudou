@@ -4,18 +4,31 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
+var domaintmpl = `package domain
+
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
+
+//dd:table
+type {{.Name}} struct {
+{{- range $f := .Fields }}
+	{{$f.Name}} {{$f.Type}} ` + "`" + `{{$f.Tag}}` + "`" + `
+{{- end }}
+}`
+
 func GenDomainGo(dpath string, domain astutils.StructMeta) error {
 	var (
-		err     error
-		tplpath string
-		f       *os.File
+		err error
+		f   *os.File
 	)
 
 	if err = os.MkdirAll(dpath, os.ModePerm); err != nil {
@@ -29,9 +42,8 @@ func GenDomainGo(dpath string, domain astutils.StructMeta) error {
 		}
 		defer f.Close()
 
-		tplpath = pathutils.Abs("domain.go.tmpl")
 		var source string
-		if source, err = templateutils.String(tplpath, domain); err != nil {
+		if source, err = templateutils.String("domain.go.tmpl", domaintmpl, domain); err != nil {
 			return errors.Wrap(err, "error")
 		}
 

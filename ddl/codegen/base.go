@@ -3,11 +3,33 @@ package codegen
 import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
 	"path/filepath"
 	"text/template"
 )
+
+var basetmpl = `package dao
+
+import (
+	"context"
+	"github.com/unionj-cloud/go-doudou/ddl/query"
+)
+
+type Base interface {
+	Insert(ctx context.Context, data interface{}) (int64, error)
+	Upsert(ctx context.Context, data interface{}) (int64, error)
+	UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)
+	DeleteMany(ctx context.Context, where query.Q) (int64, error)
+	Update(ctx context.Context, data interface{}) (int64, error)
+	UpdateNoneZero(ctx context.Context, data interface{}) (int64, error)
+	UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error)
+	UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error)
+	Get(ctx context.Context, id interface{}) (interface{}, error)
+	SelectMany(ctx context.Context, where ...query.Q) (interface{}, error)
+	CountMany(ctx context.Context, where ...query.Q) (int, error)
+	PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
+}
+`
 
 func GenBaseGo(domainpath string, folder ...string) error {
 	var (
@@ -32,7 +54,7 @@ func GenBaseGo(domainpath string, folder ...string) error {
 			return errors.Wrap(err, "error")
 		}
 		defer f.Close()
-		if tpl, err = template.New("base.go.tmpl").ParseFiles(pathutils.Abs("base.go.tmpl")); err != nil {
+		if tpl, err = template.New("base.go.tmpl").Parse(basetmpl); err != nil {
 			return errors.Wrap(err, "error")
 		}
 		if err = tpl.Execute(f, nil); err != nil {
