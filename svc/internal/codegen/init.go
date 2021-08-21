@@ -87,10 +87,11 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.5.6
+	github.com/unionj-cloud/go-doudou v0.5.7
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
+	github.com/unionj-cloud/cast v1.3.2
 )`
 
 const gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"

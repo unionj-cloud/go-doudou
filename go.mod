@@ -59,6 +59,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.11.0
+	github.com/unionj-cloud/cast v1.3.2 // indirect
 	github.com/unionj-cloud/memberlist v0.2.7
 	github.com/urfave/negroni v1.0.0
 	go.opencensus.io v0.23.0 // indirect

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cast"
+	"github.com/unionj-cloud/cast"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/memberlist"

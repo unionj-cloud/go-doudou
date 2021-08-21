@@ -231,7 +231,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	_cast "github.com/unionj-cloud/go-doudou/cast"
+	_cast "github.com/unionj-cloud/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
