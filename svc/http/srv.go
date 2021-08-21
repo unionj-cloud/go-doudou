@@ -36,21 +36,21 @@ type Srv interface {
 func newServer(router http.Handler) *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITETIMEOUT",
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
 			config.GddWriteTimeout.Load(), err.Error())
 		write = 15 * time.Second
 	}
 
 	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READTIMEOUT",
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
 			config.GddReadTimeout.Load(), err.Error())
 		read = 15 * time.Second
 	}
 
 	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLETIMEOUT",
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
 			config.GddIdleTimeout.Load(), err.Error())
 		idle = 60 * time.Second
 	}
