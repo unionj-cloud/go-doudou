@@ -20,7 +20,6 @@ import (
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
@@ -31,9 +30,7 @@ import (
 )
 
 func main() {
-	env := config.NewDotenv(pathutils.Abs("../.env"))
-	conf := env.Get()
-
+	conf := config.LoadFromEnv()
 	conn, err := db.NewDb(conf.DbConf)
 	if err != nil {
 		panic(err)
