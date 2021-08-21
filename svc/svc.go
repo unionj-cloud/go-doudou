@@ -201,7 +201,7 @@ func (receiver Svc) Push() {
 	}
 	logrus.Infof("image %s has been pushed successfully\n", image)
 
-	codegen.GenK8s(receiver.Dir, svcname, image)
+	codegen.GenK8sDeployment(receiver.Dir, svcname, image)
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 

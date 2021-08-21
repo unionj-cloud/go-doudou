@@ -11,7 +11,7 @@ import (
 	"text/template"
 )
 
-var k8sTmpl = `apiVersion: apps/v1
+var deploymentTmpl = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.SvcName}}-deployment
@@ -53,19 +53,19 @@ spec:
       port: 6060
       targetPort: 6060`
 
-func GenK8s(dir string, svcname, image string) {
+func GenK8sDeployment(dir string, svcname, image string) {
 	var (
 		f   *os.File
 		tpl *template.Template
 	)
-	k8sfile := filepath.Join(dir, svcname+"_k8s.yaml")
+	k8sfile := filepath.Join(dir, svcname+"_deployment.yaml")
 	if _, err := os.Stat(k8sfile); os.IsNotExist(err) {
 		if f, err = os.Create(k8sfile); err != nil {
 			panic(err)
 		}
 		defer f.Close()
 
-		if tpl, err = template.New("k8sfile.tmpl").Parse(k8sTmpl); err != nil {
+		if tpl, err = template.New("deployment.tmpl").Parse(deploymentTmpl); err != nil {
 			panic(err)
 		}
 		if err = tpl.Execute(f, struct {

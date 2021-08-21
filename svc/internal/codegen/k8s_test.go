@@ -50,7 +50,7 @@ func TestGenK8s(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenK8s(tt.args.dir, tt.args.svcname, tt.args.image)
+			GenK8sDeployment(tt.args.dir, tt.args.svcname, tt.args.image)
 		})
 	}
 }
