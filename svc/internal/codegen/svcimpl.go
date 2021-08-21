@@ -21,7 +21,7 @@ import (
 )
 
 type {{.Meta.Name}}Impl struct {
-	conf config.Config
+	conf *config.Config
 }
 
 {{- range $m := .Meta.Methods }}
@@ -36,7 +36,7 @@ type {{.Meta.Name}}Impl struct {
     }
 {{- end }}
 
-func New{{.Meta.Name}}(conf config.Config, db *sqlx.DB) {{.Meta.Name}} {
+func New{{.Meta.Name}}(conf *config.Config, db *sqlx.DB) {{.Meta.Name}} {
 	return &{{.Meta.Name}}Impl{
 		conf,
 	}

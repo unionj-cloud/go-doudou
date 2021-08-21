@@ -24,14 +24,14 @@ import (
 )
 
 type TestfilessvcimplImpl struct {
-	conf config.Config
+	conf *config.Config
 }
 
 func (receiver *TestfilessvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
 	panic("implement me")
 }
 
-func NewTestfilessvcimpl(conf config.Config, db *sqlx.DB) Testfilessvcimpl {
+func NewTestfilessvcimpl(conf *config.Config, db *sqlx.DB) Testfilessvcimpl {
 	return &TestfilessvcimplImpl{
 		conf,
 	}

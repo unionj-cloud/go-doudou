@@ -80,7 +80,6 @@ func (receiver Svc) Http() {
 	validateRestApi(ic)
 
 	codegen.GenConfig(dir)
-	codegen.GenDotenv(dir)
 	codegen.GenDb(dir)
 	codegen.GenHttpMiddleware(dir)
 

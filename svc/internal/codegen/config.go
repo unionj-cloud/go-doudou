@@ -9,10 +9,10 @@ import (
 
 var configTmpl = `package config
 
-type Configurator interface {
-	Load()
-	Get() Config
-}
+import (
+	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
+)
 
 type Config struct {
 	DbConf   DbConfig
@@ -26,6 +26,17 @@ type DbConfig struct {
 	Passwd  string
 	Schema  string
 	Charset string ` + "`" + `default:"utf8mb4"` + "`" + `
+}
+
+func LoadFromEnv() *Config {
+	var dbconf DbConfig
+	err := envconfig.Process("db", &dbconf)
+	if err != nil {
+		logrus.Panicln("Error processing env", err)
+	}
+	return &Config{
+		dbconf,
+	}
 }
 `
 
