@@ -58,9 +58,9 @@ func GenK8sDeployment(dir string, svcname, image string) {
 		f   *os.File
 		tpl *template.Template
 	)
-	k8sfile := filepath.Join(dir, svcname+"_deployment.yaml")
-	if _, err := os.Stat(k8sfile); os.IsNotExist(err) {
-		if f, err = os.Create(k8sfile); err != nil {
+	file := filepath.Join(dir, svcname+"_deployment.yaml")
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		if f, err = os.Create(file); err != nil {
 			panic(err)
 		}
 		defer f.Close()
@@ -78,8 +78,8 @@ func GenK8sDeployment(dir string, svcname, image string) {
 			panic(err)
 		}
 	} else {
-		logrus.Warnf("file %s will be overwrite", k8sfile)
-		err = ioutil.WriteFile(k8sfile, modifyVersion(k8sfile, image), os.ModePerm)
+		logrus.Warnf("file %s will be overwrite", file)
+		err = ioutil.WriteFile(file, modifyVersion(file, image), os.ModePerm)
 		if err != nil {
 			panic(err)
 		}

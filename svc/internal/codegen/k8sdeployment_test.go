@@ -29,7 +29,30 @@ func TestModifyVersion(t *testing.T) {
 	}
 }
 
-func TestGenK8s(t *testing.T) {
+func TestModifyVersion2(t *testing.T) {
+	type args struct {
+		yfile string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				yfile: pathutils.Abs("./testfiles/corpus_statefulset.yaml"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := modifyVersion(tt.args.yfile, "v1.0.0")
+			fmt.Println(string(result))
+		})
+	}
+}
+
+func TestGenK8sDeployment(t *testing.T) {
 	type args struct {
 		dir     string
 		svcname string

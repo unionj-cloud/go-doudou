@@ -182,7 +182,7 @@ func (receiver Svc) Push() {
 	}
 
 	if stringutils.IsEmpty(receiver.ImageRepo) {
-		logrus.Warnln("stopped as no private docker image repository address provided")
+		logrus.Warnln("no private docker image repository address provided")
 		return
 	}
 	image := fmt.Sprintf("%s/%s:%s", receiver.ImageRepo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
@@ -202,6 +202,7 @@ func (receiver Svc) Push() {
 	logrus.Infof("image %s has been pushed successfully\n", image)
 
 	codegen.GenK8sDeployment(receiver.Dir, svcname, image)
+	codegen.GenK8sStatefulset(receiver.Dir, svcname, image)
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 
@@ -211,7 +212,7 @@ func (receiver Svc) Deploy() {
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
-		k8sfile = svcname + "_k8s.yaml"
+		k8sfile = svcname + "_statefulset.yaml"
 	}
 	cmd := exec.Command("kubectl", "apply", "-f", k8sfile)
 	cmd.Stdout = os.Stdout
@@ -227,7 +228,7 @@ func (receiver Svc) Shutdown() {
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
-		k8sfile = svcname + "_k8s.yaml"
+		k8sfile = svcname + "_statefulset.yaml"
 	}
 	cmd := exec.Command("kubectl", "delete", "-f", k8sfile)
 	cmd.Stdout = os.Stdout

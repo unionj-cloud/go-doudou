@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: corpus-statefulset
+spec:
+  selector:
+    matchLabels:
+      app: corpus
+  serviceName: corpus-svc-headless
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corpus
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: corpus
+          image: google.com/corpus:v2.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: http-port
+              containerPort: 6060
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: corpus-svc-headless
+spec:
+  selector:
+    app: corpus
+  ports:
+    - protocol: TCP
+      port: 6060
+      targetPort: 6060
+  clusterIP: None
