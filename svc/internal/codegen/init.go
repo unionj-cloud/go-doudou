@@ -151,6 +151,8 @@ GDD_MEM_HOST=`
 const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
 
 ENV GO111MODULE=on
+ARG user
+ENV HOST_USER=$user
 
 WORKDIR /repo
 
@@ -164,9 +166,8 @@ RUN apk add --no-cache bash tzdata
 
 ENV TZ="Asia/Shanghai"
 
-EXPOSE 6060
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -o api cmd/main.go
+RUN export GDD_VER=$(go list -mod=vendor -m -f '{{` + "`" + `{{ .Version }}` + "`" + `}}' github.com/unionj-cloud/go-doudou) && \
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-X 'github.com/unionj-cloud/go-doudou/svc/config.BuildUser=$HOST_USER' -X 'github.com/unionj-cloud/go-doudou/svc/config.BuildTime=$(date)' -X 'github.com/unionj-cloud/go-doudou/svc/config.GddVer=$GDD_VER'" -mod vendor -o api cmd/main.go
 
 ENTRYPOINT ["/repo/api"]
 `

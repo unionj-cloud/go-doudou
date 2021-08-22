@@ -19,6 +19,10 @@ func init() {
 	}
 }
 
+var (
+	GddVer, BuildUser, BuildTime string
+)
+
 type envVariable string
 
 const (

@@ -27,6 +27,7 @@ require (
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/go-querystring v1.1.0
 	github.com/gorilla/mux v1.8.0
+	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-msgpack v1.1.5 // indirect

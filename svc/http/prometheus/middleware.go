@@ -25,7 +25,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-var totalRequests = prometheus.NewCounterVec(
+var TotalRequests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "http_requests_total",
 		Help: "Number of get requests.",
@@ -58,14 +58,14 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 		statusCode := rw.statusCode
 
 		responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
-		totalRequests.WithLabelValues(path).Inc()
+		TotalRequests.WithLabelValues(path).Inc()
 
 		timer.ObserveDuration()
 	})
 }
 
 func init() {
-	prometheus.Register(totalRequests)
+	prometheus.Register(TotalRequests)
 	prometheus.Register(responseStatus)
 	prometheus.Register(httpDuration)
 }

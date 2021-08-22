@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hako/durafmt"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -12,6 +13,7 @@ import (
 	"github.com/unionj-cloud/memberlist"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -60,10 +62,9 @@ func (r *registry) Discover(svc string) ([]*Node, error) {
 		if err := json.Unmarshal(member.Meta, &mmeta); err != nil {
 			return nil, errors.Wrap(err, "")
 		}
-		if mmeta.Meta.Service == svc {
+		if stringutils.IsEmpty(svc) || mmeta.Meta.Service == svc {
 			nodes = append(nodes, &Node{
 				mmeta:      mmeta,
-				state:      Alive,
 				memberNode: member,
 				remote:     true,
 			})
@@ -73,9 +74,14 @@ func (r *registry) Discover(svc string) ([]*Node, error) {
 }
 
 type nodeMeta struct {
-	Service       string `json:"service"`
-	RouteRootPath string `json:"routeRootPath"`
-	Port          int    `json:"port"`
+	Service       string     `json:"service"`
+	RouteRootPath string     `json:"routeRootPath"`
+	Port          int        `json:"port"`
+	RegisterAt    *time.Time `json:"registerAt"`
+	GoVer         string     `json:"goVer"`
+	GddVer        string     `json:"gddVer"`
+	BuildUser     string     `json:"buildUser"`
+	BuildTime     string     `json:"buildTime"`
 }
 
 func newMeta(mnode *memberlist.Node) (mergedMeta, error) {
@@ -86,30 +92,6 @@ func newMeta(mnode *memberlist.Node) (mergedMeta, error) {
 	return mm, nil
 }
 
-type NodeState int
-
-const (
-	Alive NodeState = iota
-	Leaving
-	Left
-	Shutdown
-)
-
-func (s NodeState) String() string {
-	switch s {
-	case Alive:
-		return "alive"
-	case Leaving:
-		return "leaving"
-	case Left:
-		return "left"
-	case Shutdown:
-		return "shutdown"
-	default:
-		return "unknown"
-	}
-}
-
 type mergedMeta struct {
 	Meta nodeMeta    `json:"_meta,omitempty"`
 	Data interface{} `json:"data,omitempty"`
@@ -117,12 +99,13 @@ type mergedMeta struct {
 
 type Node struct {
 	mmeta      mergedMeta
-	state      NodeState
 	memberNode *memberlist.Node
 	*registry
 	// check the node is a local node or remote node
 	remote bool
 }
+
+var LocalNode *Node
 
 type NodeOption func(*Node)
 
@@ -210,7 +193,6 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))
 	}
 	node := &Node{
-		state: -1,
 		registry: &registry{
 			memberConf: mconf,
 		},
@@ -222,10 +204,16 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	if port == 0 {
 		port, _ = getFreePort()
 	}
+	now := time.Now()
 	node.mmeta.Meta = nodeMeta{
 		Service:       service,
-		Port:          port,
 		RouteRootPath: config.GddRouteRootPath.Load(),
+		Port:          port,
+		RegisterAt:    &now,
+		GoVer:         runtime.Version(),
+		GddVer:        config.GddVer,
+		BuildUser:     config.BuildUser,
+		BuildTime:     config.BuildTime,
 	}
 	mconf.Delegate = &delegate{node}
 	mconf.Events = &eventDelegate{node}
@@ -242,8 +230,8 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 		node.registry.memberlist.Shutdown()
 		return nil, errors.Wrap(err, "NewNode() error: Node register failed")
 	}
-	node.state = Alive
 	node.memberNode = list.LocalNode()
+	LocalNode = node
 	return node, nil
 }
 
@@ -253,6 +241,51 @@ func (n *Node) NumNodes() (numNodes int) {
 	n.memberLock.RUnlock()
 
 	return numNodes
+}
+
+type NodeInfo struct {
+	SvcName   string `json:"svcName"`
+	Hostname  string `json:"hostname"`
+	BaseUrl   string `json:"baseUrl"`
+	Status    string `json:"status"`
+	Uptime    string `json:"uptime"`
+	GoVer     string `json:"goVer"`
+	GddVer    string `json:"gddVer"`
+	BuildUser string `json:"buildUser"`
+	BuildTime string `json:"buildTime"`
+	Data      string `json:"data"`
+}
+
+func (n *Node) Info() NodeInfo {
+	status := "up"
+	if n.memberNode.State == memberlist.StateSuspect {
+		status = "suspect"
+	}
+	var data string
+	if n.mmeta.Data != nil {
+		if b, err := json.Marshal(n.mmeta.Data); err == nil {
+			data = string(b)
+		}
+	}
+	var uptime string
+	if n.mmeta.Meta.RegisterAt != nil {
+		uptime = time.Since(*n.mmeta.Meta.RegisterAt).String()
+		if duration, err := durafmt.ParseString(uptime); err == nil {
+			uptime = duration.LimitFirstN(2).String()
+		}
+	}
+	return NodeInfo{
+		SvcName:   n.mmeta.Meta.Service,
+		Hostname:  n.memberNode.Name,
+		BaseUrl:   n.BaseUrl(),
+		Status:    status,
+		Uptime:    uptime,
+		GoVer:     n.mmeta.Meta.GoVer,
+		GddVer:    n.mmeta.Meta.GddVer,
+		BuildUser: n.mmeta.Meta.BuildUser,
+		BuildTime: n.mmeta.Meta.BuildTime,
+		Data:      data,
+	}
 }
 
 func (n *Node) BaseUrl() string {

@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/svc/http/prometheus"
+	"github.com/unionj-cloud/go-doudou/svc/http/registry"
 	"github.com/urfave/negroni"
 	"net/http"
 	"os"
@@ -36,6 +37,7 @@ func NewDefaultHttpSrv() Srv {
 		var mergedRoutes []model.Route
 		mergedRoutes = append(mergedRoutes, onlinedoc.Routes()...)
 		mergedRoutes = append(mergedRoutes, prometheus.Routes()...)
+		mergedRoutes = append(mergedRoutes, registry.Routes()...)
 		for _, item := range mergedRoutes {
 			gddRouter.
 				Methods(item.Method).

@@ -26,7 +26,7 @@ func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *
 		scheme string
 		host string
 	)
-	if tpl, err = template.New("handlerimpl.go.tmpl").Parse(indexTmpl); err != nil {
+	if tpl, err = template.New("onlinedoc.tmpl").Parse(indexTmpl); err != nil {
 		panic(err)
 	}
 	doc, _ := json.Marshal(Oas)

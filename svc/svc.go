@@ -15,6 +15,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -173,8 +174,13 @@ func (receiver Svc) Push() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	validateRestApi(ic)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
-
-	cmd := exec.Command("docker", "build", "-t", svcname, ".")
+	loginUser, _ := user.Current()
+	var cmd *exec.Cmd
+	if loginUser != nil {
+		cmd = exec.Command("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", svcname, ".")
+	} else {
+		cmd = exec.Command("docker", "build", "-t", svcname, ".")
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
