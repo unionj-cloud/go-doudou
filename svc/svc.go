@@ -173,9 +173,16 @@ func (receiver Svc) Init() {
 func (receiver Svc) Push() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	validateRestApi(ic)
+
+	cmd := exec.Command("go", "mod", "vendor")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	loginUser, _ := user.Current()
-	var cmd *exec.Cmd
 	if loginUser != nil {
 		cmd = exec.Command("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", svcname, ".")
 	} else {
