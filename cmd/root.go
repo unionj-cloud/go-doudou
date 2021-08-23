@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/svc"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -35,14 +36,19 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "go-doudou",
-	Short: "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
+	Version: "v0.5.8",
+	Use:     "go-doudou",
+	Short:   "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
 	Long: `go-doudou works like a scaffolding tool but more than that. 
 it lets api providers design their apis and help them code less. 
 it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
 consumers can import it into postman to debug and test, or upload it into some code generators to download client sdk.
 it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
 load balancing and so on. it just begins, more features will come out soon.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		s := svc.Svc{}
+		s.Seed()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -63,11 +69,10 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-doudou.yaml)")
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-doudou.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.

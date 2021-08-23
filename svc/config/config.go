@@ -79,6 +79,10 @@ func (receiver envVariable) String() string {
 	return string(receiver)
 }
 
+func (receiver envVariable) Write(value string) error {
+	return os.Setenv(string(receiver), value)
+}
+
 type Switch bool
 
 func (s *Switch) Decode(value string) error {

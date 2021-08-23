@@ -204,6 +204,7 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	if port == 0 {
 		port, _ = getFreePort()
 	}
+	config.GddPort.Write(fmt.Sprint(port))
 	now := time.Now()
 	node.mmeta.Meta = nodeMeta{
 		Service:       service,
