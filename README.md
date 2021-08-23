@@ -37,7 +37,7 @@ go-doudou致力于帮助开发者打造去中心化的微服务体系，通过go
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.5.8
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.5.9
 ```
 
 

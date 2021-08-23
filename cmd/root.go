@@ -36,7 +36,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: "v0.5.8",
+	Version: "v0.5.9",
 	Use:     "go-doudou",
 	Short:   "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
 	Long: `go-doudou works like a scaffolding tool but more than that. 
