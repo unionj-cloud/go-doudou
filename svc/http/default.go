@@ -27,7 +27,7 @@ type DefaultHttpSrv struct {
 	routes    []model.Route
 }
 
-const gddPathPrefix = "/go-doudou"
+const gddPathPrefix = "/go-doudou/"
 
 func NewDefaultHttpSrv() Srv {
 	var gddRouter *mux.Router
@@ -41,7 +41,7 @@ func NewDefaultHttpSrv() Srv {
 		for _, item := range mergedRoutes {
 			gddRouter.
 				Methods(item.Method).
-				Path(strings.TrimPrefix(item.Pattern, gddPathPrefix)).
+				Path("/" + strings.TrimPrefix(item.Pattern, gddPathPrefix)).
 				Name(item.Name).
 				Handler(item.HandlerFunc)
 		}
@@ -91,6 +91,7 @@ func BasicAuth(w http.ResponseWriter, r *http.Request) bool {
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
 	if config.GddManage.Load() == "true" {
 		srv.Use(prometheus.PrometheusMiddleware)
+		srv.gddRouter.Use(prometheus.PrometheusMiddleware)
 	}
 	var middlewares []mux.MiddlewareFunc
 	for _, item := range mwf {

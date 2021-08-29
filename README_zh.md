@@ -7,43 +7,15 @@
 
 [中文](./README_zh.md) [EN](./README.md)  
 
-go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. It supports restful service only currently, but will support grpc in v2 version.
-
-
-
-### Philosophy 
-
-- Design First: We encourage designing your apis at the first place.
-- Contract: We use OpenAPI 3.0 spec as a contract between server and client to reduce the communication cost between different dev teams and speed up development.
-- Decentralization: We use gossip protocol to do service register and discovery to build a robust, scalable and decentralized service cluster. Thanks the awesome library memberlist by hashicorp.
-
-
-
-### Features
-
-- Design service interface to generate main function, routes, http handlers, service implementation stub, http client, OpenAPI 3.0 json spec and more.
-- Support DNS address for service register and discovery
-- Support monolith or microservices architecture
-- Built-in client load balancing: currently only round-robin
-- Built-in graceful shutdown
-- Built-in live reloading by watching go files
-- Built-in service apis documentation UI
-- Built-in service registry UI
-- Built-in prometheus middlewares: http_requests_total, response_status and http_response_time_seconds
-- Built-in docker and k8s deployment support: dockerfile, deployment kind yaml file and statefulset kind yaml file
-- Easy to learn, simple to use
-
-
-
-### Support Golang Version
-
-- go 1.13, 1.14, 1.15 with GO111MODULE=on
-
-- go 1.16+
+go-doudou（doudou发音/dəudəu/）是基于gossip协议做服务注册与发现，基于openapi 3.0规范做接口定义的go语言去中心化微服务敏捷开发框架。  
+go-doudou通过一组命令行工具可以帮助开发者快速初始化一个或一组restful服务，通过在接口类中定义方法，即相当于设计了一组api，然后通过命令可以
+生成启动服务的main方法，路由和相应的handler，以及go客户端代码。  
+go-doudou主张设计优先，通过预先设计和定义接口，来生成代码，修改定义后，重新覆盖或者增量生成代码的方式来实现快速开发。  
+go-doudou推崇契约精神，通过openapi 3.0协议来描述接口，规范服务提供方和消费方的合作，促使研发团队整体提高交付效率。  
+go-doudou致力于帮助开发者打造去中心化的微服务体系，通过gossip协议将集群内的服务连接起来，采用客户端负载均衡的方式调用其他服务。  
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 ### TOC
 
 - [安装](#%E5%AE%89%E8%A3%85)
@@ -64,69 +36,38 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 
 
-### Install
+### 安装
 
 ```shell
 go get -v -u github.com/unionj-cloud/go-doudou/...@v0.5.9
 ```
 
-### Hello World
 
-#### Initialize project
+### 使用
 
+1. 以auth服务为例，初始化项目
 ```shell
-➜  ~ go-doudou svc init helloworld
-WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
-1.16
-helloworld
+go-doudou svc init auth
 ```
-You can ignore the warning now.
+会生成如下项目结构
 ```shell
-➜  helloworld git:(master) ✗ ls -la -h
-total 40
-drwxr-xr-x   10 wubin1989  staff   320B  8 29 23:27 .
-drwxr-xr-x+ 157 wubin1989  staff   4.9K  8 29 23:27 ..
--rw-r--r--    1 wubin1989  staff   2.0K  8 29 23:22 .env
-drwxr-xr-x    5 wubin1989  staff   160B  8 29 23:26 .git
--rw-r--r--    1 wubin1989  staff   268B  8 29 23:22 .gitignore
-drwxr-xr-x    6 wubin1989  staff   192B  8 29 23:27 .idea
--rw-r--r--    1 wubin1989  staff   707B  8 29 23:22 Dockerfile
--rw-r--r--    1 wubin1989  staff   442B  8 29 23:22 go.mod
--rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
-drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
+➜  auth git:(master) ✗ ll
+total 24
+-rw-r--r--  1 wubin1989  staff   372B  7  2 17:20 Dockerfile
+-rw-r--r--  1 wubin1989  staff   399B  7  2 17:20 go.mod
+-rw-r--r--  1 wubin1989  staff   241B  7  2 17:20 svc.go
+drwxr-xr-x  3 wubin1989  staff    96B  7  2 17:20 vo
 ```
-- Dockerfile：build docker image
-
-- svc.go: design your rest apis by defining methods of Helloworld interface
-
-- vo folder：define structs as data structure in http request body and response body, and also as OpenAPI 3.0 schemas
-
-- .env: config file, go-doudou use it to load enviroment variables with GDD_ prefix
-
-  
-
-#### Define methods
-
-There are some constraints, please read [接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-
-```go
-package service
-
-import (
-	"context"
-	"helloworld/vo"
-)
-
-type Helloworld interface {
-	// You can define your service methods as your need. Below is an example.
-	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error)
-}
-```
+- Dockerfile：生成docker镜像
+- svc.go：接口设计文件，里面是interface，在里面定义方法
+- vo文件夹：里面定义struct，作为接口的入参和出参，也用于生成openapi3.0规范里的schema
 
 
+2. 在svc.go文件里的interface里定义接口方法，在vo包里定义入参和出参结构体  
+   此处略，见下文的[接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
+   
 
-#### Generate code
-
+3. 生成http接口代码
 ```shell
 go-doudou svc http --handler -c go -o --doc
 ```
@@ -164,6 +105,7 @@ drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 vo
 
 4. 将.env文件里的配置项GDD_SEED的值删掉，因为目前还没有种子  
    
+
 5. 启动服务
 ```shell
 ➜  auth git:(master) ✗ go run cmd/main.go
@@ -185,7 +127,7 @@ INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+
 INFO[2021-07-02 17:46:53] =================================================== 
 INFO[2021-07-02 17:46:53] Started in 468.696µs                         
 INFO[2021-07-02 17:46:53] Http server is listening on :6060 
-```
+```  
 
 从第6步开始是部署服务相关的步骤，需要本地有docker环境，连接到本地或者远程的k8s服务  
 
@@ -193,19 +135,19 @@ INFO[2021-07-02 17:46:53] Http server is listening on :6060
 6. 打镜像
 ```shell
 go-doudou svc push -r yourprivaterepositoryaddress
-```
+```  
 
 
 7. 部署到k8s
 ```shell
 go-doudou svc deploy 
-```
+```  
 
 
 8. 关闭服务
 ```shell
 go-doudou svc shutdown
-```
+```  
 
 
 9. 伸缩服务
