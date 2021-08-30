@@ -4,7 +4,6 @@ package prometheus
 // Many thanks to TannerGabriel https://github.com/TannerGabriel
 // Post link https://gabrieltanner.org/blog/collecting-prometheus-metrics-in-golang written by TannerGabriel
 import (
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net/http"
@@ -30,7 +29,7 @@ var TotalRequests = prometheus.NewCounterVec(
 		Name: "http_requests_total",
 		Help: "Number of get requests.",
 	},
-	[]string{"path"},
+	[]string{"path", "method"},
 )
 
 var responseStatus = prometheus.NewCounterVec(
@@ -44,21 +43,21 @@ var responseStatus = prometheus.NewCounterVec(
 var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name: "http_response_time_seconds",
 	Help: "Duration of HTTP requests.",
-}, []string{"path"})
+}, []string{"path", "method"})
 
 func PrometheusMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		route := mux.CurrentRoute(r)
-		path, _ := route.GetPathTemplate()
+		path := r.URL.Path
+		method := r.Method
+		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path, method))
 
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
 		rw := NewResponseWriter(w)
 		next.ServeHTTP(rw, r)
 
 		statusCode := rw.statusCode
 
 		responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
-		TotalRequests.WithLabelValues(path).Inc()
+		TotalRequests.WithLabelValues(path, method).Inc()
 
 		timer.ObserveDuration()
 	})

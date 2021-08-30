@@ -91,7 +91,6 @@ func BasicAuth(w http.ResponseWriter, r *http.Request) bool {
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
 	if config.GddManage.Load() == "true" {
 		srv.Use(prometheus.PrometheusMiddleware)
-		srv.gddRouter.Use(prometheus.PrometheusMiddleware)
 	}
 	var middlewares []mux.MiddlewareFunc
 	for _, item := range mwf {
