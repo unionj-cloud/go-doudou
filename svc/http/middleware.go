@@ -1,11 +1,13 @@
 package ddhttp
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"github.com/ascarter/requestid"
 	"github.com/felixge/httpsnoop"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -82,6 +84,24 @@ func Rest(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		}
+		inner.ServeHTTP(w, r)
+	})
+}
+
+func BasicAuth(inner http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username := config.GddManageUser.Load()
+		password := config.GddManagePass.Load()
+		if stringutils.IsNotEmpty(username) || stringutils.IsNotEmpty(password) {
+			user, pass, ok := r.BasicAuth()
+
+			if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
+				w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
+				w.WriteHeader(401)
+				w.Write([]byte("Unauthorised.\n"))
+				return
+			}
 		}
 		inner.ServeHTTP(w, r)
 	})

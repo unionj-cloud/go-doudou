@@ -2,7 +2,6 @@ package ddhttp
 
 import (
 	"context"
-	"crypto/subtle"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -12,7 +11,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/svc/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/svc/http/registry"
-	"github.com/urfave/negroni"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,10 +28,13 @@ type DefaultHttpSrv struct {
 const gddPathPrefix = "/go-doudou/"
 
 func NewDefaultHttpSrv() Srv {
+	rootRouter := mux.NewRouter().PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true)
 	var gddRouter *mux.Router
 	var routes []model.Route
 	if config.GddManage.Load() == "true" {
-		gddRouter = mux.NewRouter().PathPrefix(config.GddRouteRootPath.Load() + gddPathPrefix).Subrouter().StrictSlash(true)
+		rootRouter.Use(prometheus.PrometheusMiddleware)
+		gddRouter = rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
+		gddRouter.Use(BasicAuth)
 		var mergedRoutes []model.Route
 		mergedRoutes = append(mergedRoutes, onlinedoc.Routes()...)
 		mergedRoutes = append(mergedRoutes, prometheus.Routes()...)
@@ -48,7 +49,7 @@ func NewDefaultHttpSrv() Srv {
 		routes = append(routes, mergedRoutes...)
 	}
 	return &DefaultHttpSrv{
-		mux.NewRouter().PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true),
+		rootRouter,
 		gddRouter,
 		routes,
 	}
@@ -69,44 +70,12 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	}
 }
 
-func BasicAuth(w http.ResponseWriter, r *http.Request) bool {
-	username := config.GddManageUser.Load()
-	password := config.GddManagePass.Load()
-	if stringutils.IsEmpty(username) && stringutils.IsEmpty(password) {
-		return true
-	}
-
-	user, pass, ok := r.BasicAuth()
-
-	if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
-		w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
-		w.WriteHeader(401)
-		w.Write([]byte("Unauthorised.\n"))
-		return false
-	}
-
-	return true
-}
-
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
-	if config.GddManage.Load() == "true" {
-		srv.Use(prometheus.PrometheusMiddleware)
-	}
 	var middlewares []mux.MiddlewareFunc
 	for _, item := range mwf {
 		middlewares = append(middlewares, item)
 	}
 	srv.Use(middlewares...)
-	if config.GddManage.Load() == "true" {
-		srv.PathPrefix(gddPathPrefix).Handler(negroni.New(
-			negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-				if BasicAuth(w, r) {
-					next(w, r)
-				}
-			}),
-			negroni.Wrap(srv.gddRouter),
-		))
-	}
 }
 
 func (srv *DefaultHttpSrv) Run() {
