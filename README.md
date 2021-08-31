@@ -45,7 +45,6 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 ### TOC
 
   - [Install](#install)
@@ -58,10 +57,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
       - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
       - [Deploy](#deploy)
       - [Shutdown](#shutdown)
-      - [Scale](#scale)
-  - [Constraints](#constraints)
-    - [Methods](#methods)
-    - [Struct Parameters](#struct-parameters)
+  - [Must Know](#must-know)
   - [Service register & discovery](#service-register--discovery)
   - [Client load balance](#client-load-balance)
   - [Example](#example)
@@ -69,7 +65,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
     - [name](#name)
     - [ddl](#ddl)
   - [TODO](#todo)
-  - [Help](#help)
+  - [Community](#community)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
