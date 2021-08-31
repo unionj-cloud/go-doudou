@@ -21,9 +21,9 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 ### Features
 
-- Design service interface to generate main function, routes, http handlers, service implementation stub, http client, OpenAPI 3.0 json spec and more.
+- Low-code: design service interface to generate main function, routes, http handlers, service implementation stub, http client, OpenAPI 3.0 json spec and more.
 - Support DNS address for service register and discovery
-- Support monolith or microservices architecture
+- Support monolith and microservices architecture
 - Built-in client load balancing: currently only round-robin
 - Built-in graceful shutdown
 - Built-in live reloading by watching go files
@@ -38,11 +38,12 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Support Golang Version
 
 - go 1.13, 1.14, 1.15 with GO111MODULE=on
-
 - go 1.16+
+- < go 1.13: not test, maybe support
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 ### TOC
 
   - [Install](#install)
@@ -128,7 +129,7 @@ import (
 
 type Helloworld interface {
 	// You can define your service methods as your need. Below is an example.
-	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error)
+	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
 }
 ```
 
@@ -181,29 +182,29 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 Set GDD_MEM_SEED empty in .env file because there is no seed address before run our service now.
 
 ```shell
-➜  helloworld git:(master) ✗ go run cmd/main.go 
-time="2021-08-31 12:47:22" level=info msg="Node wubindeMacBook-Pro.local joined, supplying helloworld service"
-time="2021-08-31 12:47:22" level=warning msg="No seed found"
-time="2021-08-31 12:47:22" level=info msg="Memberlist created. Local node is Node wubindeMacBook-Pro.local, providing helloworld service at http://192.168.101.6:6060, memberlist port 59505\n"
+➜  helloworld git:(master) ✗ go run cmd/main.go
+INFO[2021-08-31 21:35:47] Node 192.168.2.20 joined, supplying helloworld service 
+WARN[2021-08-31 21:35:47] No seed found                                
+INFO[2021-08-31 21:35:47] Memberlist created. Local node is Node 192.168.2.20, providing helloworld service at http://192.168.2.20:6060, memberlist port 50324 
  _____                     _                    _
 |  __ \                   | |                  | |
 | |  \/  ___   ______   __| |  ___   _   _   __| |  ___   _   _
 | | __  / _ \ |______| / _` | / _ \ | | | | / _` | / _ \ | | | |
 | |_\ \| (_) |        | (_| || (_) || |_| || (_| || (_) || |_| |
  \____/ \___/          \__,_| \___/  \__,_| \__,_| \___/  \__,_|
-time="2021-08-31 12:47:22" level=info msg="================ Registered Routes ================"
-time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
-time="2021-08-31 12:47:22" level=info msg="|    NAME     | METHOD |         PATTERN         |"
-time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
-time="2021-08-31 12:47:22" level=info msg="| PageUsers   | POST   | /page/users             |"
-time="2021-08-31 12:47:22" level=info msg="| GetDoc      | GET    | /go-doudou/doc          |"
-time="2021-08-31 12:47:22" level=info msg="| GetOpenAPI  | GET    | /go-doudou/openapi.json |"
-time="2021-08-31 12:47:22" level=info msg="| Prometheus  | GET    | /go-doudou/prometheus   |"
-time="2021-08-31 12:47:22" level=info msg="| GetRegistry | GET    | /go-doudou/registry     |"
-time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
-time="2021-08-31 12:47:22" level=info msg="==================================================="
-time="2021-08-31 12:47:22" level=info msg="Started in 547.349µs\n"
-time="2021-08-31 12:47:22" level=info msg="Http server is listening on :6060\n"
+INFO[2021-08-31 21:35:47] ================ Registered Routes ================ 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] |    NAME     | METHOD |         PATTERN         | 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] | PageUsers   | POST   | /page/users             | 
+INFO[2021-08-31 21:35:47] | GetDoc      | GET    | /go-doudou/doc          | 
+INFO[2021-08-31 21:35:47] | GetOpenAPI  | GET    | /go-doudou/openapi.json | 
+INFO[2021-08-31 21:35:47] | Prometheus  | GET    | /go-doudou/prometheus   | 
+INFO[2021-08-31 21:35:47] | GetRegistry | GET    | /go-doudou/registry     | 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] =================================================== 
+INFO[2021-08-31 21:35:47] Started in 431.269µs                         
+INFO[2021-08-31 21:35:47] Http server is listening on :6060
 ```
 
 
@@ -293,50 +294,32 @@ go-doudou svc deploy
 go-doudou svc shutdown
 ```
 
-##### Scale
-
-```shell
-go-doudou svc scale -n 3
-```
 
 
+### Must Know
 
-### Constraints
+There are some constraints or notable things when you define your methods as exposed apis for client in svc.go file.
 
-There are some constraints when you define your methods as exposed apis for client in svc.go file.
-
-#### Methods
-
-1. 支持Post, Get, Delete, Put四种http请求方法，从接口方法名称来判断，默认是post请求，如果方法名以Post/Get/Delete/Put开头，
-   则http请求方法分别为相对应的post/get/delete/put的其中一种  
-2. 第一个入参的类型是context.Context，这个不要改，可以合理利用这个参数实现一些效果，比如当客户端取消请求，处理逻辑可以及时停止，节省服务器资源
-3. 入参和出参的类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体以及上述类型相应的切片类型和指针类型。
-   go-doudou生成代码和openapi文档的时候会扫描vo包里的结构体，如果接口的入参和出参里用了vo包以外的包里的结构体，go-doudou扫描不到结构体的字段。 
-4. 特别的，入参还支持multipart.FileHeader类型，用于文件上传。出参还支持os.File类型，用于文件下载
-5. 入参和出参的类型，不支持func类型，channel类型，接口类型和匿名结构体
-6. 因为go的net/http包里的取Form参数相关的方法，比如FormValue，取到的参数值都是string类型的，go-doudou采用了cobra和viper的作者spf13大神的[cast](https://github.com/spf13/cast) 库做类型转换，
-   生成的handlerimpl.go文件里的代码里解析表单参数的地方可能会报编译错误，可以给go-doudou提[issue](https://github.com/unionj-cloud/go-doudou/issues) ，也可以自己手动修改。
-   当增删改了svc.go里的接口方法，重新执行代码生成命令`go-doudou svc http --handler -c go -o --doc`时，handlerimpl.go文件里的代码是增量生成的，
-   即之前生成的代码和自己手动修改过的代码都不会被覆盖
-7. handler.go文件里的代码在每次执行go-doudou svc http命令的时候都会重新生成，请不要手动修改里面的代码
-8. 除handler.go和handlerimpl.go之外的其他文件，都是先判断是否存在，不存在才生成，存在就什么都不做
-
-
-
-#### Struct Parameters
-
-1. 结构体字段类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体，**匿名结构体**以及上述类型相应的切片类型和指针类型。
-2. 结构体字段类型，不支持func类型，channel类型，接口类型
-3. 结构体字段类型，不支持类型别名
+1. Only support GET, POST, PUT, DELETE http methods. If method name starts with one of Get/Post/Put/Delete, http method will be one of GET/POST/PUT/DELETE. If method name doesn't start with any of them, default http method is POST.
+2. First input parameter MUST be context.Context.
+3. Only support golang [built-in types](https://golang.org/pkg/builtin/), map with string key, custom structs in vo package, corresponding slice and pointer types for input and output parameters. When go-doudou generate code and OpenAPI 3.0 spec, it will scan structs in vo package. If there is a struct from other package, the struct fields cannot be known by go-doudou.
+4. As special cases, it supports multipart.FileHeader for uploading file as input parameter, supports os.File for downloading file as output parameter.
+5. NOT support alias types as field of a struct.
+6. NOT support func, channel, interface and anonymous struct type as input and output parameter.
+7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added or modified methods in svc.go, new code will be appended to handlerimpl.go.
+8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify handler.go file.
+9. When execute  `go-doudou svc http`, before generating one file other than handler.go and handlerimpl.go files, go-doudou will check if it exists first, if already exists, do nothing.
 
 
 
 ### Service register & discovery
 
-go-doudou同时支持单体模式和微服务模式，以环境变量的方式配置。  
-- `GDD_MODE=micro`：为微服务模式  
-- `GDD_MODE=mono`：为单体模式  
-在生成的cmd/main.go文件里有如下所示代码：  
+Go-doudou supports monolith and microservices architecture.
+- `GDD_MODE=micro`：microservices architecture
+- `GDD_MODE=mono`：monolith architecture 
+
+There is service register code in main.go file.
+
 ```go
 if ddconfig.GddMode.Load() == "micro" {
     node, err := registry.NewNode()
@@ -346,22 +329,24 @@ if ddconfig.GddMode.Load() == "micro" {
     logrus.Infof("Memberlist created. Local node is %s\n", node)
 }
 ```
-当只有其他服务依赖自己的时候，只需要把自己的服务通过`registry.NewNode()`方法注册上去即可。  
 如果自己需要依赖其他服务，则除了需要把自己的服务注册到微服务集群之外，还需要加上实现服务发现的代码：
+
+If dependent on other services, it should add service discovery code besides service register code.
+
 ```go
-// 注册自己并加入集群
+// service register
 node, err := registry.NewNode()
 if err != nil {
     logrus.Panicln(fmt.Sprintf("%+v", err))
 }
 logrus.Infof("%s joined cluster\n", node.String())
 
-// 需要依赖usersvc服务，那么就创建一个usersvc服务的provider
+// call NewMemberlistServiceProvider to new a provider with name of the dependent service
 usersvcProvider := ddhttp.NewMemberlistServiceProvider("usersvc", node)
-// 将usersvc服务的provider注入到usersvc服务的客户端实例里
+// inject the provider into a client of the service
 usersvcClient := client.NewUsersvc(client.WithProvider(usersvcProvider))
 
-// 将usersvc服务的客户端实例注入到自己的服务实例里
+// inject the client into our service implementation instance
 svc := service.NewOrdersvc(conf, conn, usersvcClient)
 ```
 
@@ -369,7 +354,8 @@ svc := service.NewOrdersvc(conf, conn, usersvcClient)
 
 ### Client load balance
 
-暂时只实现了一种round robin的负载均衡策略，欢迎提pr:)
+Currently only one round robin strategy, welcome pr:)
+
 ```go
 func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 	nodes, err := m.registry.Discover(m.name)
@@ -395,7 +381,7 @@ Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
 
 #### name
 
-根据指定的命名规则生成结构体字段后面的`json`tag。[查看文档](./name/README.md)
+Command line tool for generating json tag of struct field. [Document](./name/README.md)
 
 
 

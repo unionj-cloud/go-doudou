@@ -1,6 +1,6 @@
 ## name
 
-Command line tool for generating json tag of struct field. Default strategy is camel case with first letter lowercased. Support snake case as well.
+根据指定的命名规则生成结构体字段后面的`json`tag。默认生成策略是**首字母小写的驼峰命名策略**，同时支持蛇形命名。
 
 
 
@@ -8,20 +8,24 @@ Command line tool for generating json tag of struct field. Default strategy is c
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ### TOC
 
-- [Flags](#flags)
-- [Usage](#usage)
+- [命令行参数](#%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0)
+- [用法](#%E7%94%A8%E6%B3%95)
 - [TODO](#todo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 
-### Flags
+### 命令行参数
 
 ```shell
-➜  go-doudou git:(main) go-doudou name -h   
-WARN[0000] Error loading .env file: open /Users/wubin1989/workspace/cloud/.env: no such file or directory 
-bulk add or update struct fields json tag
+➜  go-doudou git:(main) ✗ go-doudou name -h    
+A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.
 
 Usage:
   go-doudou name [flags]
@@ -31,13 +35,16 @@ Flags:
   -h, --help              help for name
   -o, --omitempty         whether omit empty value or not
   -s, --strategy string   name of strategy, currently only support "lowerCamel" and "snake" (default "lowerCamel")
+
+Global Flags:
+      --config string   config file (default is $HOME/.go-doudou.yaml)
 ```
 
 
 
-### Usage
+### 用法
 
-- Put `//go:generate go-doudou name --file $GOFILE` into go file
+- 在go文件里写上`//go:generate go-doudou name --file $GOFILE`，不限位置，最好是写在上方。目前的实现是对整个文件的所有struct都生效。
 
 ```go
 //go:generate go-doudou name --file $GOFILE
@@ -64,7 +71,7 @@ type TestName struct {
 }
 ```
 
-- Execute  `go generate ./...` at the same folder
+- 在项目根路径下执行命令`go generate ./...`
 
 ```go
 type Event struct {
@@ -90,11 +97,11 @@ type TestName struct {
 ```
 
 
-
 ### TODO
 
-+ [x] Support omitempty
-+ [x] Snake case strategy
++ [x] 支持omitempty
++ [x] 蛇形命名策略
++ [ ] 只针对上方标注了`//go:generate name -file $GOFILE`的结构体生效，而不是对整个文件的结构体都生效
 
 
 
