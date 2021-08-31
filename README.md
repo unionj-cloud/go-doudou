@@ -107,7 +107,7 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 
 #### Define methods
 
-There are some constraints, please read [接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
+There are some constraints, please read [Methods](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[Struct Parameters](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
 
 ```go
 package service
@@ -130,119 +130,208 @@ type Helloworld interface {
 ```shell
 go-doudou svc http --handler -c go -o --doc
 ```
-此时新增了一些文件夹
+Let's see what are generated.
 ```shell
-➜  auth git:(master) ✗ ls -la -h                  
-total 280
-drwxr-xr-x  17 wubin1989  staff   544B  7  2 17:43 .
-drwxr-xr-x  11 wubin1989  staff   352B  7  2 17:40 ..
--rw-r--r--   1 wubin1989  staff   413B  7  2 17:43 .env
-drwxr-xr-x   5 wubin1989  staff   160B  7  2 17:42 .git
--rw-r--r--   1 wubin1989  staff   268B  7  2 17:40 .gitignore
--rw-r--r--   1 wubin1989  staff   372B  7  2 17:40 Dockerfile
--rwxr-xr-x   1 wubin1989  staff   1.8K  7  2 17:40 auth_openapi3.json
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 client
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 cmd
-drwxr-xr-x   4 wubin1989  staff   128B  7  2 17:40 config
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 db
--rw-r--r--   1 wubin1989  staff   614B  7  2 17:42 go.mod
--rw-r--r--   1 wubin1989  staff   111K  7  2 17:42 go.sum
--rw-r--r--   1 wubin1989  staff   241B  7  2 17:40 svc.go
--rw-r--r--   1 wubin1989  staff   369B  7  2 17:40 svcimpl.go
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 transport
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 vo
+➜  helloworld git:(master) ✗ ls -la -h
+total 328
+drwxr-xr-x   20 wubin1989  staff   640B  8 31 12:34 .
+drwxr-xr-x+ 157 wubin1989  staff   4.9K  8 31 12:36 ..
+-rw-r--r--    1 wubin1989  staff   2.0K  8 29 23:45 .env
+drwxr-xr-x    5 wubin1989  staff   160B  8 31 12:36 .git
+-rw-r--r--    1 wubin1989  staff   268B  8 29 23:22 .gitignore
+drwxr-xr-x    7 wubin1989  staff   224B  8 31 12:33 .idea
+-rw-r--r--    1 wubin1989  staff   707B  8 29 23:22 Dockerfile
+-rwxr-xr-x    1 wubin1989  staff    13K  8 31 12:35 app.log
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 client
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 cmd
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 config
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 db
+-rw-r--r--    1 wubin1989  staff   536B  8 31 12:35 go.mod
+-rw-r--r--    1 wubin1989  staff   115K  8 31 12:35 go.sum
+-rwxr-xr-x    1 wubin1989  staff   1.9K  8 31 12:34 helloworld_openapi3.go
+-rwxr-xr-x    1 wubin1989  staff   1.8K  8 31 12:34 helloworld_openapi3.json
+-rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
+-rw-r--r--    1 wubin1989  staff   413B  8 29 23:44 svcimpl.go
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 transport
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
-- auth_openapi3.json：openapi3.0规范的json格式接口文档
-- client：包含golang的接口客户端代码，封装了[resty库](https://github.com/go-resty/resty)
-- cmd：服务启动入口，需要在main方法里创建依赖的组件或者第三方服务客户端实例，注入本项目服务实例中
-- config：配置文件相关
-- db：生成数据库连接
-- svcimpl.go：自定义服务的实现逻辑
-- transport：包含生成的http routes和handlers
-- .env：定义环境变量  
+- helloworld_openapi3.json：OpenAPI 3.0 spec json documentation
+- helloworld_openapi3.go: assgin OpenAPI 3.0 spec json string to a variable for serving online
+- client：golang http client based on [resty](https://github.com/go-resty/resty)
+- cmd：main.go file here
+- config：config loading related
+- db：function for connecting to database
+- svcimpl.go：write your business logic here
+- transport：http routes and handlers
+- .env：put configs here
 
 
-4. 将.env文件里的配置项GDD_SEED的值删掉，因为目前还没有种子  
-   
-5. 启动服务
+
+#### Run
+
+Set GDD_MEM_SEED empty in .env file because there is no seed address before run our service now.
+
 ```shell
-➜  auth git:(master) ✗ go run cmd/main.go
-INFO[0000] Node wubindeMacBook-Pro.local joined, supplying auth service 
-WARN[0000] No seed found                                
-INFO[0000] Memberlist created. Local node is Node wubindeMacBook-Pro.local, providing auth service at 192.168.101.6, memberlist port 57157, service port 6060 
+➜  helloworld git:(master) ✗ go run cmd/main.go 
+time="2021-08-31 12:47:22" level=info msg="Node wubindeMacBook-Pro.local joined, supplying helloworld service"
+time="2021-08-31 12:47:22" level=warning msg="No seed found"
+time="2021-08-31 12:47:22" level=info msg="Memberlist created. Local node is Node wubindeMacBook-Pro.local, providing helloworld service at http://192.168.101.6:6060, memberlist port 59505\n"
  _____                     _                    _
 |  __ \                   | |                  | |
 | |  \/  ___   ______   __| |  ___   _   _   __| |  ___   _   _
 | | __  / _ \ |______| / _` | / _ \ | | | | / _` | / _ \ | | | |
 | |_\ \| (_) |        | (_| || (_) || |_| || (_| || (_) || |_| |
  \____/ \___/          \__,_| \___/  \__,_| \__,_| \___/  \__,_|
-INFO[2021-07-02 17:46:53] ================ Registered Routes ================ 
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] |   NAME    | METHOD |     PATTERN     |     
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] | PageUsers | POST   | /auth/pageusers |     
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] =================================================== 
-INFO[2021-07-02 17:46:53] Started in 468.696µs                         
-INFO[2021-07-02 17:46:53] Http server is listening on :6060 
+time="2021-08-31 12:47:22" level=info msg="================ Registered Routes ================"
+time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
+time="2021-08-31 12:47:22" level=info msg="|    NAME     | METHOD |         PATTERN         |"
+time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
+time="2021-08-31 12:47:22" level=info msg="| PageUsers   | POST   | /page/users             |"
+time="2021-08-31 12:47:22" level=info msg="| GetDoc      | GET    | /go-doudou/doc          |"
+time="2021-08-31 12:47:22" level=info msg="| GetOpenAPI  | GET    | /go-doudou/openapi.json |"
+time="2021-08-31 12:47:22" level=info msg="| Prometheus  | GET    | /go-doudou/prometheus   |"
+time="2021-08-31 12:47:22" level=info msg="| GetRegistry | GET    | /go-doudou/registry     |"
+time="2021-08-31 12:47:22" level=info msg=+-------------+--------+-------------------------+
+time="2021-08-31 12:47:22" level=info msg="==================================================="
+time="2021-08-31 12:47:22" level=info msg="Started in 547.349µs\n"
+time="2021-08-31 12:47:22" level=info msg="Http server is listening on :6060\n"
 ```
 
-从第6步开始是部署服务相关的步骤，需要本地有docker环境，连接到本地或者远程的k8s服务  
 
 
-6. 打镜像
+#### Deployment
+
+##### Build docker image and push to your repository
+
 ```shell
-go-doudou svc push -r yourprivaterepositoryaddress
+➜  helloworld git:(master) ✗ go-doudou svc push -r wubin1989
+[+] Building 0.8s (13/13) FINISHED                                                                                                       
+ => [internal] load build definition from Dockerfile                                                                                0.0s
+ => => transferring dockerfile: 37B                                                                                                 0.0s
+ => [internal] load .dockerignore                                                                                                   0.0s
+ => => transferring context: 2B                                                                                                     0.0s
+ => [internal] load metadata for docker.io/library/golang:1.13.4-alpine                                                             0.0s
+ => [1/8] FROM docker.io/library/golang:1.13.4-alpine                                                                               0.0s
+ => [internal] load build context                                                                                                   0.7s
+ => => transferring context: 22.43MB                                                                                                0.6s
+ => CACHED [2/8] WORKDIR /repo                                                                                                      0.0s
+ => CACHED [3/8] ADD go.mod .                                                                                                       0.0s
+ => CACHED [4/8] ADD go.sum .                                                                                                       0.0s
+ => CACHED [5/8] ADD . ./                                                                                                           0.0s
+ => CACHED [6/8] RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories                                   0.0s
+ => CACHED [7/8] RUN apk add --no-cache bash tzdata                                                                                 0.0s
+ => CACHED [8/8] RUN export GDD_VER=$(go list -mod=vendor -m -f '{{ .Version }}' github.com/unionj-cloud/go-doudou) && CGO_ENABLED  0.0s
+ => exporting to image                                                                                                              0.0s
+ => => exporting layers                                                                                                             0.0s
+ => => writing image sha256:00365c58d0410d978aea462ec93323e20d879b15421e8eba29d8a17918660af8                                        0.0s
+ => => naming to docker.io/library/helloworld                                                                                       0.0s
+
+Use 'docker scan' to run Snyk tests against images to find vulnerabilities and learn how to fix them
+The push refers to repository [docker.io/wubin1989/helloworld]
+d0a9599b03e1: Pushed 
+c3055fdf1a79: Layer already exists 
+1c265a7f4c3e: Layer already exists 
+f567cf5a5cf1: Layer already exists 
+0b4acd902364: Layer already exists 
+bbf9670b59e9: Layer already exists 
+fdd6fb6fca5b: Layer already exists 
+a17f85ec7605: Layer already exists 
+2895b872dff5: Layer already exists 
+eed8c158e67f: Layer already exists 
+2033402d2275: Layer already exists 
+77cae8ab23bf: Layer already exists 
+v20210831125525: digest: sha256:5f75f7b43708d0619555f9bccbf0347e8db65319b83c65251015982ca6d23370 size: 2829
+time="2021-08-31 12:55:53" level=info msg="image wubin1989/helloworld:v20210831125525 has been pushed successfully\n"
+time="2021-08-31 12:55:53" level=info msg="k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service helloworld to k8s cluster\n"
 ```
 
+then you should see there are two yaml files generated
 
-7. 部署到k8s
+```
+➜  helloworld git:(master) ✗ ll
+total 328
+-rw-r--r--  1 wubin1989  staff   707B  8 29 23:22 Dockerfile
+-rwxr-xr-x  1 wubin1989  staff    15K  8 31 12:55 app.log
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 client
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 cmd
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 config
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 db
+-rw-r--r--  1 wubin1989  staff   536B  8 31 12:35 go.mod
+-rw-r--r--  1 wubin1989  staff   115K  8 31 12:35 go.sum
+-rw-r--r--  1 wubin1989  staff   817B  8 31 12:55 helloworld_deployment.yaml
+-rwxr-xr-x  1 wubin1989  staff   1.9K  8 31 12:34 helloworld_openapi3.go
+-rwxr-xr-x  1 wubin1989  staff   1.8K  8 31 12:34 helloworld_openapi3.json
+-rw-r--r--  1 wubin1989  staff   867B  8 31 12:55 helloworld_statefulset.yaml
+-rw-r--r--  1 wubin1989  staff   253B  8 29 23:22 svc.go
+-rw-r--r--  1 wubin1989  staff   413B  8 29 23:44 svcimpl.go
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 transport
+drwxr-xr-x  6 wubin1989  staff   192B  8 31 12:55 vendor
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:22 vo
+```
+
+- helloworld_deployment.yaml: k8s deploy file for stateless service, recommend for monolith architecture services
+- helloworld_statefulset.yaml: k8s deploy file for stateful service, recommend for microservices  architecture services
+
+##### Deploy
+
 ```shell
 go-doudou svc deploy 
 ```
 
+##### Shutdown
 
-8. 关闭服务
 ```shell
 go-doudou svc shutdown
 ```
 
+##### Scale
 
-9. 伸缩服务
 ```shell
 go-doudou svc scale -n 3
 ```
 
 
-### 注意
 
-暂时只支持http的restful接口，不支持grpc和protobuffer
+### Constraints
 
+There are some constraints when you define your methods as exposed apis for client in svc.go file.
 
-### 接口设计约束
+#### Methods
 
 1. 支持Post, Get, Delete, Put四种http请求方法，从接口方法名称来判断，默认是post请求，如果方法名以Post/Get/Delete/Put开头，
    则http请求方法分别为相对应的post/get/delete/put的其中一种  
+   
 2. 第一个入参的类型是context.Context，这个不要改，可以合理利用这个参数实现一些效果，比如当客户端取消请求，处理逻辑可以及时停止，节省服务器资源
+
 3. 入参和出参的类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体以及上述类型相应的切片类型和指针类型。
    go-doudou生成代码和openapi文档的时候会扫描vo包里的结构体，如果接口的入参和出参里用了vo包以外的包里的结构体，go-doudou扫描不到结构体的字段。 
+   
 4. 特别的，入参还支持multipart.FileHeader类型，用于文件上传。出参还支持os.File类型，用于文件下载
+
 5. 入参和出参的类型，不支持func类型，channel类型，接口类型和匿名结构体
+
 6. 因为go的net/http包里的取Form参数相关的方法，比如FormValue，取到的参数值都是string类型的，go-doudou采用了cobra和viper的作者spf13大神的[cast](https://github.com/spf13/cast) 库做类型转换，
    生成的handlerimpl.go文件里的代码里解析表单参数的地方可能会报编译错误，可以给go-doudou提[issue](https://github.com/unionj-cloud/go-doudou/issues) ，也可以自己手动修改。
    当增删改了svc.go里的接口方法，重新执行代码生成命令`go-doudou svc http --handler -c go -o --doc`时，handlerimpl.go文件里的代码是增量生成的，
    即之前生成的代码和自己手动修改过的代码都不会被覆盖
+   
 7. handler.go文件里的代码在每次执行go-doudou svc http命令的时候都会重新生成，请不要手动修改里面的代码
+
 8. 除handler.go和handlerimpl.go之外的其他文件，都是先判断是否存在，不存在才生成，存在就什么都不做
 
+   
 
-### vo包结构体设计约束
+
+### Struct Parameters
 
 1. 结构体字段类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体，**匿名结构体**以及上述类型相应的切片类型和指针类型。
 2. 结构体字段类型，不支持func类型，channel类型，接口类型
 3. 结构体字段类型，不支持类型别名
 
-### 服务注册与发现
+
+
+### Service register & discovery
+
 go-doudou同时支持单体模式和微服务模式，以环境变量的方式配置。  
 - `GDD_MODE=micro`：为微服务模式  
 - `GDD_MODE=mono`：为单体模式  
@@ -276,7 +365,9 @@ svc := service.NewOrdersvc(conf, conn, usersvcClient)
 ```
 
 
-### 客户端负载均衡
+
+### Client load balance
+
 暂时只实现了一种round robin的负载均衡策略，欢迎提pr:)
 ```go
 func (m *MemberlistServiceProvider) SelectServer() (string, error) {
@@ -292,28 +383,35 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 ```
 
 
-### Demo
 
-请参考[go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) 
+### Example
+
+Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) 
 
 
-### 工具箱
 
-kit包有一些命令行工具，执行上面👆的安装命令后，就可以用了。
+### Notable tools
 
 #### name
 
 根据指定的命名规则生成结构体字段后面的`json`tag。[查看文档](./name/README.md)
+
+
 
 #### ddl
 
 基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 实现的同步数据库表结构和Go结构体的工具。还可以生成dao层代码。
 [查看文档](./ddl/doc/README.md)
 
+
+
 ### TODO
 Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
 
+
+
 ### Help
+
 希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
 ![qrcode.png](qrcode.png) 
 
