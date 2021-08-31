@@ -43,7 +43,7 @@ func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWrit
 		query vo.PageQuery
 		code  int
 		data  vo.PageRet
-		msg   error
+		err   error
 	)
 	ctx = _req.Context()
 	if err := json.NewDecoder(_req.Body).Decode(&query); err != nil {
@@ -51,15 +51,15 @@ func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWrit
 		return
 	}
 	defer _req.Body.Close()
-	code, data, msg = receiver.testfileshttpcmd.PageUsers(
+	code, data, err = receiver.testfileshttpcmd.PageUsers(
 		ctx,
 		query,
 	)
-	if msg != nil {
-		if msg == context.Canceled {
-			http.Error(_writer, msg.Error(), http.StatusBadRequest)
+	if err != nil {
+		if err == context.Canceled {
+			http.Error(_writer, err.Error(), http.StatusBadRequest)
 		} else {
-			http.Error(_writer, msg.Error(), http.StatusInternalServerError)
+			http.Error(_writer, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -91,7 +91,7 @@ func NewTestfileshttpcmdHandler(testfileshttpcmd service.Testfileshttpcmd) Testf
 		t.Fatal(err)
 	}
 	if string(content) != expect {
-		t.Errorf("want %s, go %s\n", expect, string(content))
+		t.Errorf("want %s, got %s\n", expect, string(content))
 	}
 
 	expect = `package client
@@ -120,13 +120,13 @@ func (receiver *TestfileshttpcmdClient) SetProvider(provider ddhttp.IServiceProv
 func (receiver *TestfileshttpcmdClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
+func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
 	var (
 		_server string
 		_err    error
 	)
 	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		msg = errors.Wrap(_err, "")
+		err = errors.Wrap(_err, "")
 		return
 	}
 	_urlValues := url.Values{}
@@ -141,24 +141,24 @@ func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.
 	}
 	_resp, _err := _req.Post(_server + _path)
 	if _err != nil {
-		msg = errors.Wrap(_err, "")
+		err = errors.Wrap(_err, "")
 		return
 	}
 	if _resp.IsError() {
-		msg = errors.New(_resp.String())
+		err = errors.New(_resp.String())
 		return
 	}
 	var _result struct {
 		Code int        ` + "`" + `json:"code"` + "`" + `
 		Data vo.PageRet ` + "`" + `json:"data"` + "`" + `
-		Msg  string     ` + "`" + `json:"msg"` + "`" + `
+		Err  string     ` + "`" + `json:"err"` + "`" + `
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		msg = errors.Wrap(_err, "")
+		err = errors.Wrap(_err, "")
 		return
 	}
-	if stringutils.IsNotEmpty(_result.Msg) {
-		msg = errors.New(_result.Msg)
+	if stringutils.IsNotEmpty(_result.Err) {
+		err = errors.New(_result.Err)
 		return
 	}
 	return _result.Code, _result.Data, nil
@@ -191,6 +191,6 @@ func NewTestfileshttpcmd(opts ...ddhttp.DdClientOption) *TestfileshttpcmdClient 
 		t.Fatal(err)
 	}
 	if string(content) != expect {
-		t.Errorf("want %s, go %s\n", expect, string(content))
+		t.Errorf("want %s, got %s\n", expect, string(content))
 	}
 }

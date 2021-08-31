@@ -27,7 +27,7 @@ type TestfilessvcimplImpl struct {
 	conf *config.Config
 }
 
-func (receiver *TestfilessvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
+func (receiver *TestfilessvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
 	panic("implement me")
 }
 
