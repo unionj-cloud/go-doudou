@@ -17,12 +17,13 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
   - [Features](#features)
   - [Support Golang Version](#support-golang-version)
   - [Install](#install)
+  - [Usage](#usage)
   - [Hello World](#hello-world)
     - [Initialize project](#initialize-project)
     - [Define methods](#define-methods)
     - [Generate code](#generate-code)
     - [Run](#run)
-    - [Deployment](#deployment)
+    - [*Deployment](#deployment)
       - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
       - [Deploy](#deploy)
       - [Shutdown](#shutdown)
@@ -77,6 +78,37 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 ```shell
 go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.0
+```
+
+
+
+### Usage
+
+```shell
+➜  ~ go-doudou -h                            
+WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
+go-doudou works like a scaffolding tool but more than that. 
+it lets api providers design their apis and help them code less. 
+it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
+consumers can import it into postman to debug and test, or upload it into some code generators to download client sdk.
+it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
+load balancing and so on. it just begins, more features will come out soon.
+
+Usage:
+  go-doudou [flags]
+  go-doudou [command]
+
+Available Commands:
+  ddl         migration tool between database table structure and golang struct
+  help        Help about any command
+  name        bulk add or update struct fields json tag
+  svc         generate or update service
+
+Flags:
+  -h, --help      help for go-doudou
+  -v, --version   version for go-doudou
+
+Use "go-doudou [command] --help" for more information about a command.
 ```
 
 
@@ -140,6 +172,7 @@ type Helloworld interface {
 
 ```shell
 go-doudou svc http --handler -c go -o --doc
+go mod tidy
 ```
 Let's see what are generated.
 ```shell
@@ -208,9 +241,9 @@ INFO[2021-08-31 21:35:47] Started in 431.269µs
 INFO[2021-08-31 21:35:47] Http server is listening on :6060
 ```
 
+![screenshot-doc](./screenshot-doc.png)
 
-
-#### Deployment
+#### ![screenshot-registry](./screenshot-registry.png)Deployment
 
 ##### Build docker image and push to your repository
 
