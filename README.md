@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou)](https://goreportcard.com/report/github.com/unionj-cloud/go-doudou)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_shield)
 
-go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. It supports restful service only currently, but will support grpc in v2 version.
+go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports restful service only.
 
 
 

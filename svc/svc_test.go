@@ -196,22 +196,6 @@ func TestSvc_Shutdown(t *testing.T) {
 	})
 }
 
-func TestSvc_Scale(t *testing.T) {
-	dir := testDir + "scale"
-	receiver := Svc{
-		Dir: dir,
-	}
-	receiver.Init()
-	defer os.RemoveAll(dir)
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Panics(t, func() {
-		receiver.Scale()
-	})
-}
-
 func Test_validateDataType(t *testing.T) {
 	assert.NotPanics(t, func() {
 		validateDataType(testDir)
