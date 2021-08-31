@@ -4,20 +4,11 @@ DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://g
 
 
 
-### Features
-
-- Create/Update table from go struct
-
-- Create/Update go struct from table
-
-- Generate dao layer code with basic crud operations
-
-  
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ### TOC
 
+- [Features](#features)
 - [Flags](#flags)
 - [Quickstart](#quickstart)
 - [API](#api)
@@ -44,6 +35,14 @@ DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://g
 - [TODO](#todo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
+### Features
+
+- Create/Update table from go struct
+- Create/Update go struct from table
+- Generate dao layer code with basic crud operations
 
 
 

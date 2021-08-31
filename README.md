@@ -9,6 +9,38 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+### TOC
+
+  - [Philosophy](#philosophy)
+  - [Features](#features)
+  - [Support Golang Version](#support-golang-version)
+  - [Install](#install)
+  - [Hello World](#hello-world)
+    - [Initialize project](#initialize-project)
+    - [Define methods](#define-methods)
+    - [Generate code](#generate-code)
+    - [Run](#run)
+    - [Deployment](#deployment)
+      - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
+      - [Deploy](#deploy)
+      - [Shutdown](#shutdown)
+  - [Must Know](#must-know)
+  - [Service register & discovery](#service-register--discovery)
+  - [Client load balance](#client-load-balance)
+  - [Example](#example)
+  - [Notable tools](#notable-tools)
+    - [name](#name)
+    - [ddl](#ddl)
+  - [TODO](#todo)
+  - [Community](#community)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
 ### Philosophy 
 
 - Design First: We encourage designing your apis at the first place.
@@ -36,39 +68,8 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Support Golang Version
 
 - go 1.13, 1.14, 1.15 with GO111MODULE=on
-
 - go 1.16+
-
 - < go 1.13: not test, maybe support
-
-  
-
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-### TOC
-
-  - [Install](#install)
-  - [Hello World](#hello-world)
-    - [Initialize project](#initialize-project)
-    - [Define methods](#define-methods)
-    - [Generate code](#generate-code)
-    - [Run](#run)
-    - [Deployment](#deployment)
-      - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
-      - [Deploy](#deploy)
-      - [Shutdown](#shutdown)
-  - [Must Know](#must-know)
-  - [Service register & discovery](#service-register--discovery)
-  - [Client load balance](#client-load-balance)
-  - [Example](#example)
-  - [Notable tools](#notable-tools)
-    - [name](#name)
-    - [ddl](#ddl)
-  - [TODO](#todo)
-  - [Community](#community)
-- [License](#license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 
