@@ -230,6 +230,7 @@ func (receiver Svc) Deploy() {
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
 	}
+	logrus.Infof("Execute command: kubectl apply -f %s\n", k8sfile)
 	cmd := exec.Command("kubectl", "apply", "-f", k8sfile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -246,19 +247,8 @@ func (receiver Svc) Shutdown() {
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
 	}
+	logrus.Infof("Execute command: kubectl delete -f %s\n", k8sfile)
 	cmd := exec.Command("kubectl", "delete", "-f", k8sfile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-}
-
-func (receiver Svc) Scale() {
-	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
-	svcname := strings.ToLower(ic.Interfaces[0].Name)
-	cmd := exec.Command("kubectl", "scale", fmt.Sprintf("--replicas=%d", receiver.N), fmt.Sprintf("deployment/%s-deployment", svcname))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
