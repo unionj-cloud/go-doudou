@@ -100,7 +100,6 @@ const envTmpl = `GDD_BANNER=on
 GDD_BANNER_TEXT=Go-doudou
 # GddLogLevel accept values are panic, fatal, error, warn, warning, info, debug, trace
 GDD_LOG_LEVEL=info
-GDD_LOG_PATH=
 
 DB_HOST=localhost
 DB_PORT=3306
