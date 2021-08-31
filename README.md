@@ -5,8 +5,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou)](https://goreportcard.com/report/github.com/unionj-cloud/go-doudou)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_shield)
 
-[中文](./README_zh.md) [EN](./README.md)  
-
 go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. It supports restful service only currently, but will support grpc in v2 version.
 
 
@@ -38,8 +36,12 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Support Golang Version
 
 - go 1.13, 1.14, 1.15 with GO111MODULE=on
+
 - go 1.16+
+
 - < go 1.13: not test, maybe support
+
+  
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -79,6 +81,8 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ```shell
 go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.0
 ```
+
+
 
 ### Hello World
 
@@ -329,9 +333,7 @@ if ddconfig.GddMode.Load() == "micro" {
     logrus.Infof("Memberlist created. Local node is %s\n", node)
 }
 ```
-如果自己需要依赖其他服务，则除了需要把自己的服务注册到微服务集群之外，还需要加上实现服务发现的代码：
-
-If dependent on other services, it should add service discovery code besides service register code.
+If dependent on other services, here is an example code below.
 
 ```go
 // service register
@@ -381,14 +383,13 @@ Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
 
 #### name
 
-Command line tool for generating json tag of struct field. [Document](./name/README.md)
+Command line tool for generating json tag of struct field. Please check [document ](./name/README.md).
 
 
 
 #### ddl
 
-基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 实现的同步数据库表结构和Go结构体的工具。还可以生成dao层代码。
-[查看文档](./ddl/doc/README.md)
+DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). Please check [document](./ddl/doc/README.md).
 
 
 
@@ -397,18 +398,13 @@ Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/pr
 
 
 
-### Help
+### Community
 
-希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
+Welcome to contribute to go-doudou by forking it and submitting pr or issue. If you like go-doudou, please give it a star!
+
+Welcome to add my wechat to give me some feedback.
+
 ![qrcode.png](qrcode.png) 
-
-社区钉钉群二维码，群号：31405977
-
-![dingtalk.png](dingtalk.png)
-
-
-
-
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_large)

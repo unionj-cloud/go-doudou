@@ -16,14 +16,13 @@ DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://g
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 ### TOC
 
-- [快速上手](#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)
-- [命令行参数](#%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0)
+- [Flags](#flags)
+- [Quickstart](#quickstart)
 - [API](#api)
-  - [示例](#%E7%A4%BA%E4%BE%8B)
-  - [结构体标签](#%E7%BB%93%E6%9E%84%E4%BD%93%E6%A0%87%E7%AD%BE)
+  - [Example](#example)
+  - [Tags](#tags)
     - [pk](#pk)
     - [auto](#auto)
     - [type](#type)
@@ -33,27 +32,15 @@ DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://g
     - [unique](#unique)
     - [null](#null)
     - [unsigned](#unsigned)
-  - [dao层接口](#dao%E5%B1%82%E6%8E%A5%E5%8F%A3)
-    - [InsertXXX](#insertxxx)
-    - [UpsertXXX](#upsertxxx)
-    - [UpsertXXXNoneZero](#upsertxxxnonezero)
-    - [DeleteXXXs](#deletexxxs)
-    - [UpdateXXX](#updatexxx)
-    - [UpdateXXXNoneZero](#updatexxxnonezero)
-    - [UpdateXXXs](#updatexxxs)
-    - [UpdateXXXsNoneZero](#updatexxxsnonezero)
-    - [GetXXX](#getxxx)
-    - [SelectXXXs](#selectxxxs)
-    - [CountXXXs](#countxxxs)
-    - [PageXXXs](#pagexxxs)
+  - [Dao layer code](#dao-layer-code)
+    - [CRUD](#crud)
     - [Transaction](#transaction)
-  - [查询Dsl](#%E6%9F%A5%E8%AF%A2dsl)
-    - [示例](#%E7%A4%BA%E4%BE%8B-1)
-    - [API](#api-1)
-      - [Q接口](#q%E6%8E%A5%E5%8F%A3)
-      - [criteria结构体](#criteria%E7%BB%93%E6%9E%84%E4%BD%93)
-      - [where结构体](#where%E7%BB%93%E6%9E%84%E4%BD%93)
-      - [Page结构体](#page%E7%BB%93%E6%9E%84%E4%BD%93)
+  - [Query Dsl](#query-dsl)
+    - [Example](#example-1)
+    - [Q](#q)
+    - [criteria](#criteria)
+    - [Val](#val)
+    - [where](#where)
 - [TODO](#todo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -84,7 +71,79 @@ Flags:
 
 ### Quickstart
 
-Please 
+- Install go-doudou
+
+  ```shell
+  go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.0
+  ```
+
+- Clone demo repository
+
+  ```
+  git clone git@github.com:unionj-cloud/ddldemo.git
+  ```
+
+- Update database table struct and generate dao layer code
+
+  ```shell
+  go-doudou ddl --dao --pre=ddl_
+  ```
+
+  ```shell
+  ➜  ddldemo git:(main) ls -la dao
+  total 56
+  drwxr-xr-x   6 wubin1989  staff   192  9  1 00:28 .
+  drwxr-xr-x  14 wubin1989  staff   448  9  1 00:28 ..
+  -rw-r--r--   1 wubin1989  staff   953  9  1 00:28 base.go
+  -rw-r--r--   1 wubin1989  staff    45  9  1 00:28 userdao.go
+  -rw-r--r--   1 wubin1989  staff  9125  9  1 00:28 userdaoimpl.go
+  -rw-r--r--   1 wubin1989  staff  5752  9  1 00:28 userdaosql.go
+  ```
+
+- Run main function
+
+  ```
+  ➜  ddldemo git:(main) go run main.go       
+  INFO[0000] user jack's id is 14                         
+  INFO[0000] returned user jack's id is 14                
+  INFO[0000] returned user jack's average score is 97.534
+  ```
+
+- Delete domain and dao folder
+
+  ```shell
+  ➜  ddldemo git:(main) rm -rf dao && rm -rf domain
+  ```
+
+- Generate go struct and dao layer code from database
+
+  ```shell
+  go-doudou ddl --reverse --dao --pre=ddl_
+  ```
+
+  ```shell
+  ➜  ddldemo git:(main) ✗ ll
+  total 272
+  -rw-r--r--  1 wubin1989  staff   1.0K  9  1 00:27 LICENSE
+  -rw-r--r--  1 wubin1989  staff    85B  9  1 00:27 Makefile
+  -rw-r--r--  1 wubin1989  staff     9B  9  1 00:27 README.md
+  drwxr-xr-x  6 wubin1989  staff   192B  9  1 00:35 dao
+  drwxr-xr-x  3 wubin1989  staff    96B  9  1 00:35 domain
+  -rw-r--r--  1 wubin1989  staff   339B  9  1 00:27 go.mod
+  -rw-r--r--  1 wubin1989  staff   116K  9  1 00:27 go.sum
+  -rw-r--r--  1 wubin1989  staff   2.0K  9  1 00:27 main.go
+  ```
+
+- Run main function again
+
+  ```
+  ➜  ddldemo git:(main) ✗ go run main.go                          
+  INFO[0000] user jack's id is 15                         
+  INFO[0000] returned user jack's id is 15                
+  INFO[0000] returned user jack's average score is 97.534 
+  ```
+
+  
 
 ### API
 
@@ -318,13 +377,7 @@ func ExampleCriteria() {
 
 
 
-##### API
-
-Includes 1 interface and 6 structs 
-
-
-
-###### Q
+##### Q
 
 ```go
 type Q interface {
@@ -336,7 +389,7 @@ type Q interface {
 
 
 
-###### criteria
+##### criteria
 
 ```go
 type criteria struct {
@@ -361,7 +414,7 @@ type criteria struct {
 
 
 
-###### Val
+##### Val
 
 ```go
 type Val struct {
@@ -378,7 +431,7 @@ type Val struct {
 
 
 
-###### where
+##### where
 
 ```
 type where struct {
@@ -390,46 +443,10 @@ type where struct {
 - lsym
   - And: `and`
   - Or: `or`
+  
 - children: sub queries
 
-
-
-###### Page
-
-```go
-type Page struct {
-	Orders []Order
-	Offset int
-	Size   int
-}
-```
-
-
-
-###### Order
-
-```go
-type Order struct {
-	Col  string
-	Sort sortenum.Sort
-}
-```
-
-
-
-###### PageRet
-
-```go
-type PageRet struct {
-	Items    interface{}
-	PageNo   int
-	PageSize int
-	Total    int
-	HasNext  bool
-}
-```
-
-
+  
 
 ### TODO
 
