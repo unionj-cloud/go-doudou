@@ -118,7 +118,7 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 
 #### Define methods
 
-There are some constraints, please read [Methods](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[Struct Parameters](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
+Please read [Must Know](#must-know)
 
 ```go
 package service
