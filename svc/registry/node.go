@@ -34,16 +34,29 @@ type registry struct {
 	members    []*memberlist.Node
 }
 
+func seeds(seedstr string) []string {
+	if stringutils.IsEmpty(seedstr) {
+		return nil
+	}
+	seeds := strings.Split(seedstr, ",")
+	for i, seed := range seeds {
+		if !strings.Contains(seed, ":") {
+			seeds[i] = seed + ":56199"
+		}
+	}
+	return seeds
+}
+
 func (r *registry) Register() error {
 	if r.memberlist == nil {
 		return errors.New("Memberlist is nil")
 	}
-	seed := config.GddMemSeed.Load()
-	if stringutils.IsEmpty(seed) {
+	seeds := seeds(config.GddMemSeed.Load())
+	if len(seeds) == 0 {
 		logrus.Warnln("No seed found")
 		return nil
 	}
-	_, err := r.memberlist.Join([]string{seed})
+	_, err := r.memberlist.Join(seeds)
 	if err != nil {
 		return errors.Wrap(err, "Failed to join cluster")
 	}
