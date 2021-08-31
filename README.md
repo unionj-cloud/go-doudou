@@ -43,22 +43,31 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 ### TOC
 
-- [安装](#%E5%AE%89%E8%A3%85)
-- [使用](#%E4%BD%BF%E7%94%A8)
-- [注意](#%E6%B3%A8%E6%84%8F)
-- [接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-- [vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-- [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
-- [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
-- [Demo](#demo)
-- [工具箱](#%E5%B7%A5%E5%85%B7%E7%AE%B1)
-  - [name](#name)
-  - [ddl](#ddl)
-- [TODO](#todo)
-- [Help](#help)
+  - [Install](#install)
+  - [Hello World](#hello-world)
+    - [Initialize project](#initialize-project)
+    - [Define methods](#define-methods)
+    - [Generate code](#generate-code)
+    - [Run](#run)
+    - [Deployment](#deployment)
+      - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
+      - [Deploy](#deploy)
+      - [Shutdown](#shutdown)
+      - [Scale](#scale)
+  - [Constraints](#constraints)
+    - [Methods](#methods)
+    - [Struct Parameters](#struct-parameters)
+  - [Service register & discovery](#service-register--discovery)
+  - [Client load balance](#client-load-balance)
+  - [Example](#example)
+  - [Notable tools](#notable-tools)
+    - [name](#name)
+    - [ddl](#ddl)
+  - [TODO](#todo)
+  - [Help](#help)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -300,29 +309,21 @@ There are some constraints when you define your methods as exposed apis for clie
 
 1. 支持Post, Get, Delete, Put四种http请求方法，从接口方法名称来判断，默认是post请求，如果方法名以Post/Get/Delete/Put开头，
    则http请求方法分别为相对应的post/get/delete/put的其中一种  
-   
 2. 第一个入参的类型是context.Context，这个不要改，可以合理利用这个参数实现一些效果，比如当客户端取消请求，处理逻辑可以及时停止，节省服务器资源
-
 3. 入参和出参的类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体以及上述类型相应的切片类型和指针类型。
    go-doudou生成代码和openapi文档的时候会扫描vo包里的结构体，如果接口的入参和出参里用了vo包以外的包里的结构体，go-doudou扫描不到结构体的字段。 
-   
 4. 特别的，入参还支持multipart.FileHeader类型，用于文件上传。出参还支持os.File类型，用于文件下载
-
 5. 入参和出参的类型，不支持func类型，channel类型，接口类型和匿名结构体
-
 6. 因为go的net/http包里的取Form参数相关的方法，比如FormValue，取到的参数值都是string类型的，go-doudou采用了cobra和viper的作者spf13大神的[cast](https://github.com/spf13/cast) 库做类型转换，
    生成的handlerimpl.go文件里的代码里解析表单参数的地方可能会报编译错误，可以给go-doudou提[issue](https://github.com/unionj-cloud/go-doudou/issues) ，也可以自己手动修改。
    当增删改了svc.go里的接口方法，重新执行代码生成命令`go-doudou svc http --handler -c go -o --doc`时，handlerimpl.go文件里的代码是增量生成的，
    即之前生成的代码和自己手动修改过的代码都不会被覆盖
-   
 7. handler.go文件里的代码在每次执行go-doudou svc http命令的时候都会重新生成，请不要手动修改里面的代码
-
 8. 除handler.go和handlerimpl.go之外的其他文件，都是先判断是否存在，不存在才生成，存在就什么都不做
 
-   
 
 
-### Struct Parameters
+#### Struct Parameters
 
 1. 结构体字段类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体，**匿名结构体**以及上述类型相应的切片类型和指针类型。
 2. 结构体字段类型，不支持func类型，channel类型，接口类型
