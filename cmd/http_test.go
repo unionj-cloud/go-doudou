@@ -56,7 +56,7 @@ func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWrit
 		query,
 	)
 	if err != nil {
-		if err == context.Canceled {
+		if errors.Is(err, context.Canceled) {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 		} else {
 			http.Error(_writer, err.Error(), http.StatusInternalServerError)
