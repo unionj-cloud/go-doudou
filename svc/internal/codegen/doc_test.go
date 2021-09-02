@@ -45,6 +45,33 @@ func TestGenDoc(t *testing.T) {
 	}
 }
 
+func TestGenDocUploadFile(t *testing.T) {
+	type args struct {
+		dir string
+		ic  astutils.InterfaceCollector
+	}
+	svcfile := filepath.Join(testDir, "svc.go")
+	ic := astutils.BuildInterfaceCollector(svcfile, ExprStringP)
+
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "1",
+			args: args{
+				testDir,
+				ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			GenDoc(tt.args.dir, tt.args.ic, 1)
+		})
+	}
+}
+
 func Test_schemasOf(t *testing.T) {
 	type args struct {
 		vofile string

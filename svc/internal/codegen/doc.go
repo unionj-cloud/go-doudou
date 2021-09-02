@@ -119,10 +119,21 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			pschema := v3.CopySchema(item)
 			pschema.Description = strings.Join(item.Comments, "\n")
 			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
-				var content v3.Content
-				mt := &v3.MediaType{
-					Schema: &pschema,
+				title := method.Name + "Req"
+				reqSchema := v3.Schema{
+					Type:       v3.ObjectT,
+					Title:      title,
+					Properties: make(map[string]*v3.Schema),
 				}
+				key := item.Name
+				reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
+				v3.Schemas[title] = reqSchema
+				mt := &v3.MediaType{
+					Schema: &v3.Schema{
+						Ref: "#/components/schemas/" + title,
+					},
+				}
+				var content v3.Content
 				reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
 				ret.RequestBody = &v3.RequestBody{
 					Content:  &content,
@@ -286,7 +297,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		Openapi: "3.0.2",
 		Info: &v3.Info{
 			Title:          svcname,
-			Description:    "",
+			Description:    strings.Join(ic.Interfaces[0].Comments, "\n"),
 			TermsOfService: "",
 			Contact:        nil,
 			License:        nil,
