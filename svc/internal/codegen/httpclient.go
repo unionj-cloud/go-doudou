@@ -84,16 +84,16 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			_req.SetFileReader("{{$p.Name}}", _fh.Filename, _f)
 		}
 		{{- else}}
-		_f, _err := {{$p.Name}}.Open()
-		if _err != nil {
+		if _f, _err := {{$p.Name}}.Open(); _err != nil {
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
 					{{ $r.Name }} = errors.Wrap(_err, "")
 				{{- end }}
 			{{- end }}
 			return
+		} else {
+			_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
 		}
-		_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
 		{{- end}}
 		{{- else if eq $p.Type "context.Context" }}
 		_req.SetContext({{$p.Name}})

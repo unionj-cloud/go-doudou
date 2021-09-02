@@ -111,49 +111,72 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 		// Complex parameters such as structs in vo package, map and corresponding slice/array type
 		// will be put into request body as json content type.
 		// File and file array parameter will be put into request body as multipart/form-data content type.
+
+		upload := false
 		for _, item := range method.Params {
 			if item.Type == "context.Context" {
 				continue
 			}
 			pschemaType := v3.SchemaOf(item)
-			pschema := v3.CopySchema(item)
-			pschema.Description = strings.Join(item.Comments, "\n")
 			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
-				title := method.Name + "Req"
-				reqSchema := v3.Schema{
-					Type:       v3.ObjectT,
-					Title:      title,
-					Properties: make(map[string]*v3.Schema),
+				upload = true
+				break
+			}
+		}
+
+		if upload {
+			title := method.Name + "Req"
+			reqSchema := v3.Schema{
+				Type:       v3.ObjectT,
+				Title:      title,
+				Properties: make(map[string]*v3.Schema),
+			}
+			for _, item := range method.Params {
+				if item.Type == "context.Context" {
+					continue
 				}
-				key := item.Name
-				reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
-				v3.Schemas[title] = reqSchema
-				mt := &v3.MediaType{
-					Schema: &v3.Schema{
-						Ref: "#/components/schemas/" + title,
-					},
+				pschemaType := v3.SchemaOf(item)
+				pschema := v3.CopySchema(item)
+				pschema.Description = strings.Join(item.Comments, "\n")
+				if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3.IsBuiltin(item) {
+					reqSchema.Properties[strcase.ToLowerCamel(item.Name)] = &pschema
 				}
-				var content v3.Content
-				reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
-				ret.RequestBody = &v3.RequestBody{
-					Content:  &content,
-					Required: true,
+			}
+			v3.Schemas[title] = reqSchema
+			mt := &v3.MediaType{
+				Schema: &v3.Schema{
+					Ref: "#/components/schemas/" + title,
+				},
+			}
+			var content v3.Content
+			reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
+			ret.RequestBody = &v3.RequestBody{
+				Content:  &content,
+				Required: true,
+			}
+		} else {
+			for _, item := range method.Params {
+				if item.Type == "context.Context" {
+					continue
 				}
-			} else if v3.IsBuiltin(item) {
-				params = append(params, v3.Parameter{
-					Name:   strcase.ToLowerCamel(item.Name),
-					In:     v3.InQuery,
-					Schema: &pschema,
-				})
-			} else {
-				var content v3.Content
-				mt := &v3.MediaType{
-					Schema: &pschema,
-				}
-				reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
-				ret.RequestBody = &v3.RequestBody{
-					Content:  &content,
-					Required: true,
+				pschema := v3.CopySchema(item)
+				pschema.Description = strings.Join(item.Comments, "\n")
+				if v3.IsBuiltin(item) {
+					params = append(params, v3.Parameter{
+						Name:   strcase.ToLowerCamel(item.Name),
+						In:     v3.InQuery,
+						Schema: &pschema,
+					})
+				} else {
+					var content v3.Content
+					mt := &v3.MediaType{
+						Schema: &pschema,
+					}
+					reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
+					ret.RequestBody = &v3.RequestBody{
+						Content:  &content,
+						Required: true,
+					}
 				}
 			}
 		}
