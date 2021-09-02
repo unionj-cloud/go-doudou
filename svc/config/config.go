@@ -51,7 +51,7 @@ const (
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
 	GddMemSeed envVariable = "GDD_MEM_SEED"
-	// GddMemName unique name of this node in cluster. if not provided, hostname will be used instead
+	// GddMemName unique name of this node in cluster. if empty or not set, hostname will be used instead
 	GddMemName envVariable = "GDD_MEM_NAME"
 	// GddMemHost specify AdvertiseAddr attribute of memberlist config struct.
 	// if GddMemHost starts with dot such as .seed-svc-headless.default.svc.cluster.local,
