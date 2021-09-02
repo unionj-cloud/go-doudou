@@ -31,6 +31,8 @@ import (
 	"net/http"
 	service "testfileshttpcmd"
 	"testfileshttpcmd/vo"
+
+	"github.com/pkg/errors"
 )
 
 type TestfileshttpcmdHandlerImpl struct {
