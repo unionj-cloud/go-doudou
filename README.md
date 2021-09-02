@@ -30,6 +30,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
   - [Must Know](#must-know)
   - [Service register & discovery](#service-register--discovery)
   - [Client load balance](#client-load-balance)
+  - [Configuration](#configuration)
   - [Example](#example)
   - [Notable tools](#notable-tools)
     - [name](#name)
