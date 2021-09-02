@@ -173,7 +173,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
-					if {{ $r.Name }} == context.Canceled {
+					if errors.Is({{ $r.Name }}, context.Canceled) {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
 					} else {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
@@ -235,6 +235,7 @@ import (
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
+	"github.com/pkg/errors"
 )
 
 type {{.Meta.Name}}HandlerImpl struct{
