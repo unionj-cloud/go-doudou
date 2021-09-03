@@ -8,6 +8,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"time"
 )
 
 func SetupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (func(), string, int, error) {
@@ -26,7 +27,7 @@ func SetupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (f
 		BindMounts: map[string]string{
 			initdb: "/docker-entrypoint-initdb.d",
 		},
-		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL"),
+		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(120 * time.Second),
 	}
 
 	mysqlC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

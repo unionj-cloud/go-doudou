@@ -48,56 +48,40 @@ func GetMethodMeta(spec *ast.FuncDecl) MethodMeta {
 func NewMethodMeta(ft *ast.FuncType, exprString func(ast.Expr) string) MethodMeta {
 	var params, results []FieldMeta
 	for _, param := range ft.Params.List {
-		var pComments []string
-		if param.Comment != nil {
-			for _, comment := range param.Comment.List {
-				pComments = append(pComments, comment.Text)
-			}
-		}
 		pt := exprString(param.Type)
 		if len(param.Names) > 0 {
 			for _, name := range param.Names {
 				params = append(params, FieldMeta{
-					Name:     name.Name,
-					Type:     pt,
-					Tag:      "",
-					Comments: pComments,
+					Name: name.Name,
+					Type: pt,
+					Tag:  "",
 				})
 			}
 			continue
 		}
 		params = append(params, FieldMeta{
-			Name:     "",
-			Type:     pt,
-			Tag:      "",
-			Comments: pComments,
+			Name: "",
+			Type: pt,
+			Tag:  "",
 		})
 	}
 	if ft.Results != nil {
 		for _, result := range ft.Results.List {
-			var rComments []string
-			if result.Comment != nil {
-				for _, comment := range result.Comment.List {
-					rComments = append(rComments, comment.Text)
-				}
-			}
 			rt := exprString(result.Type)
 			if len(result.Names) > 0 {
 				for _, name := range result.Names {
 					results = append(results, FieldMeta{
-						Name:     name.Name,
-						Type:     rt,
-						Tag:      "",
-						Comments: rComments,
+						Name: name.Name,
+						Type: rt,
+						Tag:  "",
 					})
 				}
 				continue
 			}
 			results = append(results, FieldMeta{
-				Name:     "",
-				Type:     rt,
-				Tag:      "",
-				Comments: rComments,
+				Name: "",
+				Type: rt,
+				Tag:  "",
 			})
 		}
 	}
@@ -177,7 +161,8 @@ type FieldMeta struct {
 	Tag      string
 	Comments []string
 	IsExport bool
-	DocName  string
+	// used in OpenAPI 3.0 spec as property name
+	DocName string
 }
 
 type StructMeta struct {
@@ -339,7 +324,8 @@ func GetMod() string {
 	return strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 }
 
-func GetImportPath(file string) string {
-	dir, _ := os.Getwd()
-	return GetMod() + strings.TrimPrefix(file, dir)
+// GetImportPath get import path of pkg from dir
+func GetImportPath(dir string) string {
+	wd, _ := os.Getwd()
+	return GetMod() + strings.TrimPrefix(dir, wd)
 }

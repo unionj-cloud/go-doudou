@@ -2,11 +2,16 @@ package astutils
 
 import (
 	"bytes"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -312,4 +317,38 @@ func TestMethodMeta_String(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestVisit(t *testing.T) {
+	testDir := pathutils.Abs("./testfiles")
+	vodir := filepath.Join(testDir, "vo")
+	var files []string
+	err := filepath.Walk(vodir, Visit(&files))
+	if err != nil {
+		logrus.Panicln(err)
+	}
+	assert.Len(t, files, 1)
+}
+
+func TestGetMod(t *testing.T) {
+	testDir := pathutils.Abs("./testfiles")
+	_ = os.Chdir(testDir)
+	assert.Equal(t, "testfiles", GetMod())
+}
+
+func TestGetImportPath(t *testing.T) {
+	testDir := pathutils.Abs("./testfiles")
+	_ = os.Chdir(testDir)
+	assert.Equal(t, "testfiles/vo", GetImportPath(testDir+"/vo"))
+}
+
+func TestNewMethodMeta(t *testing.T) {
+	file := pathutils.Abs("testfiles/cat.go")
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := NewStructCollector(ExprString)
+	ast.Walk(sc, root)
 }

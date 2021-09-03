@@ -15,6 +15,7 @@ type InterfaceCollector struct {
 	Interfaces []InterfaceMeta
 	Package    PackageMeta
 	exprString func(ast.Expr) string
+	cmap       ast.CommentMap
 }
 
 func (ic *InterfaceCollector) Visit(n ast.Node) ast.Visitor {
@@ -57,18 +58,14 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 							}
 						}
 
-						var ft *ast.FuncType
-						var ok bool
-						if ft, ok = method.Type.(*ast.FuncType); !ok {
-							panic("not funcType")
-						}
+						ft, _ := method.Type.(*ast.FuncType)
 						var params, results []FieldMeta
 						pkeymap := make(map[string]int)
 						for _, param := range ft.Params.List {
 							var pComments []string
-							if param.Doc != nil {
-								for _, comment := range param.Doc.List {
-									pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+							if cmts, exists := ic.cmap[param]; exists {
+								for _, comment := range cmts {
+									pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
 								}
 							}
 							pt := ic.exprString(param.Type)
@@ -111,9 +108,9 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 							rkeymap := make(map[string]int)
 							for _, result := range ft.Results.List {
 								var rComments []string
-								if result.Doc != nil {
-									for _, comment := range result.Doc.List {
-										rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+								if cmts, exists := ic.cmap[result]; exists {
+									for _, comment := range cmts {
+										rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
 									}
 								}
 								rt := ic.exprString(result.Type)
@@ -186,6 +183,7 @@ func BuildInterfaceCollector(file string, exprString func(ast.Expr) string) Inte
 	if err != nil {
 		logrus.Panicln(err)
 	}
+	ic.cmap = ast.NewCommentMap(fset, root, root.Comments)
 	ast.Walk(ic, root)
 	return *ic
 }

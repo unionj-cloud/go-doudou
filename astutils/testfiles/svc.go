@@ -14,11 +14,17 @@ type Usersvc interface {
 	// comment1
 	// comment2
 	GetUser(ctx context.Context,
-	// 用户ID
+		// 用户ID
 		userId string,
-	// 图片地址
+		// 图片地址
 		photo string,
-	) (code int, data string, msg error)
+	) (
+		// 业务状态码
+		code int,
+		// 结果
+		data string,
+		// 错误
+		msg error)
 
 	// comment3
 	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)

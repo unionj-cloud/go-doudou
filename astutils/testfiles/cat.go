@@ -8,7 +8,12 @@ type Cat struct {
 	Run     chan string
 }
 
-func (c *Cat) eat(food string) bool {
+// eat execute eat behavior for Cat
+func (c *Cat) eat(food string) (
+	// not hungry
+	full bool,
+	// how feel
+	mood string) {
 	fmt.Println("eat " + food)
-	return true
+	return true, "happy"
 }

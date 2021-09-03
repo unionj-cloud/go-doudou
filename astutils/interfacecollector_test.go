@@ -2,7 +2,6 @@ package astutils
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
 	"go/parser"
@@ -17,8 +16,9 @@ func TestInterfaceCollector(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(root)
+	//spew.Dump(root)
 	sc := NewInterfaceCollector(ExprString)
+	sc.cmap = ast.NewCommentMap(fset, root, root.Comments)
 	ast.Walk(sc, root)
 	fmt.Println(sc)
 }
