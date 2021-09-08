@@ -48,7 +48,7 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	funcMap["Eval"] = Eval(tpl)
 	funcMap["TrimSuffix"] = TrimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
-		return t != nil
+		return t == nil
 	}
 	tpl = template.Must(tpl.Funcs(funcMap).ParseFiles(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
@@ -71,7 +71,7 @@ func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, 
 	funcMap["Eval"] = Eval(tpl)
 	funcMap["TrimSuffix"] = TrimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
-		return t != nil
+		return t == nil
 	}
 	tpl = template.Must(tpl.Funcs(funcMap).Parse(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
