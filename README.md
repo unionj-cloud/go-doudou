@@ -67,7 +67,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 
 
-### Support Golang Version
+### Golang Version Support
 
 - go 1.13, 1.14, 1.15 with GO111MODULE=on
 - go 1.16+
@@ -78,7 +78,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Install
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.4
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.6
 ```
 
 
