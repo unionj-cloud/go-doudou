@@ -19,7 +19,7 @@ import (
 )
 
 func TestNewTableFromStruct(t *testing.T) {
-	testDir := pathutils.Abs("../testfiles/domain")
+	testDir := pathutils.Abs("../testdata/domain")
 	var files []string
 	var err error
 	err = filepath.Walk(testDir, astutils.Visit(&files))
@@ -38,8 +38,7 @@ func TestNewTableFromStruct(t *testing.T) {
 	flattened := ddlast.FlatEmbed(sc.Structs)
 
 	for _, sm := range flattened {
-		table := NewTableFromStruct(sm)
-		fmt.Println(table)
+		NewTableFromStruct(sm)
 	}
 }
 
@@ -65,7 +64,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					{
 						Name:          "id",
 						Type:          columnenum.IntType,
-						Default:       nil,
+						Default:       "",
 						Pk:            true,
 						Nullable:      false,
 						Unsigned:      false,
@@ -95,7 +94,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					{
 						Name:          "age",
 						Type:          columnenum.IntType,
-						Default:       nil,
+						Default:       "",
 						Pk:            false,
 						Nullable:      true,
 						Unsigned:      false,
@@ -105,7 +104,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					{
 						Name:          "no",
 						Type:          columnenum.IntType,
-						Default:       nil,
+						Default:       "",
 						Pk:            false,
 						Nullable:      false,
 						Unsigned:      false,
@@ -173,7 +172,7 @@ func TestColumn_AlterColumnSql(t *testing.T) {
 		Table         string
 		Name          string
 		Type          columnenum.ColumnType
-		Default       interface{}
+		Default       string
 		Pk            bool
 		Nullable      bool
 		Unsigned      bool
@@ -234,7 +233,7 @@ func TestColumn_AddColumnSql(t *testing.T) {
 		Table         string
 		Name          string
 		Type          columnenum.ColumnType
-		Default       interface{}
+		Default       string
 		Pk            bool
 		Nullable      bool
 		Unsigned      bool
@@ -452,7 +451,7 @@ func TestNewFieldFromColumn(t *testing.T) {
 					Table:         "users",
 					Name:          "school",
 					Type:          columnenum.VarcharType,
-					Default:       "'harvard'",
+					Default:       "harvard",
 					Pk:            false,
 					Nullable:      false,
 					Unsigned:      false,
@@ -463,7 +462,7 @@ func TestNewFieldFromColumn(t *testing.T) {
 			want: astutils.FieldMeta{
 				Name:     "School",
 				Type:     "string",
-				Tag:      `dd:"type:VARCHAR(255);extra:comment '学校'"`,
+				Tag:      `dd:"type:VARCHAR(255);default:'harvard';extra:comment '学校'"`,
 				Comments: nil,
 			},
 		}, {
@@ -473,7 +472,7 @@ func TestNewFieldFromColumn(t *testing.T) {
 					Table:         "users",
 					Name:          "favourite",
 					Type:          columnenum.VarcharType,
-					Default:       "'football'",
+					Default:       "current_timestamp",
 					Pk:            false,
 					Nullable:      true,
 					Unsigned:      false,
@@ -493,7 +492,7 @@ func TestNewFieldFromColumn(t *testing.T) {
 			want: astutils.FieldMeta{
 				Name:     "Favourite",
 				Type:     "*string",
-				Tag:      `dd:"auto;type:VARCHAR(255);extra:comment '学校';index:my_index,1,asc"`,
+				Tag:      `dd:"auto;type:VARCHAR(255);default:current_timestamp;extra:comment '学校';index:my_index,1,asc"`,
 				Comments: nil,
 			},
 		},
@@ -612,9 +611,8 @@ func TestCheckAutoincrement(t *testing.T) {
 }
 
 func TestCheckAutoSet(t *testing.T) {
-	s := "CURRENT_TIMESTAMP"
 	type args struct {
-		defaultVal *string
+		defaultVal string
 	}
 	tests := []struct {
 		name string
@@ -624,7 +622,7 @@ func TestCheckAutoSet(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				defaultVal: &s,
+				defaultVal: "CURRENT_TIMESTAMP",
 			},
 			want: true,
 		},

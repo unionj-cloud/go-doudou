@@ -2,7 +2,6 @@ package codegen
 
 import (
 	"github.com/iancoleman/strcase"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
@@ -347,32 +346,25 @@ func GenDaoImplGo(domainpath string, t table.Table, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
-		return errors.Wrap(err, "error")
-	}
+	_ = os.MkdirAll(daopath, os.ModePerm)
 
 	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"daoimpl.go")
 	if _, err = os.Stat(daofile); os.IsNotExist(err) {
-		if f, err = os.Create(daofile); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		f, _ = os.Create(daofile)
 		defer f.Close()
 
 		dpkg = astutils.GetImportPath(domainpath)
 		funcMap = make(map[string]interface{})
 		funcMap["ToLower"] = strings.ToLower
 		funcMap["ToSnake"] = strcase.ToSnake
-		if tpl, err = template.New("daoimpl.go.tmpl").Funcs(funcMap).Parse(daoimpltmpl); err != nil {
-			return errors.Wrap(err, "error")
-		}
-
+		tpl, _ = template.New("daoimpl.go.tmpl").Funcs(funcMap).Parse(daoimpltmpl)
 		for _, column := range t.Columns {
 			if column.Pk {
 				pkColumn = column
 				break
 			}
 		}
-		if err = tpl.Execute(f, struct {
+		_ = tpl.Execute(f, struct {
 			DomainPackage string
 			DomainName    string
 			TableName     string
@@ -384,9 +376,7 @@ func GenDaoImplGo(domainpath string, t table.Table, folder ...string) error {
 			TableName:     t.Name,
 			PkField:       pkColumn.Meta,
 			PkCol:         pkColumn,
-		}); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		})
 	} else {
 		log.Warnf("file %s already exists", daofile)
 	}

@@ -4,12 +4,12 @@ import (
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestGenBaseGo(t *testing.T) {
-	testDir := pathutils.Abs("testfiles")
-	dir := testDir + "basego"
+	dir := pathutils.Abs("../testdata")
 	type args struct {
 		domainpath string
 		folder     []string
@@ -20,10 +20,16 @@ func TestGenBaseGo(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
 			args: args{
 				domainpath: dir + "/domain",
 				folder:     nil,
+			},
+			wantErr: false,
+		},
+		{
+			args: args{
+				domainpath: dir + "/domain",
+				folder:     []string{"testdao"},
 			},
 			wantErr: false,
 		},
@@ -33,7 +39,13 @@ func TestGenBaseGo(t *testing.T) {
 			if err := GenBaseGo(tt.args.domainpath, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenBaseGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			defer os.RemoveAll(dir)
+			defer func() {
+				if len(tt.args.folder) > 0 {
+					os.RemoveAll(filepath.Join(dir, tt.args.folder[0]))
+				} else {
+					os.RemoveAll(filepath.Join(dir, "dao"))
+				}
+			}()
 			expect := `package dao
 
 import (
@@ -56,7 +68,12 @@ type Base interface {
 	PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
 }
 `
-			basefile := dir + "/dao/base.go"
+			var basefile string
+			if len(tt.args.folder) > 0 {
+				basefile = filepath.Join(dir, tt.args.folder[0], "base.go")
+			} else {
+				basefile = filepath.Join(dir, "dao", "base.go")
+			}
 			f, err := os.Open(basefile)
 			if err != nil {
 				t.Fatal(err)

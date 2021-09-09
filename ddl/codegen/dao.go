@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
 	"os"
@@ -29,26 +28,18 @@ func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
-		return errors.Wrap(err, "error")
-	}
+	_ = os.MkdirAll(daopath, os.ModePerm)
 	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"dao.go")
 	if _, err = os.Stat(daofile); os.IsNotExist(err) {
-		if f, err = os.Create(daofile); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		f, _ = os.Create(daofile)
 		defer f.Close()
 
-		if tpl, err = template.New("dao.go.tmpl").Parse(daotmpl); err != nil {
-			return errors.Wrap(err, "error")
-		}
-		if err = tpl.Execute(f, struct {
+		tpl, _ = template.New("dao.go.tmpl").Parse(daotmpl)
+		_ = tpl.Execute(f, struct {
 			DomainName string
 		}{
 			DomainName: t.Meta.Name,
-		}); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		})
 	} else {
 		log.Warnf("file %s already exists", daofile)
 	}

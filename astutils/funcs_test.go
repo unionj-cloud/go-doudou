@@ -331,14 +331,6 @@ func TestGetMod(t *testing.T) {
 	assert.Equal(t, "testdata", GetMod())
 }
 
-func TestGetModShouldPanic(t *testing.T) {
-	testDir := pathutils.Abs("./testdata1")
-	_ = os.Chdir(testDir)
-	assert.Panics(t, func() {
-		GetMod()
-	})
-}
-
 func TestGetModShouldPanic2(t *testing.T) {
 	testDir := pathutils.Abs("./testdata/testdata")
 	_ = os.Chdir(testDir)

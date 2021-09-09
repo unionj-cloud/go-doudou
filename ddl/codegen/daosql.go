@@ -3,7 +3,6 @@ package codegen
 import (
 	"bytes"
 	"github.com/iancoleman/strcase"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/table"
@@ -183,22 +182,15 @@ func GenDaoSql(domainpath string, t table.Table, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
-		return errors.Wrap(err, "error")
-	}
-
+	_ = os.MkdirAll(daopath, os.ModePerm)
 	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"daosql.go")
 	if _, err = os.Stat(daofile); os.IsNotExist(err) {
-		if f, err = os.Create(daofile); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		f, _ = os.Create(daofile)
 		defer f.Close()
 
 		funcMap = make(map[string]interface{})
 		funcMap["ToSnake"] = strcase.ToSnake
-		if tpl, err = template.New("daosql.tmpl").Funcs(funcMap).Parse(daosqltmpl); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		tpl, _ = template.New("daosql.tmpl").Funcs(funcMap).Parse(daosqltmpl)
 
 		for _, co := range t.Columns {
 			if !co.AutoSet {
@@ -216,8 +208,7 @@ func GenDaoSql(domainpath string, t table.Table, folder ...string) error {
 				break
 			}
 		}
-
-		if err = tpl.Execute(&sqlBuf, struct {
+		_ = tpl.Execute(&sqlBuf, struct {
 			Schema        string
 			TableName     string
 			DomainName    string
@@ -231,9 +222,7 @@ func GenDaoSql(domainpath string, t table.Table, folder ...string) error {
 			InsertColumns: iColumns,
 			UpdateColumns: uColumns,
 			Pk:            pkColumn,
-		}); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		})
 		sqlStr := strings.TrimSpace(sqlBuf.String())
 		sqlStr = strings.ReplaceAll(sqlStr, "`", "`"+" + "+`"`+"`"+`"`+" + "+"`")
 		sqlBuf.Reset()

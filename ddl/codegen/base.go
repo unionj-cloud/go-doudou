@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
@@ -44,22 +43,13 @@ func GenBaseGo(domainpath string, folder ...string) error {
 		df = folder[0]
 	}
 	daopath = filepath.Join(filepath.Dir(domainpath), df)
-	if err = os.MkdirAll(daopath, os.ModePerm); err != nil {
-		return errors.Wrap(err, "error")
-	}
-
+	_ = os.MkdirAll(daopath, os.ModePerm)
 	basefile := filepath.Join(daopath, "base.go")
 	if _, err = os.Stat(basefile); os.IsNotExist(err) {
-		if f, err = os.Create(basefile); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		f, _ = os.Create(basefile)
 		defer f.Close()
-		if tpl, err = template.New("base.go.tmpl").Parse(basetmpl); err != nil {
-			return errors.Wrap(err, "error")
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		tpl, _ = template.New("base.go.tmpl").Parse(basetmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		log.Warnf("file %s already exists", basefile)
 	}

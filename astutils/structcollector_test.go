@@ -3,7 +3,6 @@ package astutils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
@@ -233,7 +232,7 @@ func TestStructCollector_Alias(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(root)
+	//spew.Dump(root)
 	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
@@ -251,7 +250,7 @@ func TestStructCollector_Domain(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(root)
+	//spew.Dump(root)
 	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
 	fmt.Println(sc)

@@ -11,7 +11,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
-	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -121,15 +120,15 @@ func CheckAutoincrement(extra string) bool {
 	return strings.Contains(extra, "auto_increment")
 }
 
-func CheckAutoSet(defaultVal *string) bool {
-	return defaultVal != nil && *defaultVal == now
+func CheckAutoSet(defaultVal string) bool {
+	return strings.ToLower(defaultVal) == strings.ToLower(now)
 }
 
 type Column struct {
 	Table         string
 	Name          string
 	Type          columnenum.ColumnType
-	Default       interface{}
+	Default       string
 	Pk            bool
 	Nullable      bool
 	Unsigned      bool
@@ -164,7 +163,7 @@ type DbColumn struct {
 	Type    string        `db:"Type"`
 	Null    nullenum.Null `db:"Null"`
 	Key     keyenum.Key   `db:"Key"`
-	Default *string       `db:"Default"`
+	Default string        `db:"Default"`
 	Extra   string        `db:"Extra"`
 	Comment string        `db:"Comment"`
 }
@@ -203,7 +202,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 		var (
 			columnName    string
 			columnType    columnenum.ColumnType
-			columnDefault interface{}
+			columnDefault string
 			nullable      bool
 			unsigned      bool
 			autoincrement bool
@@ -236,9 +235,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 							break
 						case "default":
 							columnDefault = value
-							if value == now {
-								autoSet = true
-							}
+							autoSet = CheckAutoSet(value)
 							break
 						case "extra":
 							extra = extraenum.Extra(value)
@@ -444,18 +441,16 @@ func NewFieldFromColumn(col Column) astutils.FieldMeta {
 	if stringutils.IsNotEmpty(string(col.Type)) {
 		feats = append(feats, fmt.Sprintf("type:%s", string(col.Type)))
 	}
-	if !reflect.ValueOf(col.Default).IsZero() {
-		if ptr, ok := col.Default.(*string); ok {
-			val := *ptr
-			re := regexp.MustCompile(`^\(.+\)$`)
-			var defaultClause string
-			if val == "CURRENT_TIMESTAMP" || re.MatchString(val) {
-				defaultClause = fmt.Sprintf("default:%s", val)
-			} else {
-				defaultClause = fmt.Sprintf("default:'%s'", val)
-			}
-			feats = append(feats, defaultClause)
+	if stringutils.IsNotEmpty(col.Default) {
+		val := col.Default
+		re := regexp.MustCompile(`^\(.+\)$`)
+		var defaultClause string
+		if strings.ToUpper(val) == "CURRENT_TIMESTAMP" || re.MatchString(val) {
+			defaultClause = fmt.Sprintf("default:%s", val)
+		} else {
+			defaultClause = fmt.Sprintf("default:'%s'", val)
 		}
+		feats = append(feats, defaultClause)
 	}
 	if stringutils.IsNotEmpty(string(col.Extra)) {
 		feats = append(feats, fmt.Sprintf("extra:%s", string(col.Extra)))

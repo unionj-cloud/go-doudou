@@ -15,7 +15,7 @@ import (
 )
 
 func TestGenDaoGo(t *testing.T) {
-	domain := "../testfiles/domain"
+	domain := "../testdata/domain"
 
 	sc := astutils.NewStructCollector(astutils.ExprString)
 
@@ -65,13 +65,13 @@ func TestGenDaoGo(t *testing.T) {
 			if err := GenDaoGo(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			defer os.RemoveAll(pathutils.Abs("../testfiles/dao"))
+			defer os.RemoveAll(pathutils.Abs("../testdata/dao"))
 			expect := `package dao
 
 type UserDao interface {
 	Base
 }`
-			daofile := pathutils.Abs("../testfiles/dao/userdao.go")
+			daofile := pathutils.Abs("../testdata/dao/userdao.go")
 			f, err := os.Open(daofile)
 			if err != nil {
 				t.Fatal(err)

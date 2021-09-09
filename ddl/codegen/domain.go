@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
@@ -30,23 +29,13 @@ func GenDomainGo(dpath string, domain astutils.StructMeta) error {
 		err error
 		f   *os.File
 	)
-
-	if err = os.MkdirAll(dpath, os.ModePerm); err != nil {
-		return errors.Wrap(err, "error")
-	}
-
+	_ = os.MkdirAll(dpath, os.ModePerm)
 	dfile := filepath.Join(dpath, strings.ToLower(domain.Name)+".go")
 	if _, err = os.Stat(dfile); os.IsNotExist(err) {
-		if f, err = os.Create(dfile); err != nil {
-			return errors.Wrap(err, "error")
-		}
+		f, _ = os.Create(dfile)
 		defer f.Close()
-
 		var source string
-		if source, err = templateutils.String("domain.go.tmpl", domaintmpl, domain); err != nil {
-			return errors.Wrap(err, "error")
-		}
-
+		source, _ = templateutils.String("domain.go.tmpl", domaintmpl, domain)
 		astutils.FixImport([]byte(source), dfile)
 	} else {
 		log.Warnf("file %s already exists", dfile)

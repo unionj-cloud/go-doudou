@@ -15,7 +15,7 @@ import (
 )
 
 func TestGenDaoSql(t *testing.T) {
-	domain := "../testfiles/domain"
+	domain := "../testdata/domain"
 
 	sc := astutils.NewStructCollector(astutils.ExprString)
 
@@ -65,8 +65,8 @@ func TestGenDaoSql(t *testing.T) {
 			if err := GenDaoSql(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			defer os.RemoveAll(pathutils.Abs("../testfiles/dao"))
-			daofile := pathutils.Abs("../testfiles/dao/userdaosql.go")
+			defer os.RemoveAll(pathutils.Abs("../testdata/dao"))
+			daofile := pathutils.Abs("../testdata/dao/userdaosql.go")
 			f, err := os.Open(daofile)
 			if err != nil {
 				t.Fatal(err)

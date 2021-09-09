@@ -16,7 +16,7 @@ import (
 )
 
 func TestGenDaoImplGo(t *testing.T) {
-	testDir := pathutils.Abs("../testfiles")
+	testDir := pathutils.Abs("../testdata")
 	err := os.Chdir(testDir)
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
-	"testfiles/domain"
+	"testdata/domain"
 	"github.com/unionj-cloud/go-doudou/ddl"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
