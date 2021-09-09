@@ -22,8 +22,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 
 	"github.com/spf13/cobra"
@@ -31,17 +29,8 @@ import (
 
 var watch bool
 
-func newSvc(args []string) svc.Svc {
-	var svcdir string
-	if len(args) > 0 {
-		svcdir = args[0]
-	}
-	var err error
-	if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
-		logrus.Panicln(err)
-	}
+func newSvc() svc.Svc {
 	return svc.Svc{
-		Dir:        svcdir,
 		Watch:      watch,
 		RestartSig: make(chan int),
 	}
@@ -53,7 +42,7 @@ var runCmd = &cobra.Command{
 	Short: "run go-doudou program",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		newSvc(args).Run()
+		newSvc().Run()
 	},
 }
 

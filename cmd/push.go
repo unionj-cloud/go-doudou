@@ -22,9 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
@@ -32,18 +30,9 @@ import (
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "wrap docker build, docker tag, docker push commands and generate or update k8s deploy yaml file",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var svcdir string
-		if len(args) > 0 {
-			svcdir = args[0]
-		}
-		var err error
-		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
-			logrus.Panicln(err)
-		}
 		s := svc.Svc{
-			Dir:       svcdir,
 			ImageRepo: imageRepo,
 		}
 		s.Push()

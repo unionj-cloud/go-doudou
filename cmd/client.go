@@ -22,8 +22,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 
 	"github.com/spf13/cobra"
@@ -40,16 +38,7 @@ var clientCmd = &cobra.Command{
 	Short: "generate http client from openapi 3.0 spec json file",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var svcdir string
-		if len(args) > 0 {
-			svcdir = args[0]
-		}
-		var err error
-		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
-			logrus.Panicln(err)
-		}
 		s := svc.Svc{
-			Dir:       svcdir,
 			DocPath:   docfile,
 			Client:    lang,
 			Omitempty: omitempty,

@@ -22,9 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
@@ -32,18 +30,9 @@ import (
 var shutdownCmd = &cobra.Command{
 	Use:   "shutdown",
 	Short: "wrap kubectl delete command to shutdown service",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var svcdir string
-		if len(args) > 0 {
-			svcdir = args[0]
-		}
-		var err error
-		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
-			logrus.Panicln(err)
-		}
 		s := svc.Svc{
-			Dir:     svcdir,
 			K8sfile: k8sfile,
 		}
 		s.Shutdown()

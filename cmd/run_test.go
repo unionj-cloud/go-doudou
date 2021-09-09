@@ -6,6 +6,6 @@ import (
 )
 
 func Test_newSvc(t *testing.T) {
-	s := newSvc(nil)
+	s := newSvc()
 	assert.NotNil(t, s)
 }
