@@ -62,10 +62,16 @@ func TestDeepCopy(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "TestDeepCopy",
 			args: args{
 				src:    src,
 				target: &target,
+			},
+			wantErr: false,
+		},
+		{
+			args: args{
+				src:    nil,
+				target: nil,
 			},
 			wantErr: false,
 		},
