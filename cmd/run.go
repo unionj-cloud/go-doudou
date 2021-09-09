@@ -31,26 +31,29 @@ import (
 
 var watch bool
 
+func newSvc(args []string) svc.Svc {
+	var svcdir string
+	if len(args) > 0 {
+		svcdir = args[0]
+	}
+	var err error
+	if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
+		logrus.Panicln(err)
+	}
+	return svc.Svc{
+		Dir:        svcdir,
+		Watch:      watch,
+		RestartSig: make(chan int),
+	}
+}
+
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "run go-doudou program",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var svcdir string
-		if len(args) > 0 {
-			svcdir = args[0]
-		}
-		var err error
-		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
-			logrus.Panicln(err)
-		}
-		s := svc.Svc{
-			Dir:        svcdir,
-			Watch:      watch,
-			RestartSig: make(chan int),
-		}
-		s.Run()
+		newSvc(args).Run()
 	},
 }
 
