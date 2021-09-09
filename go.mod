@@ -70,5 +70,3 @@ require (
 	golang.org/x/tools v0.1.3
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 )
-
-//replace github.com/unionj-cloud/memberlist v0.2.7 => /Users/wubin1989/workspace/cloud/memberlist
