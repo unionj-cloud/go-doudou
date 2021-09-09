@@ -189,18 +189,21 @@ func (d Ddl) Exec() {
 					extra += fmt.Sprintf(" comment '%s'", item.Comment)
 				}
 				extra = strings.TrimSpace(extra)
-
+				var defaultVal string
+				if item.Default != nil {
+					defaultVal = *item.Default
+				}
 				col := table.Column{
 					Table:         t,
 					Name:          item.Field,
 					Type:          columnenum.ColumnType(item.Type),
-					Default:       item.Default,
+					Default:       defaultVal,
 					Pk:            table.CheckPk(item.Key),
 					Nullable:      table.CheckNull(item.Null),
 					Unsigned:      table.CheckUnsigned(item.Type),
 					Autoincrement: table.CheckAutoincrement(item.Extra),
 					Extra:         extraenum.Extra(extra),
-					AutoSet:       table.CheckAutoSet(item.Default),
+					AutoSet:       table.CheckAutoSet(defaultVal),
 					Indexes:       colIdxMap[item.Field],
 				}
 				col.Meta = table.NewFieldFromColumn(col)

@@ -340,6 +340,12 @@ func Test_toColumnType(t *testing.T) {
 				goType: "string",
 			},
 			want: columnenum.VarcharType,
+		}, {
+			name: "8",
+			args: args{
+				goType: "decimal.Decimal",
+			},
+			want: "decimal(6,2)",
 		},
 	}
 	for _, tt := range tests {

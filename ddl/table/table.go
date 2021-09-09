@@ -163,7 +163,7 @@ type DbColumn struct {
 	Type    string        `db:"Type"`
 	Null    nullenum.Null `db:"Null"`
 	Key     keyenum.Key   `db:"Key"`
-	Default string        `db:"Default"`
+	Default *string       `db:"Default"`
 	Extra   string        `db:"Extra"`
 	Comment string        `db:"Comment"`
 }
