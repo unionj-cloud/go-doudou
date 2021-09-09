@@ -16,7 +16,7 @@ import (
 var testDir string
 
 func init() {
-	testDir = pathutils.Abs("testfiles")
+	testDir = pathutils.Abs("testdata")
 }
 
 func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {

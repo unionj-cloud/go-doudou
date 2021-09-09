@@ -1,25 +1,17 @@
 package cmd
 
 import (
-	"github.com/unionj-cloud/go-doudou/svc"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestHttpCmd(t *testing.T) {
-	dir := testDir + "httpcmd"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
-	receiver.Init()
-	defer os.RemoveAll(dir)
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	dir := filepath.Join(testDir, "testsvc")
+	_ = os.Chdir(dir)
 	// go-doudou svc http --handler -c go -o
-	_, _, err = ExecuteCommandC(rootCmd, []string{"svc", "http", "--handler", "-c", "go", "-o"}...)
+	_, _, err := ExecuteCommandC(rootCmd, []string{"svc", "http", "--handler", "-c", "go", "-o"}...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,17 +21,17 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	service "testfileshttpcmd"
-	"testfileshttpcmd/vo"
+	service "testsvc"
+	"testsvc/vo"
 
 	"github.com/pkg/errors"
 )
 
-type TestfileshttpcmdHandlerImpl struct {
-	testfileshttpcmd service.Testfileshttpcmd
+type TestsvcHandlerImpl struct {
+	testsvc service.Testsvc
 }
 
-func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWriter, _req *http.Request) {
+func (receiver *TestsvcHandlerImpl) PageUsers(_writer http.ResponseWriter, _req *http.Request) {
 	var (
 		ctx   context.Context
 		query vo.PageQuery
@@ -53,7 +45,7 @@ func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWrit
 		return
 	}
 	defer _req.Body.Close()
-	code, data, err = receiver.testfileshttpcmd.PageUsers(
+	code, data, err = receiver.testsvc.PageUsers(
 		ctx,
 		query,
 	)
@@ -77,9 +69,9 @@ func (receiver *TestfileshttpcmdHandlerImpl) PageUsers(_writer http.ResponseWrit
 	}
 }
 
-func NewTestfileshttpcmdHandler(testfileshttpcmd service.Testfileshttpcmd) TestfileshttpcmdHandler {
-	return &TestfileshttpcmdHandlerImpl{
-		testfileshttpcmd,
+func NewTestsvcHandler(testsvc service.Testsvc) TestsvcHandler {
+	return &TestsvcHandlerImpl{
+		testsvc,
 	}
 }
 `
@@ -102,7 +94,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"testfileshttpcmd/vo"
+	"testsvc/vo"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -110,19 +102,19 @@ import (
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 )
 
-type TestfileshttpcmdClient struct {
+type TestsvcClient struct {
 	provider ddhttp.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *TestfileshttpcmdClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *TestsvcClient) SetProvider(provider ddhttp.IServiceProvider) {
 	receiver.provider = provider
 }
 
-func (receiver *TestfileshttpcmdClient) SetClient(client *resty.Client) {
+func (receiver *TestsvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
+func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
 	var (
 		_server string
 		_err    error
@@ -166,11 +158,11 @@ func (receiver *TestfileshttpcmdClient) PageUsers(ctx context.Context, query vo.
 	return _result.Code, _result.Data, nil
 }
 
-func NewTestfileshttpcmd(opts ...ddhttp.DdClientOption) *TestfileshttpcmdClient {
-	defaultProvider := ddhttp.NewServiceProvider("TESTFILESHTTPCMD")
+func NewTestsvc(opts ...ddhttp.DdClientOption) *TestsvcClient {
+	defaultProvider := ddhttp.NewServiceProvider("TESTSVC")
 	defaultClient := ddhttp.NewClient()
 
-	svcClient := &TestfileshttpcmdClient{
+	svcClient := &TestsvcClient{
 		provider: defaultProvider,
 		client:   defaultClient,
 	}

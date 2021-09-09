@@ -18,10 +18,10 @@ func TestInitCmd(t *testing.T) {
 
 import (
 	"context"
-	"testfilesinitcmd/vo"
+	"testdatainitcmd/vo"
 )
 
-type Testfilesinitcmd interface {
+type Testdatainitcmd interface {
 	// You can define your service methods as your need. Below is an example.
 	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
 }

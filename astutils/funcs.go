@@ -32,10 +32,7 @@ func FixImport(src []byte, file string) {
 	}); err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile(file, res, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
+	_ = ioutil.WriteFile(file, res, os.ModePerm)
 }
 
 func GetMethodMeta(spec *ast.FuncDecl) MethodMeta {
@@ -267,20 +264,11 @@ func (mm MethodMeta) String() string {
 		isAnony = true
 		mm.Name = "placeholder"
 	}
-	t, err := template.New("method.tmpl").Parse(methodTmpl)
-	if err != nil {
-		panic(err)
-	}
+	t, _ := template.New("method.tmpl").Parse(methodTmpl)
 	var buf bytes.Buffer
-	err = t.Execute(&buf, mm)
-	if err != nil {
-		panic(err)
-	}
+	_ = t.Execute(&buf, mm)
 	var res []byte
-	res, err = format.Source(buf.Bytes())
-	if err != nil {
-		panic(err)
-	}
+	res, _ = format.Source(buf.Bytes())
 	result := string(res)
 	if isAnony {
 		return strings.Replace(result, "func placeholder(", "func(", 1)

@@ -2,18 +2,13 @@ package cmd
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/svc"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestShutdownCmd(t *testing.T) {
-	dir := testDir + "shutdowncmd"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
-	receiver.Init()
-	defer os.RemoveAll(dir)
+	dir := filepath.Join(testDir, "testsvc")
 	err := os.Chdir(dir)
 	if err != nil {
 		t.Fatal(err)

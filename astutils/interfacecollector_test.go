@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"go/ast"
 	"go/parser"
@@ -10,7 +11,7 @@ import (
 )
 
 func TestInterfaceCollector(t *testing.T) {
-	file := pathutils.Abs("testfiles/svc.go")
+	file := pathutils.Abs("testdata/svc.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -21,4 +22,10 @@ func TestInterfaceCollector(t *testing.T) {
 	sc.cmap = ast.NewCommentMap(fset, root, root.Comments)
 	ast.Walk(sc, root)
 	fmt.Println(sc)
+}
+
+func TestBuildInterfaceCollector(t *testing.T) {
+	file := pathutils.Abs("testdata/svc.go")
+	ic := BuildInterfaceCollector(file, ExprString)
+	assert.NotNil(t, ic)
 }

@@ -49,7 +49,7 @@ func TestGetImportPath(t *testing.T) {
 			args: args{
 				file: dir + "/domain",
 			},
-			want: "testfilesimportpath/domain",
+			want: "testdataimportpath/domain",
 		},
 	}
 	for _, tt := range tests {

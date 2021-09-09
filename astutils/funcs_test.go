@@ -74,39 +74,34 @@ func main() {
 	fmt.Println(string(b))
 }
 `
-	type args struct {
-		src  []byte
-		file string
+	file := pathutils.Abs("testdata/output.go")
+	FixImport([]byte(code), file)
+	f, err := os.Open(file)
+	if err != nil {
+		t.Fatal(err)
 	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "1",
-			args: args{
-				src:  []byte(code),
-				file: "",
-			},
-		},
+	got, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			file := pathutils.Abs("testfiles/output.go")
-			FixImport(tt.args.src, file)
-			f, err := os.Open(file)
-			if err != nil {
-				t.Fatal(err)
-			}
-			got, err := ioutil.ReadAll(f)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !bytes.Equal(got, []byte(expect)) {
-				t.Error("somewhat bad happen")
-			}
-		})
+	if !bytes.Equal(got, []byte(expect)) {
+		t.Error("somewhat bad happen")
 	}
+}
+
+func TestFixImportPanic(t *testing.T) {
+	code := `package main
+
+import (
+	"fmt"
+"encoding/json"
+)
+
+type UserVo
+`
+	assert.Panics(t, func() {
+		FixImport([]byte(code), "")
+	})
 }
 
 func TestMethodMeta_String(t *testing.T) {
@@ -320,7 +315,7 @@ func TestMethodMeta_String(t *testing.T) {
 }
 
 func TestVisit(t *testing.T) {
-	testDir := pathutils.Abs("./testfiles")
+	testDir := pathutils.Abs("./testdata")
 	vodir := filepath.Join(testDir, "vo")
 	var files []string
 	err := filepath.Walk(vodir, Visit(&files))
@@ -331,19 +326,35 @@ func TestVisit(t *testing.T) {
 }
 
 func TestGetMod(t *testing.T) {
-	testDir := pathutils.Abs("./testfiles")
+	testDir := pathutils.Abs("./testdata")
 	_ = os.Chdir(testDir)
-	assert.Equal(t, "testfiles", GetMod())
+	assert.Equal(t, "testdata", GetMod())
+}
+
+func TestGetModShouldPanic(t *testing.T) {
+	testDir := pathutils.Abs("./testdata1")
+	_ = os.Chdir(testDir)
+	assert.Panics(t, func() {
+		GetMod()
+	})
+}
+
+func TestGetModShouldPanic2(t *testing.T) {
+	testDir := pathutils.Abs("./testdata/testdata")
+	_ = os.Chdir(testDir)
+	assert.Panics(t, func() {
+		GetMod()
+	})
 }
 
 func TestGetImportPath(t *testing.T) {
-	testDir := pathutils.Abs("./testfiles")
+	testDir := pathutils.Abs("./testdata")
 	_ = os.Chdir(testDir)
-	assert.Equal(t, "testfiles/vo", GetImportPath(testDir+"/vo"))
+	assert.Equal(t, "testdata/vo", GetImportPath(testDir+"/vo"))
 }
 
 func TestNewMethodMeta(t *testing.T) {
-	file := pathutils.Abs("testfiles/cat.go")
+	file := pathutils.Abs("testdata/cat.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 )
 
 func ExampleStruct() {
-	file := pathutils.Abs("testfiles/vo.go")
+	file := pathutils.Abs("testdata/vo.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -28,7 +28,7 @@ func ExampleStruct() {
 }
 
 func ExampleInter() {
-	file := pathutils.Abs("testfiles/svc.go")
+	file := pathutils.Abs("testdata/svc.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -42,7 +42,7 @@ func ExampleInter() {
 }
 
 func TestStructFuncDecl(t *testing.T) {
-	file := pathutils.Abs("testfiles/cat.go")
+	file := pathutils.Abs("testdata/cat.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -73,7 +73,7 @@ func ExampleRegex() {
 }
 
 func TestStructCollector_DocFlatEmbed(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed.go")
+	file := pathutils.Abs("testdata/embed.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -97,7 +97,7 @@ func TestStructCollector_DocFlatEmbed(t *testing.T) {
 }
 
 func TestStructCollector_DocFlatEmbed1(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed1.go")
+	file := pathutils.Abs("testdata/embed1.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -121,7 +121,7 @@ func TestStructCollector_DocFlatEmbed1(t *testing.T) {
 }
 
 func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed2.go")
+	file := pathutils.Abs("testdata/embed2.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields(t *testing.T) {
 }
 
 func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields2(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed3.go")
+	file := pathutils.Abs("testdata/embed3.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -169,7 +169,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields2(t *testing.T) {
 }
 
 func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields3(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed4.go")
+	file := pathutils.Abs("testdata/embed4.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -203,7 +203,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields3(t *testing.T) {
 }
 
 func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields4(t *testing.T) {
-	file := pathutils.Abs("testfiles/embed5.go")
+	file := pathutils.Abs("testdata/embed5.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -227,7 +227,7 @@ func TestStructCollector_DocFlatEmbed_ExcludeUnexportedFields4(t *testing.T) {
 }
 
 func TestStructCollector_Alias(t *testing.T) {
-	file := pathutils.Abs("testfiles/alias.go")
+	file := pathutils.Abs("testdata/alias.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -245,7 +245,7 @@ func TestStructCollector_Alias(t *testing.T) {
 }
 
 func TestStructCollector_Domain(t *testing.T) {
-	file := pathutils.Abs("testfiles/domain/purchase.go")
+	file := pathutils.Abs("testdata/domain/purchase.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
