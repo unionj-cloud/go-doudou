@@ -223,7 +223,6 @@ func (receiver Svc) Push() {
 
 func (receiver Svc) Deploy() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
@@ -240,7 +239,6 @@ func (receiver Svc) Deploy() {
 
 func (receiver Svc) Shutdown() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
