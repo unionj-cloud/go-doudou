@@ -465,6 +465,8 @@ Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/pr
 
 Welcome to contribute to go-doudou by forking it and submitting pr or issue. If you like go-doudou, please give it a star!
 
+Slack invitation link: https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ
+
 Welcome to add my wechat to give me some feedback.
 
 ![qrcode.png](qrcode.png) 
