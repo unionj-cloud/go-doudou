@@ -16,17 +16,17 @@ type Usersvc interface {
 	// comment1
 	// comment2
 	GetUser(ctx context.Context,
-	// 用户ID
+		// 用户ID
 		userId string,
-	// 图片地址
+		// 图片地址
 		photo string,
 	) (code int, data string, msg error)
 
 	// comment3
-	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)
+	SignUp(ctx context.Context, username string, password int, actived bool, score []int) (code int, data string, msg error)
 
 	// comment4
-	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)
+	UploadAvatar(context.Context, []*multipart.FileHeader, string, *multipart.FileHeader) (int, string, error)
 
 	// comment5
 	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)

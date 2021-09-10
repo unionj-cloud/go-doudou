@@ -115,12 +115,17 @@ var appendHttpHandlerImplTmpl = `
 			{{ $r.Name }} {{ $r.Type }}
 			{{- end }}
 		)
+		{{- $multipartFormParsed := false }}
+		{{- $formParsed := false }}
 		{{- range $p := $m.Params }}
 		{{- if contains $p.Type "*multipart.FileHeader" }}
+		{{- if not $multipartFormParsed }}
 		if err := _req.ParseMultipartForm(32 << 20); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
 		}
+		{{- $multipartFormParsed = true }}
+		{{- end }}
 		{{$p.Name}}Files := _req.MultipartForm.File["{{$p.Name}}"]
 		{{- if contains $p.Type "["}}
 		{{$p.Name}} = {{$p.Name}}Files
@@ -138,31 +143,45 @@ var appendHttpHandlerImplTmpl = `
 		}
 		defer _req.Body.Close()
 		{{- else if contains $p.Type "["}}
+		{{- if not $formParsed }}
 		if err := _req.ParseForm(); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
 		}
-		{{- if $p.Type | isSupport }}
-		if casted, err := _cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
-			return
-		} else {
-			{{$p.Name}} = casted
+		{{- $formParsed = true }}
+		{{- end }}
+		if _, exists := _req.Form["{{$p.Name}}"]; exists {
+			{{- if $p.Type | isSupport }}
+			if casted, err := _cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			} else {
+				{{$p.Name}} = casted
+			}
+			{{- else }}
+			{{$p.Name}} = _req.Form["{{$p.Name}}"]
+			{{- end }}
 		}
 		{{- else }}
-		{{$p.Name}} = _req.Form["{{$p.Name}}"]
-		{{- end }}
-		{{- else }}
-		{{- if $p.Type | isSupport }}
-		if casted, err := _cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
+		{{- if not $formParsed }}
+		if err := _req.ParseForm(); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
 			return
-		} else {
-			{{$p.Name}} = casted
 		}
-		{{- else }}
-		{{$p.Name}} = _req.FormValue("{{$p.Name}}")
+		{{- $formParsed = true }}
 		{{- end }}
+		if _, exists := _req.Form["{{$p.Name}}"]; exists {
+			{{- if $p.Type | isSupport }}
+			if casted, err := _cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			} else {
+				{{$p.Name}} = casted
+			}
+			{{- else }}
+			{{$p.Name}} = _req.FormValue("{{$p.Name}}")
+			{{- end }}
+		}
 		{{- end }}
 		{{- end }}
 		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(

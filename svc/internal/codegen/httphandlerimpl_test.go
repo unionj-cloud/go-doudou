@@ -10,9 +10,8 @@ import (
 )
 
 func TestGenHttpHandlerImplWithImpl(t *testing.T) {
-	dir := testDir + "handlerImpl1"
-	InitSvc(dir)
-	defer os.RemoveAll(dir)
+	dir := "testfiles"
+	defer os.RemoveAll(filepath.Join(dir, "transport"))
 	svcfile := filepath.Join(dir, "svc.go")
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
