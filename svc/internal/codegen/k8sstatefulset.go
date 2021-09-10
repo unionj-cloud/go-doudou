@@ -76,7 +76,7 @@ func GenK8sStatefulset(dir string, svcname, image string) {
 			panic(err)
 		}
 	} else {
-		logrus.Warnf("file %s will be overwrite", file)
+		logrus.Warnf("image version will be modified in file %s", file)
 		err = ioutil.WriteFile(file, modifyVersion(file, image), os.ModePerm)
 		if err != nil {
 			panic(err)
