@@ -175,7 +175,6 @@ func (receiver Svc) Init() {
 
 func (receiver Svc) Push() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
 
 	cmd := exec.Command("go", "mod", "vendor")
 	cmd.Stdout = os.Stdout
