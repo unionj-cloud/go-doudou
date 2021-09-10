@@ -11,10 +11,15 @@ import (
 	"strings"
 )
 
-type Q interface {
+type Base interface {
 	Sql() string
-	And(q Q) Q
-	Or(q Q) Q
+}
+
+type Q interface {
+	Base
+	And(q Base) Where
+	Or(q Base) Where
+	Append(q Base) Where
 }
 
 type Val struct {
@@ -43,13 +48,13 @@ func null() Val {
 	}
 }
 
-type criteria struct {
+type Criteria struct {
 	col  string
 	val  Val
 	asym arithsymbol.ArithSymbol
 }
 
-func (c criteria) Sql() string {
+func (c Criteria) Sql() string {
 	if c.asym == arithsymbol.In {
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("`%s` %s (", c.col, c.asym))
@@ -85,111 +90,132 @@ func (c criteria) Sql() string {
 	}
 }
 
-func C() criteria {
-	return criteria{}
+func C() Criteria {
+	return Criteria{}
 }
 
-func (c criteria) Col(col string) criteria {
+func (c Criteria) Col(col string) Criteria {
 	c.col = col
 	return c
 }
 
-func (c criteria) Eq(val Val) criteria {
+func (c Criteria) Eq(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Eq
 	return c
 }
 
-func (c criteria) Ne(val Val) criteria {
+func (c Criteria) Ne(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Ne
 	return c
 }
 
-func (c criteria) Gt(val Val) criteria {
+func (c Criteria) Gt(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gt
 	return c
 }
 
-func (c criteria) Lt(val Val) criteria {
+func (c Criteria) Lt(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lt
 	return c
 }
 
-func (c criteria) Gte(val Val) criteria {
+func (c Criteria) Gte(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gte
 	return c
 }
 
-func (c criteria) Lte(val Val) criteria {
+func (c Criteria) Lte(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lte
 	return c
 }
 
-func (c criteria) IsNull() criteria {
+func (c Criteria) IsNull() Criteria {
 	c.val = null()
 	c.asym = arithsymbol.Is
 	return c
 }
 
-func (c criteria) IsNotNull() criteria {
+func (c Criteria) IsNotNull() Criteria {
 	c.val = null()
 	c.asym = arithsymbol.Not
 	return c
 }
 
-func (c criteria) In(val Val) criteria {
+func (c Criteria) In(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.In
 	return c
 }
 
-func (c criteria) And(cri Q) Q {
-	w := where{
-		children: make([]Q, 0),
+func (c Criteria) And(cri Base) Where {
+	w := Where{
+		children: make([]Base, 0),
 	}
 	w.children = append(w.children, c, cri)
 	w.lsym = logicsymbol.And
 	return w
 }
 
-func (c criteria) Or(cri Q) Q {
-	w := where{
-		children: make([]Q, 0),
+func (c Criteria) Or(cri Base) Where {
+	w := Where{
+		children: make([]Base, 0),
 	}
 	w.children = append(w.children, c, cri)
 	w.lsym = logicsymbol.Or
 	return w
 }
 
-type where struct {
+func (c Criteria) Append(cri Base) Where {
+	w := Where{
+		children: make([]Base, 0),
+	}
+	w.children = append(w.children, c, cri)
+	w.lsym = logicsymbol.Append
+	return w
+}
+
+type Where struct {
 	lsym     logicsymbol.LogicSymbol
-	children []Q
+	children []Base
 }
 
-func (w where) Sql() string {
-	return fmt.Sprintf("(%s %s %s)", w.children[0].Sql(), w.lsym, w.children[1].Sql())
+func (w Where) Sql() string {
+	if w.lsym != logicsymbol.Append {
+		return fmt.Sprintf("(%s %s %s)", w.children[0].Sql(), w.lsym, w.children[1].Sql())
+	}
+	return fmt.Sprintf("%s%s%s", w.children[0].Sql(), w.lsym, w.children[1].Sql())
 }
 
-func (w where) And(whe Q) Q {
-	parentW := where{
-		children: make([]Q, 0),
+func (w Where) And(whe Base) Where {
+	parentW := Where{
+		children: make([]Base, 0),
 	}
 	parentW.children = append(parentW.children, w, whe)
 	parentW.lsym = logicsymbol.And
 	return parentW
 }
 
-func (w where) Or(whe Q) Q {
-	parentW := where{
-		children: make([]Q, 0),
+func (w Where) Or(whe Base) Where {
+	parentW := Where{
+		children: make([]Base, 0),
 	}
 	parentW.children = append(parentW.children, w, whe)
 	parentW.lsym = logicsymbol.Or
+	return parentW
+}
+
+func (w Where) Append(whe Base) Where {
+	parentW := Where{
+		children: make([]Base, 0),
+	}
+	parentW.children = append(parentW.children, w, whe)
+	parentW.lsym = logicsymbol.Append
 	return parentW
 }
 
@@ -221,7 +247,7 @@ func (p Page) Limit(offset, size int) Page {
 	return p
 }
 
-// order by age desc limit 2,1
+// Sql order by age desc limit 2,1
 func (p Page) Sql() string {
 	var sb strings.Builder
 
