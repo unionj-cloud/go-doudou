@@ -147,7 +147,7 @@ GDD_MEM_NAME=
 # for supporting k8s stateful service
 GDD_MEM_HOST=`
 
-const dockerfileTmpl = `FROM golang:1.13.4-alpine AS builder
+const dockerfileTmpl = `FROM golang:1.16.6-alpine AS builder
 
 ENV GO111MODULE=on
 ARG user
