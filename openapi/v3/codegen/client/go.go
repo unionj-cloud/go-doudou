@@ -248,9 +248,7 @@ func restyMethod(method string) string {
 }
 
 func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		panic(err)
-	}
+	_ = os.MkdirAll(dir, os.ModePerm)
 	output := filepath.Join(dir, svcname+"client.go")
 	fi, err := os.Stat(output)
 	if err != nil && !os.IsNotExist(err) {
@@ -263,19 +261,18 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 	if f, err = os.Create(output); err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
-	tpl, err := template.New("http.go.tmpl").Funcs(funcMap).Parse(httptmpl)
-	if err != nil {
-		panic(err)
-	}
+	tpl, _ := template.New("http.go.tmpl").Funcs(funcMap).Parse(httptmpl)
 	var sqlBuf bytes.Buffer
-	err = tpl.Execute(&sqlBuf, struct {
+	_ = tpl.Execute(&sqlBuf, struct {
 		Meta astutils.InterfaceMeta
 		Env  string
 		Pkg  string
@@ -284,11 +281,7 @@ func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 		Env:  env,
 		Pkg:  pkg,
 	})
-	if err != nil {
-		panic(err)
-	}
 	source := strings.TrimSpace(sqlBuf.String())
-	fmt.Println(source)
 	astutils.FixImport([]byte(source), output)
 }
 
@@ -737,7 +730,9 @@ func loadApi(file string) v3.Api {
 	if docfile, err = os.Open(file); err != nil {
 		panic(err)
 	}
-	defer docfile.Close()
+	defer func(docfile *os.File) {
+		_ = docfile.Close()
+	}(docfile)
 	if docraw, err = ioutil.ReadAll(docfile); err != nil {
 		panic(err)
 	}

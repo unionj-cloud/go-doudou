@@ -14,7 +14,7 @@ import (
 var Schemas map[string]Schema
 var SchemaNames []string
 
-// Reference https://golang.org/pkg/builtin/
+// SchemaOf reference https://golang.org/pkg/builtin/
 // type bool
 // type byte
 // type complex128

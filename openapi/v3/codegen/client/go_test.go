@@ -3,8 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/pathutils"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -12,20 +14,20 @@ import (
 )
 
 func Test_genGoVo(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoVo_Omit(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
 	omitempty = true
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoHttp(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -46,7 +48,7 @@ func Test_genGoHttp(t *testing.T) {
 }
 
 func Test_genGoHttp1(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "test1.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -67,7 +69,7 @@ func Test_genGoHttp1(t *testing.T) {
 }
 
 func Test_genGoHttp2(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "test2.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -88,7 +90,7 @@ func Test_genGoHttp2(t *testing.T) {
 }
 
 func Test_genGoHttp3(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "test3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -108,8 +110,40 @@ func Test_genGoHttp3(t *testing.T) {
 	}
 }
 
+func Test_genGoHttp4(t *testing.T) {
+	api := loadApi("https://petstore3.swagger.io/api/v3/openapi.json")
+	schemas = api.Components.Schemas
+	requestBodies = api.Components.RequestBodies
+	svcmap := make(map[string]map[string]v3.Path)
+	for endpoint, path := range api.Paths {
+		svcname := strings.Split(strings.Trim(endpoint, "/"), "/")[0]
+		if value, exists := svcmap[svcname]; exists {
+			value[endpoint] = path
+		} else {
+			svcmap[svcname] = make(map[string]v3.Path)
+			svcmap[svcname][endpoint] = path
+		}
+	}
+
+	for svcname, paths := range svcmap {
+		genGoHttp(paths, svcname, filepath.Join(pathutils.Abs("../testdata"), "test"), "", "test")
+	}
+}
+
+func Test_loadApiPanic(t *testing.T) {
+	assert.Panics(t, func() {
+		loadApi("notexists.json")
+	})
+}
+
+func Test_loadApiJsonUnmarshalPanic(t *testing.T) {
+	assert.Panics(t, func() {
+		loadApi("../testdata/test4.json")
+	})
+}
+
 func Test_genGoHttp_Omit(t *testing.T) {
-	testdir := pathutils.Abs("../testfiles")
+	testdir := pathutils.Abs("../testdata")
 	api := loadApi(path.Join(testdir, "petstore3.json"))
 	omitempty = true
 	schemas = api.Components.Schemas
@@ -245,6 +279,297 @@ func Test_toMethod(t *testing.T) {
 			if got := toMethod(tt.args.endpoint); got != tt.want {
 				t.Errorf("toMethod() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_httpMethod(t *testing.T) {
+	type args struct {
+		method string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				method: "CreateUser",
+			},
+			want: "POST",
+		},
+		{
+			name: "",
+			args: args{
+				method: "GetUserInfo",
+			},
+			want: "GET",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := httpMethod(tt.args.method); got != tt.want {
+				t.Errorf("httpMethod() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenGoClient(t *testing.T) {
+	dir := "../testdata/testclient"
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(dir)
+	assert.NotPanics(t, func() {
+		GenGoClient(dir, "../testdata/petstore3.json", true, "", "client")
+	})
+}
+
+func Test_operation2Method(t *testing.T) {
+	type args struct {
+		endpoint   string
+		httpMethod string
+		operation  *v3.Operation
+		gparams    []v3.Parameter
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				endpoint:   "/test/operation2Mthod/{pid}",
+				httpMethod: "GET",
+				operation: &v3.Operation{
+					Tags:        []string{"test"},
+					Summary:     "This is only for test",
+					Description: "Description for test",
+					OperationId: "TestOperation2Mthod",
+					Parameters:  []v3.Parameter{},
+					RequestBody: &v3.RequestBody{
+						Description: "This is a description",
+						Content: &v3.Content{
+							FormUrl: &v3.MediaType{
+								Schema: &v3.Schema{
+									Type: "object",
+									Properties: map[string]*v3.Schema{
+										"id":    v3.Int64,
+										"name":  v3.String,
+										"score": v3.Float64,
+										"isBoy": v3.Bool,
+									},
+								},
+							},
+						},
+						Required: true,
+					},
+					Responses: &v3.Responses{
+						Resp200: &v3.Response{
+							Description: "this is a response",
+							Content: &v3.Content{
+								Json: &v3.MediaType{
+									Schema: &v3.Schema{
+										Type: "object",
+										Properties: map[string]*v3.Schema{
+											"code": v3.Int,
+											"data": v3.String,
+											"err":  v3.String,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				gparams: []v3.Parameter{
+					{
+						Name:        "companyId",
+						In:          v3.InQuery,
+						Description: "company ID",
+						Required:    true,
+						Schema:      v3.Int64,
+					},
+					{
+						Name:        "name",
+						In:          v3.InQuery,
+						Description: "user name",
+						Required:    true,
+						Deprecated:  false,
+						Schema:      v3.String,
+					},
+					{
+						Name:        "pid",
+						In:          v3.InPath,
+						Description: "project Id",
+						Required:    false,
+						Deprecated:  false,
+						Schema:      v3.Int64,
+					},
+					{
+						Name:        "token",
+						In:          v3.InHeader,
+						Description: "user token",
+						Required:    true,
+						Deprecated:  false,
+						Schema:      v3.String,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				endpoint:   "/test/operation2Mthod/{pid}",
+				httpMethod: "GET",
+				operation: &v3.Operation{
+					Tags:        []string{"test"},
+					Summary:     "This is only for test",
+					Description: "Description for test",
+					OperationId: "TestOperation2Mthod",
+					Parameters:  []v3.Parameter{},
+					RequestBody: &v3.RequestBody{
+						Description: "This is a description",
+						Content: &v3.Content{
+							FormData: &v3.MediaType{
+								Schema: &v3.Schema{
+									Type: "object",
+									Properties: map[string]*v3.Schema{
+										"id":      v3.Int64,
+										"name":    v3.String,
+										"score":   v3.Float64,
+										"isBoy":   v3.Bool,
+										"photoes": v3.FileArray,
+										"doc":     v3.File,
+									},
+								},
+							},
+						},
+						Required: true,
+					},
+					Responses: &v3.Responses{
+						Resp200: &v3.Response{
+							Description: "this is a response",
+							Content: &v3.Content{
+								Json: &v3.MediaType{
+									Schema: &v3.Schema{
+										Type: "object",
+										Properties: map[string]*v3.Schema{
+											"code": v3.Int,
+											"data": v3.String,
+											"err":  v3.String,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				endpoint:   "/test/operation2Mthod/{pid}",
+				httpMethod: "GET",
+				operation: &v3.Operation{
+					Tags:        []string{"test"},
+					Summary:     "This is only for test",
+					Description: "Description for test",
+					OperationId: "TestOperation2Mthod",
+					Parameters:  []v3.Parameter{},
+					RequestBody: &v3.RequestBody{
+						Description: "This is a description",
+						Content: &v3.Content{
+							FormData: &v3.MediaType{
+								Schema: &v3.Schema{
+									Type: "object",
+									Properties: map[string]*v3.Schema{
+										"id":      v3.Int64,
+										"name":    v3.String,
+										"score":   v3.Float64,
+										"isBoy":   v3.Bool,
+										"photoes": v3.FileArray,
+										"doc":     v3.File,
+									},
+								},
+							},
+						},
+						Required: true,
+					},
+					Responses: &v3.Responses{
+						Resp200: &v3.Response{
+							Description: "this is a response",
+							Content: &v3.Content{
+								Stream: &v3.MediaType{
+									Schema: v3.File,
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				endpoint:   "/test/operation2Mthod/{pid}",
+				httpMethod: "GET",
+				operation: &v3.Operation{
+					Tags:        []string{"test"},
+					Summary:     "This is only for test",
+					Description: "Description for test",
+					OperationId: "TestOperation2Mthod",
+					Parameters:  []v3.Parameter{},
+					RequestBody: &v3.RequestBody{
+						Description: "This is a description",
+						Content: &v3.Content{
+							TextPlain: &v3.MediaType{
+								Schema: &v3.Schema{
+									Type: "object",
+									Properties: map[string]*v3.Schema{
+										"id":    v3.Int64,
+										"name":  v3.String,
+										"score": v3.Float64,
+										"isBoy": v3.Bool,
+									},
+								},
+							},
+						},
+						Required: true,
+					},
+					Responses: &v3.Responses{
+						Resp200: &v3.Response{
+							Description: "this is a response",
+							Content: &v3.Content{
+								TextPlain: &v3.MediaType{
+									Schema: &v3.Schema{
+										Type: "object",
+										Properties: map[string]*v3.Schema{
+											"code": v3.Int,
+											"data": v3.String,
+											"err":  v3.String,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				_, _ = operation2Method(tt.args.endpoint, tt.args.httpMethod, tt.args.operation, tt.args.gparams)
+			})
 		})
 	}
 }

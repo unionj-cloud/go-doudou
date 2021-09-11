@@ -219,7 +219,7 @@ type MethodMeta struct {
 	// when generate client code from service interface in svc.go file, if there is struct type param, this struct type param will put into request body,
 	// then others will be put into url as query string. if there is no struct type param and the api is a get request, all will be put into url as query string.
 	// if there is no struct type param and the api is Not a get request, all will be put into request body as application/x-www-form-urlencoded data.
-	// specailly, if there is one or more *multipart.FileHeader or []*multipart.FileHeader params, all will be put into request body as multipart/form-data data.
+	// specially, if there is one or more *multipart.FileHeader or []*multipart.FileHeader params, all will be put into request body as multipart/form-data data.
 	Params []FieldMeta
 	// response
 	Results []FieldMeta

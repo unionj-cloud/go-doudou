@@ -27,8 +27,8 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 // Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context,
 	queryParams struct {
-		Password string `json:"password,omitempty" url:"password"`
 		Username string `json:"username,omitempty" url:"username"`
+		Password string `json:"password,omitempty" url:"password"`
 	}) (ret string, err error) {
 	var (
 		_server string
