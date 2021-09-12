@@ -13,7 +13,8 @@ import (
 	"strings"
 )
 
-func RewriteJsonTag(file string, omitempty bool, convert func(old string) string) (string, error) {
+// RewriteJSONTag overwrites json tag by convert function and return formatted source code
+func RewriteJSONTag(file string, omitempty bool, convert func(old string) string) (string, error) {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {

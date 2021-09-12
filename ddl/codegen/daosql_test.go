@@ -62,7 +62,7 @@ func TestGenDaoSql(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := GenDaoSql(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
+			if err := GenDaoSQL(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			defer os.RemoveAll(pathutils.Abs("../testdata/dao"))

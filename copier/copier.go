@@ -6,6 +6,7 @@ import (
 	"reflect"
 )
 
+// DeepCopy src to target with json marshal and unmarshal
 func DeepCopy(src, target interface{}) error {
 	if src == nil || target == nil {
 		return nil

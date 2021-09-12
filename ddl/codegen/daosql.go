@@ -165,7 +165,8 @@ WHERE
     {{` + "`" + `{{` + "`" + `}}.Where{{` + "`" + `}}` + "`" + `}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}`
 
-func GenDaoSql(domainpath string, t table.Table, folder ...string) error {
+// GenDaoSQL generates sql statements used by dao layer
+func GenDaoSQL(domainpath string, t table.Table, folder ...string) error {
 	var (
 		err      error
 		daopath  string

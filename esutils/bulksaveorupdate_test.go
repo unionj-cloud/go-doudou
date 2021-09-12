@@ -9,7 +9,16 @@ import (
 	"time"
 )
 
+var (
+	loc *time.Location
+)
+
 func TestMain(m *testing.M) {
+	var err error
+	loc, err = time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		panic(err)
+	}
 	var terminator func()
 	terminator, esHost, esPort = test.PrepareTestEnvironment()
 	code := m.Run()
@@ -32,7 +41,7 @@ func TestBulkSaveOrUpdate(t *testing.T) {
 			args: args{
 				docs: []interface{}{
 					map[string]interface{}{
-						"createAt": time.Now().In(constants.Loc).Format(constants.FORMATES),
+						"createAt": time.Now().In(loc).Format(constants.FORMATES),
 					},
 				},
 			},
@@ -63,7 +72,7 @@ func Test_getId(t *testing.T) {
 			args: args{
 				doc: map[string]interface{}{
 					"id":       "id1",
-					"createAt": time.Now().In(constants.Loc).Format(constants.FORMATES),
+					"createAt": time.Now().In(loc).Format(constants.FORMATES),
 				},
 			},
 			want:    "id1",
@@ -77,7 +86,7 @@ func Test_getId(t *testing.T) {
 					CreateAt string
 				}{
 					Id:       "id2",
-					CreateAt: time.Now().In(constants.Loc).Format(constants.FORMATES),
+					CreateAt: time.Now().In(loc).Format(constants.FORMATES),
 				},
 			},
 			want:    "id2",
@@ -87,7 +96,7 @@ func Test_getId(t *testing.T) {
 			name: "",
 			args: args{
 				doc: map[string]interface{}{
-					"createAt": time.Now().In(constants.Loc).Format(constants.FORMATES),
+					"createAt": time.Now().In(loc).Format(constants.FORMATES),
 				},
 			},
 			want:    "",
@@ -99,7 +108,7 @@ func Test_getId(t *testing.T) {
 				doc: struct {
 					CreateAt string
 				}{
-					CreateAt: time.Now().In(constants.Loc).Format(constants.FORMATES),
+					CreateAt: time.Now().In(loc).Format(constants.FORMATES),
 				},
 			},
 			want:    "",

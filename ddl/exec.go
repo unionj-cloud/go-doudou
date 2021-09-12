@@ -3,6 +3,7 @@ package ddl
 import (
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
+	// here must import mysql
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
@@ -25,6 +26,7 @@ import (
 	"strings"
 )
 
+// Ddl is for ddl command
 type Ddl struct {
 	Dir     string
 	Reverse bool
@@ -34,6 +36,9 @@ type Ddl struct {
 	Conf    config.DbConfig
 }
 
+// Exec executes the logic for ddl command
+// if Reverse is true, it will generate code from database tables,
+// otherwise it will update database tables from structs defined in domain pkg
 func (d Ddl) Exec() {
 	var db *sqlx.DB
 	var err error
@@ -256,7 +261,7 @@ func (d Ddl) Exec() {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}
-			if err = codegen.GenDaoSql(d.Dir, t, d.Df); err != nil {
+			if err = codegen.GenDaoSQL(d.Dir, t, d.Df); err != nil {
 				logrus.Errorf("FATAL: %+v\n", err)
 				break
 			}

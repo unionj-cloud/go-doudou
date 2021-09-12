@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// InterfaceCollector collect interfaces by parsing source code
 type InterfaceCollector struct {
 	Interfaces []InterfaceMeta
 	Package    PackageMeta
@@ -18,10 +19,12 @@ type InterfaceCollector struct {
 	cmap       ast.CommentMap
 }
 
+// Visit traverse each node from source code
 func (ic *InterfaceCollector) Visit(n ast.Node) ast.Visitor {
 	return ic.Collect(n)
 }
 
+// Collect collects all interfaces from source code
 func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	switch spec := n.(type) {
 	case *ast.Package:
@@ -170,12 +173,14 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
+// NewInterfaceCollector initializes an InterfaceCollector
 func NewInterfaceCollector(exprString func(ast.Expr) string) *InterfaceCollector {
 	return &InterfaceCollector{
 		exprString: exprString,
 	}
 }
 
+// BuildInterfaceCollector initializes an InterfaceCollector and collects interfaces
 func BuildInterfaceCollector(file string, exprString func(ast.Expr) string) InterfaceCollector {
 	ic := NewInterfaceCollector(exprString)
 	fset := token.NewFileSet()

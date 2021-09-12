@@ -330,6 +330,7 @@ func (receiver {{.DomainName}}DaoImpl) PageMany(ctx context.Context, page query.
 	return pageRet, nil
 }`
 
+// GenDaoImplGo generates dao layer implementation code
 func GenDaoImplGo(domainpath string, t table.Table, folder ...string) error {
 	var (
 		err      error

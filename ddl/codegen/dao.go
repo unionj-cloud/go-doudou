@@ -15,6 +15,7 @@ type {{.DomainName}}Dao interface {
 	Base
 }`
 
+// GenDaoGo generates dao layer interface code
 func GenDaoGo(domainpath string, t table.Table, folder ...string) error {
 	var (
 		err     error

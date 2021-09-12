@@ -1,24 +1,3 @@
-/*
-Copyright © 2021 wubin1989 <328454505@qq.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
 package cmd
 
 import (
@@ -33,7 +12,7 @@ var doc bool
 var jsonattrcase string
 var routePatternStrategy int
 
-// httpCmd represents the http command
+// httpCmd generates scaffold code of restful service
 var httpCmd = &cobra.Command{
 	Use:   "http",
 	Short: "generate http routes and handlers",
@@ -45,7 +24,7 @@ var httpCmd = &cobra.Command{
 			Omitempty:            omitempty,
 			Doc:                  doc,
 			Jsonattrcase:         jsonattrcase,
-			Env:                  baseUrlEnv,
+			Env:                  baseURLEnv,
 			RoutePatternStrategy: routePatternStrategy,
 		}
 		s.Http()
@@ -68,6 +47,6 @@ func init() {
 	httpCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
 	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
 	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)
-	httpCmd.Flags().StringVarP(&baseUrlEnv, "env", "e", "", `base url environment variable name`)
+	httpCmd.Flags().StringVarP(&baseURLEnv, "env", "e", "", `base url environment variable name`)
 	httpCmd.Flags().IntVarP(&routePatternStrategy, "routePattern", "r", 0, "route pattern generate strategy. 0 means splitting each methods of service interface by slash / after converting to snake case. 1 means no splitting, only lowercase. recommend default value.")
 }

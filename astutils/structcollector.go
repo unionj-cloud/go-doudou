@@ -10,6 +10,7 @@ import (
 	"unicode"
 )
 
+// StructCollector collect structs by parsing source code
 type StructCollector struct {
 	Structs          []StructMeta
 	Methods          map[string][]MethodMeta
@@ -18,10 +19,12 @@ type StructCollector struct {
 	exprString       func(ast.Expr) string
 }
 
+// Visit traverse each node from source code
 func (sc *StructCollector) Visit(n ast.Node) ast.Visitor {
 	return sc.Collect(n)
 }
 
+// Collect collects all structs from source code
 func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 	switch spec := n.(type) {
 	case *ast.Package:
@@ -69,6 +72,7 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
+// DocFlatEmbed flatten embed struct fields
 func (sc *StructCollector) DocFlatEmbed() []StructMeta {
 	structMap := make(map[string]StructMeta)
 	for _, structMeta := range sc.Structs {
@@ -130,6 +134,7 @@ func (sc *StructCollector) DocFlatEmbed() []StructMeta {
 	return result
 }
 
+// NewStructCollector initializes an StructCollector
 func NewStructCollector(exprString func(ast.Expr) string) *StructCollector {
 	return &StructCollector{
 		Structs:          nil,
@@ -140,6 +145,7 @@ func NewStructCollector(exprString func(ast.Expr) string) *StructCollector {
 	}
 }
 
+// BuildStructCollector initializes an StructCollector and collects structs
 func BuildStructCollector(file string, exprString func(ast.Expr) string) StructCollector {
 	sc := NewStructCollector(exprString)
 	fset := token.NewFileSet()

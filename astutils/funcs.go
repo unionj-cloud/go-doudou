@@ -152,12 +152,12 @@ func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string)
 	}
 }
 
-// PackageMeta wrap package info
+// PackageMeta wraps package info
 type PackageMeta struct {
 	Name string
 }
 
-// FieldMeta wrap field info
+// FieldMeta wraps field info
 type FieldMeta struct {
 	Name     string
 	Type     string
@@ -168,7 +168,7 @@ type FieldMeta struct {
 	DocName string
 }
 
-// StructMeta wrap struct info
+// StructMeta wraps struct info
 type StructMeta struct {
 	Name     string
 	Fields   []FieldMeta
@@ -286,7 +286,7 @@ func (mm MethodMeta) String() string {
 	return result
 }
 
-// InterfaceMeta wrap interface info
+// InterfaceMeta wraps interface info
 type InterfaceMeta struct {
 	Name     string
 	Methods  []MethodMeta

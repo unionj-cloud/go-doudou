@@ -8,7 +8,7 @@ import (
 
 func ExampleRewriteJsonTag() {
 	file := pathutils.Abs("testdata/rewritejsontag.go")
-	result, err := RewriteJsonTag(file, true, strcase.ToLowerCamel)
+	result, err := RewriteJSONTag(file, true, strcase.ToLowerCamel)
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func ExampleRewriteJsonTag() {
 
 func ExampleRewriteJsonTag1() {
 	file := pathutils.Abs("testdata/rewritejsontag.go")
-	result, err := RewriteJsonTag(file, false, strcase.ToLowerCamel)
+	result, err := RewriteJSONTag(file, false, strcase.ToLowerCamel)
 	if err != nil {
 		panic(err)
 	}

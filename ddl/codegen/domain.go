@@ -24,6 +24,7 @@ type {{.Name}} struct {
 {{- end }}
 }`
 
+// GenDomainGo generates structs code in domain pkg from database tables
 func GenDomainGo(dpath string, domain astutils.StructMeta) error {
 	var (
 		err error

@@ -30,6 +30,8 @@ type Base interface {
 }
 `
 
+// GenBaseGo generates Base interface code
+// Base interface wraps some common CRUD operations for convenient use
 func GenBaseGo(domainpath string, folder ...string) error {
 	var (
 		err     error

@@ -34,7 +34,7 @@ func (receiver Name) Exec() {
 		panic(errors.New(`unknown strategy. currently only support "lowerCamel" and "snake"`))
 	}
 
-	newcode, err := astutils.RewriteJsonTag(receiver.File, receiver.Omitempty, convert)
+	newcode, err := astutils.RewriteJSONTag(receiver.File, receiver.Omitempty, convert)
 	if err != nil {
 		panic(err)
 	}
