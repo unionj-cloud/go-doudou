@@ -1,8 +1,15 @@
 package registry
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/memberlist"
+	"log"
+	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func Test_seeds(t *testing.T) {
@@ -29,4 +36,34 @@ func Test_seeds(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testConfigNet(tb testing.TB, bport int) *memberlist.Config {
+	tb.Helper()
+
+	lanConfig := memberlist.DefaultLANConfig()
+	hostname, _ := os.Hostname()
+	lanConfig.Name = hostname + fmt.Sprint(time.Now().UnixNano())
+	lanConfig.BindPort = bport
+	lanConfig.AdvertisePort = bport
+	lanConfig.RequireNodeNames = true
+	lanConfig.Logger = log.New(os.Stderr, lanConfig.Name, log.LstdFlags)
+	return lanConfig
+}
+
+func Test_registry_Register(t *testing.T) {
+	port, err := getFreePort()
+	if err != nil {
+		panic(err)
+	}
+	c1 := testConfigNet(t, port)
+	m1, err := memberlist.Create(c1)
+	require.NoError(t, err)
+	defer m1.Shutdown()
+
+	_ = config.GddMemSeed.Write(m1.LocalNode().Address())
+	_ = config.GddServiceName.Write("testsvc")
+
+	_, err = NewNode()
+	require.NoError(t, err)
 }

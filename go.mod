@@ -62,6 +62,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/unionj-cloud/cast v1.3.2
 	github.com/unionj-cloud/memberlist v0.2.7
+	github.com/vektra/mockery/v2 v2.9.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect

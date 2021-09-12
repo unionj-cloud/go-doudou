@@ -43,7 +43,6 @@ func TestFixPath(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "1",
 			args: args{
 				dir:      "testfiles",
 				fallback: "fallback",
@@ -52,12 +51,19 @@ func TestFixPath(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "2",
 			args: args{
 				dir:      "",
 				fallback: "fallback",
 			},
 			want:    "fallback",
+			wantErr: false,
+		},
+		{
+			args: args{
+				dir:      "/absolute/path",
+				fallback: "",
+			},
+			want:    "/absolute/path",
 			wantErr: false,
 		},
 	}

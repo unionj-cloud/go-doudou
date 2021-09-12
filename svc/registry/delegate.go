@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 )
 
 type delegate struct {
@@ -20,10 +21,8 @@ func (d *delegate) NodeMeta(limit int) []byte {
 func (d *delegate) NotifyMsg(msg []byte) {
 	d.local.lock.Lock()
 	defer d.local.lock.Unlock()
-
-	cp := make([]byte, len(msg))
-	copy(cp, msg)
 	// TODO
+	logrus.Info(string(msg))
 }
 
 func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
@@ -35,15 +34,14 @@ func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
 }
 
 func (d *delegate) LocalState(join bool) []byte {
-	d.local.lock.Lock()
-	defer d.local.lock.Unlock()
-
 	// TODO
+	//d.local.lock.Lock()
+	//defer d.local.lock.Unlock()
 	return nil
 }
 
 func (d *delegate) MergeRemoteState(s []byte, join bool) {
-	d.local.lock.Lock()
-	defer d.local.lock.Unlock()
 	// TODO
+	//d.local.lock.Lock()
+	//defer d.local.lock.Unlock()
 }

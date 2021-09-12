@@ -99,8 +99,10 @@ type nodeMeta struct {
 
 func newMeta(mnode *memberlist.Node) (mergedMeta, error) {
 	var mm mergedMeta
-	if err := json.Unmarshal(mnode.Meta, &mm); err != nil {
-		return mm, errors.Wrap(err, "Unmarshal node meta failed, not a valid json")
+	if len(mnode.Meta) > 0 {
+		if err := json.Unmarshal(mnode.Meta, &mm); err != nil {
+			return mm, errors.Wrap(err, "Unmarshal node meta failed, not a valid json")
+		}
 	}
 	return mm, nil
 }
