@@ -309,9 +309,6 @@ func (n *Node) BaseUrl() string {
 }
 
 func (n *Node) String() string {
-	if stringutils.IsNotEmpty(n.mmeta.Meta.Service) {
-		return fmt.Sprintf("Node %s, providing %s service at %s, memberlist port %s",
-			n.memberNode.Name, n.mmeta.Meta.Service, n.BaseUrl(), fmt.Sprint(n.memberNode.Port))
-	}
-	return fmt.Sprintf("Node %s", n.memberNode.Name)
+	return fmt.Sprintf("Node %s, providing %s service at %s, memberlist port %s",
+		n.memberNode.Name, n.mmeta.Meta.Service, n.BaseUrl(), fmt.Sprint(n.memberNode.Port))
 }

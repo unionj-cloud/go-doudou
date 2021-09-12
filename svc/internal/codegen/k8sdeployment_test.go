@@ -17,7 +17,7 @@ func TestModifyVersion(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				yfile: pathutils.Abs("./testfiles/k8s.yaml"),
+				yfile: pathutils.Abs("./testdata/k8s.yaml"),
 			},
 		},
 	}
@@ -40,7 +40,7 @@ func TestModifyVersion2(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				yfile: pathutils.Abs("./testfiles/corpus_statefulset.yaml"),
+				yfile: pathutils.Abs("./testdata/corpus_statefulset.yaml"),
 			},
 		},
 	}
@@ -65,7 +65,7 @@ func TestGenK8sDeployment(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				dir:     pathutils.Abs("./testfiles"),
+				dir:     pathutils.Abs("./testdata"),
 				svcname: "corpus",
 				image:   "google.com/corpus:v2.0.0",
 			},

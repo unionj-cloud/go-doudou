@@ -96,16 +96,16 @@ import (
 	ddmodel "github.com/unionj-cloud/go-doudou/svc/http/model"
 )
 
-type TestfileshttphandlerHandler interface {
+type TestdatahttphandlerHandler interface {
 	PageUsers(w http.ResponseWriter, r *http.Request)
 }
 
-func Routes(handler TestfileshttphandlerHandler) []ddmodel.Route {
+func Routes(handler TestdatahttphandlerHandler) []ddmodel.Route {
 	return []ddmodel.Route{
 		{
 			"PageUsers",
 			"POST",
-			"/testfileshttphandler/pageusers",
+			"/testdatahttphandler/pageusers",
 			handler.PageUsers,
 		},
 	}

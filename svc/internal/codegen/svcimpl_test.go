@@ -17,22 +17,22 @@ func TestGenSvcImpl(t *testing.T) {
 
 import (
 	"context"
-	"testfilessvcimpl/config"
-	"testfilessvcimpl/vo"
+	"testdatasvcimpl/config"
+	"testdatasvcimpl/vo"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type TestfilessvcimplImpl struct {
+type TestdatasvcimplImpl struct {
 	conf *config.Config
 }
 
-func (receiver *TestfilessvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
+func (receiver *TestdatasvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
 	panic("implement me")
 }
 
-func NewTestfilessvcimpl(conf *config.Config, db *sqlx.DB) Testfilessvcimpl {
-	return &TestfilessvcimplImpl{
+func NewTestdatasvcimpl(conf *config.Config, db *sqlx.DB) Testdatasvcimpl {
+	return &TestdatasvcimplImpl{
 		conf,
 	}
 }

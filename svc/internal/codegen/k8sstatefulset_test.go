@@ -18,7 +18,7 @@ func TestGenK8sStatefulset(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				dir:     pathutils.Abs("./testfiles"),
+				dir:     pathutils.Abs("./testdata"),
 				svcname: "corpus",
 				image:   "google.com/corpus:v2.0.0",
 			},

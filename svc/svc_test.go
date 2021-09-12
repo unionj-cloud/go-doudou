@@ -5,13 +5,15 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 )
 
 var testDir string
 
 func init() {
-	testDir = pathutils.Abs("testfiles")
+	testDir = pathutils.Abs("testdata")
 }
 
 func TestSvc_Create(t *testing.T) {
@@ -148,22 +150,6 @@ func Test_checkIc1(t *testing.T) {
 	}
 }
 
-func TestSvc_Push(t *testing.T) {
-	dir := testDir + "push"
-	receiver := Svc{
-		Dir: dir,
-	}
-	receiver.Init()
-	defer os.RemoveAll(dir)
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Panics(t, func() {
-		receiver.Push()
-	})
-}
-
 func TestSvc_Deploy(t *testing.T) {
 	dir := testDir + "deploy"
 	receiver := Svc{
@@ -204,6 +190,28 @@ func Test_validateDataType(t *testing.T) {
 
 func Test_validateDataType_shouldpanic(t *testing.T) {
 	assert.Panics(t, func() {
-		validateDataType(pathutils.Abs("testfiles1"))
+		validateDataType(pathutils.Abs("testdata1"))
+	})
+}
+
+func Test_GenClient(t *testing.T) {
+	defer os.RemoveAll(filepath.Join(testDir, "client"))
+	s := Svc{
+		Dir:       testDir,
+		DocPath:   filepath.Join(testDir, "testfilesdoc1_openapi3.json"),
+		Omitempty: true,
+		Client:    "go",
+		ClientPkg: "client",
+	}
+	assert.NotPanics(t, func() {
+		s.GenClient()
+	})
+}
+
+func TestSvc_Seed(t *testing.T) {
+	assert.NotPanics(t, func() {
+		s := Svc{}
+		go s.Seed()
+		time.Sleep(2 * time.Second)
 	})
 }

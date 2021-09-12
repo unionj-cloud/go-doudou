@@ -4,7 +4,7 @@ import (
 	"context"
 	"mime/multipart"
 	"os"
-	"testfiles/vo"
+	"testdata/vo"
 )
 
 // 用户服务接口

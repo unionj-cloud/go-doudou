@@ -10,7 +10,7 @@ import (
 )
 
 func TestGenHttpHandlerImplWithImpl(t *testing.T) {
-	dir := "testfiles"
+	dir := "testdata"
 	defer os.RemoveAll(filepath.Join(dir, "transport"))
 	svcfile := filepath.Join(dir, "svc.go")
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
@@ -48,20 +48,20 @@ func TestGenHttpHandlerImpl(t *testing.T) {
 
 import (
 	"net/http"
-	service "testfileshandlerImpl12"
+	service "testdatahandlerImpl12"
 )
 
-type TestfileshandlerImpl12HandlerImpl struct {
-	testfileshandlerImpl12 service.TestfileshandlerImpl12
+type TestdatahandlerImpl12HandlerImpl struct {
+	testdatahandlerImpl12 service.TestdatahandlerImpl12
 }
 
-func (receiver *TestfileshandlerImpl12HandlerImpl) PageUsers(w http.ResponseWriter, r *http.Request) {
+func (receiver *TestdatahandlerImpl12HandlerImpl) PageUsers(w http.ResponseWriter, r *http.Request) {
 	panic("implement me")
 }
 
-func NewTestfileshandlerImpl12Handler(testfileshandlerImpl12 service.TestfileshandlerImpl12) TestfileshandlerImpl12Handler {
-	return &TestfileshandlerImpl12HandlerImpl{
-		testfileshandlerImpl12,
+func NewTestdatahandlerImpl12Handler(testdatahandlerImpl12 service.TestdatahandlerImpl12) TestdatahandlerImpl12Handler {
+	return &TestdatahandlerImpl12HandlerImpl{
+		testdatahandlerImpl12,
 	}
 }
 `

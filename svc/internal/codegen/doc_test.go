@@ -12,7 +12,7 @@ import (
 var testDir string
 
 func init() {
-	testDir = pathutils.Abs("testfiles")
+	testDir = pathutils.Abs("testdata")
 }
 
 func TestGenDoc(t *testing.T) {
@@ -84,14 +84,14 @@ func Test_schemasOf(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				vofile: pathutils.Abs("testfiles") + "/vo/vo.go",
+				vofile: pathutils.Abs("testdata") + "/vo/vo.go",
 			},
 			want: 6,
 		},
 		{
 			name: "",
 			args: args{
-				vofile: pathutils.Abs("testfiles") + "/vo/vo1.go",
+				vofile: pathutils.Abs("testdata") + "/vo/vo1.go",
 			},
 			want: 2,
 		},

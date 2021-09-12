@@ -23,10 +23,10 @@ import (
 	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
-	service "testfilesmain"
-    "testfilesmain/config"
-	"testfilesmain/db"
-	"testfilesmain/transport/httpsrv"
+	service "testdatamain"
+    "testdatamain/config"
+	"testdatamain/db"
+	"testdatamain/transport/httpsrv"
 )
 
 func main() {
@@ -54,9 +54,9 @@ func main() {
 		logrus.Infof("Memberlist created. Local node is %s\n", node)
 	}
 
-    svc := service.NewTestfilesmain(conf, conn)
+    svc := service.NewTestdatamain(conf, conn)
 
-	handler := httpsrv.NewTestfilesmainHandler(svc)
+	handler := httpsrv.NewTestdatamainHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
 	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
 	srv.AddRoute(httpsrv.Routes(handler)...)

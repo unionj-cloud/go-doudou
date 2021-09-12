@@ -14,7 +14,7 @@ func TestGenDb(t *testing.T) {
 	expect := `package db
 
 import (
-	"testfilesdb/config"
+	"testdatadb/config"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"

@@ -36,29 +36,34 @@ func Test_eventDelegate_NotifyJoin(t *testing.T) {
 					mmeta:      mergedMeta{},
 					memberNode: nil,
 					registry: &registry{
-						memberConf: nil,
-						broadcasts: nil,
-						memberlist: nil,
 						lock:       sync.Mutex{},
 						memberLock: sync.RWMutex{},
-						members:    nil,
 					},
 					remote: false,
 				},
 			},
 			args: args{
 				node: &memberlist.Node{
-					Name:  "",
-					Addr:  "",
-					Port:  0,
-					Meta:  meta,
-					State: 0,
-					PMin:  0,
-					PMax:  0,
-					PCur:  0,
-					DMin:  0,
-					DMax:  0,
-					DCur:  0,
+					Meta: meta,
+				},
+			},
+		},
+		{
+			name: "",
+			fields: fields{
+				local: &Node{
+					mmeta:      mergedMeta{},
+					memberNode: nil,
+					registry: &registry{
+						lock:       sync.Mutex{},
+						memberLock: sync.RWMutex{},
+					},
+					remote: false,
+				},
+			},
+			args: args{
+				node: &memberlist.Node{
+					Meta: []byte("{name:"),
 				},
 			},
 		},
@@ -102,29 +107,34 @@ func Test_eventDelegate_NotifyLeave(t *testing.T) {
 					mmeta:      mergedMeta{},
 					memberNode: nil,
 					registry: &registry{
-						memberConf: nil,
-						broadcasts: nil,
-						memberlist: nil,
 						lock:       sync.Mutex{},
 						memberLock: sync.RWMutex{},
-						members:    nil,
 					},
 					remote: false,
 				},
 			},
 			args: args{
 				node: &memberlist.Node{
-					Name:  "",
-					Addr:  "",
-					Port:  0,
-					Meta:  meta,
-					State: 0,
-					PMin:  0,
-					PMax:  0,
-					PCur:  0,
-					DMin:  0,
-					DMax:  0,
-					DCur:  0,
+					Meta: meta,
+				},
+			},
+		},
+		{
+			name: "",
+			fields: fields{
+				local: &Node{
+					mmeta:      mergedMeta{},
+					memberNode: nil,
+					registry: &registry{
+						lock:       sync.Mutex{},
+						memberLock: sync.RWMutex{},
+					},
+					remote: false,
+				},
+			},
+			args: args{
+				node: &memberlist.Node{
+					Meta: []byte("{name:"),
 				},
 			},
 		},
@@ -168,29 +178,34 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 					mmeta:      mergedMeta{},
 					memberNode: nil,
 					registry: &registry{
-						memberConf: nil,
-						broadcasts: nil,
-						memberlist: nil,
 						lock:       sync.Mutex{},
 						memberLock: sync.RWMutex{},
-						members:    nil,
 					},
 					remote: false,
 				},
 			},
 			args: args{
 				node: &memberlist.Node{
-					Name:  "",
-					Addr:  "",
-					Port:  0,
-					Meta:  meta,
-					State: 0,
-					PMin:  0,
-					PMax:  0,
-					PCur:  0,
-					DMin:  0,
-					DMax:  0,
-					DCur:  0,
+					Meta: meta,
+				},
+			},
+		},
+		{
+			name: "",
+			fields: fields{
+				local: &Node{
+					mmeta:      mergedMeta{},
+					memberNode: nil,
+					registry: &registry{
+						lock:       sync.Mutex{},
+						memberLock: sync.RWMutex{},
+					},
+					remote: false,
+				},
+			},
+			args: args{
+				node: &memberlist.Node{
+					Meta: []byte("{name:"),
 				},
 			},
 		},
