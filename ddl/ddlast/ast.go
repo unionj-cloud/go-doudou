@@ -32,8 +32,8 @@ func FlatEmbed(structs []StructMeta) []StructMeta {
 		embedFieldMap := make(map[string]FieldMeta)
 		for _, fieldMeta := range structMeta.Fields {
 			if strings.HasPrefix(fieldMeta.Type, "embed") {
-				if embeded, exists := structMap[fieldMeta.Name]; exists {
-					for _, field := range embeded.Fields {
+				if embedded, exists := structMap[fieldMeta.Name]; exists {
+					for _, field := range embedded.Fields {
 						embedFieldMap[field.Name] = field
 					}
 				}

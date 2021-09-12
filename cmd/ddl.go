@@ -22,7 +22,7 @@ var env string
 var ddlCmd = &cobra.Command{
 	Use:   "ddl",
 	Short: "migration tool between database table structure and golang struct",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		if env, err = pathutils.FixPath(env, ".env"); err != nil {

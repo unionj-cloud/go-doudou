@@ -2,8 +2,8 @@ package registry
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/memberlist"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/memberlist"
 )
 
 type eventDelegate struct {

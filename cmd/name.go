@@ -13,7 +13,7 @@ var omitempty bool
 var nameCmd = &cobra.Command{
 	Use:   "name",
 	Short: "bulk add or update json tag of struct fields",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		n := name.Name{file, strategy, omitempty}
 		n.Exec()

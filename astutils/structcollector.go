@@ -108,8 +108,8 @@ func (sc *StructCollector) DocFlatEmbed() []StructMeta {
 					_structMeta.Fields = append(_structMeta.Fields, fieldMeta)
 					fieldMap[fieldMeta.Name] = fieldMeta
 				} else {
-					if embeded, exists := structMap[fieldMeta.Name]; exists {
-						for _, field := range embeded.Fields {
+					if embedded, exists := structMap[fieldMeta.Name]; exists {
+						for _, field := range embedded.Fields {
 							if !field.IsExport {
 								continue
 							}

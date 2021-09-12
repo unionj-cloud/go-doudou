@@ -20,11 +20,11 @@ func (receiver *OnlineDocHandlerImpl) GetOpenAPI(_writer http.ResponseWriter, _r
 
 func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *http.Request) {
 	var (
-		tpl *template.Template
-		err error
-		buf bytes.Buffer
+		tpl    *template.Template
+		err    error
+		buf    bytes.Buffer
 		scheme string
-		host string
+		host   string
 	)
 	if tpl, err = template.New("onlinedoc.tmpl").Parse(indexTmpl); err != nil {
 		panic(err)
@@ -37,10 +37,10 @@ func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *
 	}
 	host = fmt.Sprintf("%s://%s%s", scheme, _req.Host, config.GddRouteRootPath.Load())
 	if err = tpl.Execute(&buf, struct {
-		Doc string
+		Doc    string
 		DocUrl string
 	}{
-		Doc: string(doc),
+		Doc:    string(doc),
 		DocUrl: host + "/go-doudou/openapi.json",
 	}); err != nil {
 		panic(err)

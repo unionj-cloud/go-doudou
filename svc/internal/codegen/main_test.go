@@ -11,7 +11,7 @@ func TestGenMain(t *testing.T) {
 	dir := testDir + "main"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(dir + "/svc.go", astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
 	GenMain(dir, ic)
 	expect := `package main
 

@@ -11,7 +11,7 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "init a project folder",
-	Long: ``,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var svcdir string
 		if len(args) > 0 {

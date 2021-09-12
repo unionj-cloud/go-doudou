@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-// Support all built-in type referenced from https://golang.org/pkg/builtin/
+// ExprStringP Support all built-in type referenced from https://golang.org/pkg/builtin/
 // Support map with string key
 // Support structs of vo package
 // Support slice of types mentioned above
-// Not support alias type (all alias type fields of a struct will be outputed as v3.Any in openapi 3.0 json document)
+// Not support alias type (all alias type fields of a struct will be outputted as v3.Any in openapi 3.0 json document)
 // Support anonymous struct type
 // as struct field type in vo package
 // or as parameter type in method signature in svc.go file besides context.Context, multipart.FileHeader, os.File
