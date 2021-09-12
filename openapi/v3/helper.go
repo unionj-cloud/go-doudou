@@ -11,7 +11,10 @@ import (
 	"unicode"
 )
 
+// Schemas from components of OpenAPI3.0 json document
 var Schemas map[string]Schema
+
+// SchemaNames schema names from components of OpenAPI3.0 json document
 var SchemaNames []string
 
 // SchemaOf reference https://golang.org/pkg/builtin/
@@ -80,20 +83,19 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 			json.Unmarshal([]byte(result[1]), &structmeta)
 			schema := NewSchema(structmeta)
 			return &schema
-		} else {
-			var title string
-			if !strings.Contains(ft, ".") {
-				title = ft
-			}
-			if stringutils.IsEmpty(title) {
-				title = ft[strings.LastIndex(ft, ".")+1:]
-			}
-			if stringutils.IsNotEmpty(title) {
-				if unicode.IsUpper(rune(title[0])) {
-					if sliceutils.StringContains(SchemaNames, title) {
-						return &Schema{
-							Ref: "#/components/schemas/" + title,
-						}
+		}
+		var title string
+		if !strings.Contains(ft, ".") {
+			title = ft
+		}
+		if stringutils.IsEmpty(title) {
+			title = ft[strings.LastIndex(ft, ".")+1:]
+		}
+		if stringutils.IsNotEmpty(title) {
+			if unicode.IsUpper(rune(title[0])) {
+				if sliceutils.StringContains(SchemaNames, title) {
+					return &Schema{
+						Ref: "#/components/schemas/" + title,
 					}
 				}
 			}
@@ -102,6 +104,7 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 	}
 }
 
+// CopySchema as SchemaOf returns pointer, so deepcopy the schema the pointer points
 func CopySchema(field astutils.FieldMeta) Schema {
 	var schema Schema
 	err := copier.DeepCopy(SchemaOf(field), &schema)
@@ -111,6 +114,7 @@ func CopySchema(field astutils.FieldMeta) Schema {
 	return schema
 }
 
+// NewSchema new schema from astutils.StructMeta
 func NewSchema(structmeta astutils.StructMeta) Schema {
 	properties := make(map[string]*Schema)
 	for _, field := range structmeta.Fields {
@@ -126,6 +130,7 @@ func NewSchema(structmeta astutils.StructMeta) Schema {
 	}
 }
 
+// IsBuiltin check whether field is built-in type https://pkg.go.dev/builtin or not
 func IsBuiltin(field astutils.FieldMeta) bool {
 	simples := []interface{}{Int, Int64, Bool, String, Float32, Float64}
 	pschema := SchemaOf(field)

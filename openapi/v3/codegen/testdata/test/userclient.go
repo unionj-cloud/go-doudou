@@ -27,8 +27,8 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 // Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context,
 	queryParams struct {
-		Password string `json:"password,omitempty" url:"password"`
 		Username string `json:"username,omitempty" url:"username"`
+		Password string `json:"password,omitempty" url:"password"`
 	}) (ret string, err error) {
 	var (
 		_server string
@@ -94,7 +94,7 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context,
 // Creates list of users with given input array
 // Creates list of users with given input array
 func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
-	bodyJson []User) (ret User, err error) {
+	bodyJSON []User) (ret User, err error) {
 	var (
 		_server string
 		_err    error
@@ -106,7 +106,7 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJson)
+	_req.SetBody(bodyJSON)
 
 	_resp, _err := _req.Post(_server + "/user/createWithList")
 	if _err != nil {

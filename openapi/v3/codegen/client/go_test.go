@@ -15,20 +15,20 @@ import (
 
 func Test_genGoVo(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "petstore3.json"))
+	api := loadAPI(path.Join(testdir, "petstore3.json"))
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoVo_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "petstore3.json"))
+	api := loadAPI(path.Join(testdir, "petstore3.json"))
 	omitempty = true
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoHttp(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "petstore3.json"))
+	api := loadAPI(path.Join(testdir, "petstore3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -43,13 +43,13 @@ func Test_genGoHttp(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
 func Test_genGoHttp1(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "test1.json"))
+	api := loadAPI(path.Join(testdir, "test1.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -64,13 +64,13 @@ func Test_genGoHttp1(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
 func Test_genGoHttp2(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "test2.json"))
+	api := loadAPI(path.Join(testdir, "test2.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -85,13 +85,13 @@ func Test_genGoHttp2(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
 func Test_genGoHttp3(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "test3.json"))
+	api := loadAPI(path.Join(testdir, "test3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -106,12 +106,12 @@ func Test_genGoHttp3(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
 func Test_genGoHttp4(t *testing.T) {
-	api := loadApi("https://petstore3.swagger.io/api/v3/openapi.json")
+	api := loadAPI("https://petstore3.swagger.io/api/v3/openapi.json")
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -126,25 +126,25 @@ func Test_genGoHttp4(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(pathutils.Abs("../testdata"), "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(pathutils.Abs("../testdata"), "test"), "", "test")
 	}
 }
 
 func Test_loadApiPanic(t *testing.T) {
 	assert.Panics(t, func() {
-		loadApi("notexists.json")
+		loadAPI("notexists.json")
 	})
 }
 
 func Test_loadApiJsonUnmarshalPanic(t *testing.T) {
 	assert.Panics(t, func() {
-		loadApi("../testdata/test4.json")
+		loadAPI("../testdata/test4.json")
 	})
 }
 
 func Test_genGoHttp_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadApi(path.Join(testdir, "petstore3.json"))
+	api := loadAPI(path.Join(testdir, "petstore3.json"))
 	omitempty = true
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -160,7 +160,7 @@ func Test_genGoHttp_Omit(t *testing.T) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 
@@ -347,12 +347,12 @@ func Test_operation2Method(t *testing.T) {
 					Tags:        []string{"test"},
 					Summary:     "This is only for test",
 					Description: "Description for test",
-					OperationId: "TestOperation2Mthod",
+					OperationID: "TestOperation2Mthod",
 					Parameters:  []v3.Parameter{},
 					RequestBody: &v3.RequestBody{
 						Description: "This is a description",
 						Content: &v3.Content{
-							FormUrl: &v3.MediaType{
+							FormURL: &v3.MediaType{
 								Schema: &v3.Schema{
 									Type: "object",
 									Properties: map[string]*v3.Schema{
@@ -370,7 +370,7 @@ func Test_operation2Method(t *testing.T) {
 						Resp200: &v3.Response{
 							Description: "this is a response",
 							Content: &v3.Content{
-								Json: &v3.MediaType{
+								JSON: &v3.MediaType{
 									Schema: &v3.Schema{
 										Type: "object",
 										Properties: map[string]*v3.Schema{
@@ -429,7 +429,7 @@ func Test_operation2Method(t *testing.T) {
 					Tags:        []string{"test"},
 					Summary:     "This is only for test",
 					Description: "Description for test",
-					OperationId: "TestOperation2Mthod",
+					OperationID: "TestOperation2Mthod",
 					Parameters:  []v3.Parameter{},
 					RequestBody: &v3.RequestBody{
 						Description: "This is a description",
@@ -454,7 +454,7 @@ func Test_operation2Method(t *testing.T) {
 						Resp200: &v3.Response{
 							Description: "this is a response",
 							Content: &v3.Content{
-								Json: &v3.MediaType{
+								JSON: &v3.MediaType{
 									Schema: &v3.Schema{
 										Type: "object",
 										Properties: map[string]*v3.Schema{
@@ -480,7 +480,7 @@ func Test_operation2Method(t *testing.T) {
 					Tags:        []string{"test"},
 					Summary:     "This is only for test",
 					Description: "Description for test",
-					OperationId: "TestOperation2Mthod",
+					OperationID: "TestOperation2Mthod",
 					Parameters:  []v3.Parameter{},
 					RequestBody: &v3.RequestBody{
 						Description: "This is a description",
@@ -524,7 +524,7 @@ func Test_operation2Method(t *testing.T) {
 					Tags:        []string{"test"},
 					Summary:     "This is only for test",
 					Description: "Description for test",
-					OperationId: "TestOperation2Mthod",
+					OperationID: "TestOperation2Mthod",
 					Parameters:  []v3.Parameter{},
 					RequestBody: &v3.RequestBody{
 						Description: "This is a description",

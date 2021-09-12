@@ -247,7 +247,7 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func genGoHttp(paths map[string]v3.Path, svcname, dir, env, pkg string) {
+func genGoHTTP(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 	_ = os.MkdirAll(dir, os.ModePerm)
 	output := filepath.Join(dir, svcname+"client.go")
 	fi, err := os.Stat(output)
@@ -323,7 +323,7 @@ func api2Interface(paths map[string]v3.Path, svcname string) astutils.InterfaceM
 
 func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gparams []v3.Parameter) (astutils.MethodMeta, error) {
 	var results, pathvars, headervars, files, params []astutils.FieldMeta
-	var bodyJson, bodyParams, qparams *astutils.FieldMeta
+	var bodyJSON, bodyParams, qparams *astutils.FieldMeta
 	var comments []string
 	if stringutils.IsNotEmpty(operation.Summary) {
 		comments = append(comments, strings.Split(operation.Summary, "\n")...)
@@ -384,10 +384,10 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		}
 
 		content := operation.RequestBody.Content
-		if content.Json != nil {
-			bodyJson = schema2Field(content.Json.Schema, "bodyJson")
-		} else if content.FormUrl != nil {
-			bodyParams = schema2Field(content.FormUrl.Schema, "bodyParams")
+		if content.JSON != nil {
+			bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
+		} else if content.FormURL != nil {
+			bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
 		} else if content.FormData != nil {
 			schema := *content.FormData.Schema
 			if stringutils.IsNotEmpty(schema.Ref) {
@@ -427,9 +427,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 				Type: "*multipart.FileHeader",
 			})
 		} else if content.TextPlain != nil {
-			bodyJson = schema2Field(content.TextPlain.Schema, "bodyJson")
+			bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
 		} else if content.Default != nil {
-			bodyJson = schema2Field(content.Default.Schema, "bodyJson")
+			bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
 		}
 	}
 
@@ -455,8 +455,8 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		return astutils.MethodMeta{}, errors.Errorf("200 response content definition not found in api %s %s", httpMethod, endpoint)
 	}
 
-	if content.Json != nil {
-		results = append(results, *schema2Field(content.Json.Schema, "ret"))
+	if content.JSON != nil {
+		results = append(results, *schema2Field(content.JSON.Schema, "ret"))
 	} else if content.Stream != nil {
 		results = append(results, astutils.FieldMeta{
 			Name: "_downloadFile",
@@ -481,8 +481,8 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		params = append(params, *bodyParams)
 	}
 
-	if bodyJson != nil {
-		params = append(params, *bodyJson)
+	if bodyJSON != nil {
+		params = append(params, *bodyJSON)
 	}
 
 	params = append(params, files...)
@@ -494,7 +494,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		PathVars:    pathvars,
 		HeaderVars:  headervars,
 		BodyParams:  bodyParams,
-		BodyJson:    bodyJson,
+		BodyJson:    bodyJSON,
 		Files:       files,
 		Comments:    comments,
 		Path:        endpoint,
@@ -655,13 +655,14 @@ var requestBodies map[string]v3.RequestBody
 var responses map[string]v3.Response
 var omitempty bool
 
+// GenGoClient generate go http client code from OpenAPI3.0 json document
 func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 	var (
 		err       error
 		f         *os.File
 		clientDir string
 		fi        os.FileInfo
-		api       v3.Api
+		api       v3.API
 		vofile    string
 	)
 	clientDir = filepath.Join(dir, pkg)
@@ -669,7 +670,7 @@ func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 		panic(err)
 	}
 
-	api = loadApi(file)
+	api = loadAPI(file)
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	responses = api.Components.Responses
@@ -686,7 +687,7 @@ func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 	}
 
 	for svcname, paths := range svcmap {
-		genGoHttp(paths, svcname, clientDir, env, pkg)
+		genGoHTTP(paths, svcname, clientDir, env, pkg)
 	}
 
 	vofile = filepath.Join(clientDir, "vo.go")
@@ -704,12 +705,12 @@ func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 	genGoVo(api.Components.Schemas, vofile, pkg)
 }
 
-func loadApi(file string) v3.Api {
+func loadAPI(file string) v3.API {
 	var (
 		docfile *os.File
 		err     error
 		docraw  []byte
-		api     v3.Api
+		api     v3.API
 	)
 	if strings.HasPrefix(file, "http") {
 		link := file

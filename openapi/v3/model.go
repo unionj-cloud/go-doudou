@@ -1,14 +1,17 @@
 package v3
 
+// Contact https://spec.openapis.org/oas/v3.0.3#contact-object
 type Contact struct {
 	Email string `json:"email,omitempty"`
 }
 
+// License https://spec.openapis.org/oas/v3.0.3#license-object
 type License struct {
 	Name string `json:"name,omitempty"`
-	Url  string `json:"url,omitempty"`
+	URL  string `json:"url,omitempty"`
 }
 
+// Info https://spec.openapis.org/oas/v3.0.3#info-object
 type Info struct {
 	Title          string   `json:"title,omitempty"`
 	Description    string   `json:"description,omitempty"`
@@ -18,41 +21,49 @@ type Info struct {
 	Version        string   `json:"version,omitempty"`
 }
 
+// Server https://spec.openapis.org/oas/v3.0.3#server-object
 type Server struct {
-	Url string `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 }
 
+// ExternalDocs https://spec.openapis.org/oas/v3.0.3#external-documentation-object
 type ExternalDocs struct {
 	Description string `json:"description,omitempty"`
-	Url         string `json:"url,omitempty"`
+	URL         string `json:"url,omitempty"`
 }
 
+// Tag https://spec.openapis.org/oas/v3.0.3#tag-object
 type Tag struct {
 	Name         string        `json:"name,omitempty"`
 	Description  string        `json:"description,omitempty"`
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
+// In represents parameter position
 type In string
 
 const (
+	// InQuery query string parameter
 	InQuery In = "query"
-	// TODO
+	// InPath TODO not implemented yet
 	InPath In = "path"
-	// TODO
+	// InHeader TODO not implemented yet
 	InHeader In = "header"
-	// TODO
+	// InCookie TODO not implemented yet
 	InCookie In = "cookie"
 )
 
+// Example https://spec.openapis.org/oas/v3.0.3#example-object
 type Example struct {
 	// TODO
 }
 
+// Encoding https://spec.openapis.org/oas/v3.0.3#encoding-object
 type Encoding struct {
 	// TODO
 }
 
+// MediaType https://spec.openapis.org/oas/v3.0.3#media-type-object
 type MediaType struct {
 	Schema   *Schema             `json:"schema,omitempty"`
 	Example  interface{}         `json:"example,omitempty"`
@@ -60,15 +71,19 @@ type MediaType struct {
 	Encoding map[string]Encoding `json:"encoding,omitempty"`
 }
 
+// Content REQUIRED. The content of the request body. The key is a media type or [media type range]appendix-D)
+// and the value describes it. For requests that match multiple keys, only the most specific key is applicable.
+// e.g. text/plain overrides text/*
 type Content struct {
 	TextPlain *MediaType `json:"text/plain,omitempty"`
-	Json      *MediaType `json:"application/json,omitempty"`
-	FormUrl   *MediaType `json:"application/x-www-form-urlencoded,omitempty"`
+	JSON      *MediaType `json:"application/json,omitempty"`
+	FormURL   *MediaType `json:"application/x-www-form-urlencoded,omitempty"`
 	Stream    *MediaType `json:"application/octet-stream,omitempty"`
 	FormData  *MediaType `json:"multipart/form-data,omitempty"`
 	Default   *MediaType `json:"*/*,omitempty"`
 }
 
+// Parameter https://spec.openapis.org/oas/v3.0.3#parameter-object
 type Parameter struct {
 	Name            string      `json:"name,omitempty"`
 	In              In          `json:"in,omitempty"`
@@ -84,6 +99,7 @@ type Parameter struct {
 	AllowEmptyValue bool        `json:"allowEmptyValue,omitempty"`
 }
 
+// RequestBody https://spec.openapis.org/oas/v3.0.3#request-body-object
 type RequestBody struct {
 	Description string   `json:"description,omitempty"`
 	Content     *Content `json:"content,omitempty"`
@@ -91,6 +107,7 @@ type RequestBody struct {
 	Ref         string   `json:"$ref,omitempty"`
 }
 
+// Header https://spec.openapis.org/oas/v3.0.3#header-object
 type Header struct {
 	Ref         string      `json:"$ref,omitempty"`
 	Description string      `json:"description,omitempty"`
@@ -100,10 +117,12 @@ type Header struct {
 	Schema      *Schema     `json:"schema,omitempty"`
 }
 
+// Link https://spec.openapis.org/oas/v3.0.3#link-object
 type Link struct {
 	// TODO
 }
 
+// Response https://spec.openapis.org/oas/v3.0.3#response-object
 type Response struct {
 	Description string   `json:"description,omitempty"`
 	Content     *Content `json:"content,omitempty"`
@@ -113,6 +132,7 @@ type Response struct {
 	Ref     string            `json:"$ref,omitempty"`
 }
 
+// Responses https://spec.openapis.org/oas/v3.0.3#responses-object
 type Responses struct {
 	Resp200 *Response `json:"200,omitempty"`
 	Resp400 *Response `json:"400,omitempty"`
@@ -123,19 +143,22 @@ type Responses struct {
 	Default *Response `json:"default,omitempty"`
 }
 
+// Callback https://spec.openapis.org/oas/v3.0.3#callback-object
 type Callback struct {
 	// TODO
 }
 
+// Security not implemented yet
 type Security struct {
 	// TODO
 }
 
+// Operation https://spec.openapis.org/oas/v3.0.3#operation-object
 type Operation struct {
 	Tags         []string            `json:"tags,omitempty"`
 	Summary      string              `json:"summary,omitempty"`
 	Description  string              `json:"description,omitempty"`
-	OperationId  string              `json:"operationId,omitempty"`
+	OperationID  string              `json:"operationId,omitempty"`
 	Parameters   []Parameter         `json:"parameters,omitempty"`
 	RequestBody  *RequestBody        `json:"requestBody,omitempty"`
 	Responses    *Responses          `json:"responses,omitempty"`
@@ -146,6 +169,7 @@ type Operation struct {
 	Servers      []Server            `json:"servers,omitempty"`
 }
 
+// Path https://spec.openapis.org/oas/v3.0.3#path-item-object
 type Path struct {
 	Get    *Operation `json:"get,omitempty"`
 	Post   *Operation `json:"post,omitempty"`
@@ -155,15 +179,18 @@ type Path struct {
 	Parameters []Parameter `json:"parameters,omitempty"`
 }
 
+// SecurityScheme https://spec.openapis.org/oas/v3.0.3#security-scheme-object
 type SecurityScheme struct {
 	// TODO
 }
 
+// Discriminator https://spec.openapis.org/oas/v3.0.3#discriminator-object
 type Discriminator struct {
 	PropertyName string            `json:"propertyName,omitempty"`
 	Mapping      map[string]string `json:"mapping,omitempty"`
 }
 
+// Schema https://spec.openapis.org/oas/v3.0.3#schema-object
 type Schema struct {
 	Ref              string             `json:"$ref,omitempty"`
 	Title            string             `json:"title,omitempty"`
@@ -194,6 +221,7 @@ type Schema struct {
 	Pattern              interface{} `json:"pattern,omitempty"`
 }
 
+// Components https://spec.openapis.org/oas/v3.0.3#components-object
 type Components struct {
 	Schemas       map[string]Schema      `json:"schemas,omitempty"`
 	RequestBodies map[string]RequestBody `json:"requestBodies,omitempty"`
@@ -212,7 +240,8 @@ type Components struct {
 	Callbacks map[string]Callback `json:"callbacks,omitempty"`
 }
 
-type Api struct {
+// API https://spec.openapis.org/oas/v3.0.3#openapi-object
+type API struct {
 	Openapi      string          `json:"openapi,omitempty"`
 	Info         *Info           `json:"info,omitempty"`
 	Servers      []Server        `json:"servers,omitempty"`
@@ -222,62 +251,86 @@ type Api struct {
 	ExternalDocs *ExternalDocs   `json:"externalDocs,omitempty"`
 }
 
+// Type represents types in OpenAPI3.0 spec
 type Type string
 
 const (
+	// IntegerT integer
 	IntegerT Type = "integer"
-	StringT  Type = "string"
+	// StringT string
+	StringT Type = "string"
+	// BooleanT boolean
 	BooleanT Type = "boolean"
-	NumberT  Type = "number"
-	ObjectT  Type = "object"
-	ArrayT   Type = "array"
+	// NumberT number
+	NumberT Type = "number"
+	// ObjectT object
+	ObjectT Type = "object"
+	// ArrayT array
+	ArrayT Type = "array"
 )
 
+// Format represents format in OpenAPI3.0 spec
 type Format string
 
 const (
-	Int32F    Format = "int32"
-	Int64F    Format = "int64"
-	FloatF    Format = "float"
-	DoubleF   Format = "double"
+	// Int32F int32
+	Int32F Format = "int32"
+	// Int64F int64
+	Int64F Format = "int64"
+	// FloatF float
+	FloatF Format = "float"
+	// DoubleF double
+	DoubleF Format = "double"
+	// DateTimeF date-time
 	DateTimeF Format = "date-time"
-	BinaryF   Format = "binary"
+	// BinaryF binary
+	BinaryF Format = "binary"
 )
 
 var (
+	// Any constant schema for object
 	Any = &Schema{
 		Type: ObjectT,
 	}
+	// Int constant schema for int
 	Int = &Schema{
 		Type:   IntegerT,
 		Format: Int32F,
 	}
+	// Int64 constant schema for int64
 	Int64 = &Schema{
 		Type:   IntegerT,
 		Format: Int64F,
 	}
+	// String constant schema for string
 	String = &Schema{
 		Type: StringT,
 	}
+	// Time constant schema for time
 	Time = &Schema{
 		Type:   StringT,
 		Format: DateTimeF,
 	}
+	// Bool constant schema for bool
 	Bool = &Schema{
 		Type: BooleanT,
 	}
+	// Float32 constant schema for float32
 	Float32 = &Schema{
 		Type:   NumberT,
 		Format: FloatF,
 	}
+	// Float64 constant schema for float64
 	Float64 = &Schema{
 		Type:   NumberT,
 		Format: DoubleF,
 	}
+	// File constant schema for file
 	File = &Schema{
 		Type:   StringT,
 		Format: BinaryF,
 	}
+	// FileArray constant schema for file slice
 	FileArray = &Schema{
 		Type:  ArrayT,
 		Items: File,

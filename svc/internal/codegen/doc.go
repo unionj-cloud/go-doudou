@@ -100,7 +100,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			},
 		}
 		var content v3.Content
-		reflect.ValueOf(&content).Elem().FieldByName("FormUrl").Set(reflect.ValueOf(mt))
+		reflect.ValueOf(&content).Elem().FieldByName("FormURL").Set(reflect.ValueOf(mt))
 		ret.RequestBody = &v3.RequestBody{
 			Content:  &content,
 			Required: true,
@@ -172,7 +172,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 					mt := &v3.MediaType{
 						Schema: &pschema,
 					}
-					reflect.ValueOf(&content).Elem().FieldByName("Json").Set(reflect.ValueOf(mt))
+					reflect.ValueOf(&content).Elem().FieldByName("JSON").Set(reflect.ValueOf(mt))
 					ret.RequestBody = &v3.RequestBody{
 						Content:  &content,
 						Required: true,
@@ -218,7 +218,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			respSchema.Properties[strcase.ToLowerCamel(key)] = &rschema
 		}
 		v3.Schemas[title] = respSchema
-		respContent.Json = &v3.MediaType{
+		respContent.JSON = &v3.MediaType{
 			Schema: &v3.Schema{
 				Ref: "#/components/schemas/" + title,
 			},
@@ -274,7 +274,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		docfile string
 		gofile  string
 		fi      os.FileInfo
-		api     v3.Api
+		api     v3.API
 		data    []byte
 		vos     []v3.Schema
 		paths   map[string]v3.Path
@@ -316,7 +316,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		v3.Schemas[item.Title] = item
 	}
 	paths = pathsOf(ic, routePatternStrategy)
-	api = v3.Api{
+	api = v3.API{
 		Openapi: "3.0.2",
 		Info: &v3.Info{
 			Title:          svcname,
@@ -328,7 +328,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		},
 		Servers: []v3.Server{
 			{
-				Url: config.GddRouteRootPath.Load(),
+				URL: config.GddRouteRootPath.Load(),
 			},
 		},
 		Paths: paths,
