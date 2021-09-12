@@ -1,14 +1,30 @@
 package registry
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/memberlist"
+	"os"
 	"reflect"
 	"testing"
-	"time"
 )
+
+var seed *Node
+
+func TestMain(m *testing.M) {
+	_ = config.GddMemSeed.Write("")
+	_ = config.GddServiceName.Write("seed")
+	_ = config.GddMemName.Write("seed")
+	_ = config.GddMemPort.Write("56199")
+	var err error
+	seed, err = NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer seed.memberlist.Shutdown()
+	code := m.Run()
+	os.Exit(code)
+}
 
 func Test_seeds(t *testing.T) {
 	type args struct {
@@ -43,18 +59,6 @@ func Test_seeds(t *testing.T) {
 	}
 }
 
-func newSeed(port string) *Node {
-	_ = config.GddMemSeed.Write("")
-	_ = config.GddServiceName.Write("seed")
-	_ = config.GddMemName.Write("seed" + fmt.Sprint(time.Now().UnixNano()))
-	_ = config.GddMemPort.Write(port)
-	seed, err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	return seed
-}
-
 func Test_registry_Register1(t *testing.T) {
 	conf := memberlist.DefaultWANConfig()
 	node := &Node{
@@ -73,21 +77,19 @@ func Test_registry_Register2(t *testing.T) {
 }
 
 func TestNode_NumNodes(t *testing.T) {
-	seed := newSeed("56399")
 	_ = config.GddMemSeed.Write(seed.memberNode.Address())
-	_ = config.GddServiceName.Write("testsvc")
+	_ = config.GddServiceName.Write("testsvc_numnodes")
 	_ = config.GddMemPort.Write("56400")
-	_ = config.GddMemName.Write("testsvc")
+	_ = config.GddMemName.Write("testsvc_numnodes")
 	node, _ := NewNode()
 	num := node.NumNodes()
 	require.Greater(t, num, 0)
 }
 
 func TestNode_Info(t *testing.T) {
-	seed := newSeed("56499")
 	_ = config.GddMemSeed.Write(seed.memberNode.Address())
-	_ = config.GddServiceName.Write("testsvc")
-	_ = config.GddMemName.Write("testnode01")
+	_ = config.GddServiceName.Write("testsvc_info")
+	_ = config.GddMemName.Write("testnode_info")
 	_ = config.GddMemPort.Write("56099")
 	_ = config.GddPort.Write("6060")
 
@@ -96,10 +98,9 @@ func TestNode_Info(t *testing.T) {
 }
 
 func TestNode_String(t *testing.T) {
-	seed := newSeed("56599")
 	_ = config.GddMemSeed.Write(seed.memberNode.Address())
-	_ = config.GddServiceName.Write("testsvc")
-	_ = config.GddMemName.Write("testnode01")
+	_ = config.GddServiceName.Write("testsvc_string")
+	_ = config.GddMemName.Write("testnode_string")
 	_ = config.GddMemPort.Write("56699")
 	_ = config.GddPort.Write("6060")
 
@@ -107,36 +108,22 @@ func TestNode_String(t *testing.T) {
 	require.NotEmpty(t, node.String())
 }
 
-func Test_registry_Discover(t *testing.T) {
-	seed := newSeed("56899")
-	seed.memberNode.Meta = nil
-	_ = config.GddMemSeed.Write(seed.memberNode.Address())
-	_ = config.GddServiceName.Write("testsvc")
-	_ = config.GddMemName.Write("testnode01")
-	_ = config.GddMemPort.Write("56799")
-	_ = config.GddPort.Write("6060")
-
-	node, _ := NewNode()
-	_, err := node.Discover("testsvc")
-	require.Error(t, err)
-}
-
 func Test_registry_Discover2(t *testing.T) {
-	_ = config.GddMemSeed.Write("")
-	_ = config.GddServiceName.Write("testsvc01")
-	_ = config.GddMemName.Write("testnode01")
+	_ = config.GddMemSeed.Write(seed.memberNode.Address())
+	_ = config.GddServiceName.Write("testsvc_discover1")
+	_ = config.GddMemName.Write("testnode_discover1")
 	_ = config.GddMemPort.Write("56999")
 	_ = config.GddPort.Write("6060")
 
-	node, _ := NewNode()
+	_, _ = NewNode()
 
-	_ = config.GddMemSeed.Write(node.memberNode.Address())
-	_ = config.GddServiceName.Write("testsvc02")
-	_ = config.GddMemName.Write("testnode02")
+	_ = config.GddMemSeed.Write(seed.memberNode.Address())
+	_ = config.GddServiceName.Write("testsvc_discover2")
+	_ = config.GddMemName.Write("testnode_discover2")
 	_ = config.GddMemPort.Write("57099")
 	_ = config.GddPort.Write("6061")
 
-	node, _ = NewNode()
-	nodes, _ := node.Discover("testsvc01")
+	node, _ := NewNode()
+	nodes, _ := node.Discover("testsvc_discover1")
 	require.NotEmpty(t, nodes)
 }

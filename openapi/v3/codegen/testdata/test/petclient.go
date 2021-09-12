@@ -60,52 +60,6 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context,
 	return
 }
 
-// uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
-	queryParams struct {
-		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	// ID of pet to update
-	// required
-	petId int64,
-	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
-	_f, _err := _uploadFile.Open()
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
-
-	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
 // Add a new pet to the store
 // Add a new pet to the store
 func (receiver *PetClient) PostPet(ctx context.Context,
@@ -229,6 +183,52 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	_req.SetQueryParamsFromValues(_queryParams)
 
 	_resp, _err := _req.Get(_server + "/pet/findByStatus")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+	queryParams struct {
+		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	// ID of pet to update
+	// required
+	petId int64,
+	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+	_f, _err := _uploadFile.Open()
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
+
+	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
