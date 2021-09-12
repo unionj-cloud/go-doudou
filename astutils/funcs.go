@@ -19,6 +19,7 @@ import (
 	"unicode"
 )
 
+// FixImport format source code and add missing import syntax automatically
 func FixImport(src []byte, file string) {
 	var (
 		res []byte
@@ -35,6 +36,7 @@ func FixImport(src []byte, file string) {
 	_ = ioutil.WriteFile(file, res, os.ModePerm)
 }
 
+// GetMethodMeta get method name then new MethodMeta struct from *ast.FuncDecl
 func GetMethodMeta(spec *ast.FuncDecl) MethodMeta {
 	methodName := ExprString(spec.Name)
 	mm := NewMethodMeta(spec.Type, ExprString)
@@ -42,6 +44,7 @@ func GetMethodMeta(spec *ast.FuncDecl) MethodMeta {
 	return mm
 }
 
+// NewMethodMeta new MethodMeta struct from *ast.FuncDecl
 func NewMethodMeta(ft *ast.FuncType, exprString func(ast.Expr) string) MethodMeta {
 	var params, results []FieldMeta
 	for _, param := range ft.Params.List {
@@ -88,6 +91,7 @@ func NewMethodMeta(ft *ast.FuncType, exprString func(ast.Expr) string) MethodMet
 	}
 }
 
+// NewStructMeta new StructMeta from *ast.StructType
 func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string) StructMeta {
 	var fields []FieldMeta
 	re := regexp.MustCompile(`json:"(.*?)"`)
@@ -148,10 +152,12 @@ func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string)
 	}
 }
 
+// PackageMeta wrap package info
 type PackageMeta struct {
 	Name string
 }
 
+// FieldMeta wrap field info
 type FieldMeta struct {
 	Name     string
 	Type     string
@@ -162,6 +168,7 @@ type FieldMeta struct {
 	DocName string
 }
 
+// StructMeta wrap struct info
 type StructMeta struct {
 	Name     string
 	Fields   []FieldMeta
@@ -170,6 +177,7 @@ type StructMeta struct {
 	IsExport bool
 }
 
+// ExprString return string representation from ast.Expr
 func ExprString(expr ast.Expr) string {
 	switch _expr := expr.(type) {
 	case *ast.Ident:
@@ -183,9 +191,8 @@ func ExprString(expr ast.Expr) string {
 	case *ast.ArrayType:
 		if _expr.Len == nil {
 			return "[]" + ExprString(_expr.Elt)
-		} else {
-			return "[" + ExprString(_expr.Len) + "]" + ExprString(_expr.Elt)
 		}
+		return "[" + ExprString(_expr.Len) + "]" + ExprString(_expr.Elt)
 	case *ast.BasicLit:
 		return _expr.Value
 	case *ast.MapType:
@@ -211,38 +218,41 @@ func ExprString(expr ast.Expr) string {
 	}
 }
 
-// MethodMeta represented a api
+// MethodMeta represents an api
 type MethodMeta struct {
+	// Recv method receiver
 	Recv string
+	// Name method name
 	Name string
-	// when generate client code from openapi3 spec json file, Params holds all method input parameters.
+	// Params when generate client code from openapi3 spec json file, Params holds all method input parameters.
 	// when generate client code from service interface in svc.go file, if there is struct type param, this struct type param will put into request body,
 	// then others will be put into url as query string. if there is no struct type param and the api is a get request, all will be put into url as query string.
 	// if there is no struct type param and the api is Not a get request, all will be put into request body as application/x-www-form-urlencoded data.
 	// specially, if there is one or more *multipart.FileHeader or []*multipart.FileHeader params, all will be put into request body as multipart/form-data data.
 	Params []FieldMeta
-	// response
+	// Results response
 	Results []FieldMeta
-	// not support when generate client code from service interface in svc.go file
+	// PathVars not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, PathVars is parameters in url as path variable.
 	PathVars []FieldMeta
-	// not support when generate client code from service interface in svc.go file
+	// HeaderVars not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, HeaderVars is parameters in header.
 	HeaderVars []FieldMeta
-	// not support when generate client code from service interface in svc.go file
+	// BodyParams not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, BodyParams is parameters in request body as query string.
 	BodyParams *FieldMeta
-	// not support when generate client code from service interface in svc.go file
-	// when generate client code from openapi3 spec json file, BodyJson is parameters in request body as json.
-	BodyJson *FieldMeta
-	// not support when generate client code from service interface in svc.go file
+	// BodyJSON not support when generate client code from service interface in svc.go file
+	// when generate client code from openapi3 spec json file, BodyJSON is parameters in request body as json.
+	BodyJSON *FieldMeta
+	// Files not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, Files is parameters in request body as multipart file.
-	Files    []FieldMeta
+	Files []FieldMeta
+	// Comments of the method
 	Comments []string
-	// api path
+	// Path api path
 	// not support when generate client code from service interface in svc.go file
 	Path string
-	// not support when generate client code from service interface in svc.go file
+	// QueryParams not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, QueryParams is parameters in url as query string.
 	QueryParams *FieldMeta
 }
@@ -276,12 +286,14 @@ func (mm MethodMeta) String() string {
 	return result
 }
 
+// InterfaceMeta wrap interface info
 type InterfaceMeta struct {
 	Name     string
 	Methods  []MethodMeta
 	Comments []string
 }
 
+// Visit visit each files
 func Visit(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -294,6 +306,7 @@ func Visit(files *[]string) filepath.WalkFunc {
 	}
 }
 
+// GetMod get module name from go.mod file
 func GetMod() string {
 	var (
 		f         *os.File

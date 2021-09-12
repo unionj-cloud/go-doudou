@@ -109,8 +109,8 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			_bodyParams, _ := _querystring.Values({{$m.BodyParams.Name}})
 			_req.SetFormDataFromValues(_bodyParams)
 		{{- end }}
-		{{- if $m.BodyJson }}
-			_req.SetBody({{$m.BodyJson.Name}})
+		{{- if $m.BodyJSON }}
+			_req.SetBody({{$m.BodyJSON.Name}})
 		{{- end }}
 		{{- if $m.Files }}
 			{{- range $p := $m.Files }}
@@ -494,7 +494,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		PathVars:    pathvars,
 		HeaderVars:  headervars,
 		BodyParams:  bodyParams,
-		BodyJson:    bodyJSON,
+		BodyJSON:    bodyJSON,
 		Files:       files,
 		Comments:    comments,
 		Path:        endpoint,
