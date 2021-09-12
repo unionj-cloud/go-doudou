@@ -259,6 +259,13 @@ func (n *Node) NumNodes() (numNodes int) {
 	return numNodes
 }
 
+func (n *Node) Shutdown() {
+	if err := n.memberlist.Shutdown(); err != nil {
+		logrus.Errorf("memberlist shutdown fail: %+v\n", err)
+	}
+	return
+}
+
 type NodeInfo struct {
 	SvcName   string `json:"svcName"`
 	Hostname  string `json:"hostname"`

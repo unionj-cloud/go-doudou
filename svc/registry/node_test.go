@@ -82,6 +82,7 @@ func TestNode_NumNodes(t *testing.T) {
 	_ = config.GddMemPort.Write("56400")
 	_ = config.GddMemName.Write("testsvc_numnodes")
 	node, _ := NewNode()
+	defer node.memberlist.Shutdown()
 	num := node.NumNodes()
 	require.Greater(t, num, 0)
 }
@@ -94,7 +95,8 @@ func TestNode_Info(t *testing.T) {
 	_ = config.GddPort.Write("6060")
 
 	node, _ := NewNode()
-	require.NotNil(t, node)
+	defer node.memberlist.Shutdown()
+	require.NotNil(t, node.Info())
 }
 
 func TestNode_String(t *testing.T) {
@@ -105,6 +107,7 @@ func TestNode_String(t *testing.T) {
 	_ = config.GddPort.Write("6060")
 
 	node, _ := NewNode()
+	defer node.memberlist.Shutdown()
 	require.NotEmpty(t, node.String())
 }
 
@@ -114,8 +117,9 @@ func Test_registry_Discover2(t *testing.T) {
 	_ = config.GddMemName.Write("testnode_discover1")
 	_ = config.GddMemPort.Write("56999")
 	_ = config.GddPort.Write("6060")
-
-	_, _ = NewNode()
+	_ = config.GddMemHost.Write(".testsvc_discover1-svc-headless.default.svc.cluster.local")
+	node, _ := NewNode()
+	defer node.memberlist.Shutdown()
 
 	_ = config.GddMemSeed.Write(seed.memberNode.Address())
 	_ = config.GddServiceName.Write("testsvc_discover2")
@@ -123,7 +127,8 @@ func Test_registry_Discover2(t *testing.T) {
 	_ = config.GddMemPort.Write("57099")
 	_ = config.GddPort.Write("6061")
 
-	node, _ := NewNode()
+	node, _ = NewNode(WithData("a message"))
+	defer node.memberlist.Shutdown()
 	nodes, _ := node.Discover("testsvc_discover1")
 	require.NotEmpty(t, nodes)
 }
