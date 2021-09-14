@@ -57,39 +57,6 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 	return
 }
 
-// Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context,
-	queryParams struct {
-		Username string `json:"username,omitempty" url:"username"`
-		Password string `json:"password,omitempty" url:"password"`
-	}) (ret string, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err := _req.Get(_server + "/user/login")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	ret = _resp.String()
-	return
-}
-
 // Get user by user name
 func (receiver *UserClient) GetUserUsername(ctx context.Context,
 	// The name that needs to be fetched. Use user1 for testing.
@@ -121,6 +88,39 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context,
 		err = errors.Wrap(_err, "")
 		return
 	}
+	return
+}
+
+// Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context,
+	queryParams struct {
+		Username string `json:"username,omitempty" url:"username"`
+		Password string `json:"password,omitempty" url:"password"`
+	}) (ret string, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err := _req.Get(_server + "/user/login")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	ret = _resp.String()
 	return
 }
 

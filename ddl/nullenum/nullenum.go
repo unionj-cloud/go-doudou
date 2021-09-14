@@ -1,8 +1,11 @@
 package nullenum
 
+// Null nullable
 type Null string
 
 const (
+	// Yes nullable
 	Yes Null = "YES"
-	No  Null = "NO"
+	// No not null
+	No Null = "NO"
 )

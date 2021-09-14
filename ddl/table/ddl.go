@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// CreateTable create table from Table
 func CreateTable(db *sqlx.DB, t Table) error {
 	var (
 		statement string
@@ -20,6 +21,7 @@ func CreateTable(db *sqlx.DB, t Table) error {
 	return err
 }
 
+// ChangeColumn change a column definition by Column
 func ChangeColumn(db *sqlx.DB, col Column) error {
 	var (
 		statement string
@@ -35,6 +37,7 @@ func ChangeColumn(db *sqlx.DB, col Column) error {
 	return err
 }
 
+// AddColumn add a column by Column
 func AddColumn(db *sqlx.DB, col Column) error {
 	var (
 		statement string

@@ -11,10 +11,12 @@ import (
 	"strings"
 )
 
+// Base sql expression
 type Base interface {
 	Sql() string
 }
 
+// Q used for building sql expression
 type Q interface {
 	Base
 	And(q Base) Where
@@ -22,11 +24,13 @@ type Q interface {
 	Append(q Base) Where
 }
 
+// Val wrap column value
 type Val struct {
 	Data interface{}
 	Type valtypeenum.ValType
 }
 
+// Literal new literal value
 func Literal(data interface{}) Val {
 	return Val{
 		Data: data,
@@ -34,6 +38,7 @@ func Literal(data interface{}) Val {
 	}
 }
 
+// Func new database built-in function value
 func Func(data string) Val {
 	return Val{
 		Data: data,
@@ -48,12 +53,14 @@ func null() Val {
 	}
 }
 
+// Criteria wrap a group of column, value and operator such as name = 20
 type Criteria struct {
 	col  string
 	val  Val
 	asym arithsymbol.ArithSymbol
 }
 
+// Sql implement Base interface, return sql expression
 func (c Criteria) Sql() string {
 	if c.asym == arithsymbol.In {
 		var sb strings.Builder
@@ -90,69 +97,81 @@ func (c Criteria) Sql() string {
 	}
 }
 
+// C new a Criteria
 func C() Criteria {
 	return Criteria{}
 }
 
+// Col set column name
 func (c Criteria) Col(col string) Criteria {
 	c.col = col
 	return c
 }
 
+// Eq set = operator and column value
 func (c Criteria) Eq(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Eq
 	return c
 }
 
+// Ne set != operator and column value
 func (c Criteria) Ne(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Ne
 	return c
 }
 
+// Gt set > operator and column value
 func (c Criteria) Gt(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gt
 	return c
 }
 
+// Lt set < operator and column value
 func (c Criteria) Lt(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lt
 	return c
 }
 
+// Gte set >= operator and column value
 func (c Criteria) Gte(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gte
 	return c
 }
 
+// Lte set <= operator and column value
 func (c Criteria) Lte(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lte
 	return c
 }
 
+// IsNull set is null
 func (c Criteria) IsNull() Criteria {
 	c.val = null()
 	c.asym = arithsymbol.Is
 	return c
 }
 
+// IsNotNull set is not null
 func (c Criteria) IsNotNull() Criteria {
 	c.val = null()
 	c.asym = arithsymbol.Not
 	return c
 }
 
+// In set in operator and column value, val should be a slice type value
 func (c Criteria) In(val Val) Criteria {
 	c.val = val
 	c.asym = arithsymbol.In
 	return c
 }
 
+// And concat another sql expression builder with And
 func (c Criteria) And(cri Base) Where {
 	w := Where{
 		children: make([]Base, 0),
@@ -162,6 +181,7 @@ func (c Criteria) And(cri Base) Where {
 	return w
 }
 
+// Or concat another sql expression builder with Or
 func (c Criteria) Or(cri Base) Where {
 	w := Where{
 		children: make([]Base, 0),
@@ -171,6 +191,7 @@ func (c Criteria) Or(cri Base) Where {
 	return w
 }
 
+// Append concat another sql expression builder with Append
 func (c Criteria) Append(cri Base) Where {
 	w := Where{
 		children: make([]Base, 0),
@@ -180,11 +201,13 @@ func (c Criteria) Append(cri Base) Where {
 	return w
 }
 
+// Where concat children clauses with one of logic operators And, Or, Append
 type Where struct {
 	lsym     logicsymbol.LogicSymbol
 	children []Base
 }
 
+// Sql implement Base interface, return string sql expression
 func (w Where) Sql() string {
 	if w.lsym != logicsymbol.Append {
 		return fmt.Sprintf("(%s %s %s)", w.children[0].Sql(), w.lsym, w.children[1].Sql())
@@ -192,6 +215,7 @@ func (w Where) Sql() string {
 	return fmt.Sprintf("%s%s%s", w.children[0].Sql(), w.lsym, w.children[1].Sql())
 }
 
+// And concat another sql expression builder with And
 func (w Where) And(whe Base) Where {
 	parentW := Where{
 		children: make([]Base, 0),
@@ -201,6 +225,7 @@ func (w Where) And(whe Base) Where {
 	return parentW
 }
 
+// Or concat another sql expression builder with Or
 func (w Where) Or(whe Base) Where {
 	parentW := Where{
 		children: make([]Base, 0),
@@ -210,6 +235,7 @@ func (w Where) Or(whe Base) Where {
 	return parentW
 }
 
+// Append concat another sql expression builder with Append
 func (w Where) Append(whe Base) Where {
 	parentW := Where{
 		children: make([]Base, 0),
@@ -219,35 +245,40 @@ func (w Where) Append(whe Base) Where {
 	return parentW
 }
 
+// Order by Col Sort
 type Order struct {
 	Col  string
 	Sort sortenum.Sort
 }
 
+// Page a sql expression builder for order by clause
 type Page struct {
 	Orders []Order
 	Offset int
 	Size   int
 }
 
+// P new a Page
 func P() Page {
 	return Page{
 		Orders: make([]Order, 0),
 	}
 }
 
+// Order append an Order
 func (p Page) Order(o Order) Page {
 	p.Orders = append(p.Orders, o)
 	return p
 }
 
+// Limit set Offset and Size
 func (p Page) Limit(offset, size int) Page {
 	p.Offset = offset
 	p.Size = size
 	return p
 }
 
-// Sql order by age desc limit 2,1
+// Sql implement Base interface, order by age desc limit 2,1
 func (p Page) Sql() string {
 	var sb strings.Builder
 
@@ -271,6 +302,7 @@ func (p Page) Sql() string {
 	return strings.TrimSpace(sb.String())
 }
 
+// PageRet wrap page query result
 type PageRet struct {
 	Items    interface{}
 	PageNo   int
@@ -279,6 +311,7 @@ type PageRet struct {
 	HasNext  bool
 }
 
+// NewPageRet new a PageRet
 func NewPageRet(page Page) PageRet {
 	pageNo := page.Offset/page.Size + 1
 	return PageRet{

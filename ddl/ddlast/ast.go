@@ -1,19 +1,20 @@
 package ddlast
 
 import (
-	. "github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
 	"strings"
 )
 
-func FlatEmbed(structs []StructMeta) []StructMeta {
-	structMap := make(map[string]StructMeta)
+// FlatEmbed flat embed struct
+func FlatEmbed(structs []astutils.StructMeta) []astutils.StructMeta {
+	structMap := make(map[string]astutils.StructMeta)
 	for _, structMeta := range structs {
 		if _, exists := structMap[structMeta.Name]; !exists {
 			structMap[structMeta.Name] = structMeta
 		}
 	}
-	var result []StructMeta
+	var result []astutils.StructMeta
 	for _, structMeta := range structs {
 		if sliceutils.IsEmpty(structMeta.Comments) {
 			continue
@@ -21,15 +22,15 @@ func FlatEmbed(structs []StructMeta) []StructMeta {
 		if !strings.Contains(structMeta.Comments[0], "dd:table") {
 			continue
 		}
-		_structMeta := StructMeta{
+		_structMeta := astutils.StructMeta{
 			Name:     structMeta.Name,
-			Fields:   make([]FieldMeta, 0),
+			Fields:   make([]astutils.FieldMeta, 0),
 			Comments: make([]string, len(structMeta.Comments)),
 		}
 		copy(_structMeta.Comments, structMeta.Comments)
 
-		fieldMap := make(map[string]FieldMeta)
-		embedFieldMap := make(map[string]FieldMeta)
+		fieldMap := make(map[string]astutils.FieldMeta)
+		embedFieldMap := make(map[string]astutils.FieldMeta)
 		for _, fieldMeta := range structMeta.Fields {
 			if strings.HasPrefix(fieldMeta.Type, "embed") {
 				if embedded, exists := structMap[fieldMeta.Name]; exists {

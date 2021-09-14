@@ -1,5 +1,6 @@
 package config
 
+// DbConfig store database connection parameters
 type DbConfig struct {
 	Host    string
 	Port    string
