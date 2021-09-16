@@ -152,7 +152,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- end }}
 		if _, exists := _req.Form["{{$p.Name}}"]; exists {
 			{{- if $p.Type | isSupport }}
-			if casted, err := _cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
+			if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
 			} else {
@@ -172,7 +172,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- end }}
 		if _, exists := _req.Form["{{$p.Name}}"]; exists {
 			{{- if $p.Type | isSupport }}
-			if casted, err := _cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
+			if casted, err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
 			} else {
@@ -250,7 +250,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	_cast "github.com/unionj-cloud/cast"
+	"github.com/unionj-cloud/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
@@ -350,12 +350,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 			var notimplemented []astutils.MethodMeta
 			for _, item := range meta.Methods {
 				for _, handler := range handlers {
-					if len(handler.Params) != 2 {
-						continue
-					}
-					if handler.Params[0].Type == "http.ResponseWriter" &&
-						handler.Params[1].Type == "*http.Request" &&
-						item.Name == handler.Name {
+					if item.Name == handler.Name {
 						goto L
 					}
 				}

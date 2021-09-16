@@ -20,6 +20,7 @@ import (
 	"testdatasvcimpl/config"
 	"testdatasvcimpl/vo"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -28,7 +29,12 @@ type TestdatasvcimplImpl struct {
 }
 
 func (receiver *TestdatasvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
-	panic("implement me")
+	var _result struct {
+		Code int
+		Data vo.PageRet
+	}
+	_ = gofakeit.Struct(&_result)
+	return _result.Code, _result.Data, nil
 }
 
 func NewTestdatasvcimpl(conf *config.Config, db *sqlx.DB) Testdatasvcimpl {

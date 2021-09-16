@@ -318,13 +318,14 @@ func (receiver Svc) watch() {
 			select {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
-				bcmd := exec.Command("go", "build")
+				bcmd := exec.Command("go", "build", "cmd/main.go")
 				bcmd.Stdout = os.Stdout
 				bcmd.Stderr = os.Stderr
 				if err := bcmd.Run(); err != nil {
 					logrus.Warnln(err)
 					continue
 				}
+				_ = os.Remove("main")
 				receiver.RestartSig <- 1
 			case err := <-w.Error:
 				logrus.Panicln(err)
