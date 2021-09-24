@@ -465,13 +465,16 @@ Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/pr
 
 ### Community
 
-Welcome to contribute to go-doudou by forking it and submitting pr or issue. If you like go-doudou, please give it a star!
+Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a star!
 
 Slack invitation link: https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ
 
-Welcome to add my wechat to give me some feedback.
-
-![qrcode.png](qrcode.png) 
+Welcome to contact me from
+- facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
+- twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
+- email: 328454505@qq.com
+- wechat:  
+  ![qrcode.png](qrcode.png)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_large)
