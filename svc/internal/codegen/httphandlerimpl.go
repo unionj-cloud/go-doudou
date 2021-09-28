@@ -42,6 +42,7 @@ func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{
 }
 `
 
+// GenHttpHandlerImpl generates http handler implementations
 func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err             error

@@ -15,16 +15,18 @@ type responseWriter struct {
 	statusCode int
 }
 
+// NewResponseWriter creates new responseWriter
 func NewResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{w, http.StatusOK}
 }
 
+// WriteHeader set header to code
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-var TotalRequests = prometheus.NewCounterVec(
+var totalRequests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "http_requests_total",
 		Help: "Number of get requests.",
@@ -45,6 +47,7 @@ var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Help: "Duration of HTTP requests.",
 }, []string{"path", "method"})
 
+// PrometheusMiddleware returns http HandlerFunc for prometheus matrix
 func PrometheusMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -57,14 +60,14 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 		statusCode := rw.statusCode
 
 		responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
-		TotalRequests.WithLabelValues(path, method).Inc()
+		totalRequests.WithLabelValues(path, method).Inc()
 
 		timer.ObserveDuration()
 	})
 }
 
 func init() {
-	prometheus.Register(TotalRequests)
+	prometheus.Register(totalRequests)
 	prometheus.Register(responseStatus)
 	prometheus.Register(httpDuration)
 }

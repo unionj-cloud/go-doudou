@@ -8,6 +8,7 @@ import (
 	"text/template"
 )
 
+// RegistryHandlerImpl define implementation for RegistryHandler
 type RegistryHandlerImpl struct {
 }
 
@@ -16,6 +17,7 @@ type row struct {
 	registry.NodeInfo
 }
 
+// GetRegistry returns registry UI
 func (receiver *RegistryHandlerImpl) GetRegistry(_writer http.ResponseWriter, _req *http.Request) {
 	var (
 		tpl   *template.Template
@@ -49,6 +51,7 @@ func (receiver *RegistryHandlerImpl) GetRegistry(_writer http.ResponseWriter, _r
 	_writer.Write(buf.Bytes())
 }
 
+// NewRegistryHandler creates new RegistryHandlerImpl
 func NewRegistryHandler() RegistryHandler {
 	return &RegistryHandlerImpl{}
 }

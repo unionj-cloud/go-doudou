@@ -24,6 +24,7 @@ func init() {
 	configureLogger()
 }
 
+// Srv represents a go-doudou service
 type Srv interface {
 	// Run the service
 	Run()

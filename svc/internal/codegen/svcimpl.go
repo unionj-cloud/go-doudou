@@ -60,6 +60,7 @@ func New{{.Meta.Name}}(conf *config.Config, db *sqlx.DB) {{.Meta.Name}} {
 }
 `
 
+// GenSvcImpl generates service implementation
 func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err         error

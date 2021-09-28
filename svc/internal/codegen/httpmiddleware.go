@@ -9,6 +9,7 @@ import (
 
 var httpMwTmpl = `package httpsrv`
 
+// GenHttpMiddleware generates http middleware file
 func GenHttpMiddleware(dir string) {
 	var (
 		err     error

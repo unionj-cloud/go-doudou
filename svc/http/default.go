@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-// gorilla
+// DefaultHttpSrv wraps gorilla mux router
 type DefaultHttpSrv struct {
 	*mux.Router
 	gddRouter *mux.Router
@@ -27,6 +27,7 @@ type DefaultHttpSrv struct {
 
 const gddPathPrefix = "/go-doudou/"
 
+// NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() Srv {
 	rootRouter := mux.NewRouter().PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true)
 	var gddRouter *mux.Router
@@ -55,6 +56,7 @@ func NewDefaultHttpSrv() Srv {
 	}
 }
 
+// AddRoute adds routes to router
 func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	var routes []model.Route
 	routes = append(routes, route...)
@@ -70,6 +72,7 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	}
 }
 
+// AddMiddleware adds middlewares to router
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
 	var middlewares []mux.MiddlewareFunc
 	for _, item := range mwf {
@@ -78,6 +81,7 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 	srv.Use(middlewares...)
 }
 
+// Run runs http server
 func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
 	var bannerSwitch config.Switch

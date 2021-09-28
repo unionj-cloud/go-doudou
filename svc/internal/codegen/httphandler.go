@@ -100,6 +100,7 @@ func httpMethod(method string) string {
 	return "POST"
 }
 
+// GenHttpHandler generates http handler interface and routes
 func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
 		err         error

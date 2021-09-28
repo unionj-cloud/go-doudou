@@ -9,15 +9,19 @@ import (
 	"text/template"
 )
 
+// Oas store OpenAPI3.0 description json string
 var Oas string
 
+// OnlineDocHandlerImpl define implementation for OnlineDocHandler
 type OnlineDocHandlerImpl struct {
 }
 
+// GetOpenAPI return OpenAPI3.0 description json string
 func (receiver *OnlineDocHandlerImpl) GetOpenAPI(_writer http.ResponseWriter, _req *http.Request) {
 	_writer.Write([]byte(Oas))
 }
 
+// GetDoc return documentation web UI
 func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *http.Request) {
 	var (
 		tpl    *template.Template
@@ -49,6 +53,7 @@ func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *
 	_writer.Write(buf.Bytes())
 }
 
+// NewOnlineDocHandler creates new instance for OnlineDocHandlerImpl
 func NewOnlineDocHandler() OnlineDocHandler {
 	return &OnlineDocHandlerImpl{}
 }

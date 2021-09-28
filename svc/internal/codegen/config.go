@@ -40,6 +40,7 @@ func LoadFromEnv() *Config {
 }
 `
 
+//GenConfig generates config file
 func GenConfig(dir string) {
 	var (
 		err        error

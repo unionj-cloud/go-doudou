@@ -14,33 +14,40 @@ import (
 	"time"
 )
 
+// DdClient defines service client interface
 type DdClient interface {
 	SetProvider(provider IServiceProvider)
 	SetClient(client *resty.Client)
 }
 
+// DdClientOption defines configure function type
 type DdClientOption func(DdClient)
 
+// WithProvider sets service provider
 func WithProvider(provider IServiceProvider) DdClientOption {
 	return func(c DdClient) {
 		c.SetProvider(provider)
 	}
 }
 
+// WithClient sets http client
 func WithClient(client *resty.Client) DdClientOption {
 	return func(c DdClient) {
 		c.SetClient(client)
 	}
 }
 
+// IServiceProvider defines service provider interface for server discovery
 type IServiceProvider interface {
 	SelectServer() (string, error)
 }
 
+// ServiceProvider defines an implementation for IServiceProvider
 type ServiceProvider struct {
 	Env string
 }
 
+// SelectServer return service address from environment variable
 func (s *ServiceProvider) SelectServer() (string, error) {
 	address := os.Getenv(s.Env)
 	if stringutils.IsEmpty(address) {
@@ -49,8 +56,10 @@ func (s *ServiceProvider) SelectServer() (string, error) {
 	return address, nil
 }
 
+// ServiceProviderOption sets properties of ServiceProvider
 type ServiceProviderOption func(IServiceProvider)
 
+// NewServiceProvider creates new ServiceProvider instance
 func NewServiceProvider(env string, opts ...ServiceProviderOption) IServiceProvider {
 	provider := &ServiceProvider{
 		Env: env,
@@ -63,6 +72,7 @@ func NewServiceProvider(env string, opts ...ServiceProviderOption) IServiceProvi
 	return provider
 }
 
+// NewClient creates new resty Client instance
 func NewClient() *resty.Client {
 	client := resty.New()
 	client.SetTimeout(1 * time.Minute)
@@ -86,6 +96,7 @@ func NewClient() *resty.Client {
 	return client
 }
 
+// MemberlistServiceProvider defines an implementation for IServiceProvider. Recommend to use.
 type MemberlistServiceProvider struct {
 	// Name of the service that dependent on
 	name     string
@@ -93,6 +104,7 @@ type MemberlistServiceProvider struct {
 	current  uint64
 }
 
+// SelectServer selects a node which is supplying service specified by name property from cluster
 func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 	nodes, err := m.registry.Discover(m.name)
 	if err != nil {
@@ -107,8 +119,10 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 	return selected.BaseUrl(), nil
 }
 
+// MemberlistProviderOption defines a function for setting properties of MemberlistServiceProvider
 type MemberlistProviderOption func(IServiceProvider)
 
+// NewMemberlistServiceProvider create an NewMemberlistServiceProvider instance
 func NewMemberlistServiceProvider(name string, registry registry.IRegistry, opts ...MemberlistProviderOption) IServiceProvider {
 	provider := &MemberlistServiceProvider{
 		name:     name,

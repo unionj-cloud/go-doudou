@@ -5,10 +5,12 @@ import (
 	"net/http"
 )
 
+// RegistryHandler define http handler interface
 type RegistryHandler interface {
 	GetRegistry(w http.ResponseWriter, r *http.Request)
 }
 
+// Routes return route slice for gorilla mux
 func Routes() []model.Route {
 	handler := NewRegistryHandler()
 	return []model.Route{

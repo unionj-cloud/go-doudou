@@ -246,10 +246,7 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
-func getPath() {
-
-}
-
+// GenGoClient generates golang http client code from result of parsing svc.go file in project root path
 func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePatternStrategy int) {
 	var (
 		err        error

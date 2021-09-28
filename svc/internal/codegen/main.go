@@ -62,6 +62,7 @@ func main() {
 }
 `
 
+// GenMain generates main function
 func GenMain(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err       error

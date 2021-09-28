@@ -26,22 +26,33 @@ var (
 type envVariable string
 
 const (
-	GddBanner     envVariable = "GDD_BANNER"
+	// GddBanner indicates banner enabled or not
+	GddBanner envVariable = "GDD_BANNER"
+	// GddBannerText sets text content of banner
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
 	// GddLogLevel please reference logrus.ParseLevel
-	GddLogLevel      envVariable = "GDD_LOG_LEVEL"
-	GddLogPath       envVariable = "GDD_LOG_PATH"
-	GddGraceTimeout  envVariable = "GDD_GRACE_TIMEOUT"
-	GddWriteTimeout  envVariable = "GDD_WRITE_TIMEOUT"
-	GddReadTimeout   envVariable = "GDD_READ_TIMEOUT"
-	GddIdleTimeout   envVariable = "GDD_IDLE_TIMEOUT"
-	GddOutput        envVariable = "GDD_OUTPUT"
+	GddLogLevel envVariable = "GDD_LOG_LEVEL"
+	// GddLogPath sets log path
+	GddLogPath envVariable = "GDD_LOG_PATH"
+	// GddGraceTimeout sets graceful shutdown timeout
+	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
+	// GddWriteTimeout sets http connection write timeout
+	GddWriteTimeout envVariable = "GDD_WRITE_TIMEOUT"
+	// GddReadTimeout sets http connection read timeout
+	GddReadTimeout envVariable = "GDD_READ_TIMEOUT"
+	// GddIdleTimeout sets http connection idle timeout
+	GddIdleTimeout envVariable = "GDD_IDLE_TIMEOUT"
+	// GddOutput sets file output path
+	GddOutput envVariable = "GDD_OUTPUT"
+	// GddRouteRootPath sets root path for all routes
 	GddRouteRootPath envVariable = "GDD_ROUTE_ROOT_PATH"
-	GddServiceName   envVariable = "GDD_SERVICE_NAME"
-	GddHost          envVariable = "GDD_HOST"
-	// GddPort http port
+	// GddServiceName sets service name
+	GddServiceName envVariable = "GDD_SERVICE_NAME"
+	// GddHost sets bind host for http server
+	GddHost envVariable = "GDD_HOST"
+	// GddPort sets bind port for http server
 	GddPort envVariable = "GDD_PORT"
-	// Accept 'mono' for monolith mode or 'micro' for microservice mode
+	// GddMode accepts 'mono' for monolith mode or 'micro' for microservice mode
 	GddMode envVariable = "GDD_MODE"
 	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
 	GddManage envVariable = "GDD_MANAGE_ENABLE"
@@ -49,7 +60,7 @@ const (
 	GddManageUser envVariable = "GDD_MANAGE_USER"
 	// GddManagePass manage api endpoint http basic auth password
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
-
+	// GddMemSeed sets cluster seeds for joining
 	GddMemSeed envVariable = "GDD_MEM_SEED"
 	// GddMemName unique name of this node in cluster. if empty or not set, hostname will be used instead
 	GddMemName envVariable = "GDD_MEM_NAME"
@@ -71,20 +82,25 @@ const (
 	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
 )
 
+// Load loads value from environment variable
 func (receiver envVariable) Load() string {
 	return os.Getenv(string(receiver))
 }
 
+// String return string representation for receiver
 func (receiver envVariable) String() string {
 	return string(receiver)
 }
 
+// Write sets the environment variable to value
 func (receiver envVariable) Write(value string) error {
 	return os.Setenv(string(receiver), value)
 }
 
+// Switch represents a switch
 type Switch bool
 
+// Decode decodes string on to true
 func (s *Switch) Decode(value string) error {
 	if value == "on" {
 		*s = true
@@ -92,8 +108,10 @@ func (s *Switch) Decode(value string) error {
 	return nil
 }
 
+// LogLevel alias for logrus.Level
 type LogLevel logrus.Level
 
+// Decode decodes value to LogLevel
 func (ll *LogLevel) Decode(value string) error {
 	switch value {
 	case "panic":

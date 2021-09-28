@@ -51,6 +51,7 @@ spec:
       targetPort: 6060
   clusterIP: None`
 
+// GenK8sStatefulset generates statefulset kind yaml file for kubernetes deploy
 func GenK8sStatefulset(dir string, svcname, image string) {
 	var (
 		f   *os.File

@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// Metrics logs some metrics for http request
 func Metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
@@ -30,6 +31,7 @@ func Metrics(inner http.Handler) http.Handler {
 	})
 }
 
+// Logger logs http request body and response body for debugging
 func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -80,6 +82,7 @@ func Logger(inner http.Handler) http.Handler {
 	})
 }
 
+// Rest set Content-Type to application/json
 func Rest(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
@@ -89,6 +92,7 @@ func Rest(inner http.Handler) http.Handler {
 	})
 }
 
+// BasicAuth adds http basic auth validation
 func BasicAuth(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := config.GddManageUser.Load()

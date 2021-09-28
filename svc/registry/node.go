@@ -20,6 +20,7 @@ import (
 	"time"
 )
 
+// IRegistry wraps service registry behaviors
 type IRegistry interface {
 	Register() error
 	Discover(svc string) ([]*Node, error)
@@ -47,6 +48,7 @@ func seeds(seedstr string) []string {
 	return seeds
 }
 
+// Register registers local node to cluster
 func (r *registry) Register() error {
 	if r.memberlist == nil {
 		return errors.New("Memberlist is nil")
@@ -64,6 +66,7 @@ func (r *registry) Register() error {
 	return nil
 }
 
+// Discover finds nodes which supplying specified service
 func (r *registry) Discover(svc string) ([]*Node, error) {
 	if r.memberlist == nil {
 		return nil, errors.New("Memberlist is nil")
@@ -112,6 +115,7 @@ type mergedMeta struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
+// Node represents go-doudou node
 type Node struct {
 	mmeta      mergedMeta
 	memberNode *memberlist.Node
@@ -120,10 +124,13 @@ type Node struct {
 	remote bool
 }
 
+// LocalNode store local node globally
 var LocalNode *Node
 
+// NodeOption sets node properties
 type NodeOption func(*Node)
 
+// WithData sets data that local node carrying
 func WithData(data interface{}) NodeOption {
 	return func(node *Node) {
 		node.mmeta = mergedMeta{
@@ -132,7 +139,7 @@ func WithData(data interface{}) NodeOption {
 	}
 }
 
-// Borrow source code from https://github.com/phayes/freeport/blob/master/freeport.go
+// getFreePort Borrow source code from https://github.com/phayes/freeport/blob/master/freeport.go
 // GetFreePort asks the kernel for a free open port that is ready to use.
 func getFreePort() (int, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
@@ -148,6 +155,7 @@ func getFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
+// NewNode creates new go-doudou node
 func NewNode(opts ...NodeOption) (*Node, error) {
 	mconf := memberlist.DefaultWANConfig()
 	minLevel := strings.ToUpper(config.GddLogLevel.Load())
@@ -251,6 +259,7 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 	return node, nil
 }
 
+// NumNodes return node number in the cluster
 func (n *Node) NumNodes() (numNodes int) {
 	n.memberLock.RLock()
 	numNodes = len(n.memberlist.Members())
@@ -259,6 +268,7 @@ func (n *Node) NumNodes() (numNodes int) {
 	return numNodes
 }
 
+// Shutdown stops all connections and communications with other nodes in the cluster
 func (n *Node) Shutdown() {
 	if err := n.memberlist.Shutdown(); err != nil {
 		logrus.Errorf("memberlist shutdown fail: %+v\n", err)
@@ -266,6 +276,7 @@ func (n *Node) Shutdown() {
 	return
 }
 
+// NodeInfo wraps node information
 type NodeInfo struct {
 	SvcName   string `json:"svcName"`
 	Hostname  string `json:"hostname"`
@@ -279,6 +290,7 @@ type NodeInfo struct {
 	Data      string `json:"data"`
 }
 
+// Info return node info
 func (n *Node) Info() NodeInfo {
 	status := "up"
 	if n.memberNode.State == memberlist.StateSuspect {
@@ -311,10 +323,12 @@ func (n *Node) Info() NodeInfo {
 	}
 }
 
+// BaseUrl return base url for restful service
 func (n *Node) BaseUrl() string {
 	return fmt.Sprintf("http://%s:%d%s", n.memberNode.Addr, n.mmeta.Meta.Port, n.mmeta.Meta.RouteRootPath)
 }
 
+// String return string representation
 func (n *Node) String() string {
 	return fmt.Sprintf("Node %s, providing %s service at %s, memberlist port %s",
 		n.memberNode.Name, n.mmeta.Meta.Service, n.BaseUrl(), fmt.Sprint(n.memberNode.Port))

@@ -5,6 +5,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
 )
 
+// Routes return route slice for gorilla mux
 func Routes() []model.Route {
 	return []model.Route{
 		{

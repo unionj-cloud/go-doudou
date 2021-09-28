@@ -266,7 +266,8 @@ func init() {
 }
 `
 
-// Currently not suport alias type in vo file. TODO
+// GenDoc generates OpenAPI 3.0 description json file.
+// Not support alias type in vo file.
 func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
 		err     error
