@@ -28,6 +28,7 @@ func getId(doc interface{}) (string, error) {
 	return "", nil
 }
 
+// BulkSaveOrUpdate save or update docs in bulk
 func (es *Es) BulkSaveOrUpdate(ctx context.Context, docs []interface{}) error {
 	bulkRequest := es.client.Bulk().Index(es.esIndex).Type(es.esType)
 

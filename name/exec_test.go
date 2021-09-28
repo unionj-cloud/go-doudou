@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const initCode = `package testfiles
+const initCode = `package testdata
 
 // 筛选条件
 type PageFilter struct {
@@ -20,8 +20,8 @@ type PageFilter struct {
 
 //排序条件
 type Order struct {
-	Col  string
-	Sort string
+	Col  string	` + "`" + `json:"-"` + "`" + `
+	sort string
 }
 
 type PageRet struct {
@@ -65,11 +65,11 @@ func TestName_Exec(t *testing.T) {
 		{
 			name: "",
 			fields: fields{
-				File:     pathutils.Abs("testfiles/vo.go"),
+				File:     pathutils.Abs("testdata/vo.go"),
 				Strategy: lowerCamelStrategy,
 			},
 			initCode: initCode,
-			want: `package testfiles
+			want: `package testdata
 
 // 筛选条件
 type PageFilter struct {
@@ -81,8 +81,8 @@ type PageFilter struct {
 
 //排序条件
 type Order struct {
-	Col  string ` + "`" + `json:"col"` + "`" + `
-	Sort string ` + "`" + `json:"sort"` + "`" + `
+	Col  string ` + "`" + `json:"-"` + "`" + `
+	sort string
 }
 
 type PageRet struct {
@@ -114,12 +114,12 @@ type MappingPayload struct {
 		{
 			name: "",
 			fields: fields{
-				File:      pathutils.Abs("testfiles/vo.go"),
+				File:      pathutils.Abs("testdata/vo.go"),
 				Strategy:  lowerCamelStrategy,
 				Omitempty: true,
 			},
 			initCode: initCode,
-			want: `package testfiles
+			want: `package testdata
 
 // 筛选条件
 type PageFilter struct {
@@ -131,8 +131,8 @@ type PageFilter struct {
 
 //排序条件
 type Order struct {
-	Col  string ` + "`" + `json:"col,omitempty"` + "`" + `
-	Sort string ` + "`" + `json:"sort,omitempty"` + "`" + `
+	Col  string ` + "`" + `json:"-"` + "`" + `
+	sort string
 }
 
 type PageRet struct {
@@ -164,12 +164,12 @@ type MappingPayload struct {
 		{
 			name: "",
 			fields: fields{
-				File:      pathutils.Abs("testfiles/vo.go"),
+				File:      pathutils.Abs("testdata/vo.go"),
 				Strategy:  snakeStrategy,
 				Omitempty: false,
 			},
 			initCode: initCode,
-			want: `package testfiles
+			want: `package testdata
 
 // 筛选条件
 type PageFilter struct {
@@ -181,8 +181,8 @@ type PageFilter struct {
 
 //排序条件
 type Order struct {
-	Col  string ` + "`" + `json:"col"` + "`" + `
-	Sort string ` + "`" + `json:"sort"` + "`" + `
+	Col  string ` + "`" + `json:"-"` + "`" + `
+	sort string
 }
 
 type PageRet struct {
@@ -214,11 +214,11 @@ type MappingPayload struct {
 		{
 			name: "",
 			fields: fields{
-				File:      pathutils.Abs("testfiles/vo1.go"),
+				File:      pathutils.Abs("testdata/vo1.go"),
 				Strategy:  snakeStrategy,
 				Omitempty: false,
 			},
-			initCode: `package testfiles
+			initCode: `package testdata
 
 import "time"
 
@@ -258,7 +258,7 @@ type MyInter interface {
 
 type starM *time.Time
 `,
-			want: `package testfiles
+			want: `package testdata
 
 import "time"
 
@@ -316,9 +316,7 @@ type starM *time.Time
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(content) != tt.want {
-				t.Errorf("want %s, got %s\n", tt.want, string(content))
-			}
+			assert.Equal(t, tt.want, string(content))
 			ioutil.WriteFile(tt.fields.File, []byte(tt.initCode), os.ModePerm)
 		})
 	}
@@ -326,7 +324,7 @@ type starM *time.Time
 
 func TestPanic(t *testing.T) {
 	receiver := Name{
-		File:      pathutils.Abs("testfiles/vo1.go"),
+		File:      pathutils.Abs("testdata/vo1.go"),
 		Strategy:  "unknownstrategy",
 		Omitempty: false,
 	}
@@ -337,7 +335,7 @@ func TestPanic(t *testing.T) {
 
 func TestPanic2(t *testing.T) {
 	receiver := Name{
-		File:      pathutils.Abs("testfiles/vo2"),
+		File:      pathutils.Abs("testdata/vo2"),
 		Strategy:  lowerCamelStrategy,
 		Omitempty: false,
 	}

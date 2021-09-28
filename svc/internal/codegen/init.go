@@ -171,6 +171,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-X 'github.com/union
 ENTRYPOINT ["/repo/api"]
 `
 
+// InitSvc inits a service project
 func InitSvc(dir string) {
 	var (
 		err           error

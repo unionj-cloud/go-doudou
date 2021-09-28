@@ -164,14 +164,17 @@ ADD COLUMN ` + "`" + `{{.Name}}` + "`" + ` {{.Type}} {{if .Nullable}}NULL{{else}
 {{end}}
 `
 
+// ChangeColumnSql return change column sql
 func (c *Column) ChangeColumnSql() (string, error) {
 	return templateutils.StringBlock("alter.tmpl", altersqltmpl, "change", c)
 }
 
+// AddColumnSql return add column sql
 func (c *Column) AddColumnSql() (string, error) {
 	return templateutils.StringBlock("alter.tmpl", altersqltmpl, "add", c)
 }
 
+// DbColumn defines a column
 type DbColumn struct {
 	Field   string        `db:"Field"`
 	Type    string        `db:"Type"`
@@ -182,7 +185,7 @@ type DbColumn struct {
 	Comment string        `db:"Comment"`
 }
 
-// https://www.mysqltutorial.org/mysql-index/mysql-show-indexes/
+// DbIndex defines an index refer to https://www.mysqltutorial.org/mysql-index/mysql-show-indexes/
 type DbIndex struct {
 	Table        string `db:"Table"`        // The name of the table
 	Non_unique   bool   `db:"Non_unique"`   // 1 if the index can contain duplicates, 0 if it cannot.
@@ -192,6 +195,7 @@ type DbIndex struct {
 	Collation    string `db:"Collation"`    // Collation represents how the column is sorted in the index. A means ascending, B means descending, or NULL means not sorted.
 }
 
+// Table defines a table
 type Table struct {
 	Name    string
 	Columns []Column
@@ -200,6 +204,7 @@ type Table struct {
 	Meta    astutils.StructMeta
 }
 
+// NewTableFromStruct creates a Table instance from structMeta
 func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table {
 	var (
 		columns       []Column
@@ -439,6 +444,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 	}
 }
 
+// NewFieldFromColumn creates an astutils.FieldMeta instance from col
 func NewFieldFromColumn(col Column) astutils.FieldMeta {
 	tag := "dd:"
 	var feats []string
@@ -500,6 +506,7 @@ PRIMARY KEY (` + "`" + `{{.Pk}}` + "`" + `){{if .Indexes}},{{end}}
 {{if $ind.Unique}}UNIQUE {{end}}INDEX ` + "`" + `{{$ind.Name}}` + "`" + ` ({{ range $j, $it := $ind.Items }}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{ end }})
 {{- end }});`
 
+// CreateSql return create table sql
 func (t *Table) CreateSql() (string, error) {
 	return templateutils.String("create.sql.tmpl", createsqltmpl, t)
 }

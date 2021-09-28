@@ -11,7 +11,21 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 	"regexp"
 	"strings"
+	"unicode"
 )
+
+func isExport(field string) bool {
+	return unicode.IsUpper([]rune(field)[0])
+}
+
+func extractJsonPropName(tag string) string {
+	re := regexp.MustCompile(`json:"(.*?)"`)
+	if re.MatchString(tag) {
+		subs := re.FindAllStringSubmatch(tag, -1)
+		return strings.TrimSpace(strings.Split(subs[0][1], ",")[0])
+	}
+	return ""
+}
 
 // RewriteJSONTag overwrites json tag by convert function and return formatted source code
 func RewriteJSONTag(file string, omitempty bool, convert func(old string) string) (string, error) {
@@ -32,6 +46,10 @@ func RewriteJSONTag(file string, omitempty bool, convert func(old string) string
 			if field.Names == nil {
 				continue
 			}
+			fname := field.Names[0].Name
+			if !isExport(fname) {
+				continue
+			}
 			tag := convert(field.Names[0].Name)
 			if omitempty {
 				tag += ",omitempty"
@@ -39,7 +57,9 @@ func RewriteJSONTag(file string, omitempty bool, convert func(old string) string
 			tag = fmt.Sprintf(`json:"%s"`, tag)
 			if field.Tag != nil {
 				if re.MatchString(field.Tag.Value) {
-					field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, tag)
+					if extractJsonPropName(field.Tag.Value) != "-" {
+						field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, tag)
+					}
 				} else {
 					lastindex := strings.LastIndex(field.Tag.Value, "`")
 					if lastindex < 0 {

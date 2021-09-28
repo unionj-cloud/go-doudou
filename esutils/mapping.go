@@ -7,11 +7,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// MappingPayload defines request payload for es index mapping
 type MappingPayload struct {
 	Base
 	Fields []Field `json:"fields"`
 }
 
+// NewMapping return es mapping json string from mp
 func NewMapping(mp MappingPayload) string {
 	var (
 		mapping    *gabs.Container
@@ -33,6 +35,7 @@ func NewMapping(mp MappingPayload) string {
 	return mapping.String()
 }
 
+// PutMapping updates mapping
 func (es *Es) PutMapping(ctx context.Context, mp MappingPayload) error {
 	var (
 		mapping    *gabs.Container
@@ -55,6 +58,7 @@ func (es *Es) PutMapping(ctx context.Context, mp MappingPayload) error {
 	return nil
 }
 
+// CheckTypeExists assert the es type exists
 func (es *Es) CheckTypeExists(ctx context.Context) (b bool, err error) {
 	if b, err = es.client.TypeExists().Index(es.esIndex).Type(es.esType).Do(ctx); err != nil {
 		return false, errors.Wrap(err, "call TypeExists() error")

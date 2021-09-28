@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// NewIndex creates a new index
 func (es *Es) NewIndex(ctx context.Context, mapping string) (exists bool, err error) {
 	var (
 		res *elastic.IndicesCreateResult

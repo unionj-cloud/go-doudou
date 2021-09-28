@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ClearIndex remove all docs
 func (es *Es) ClearIndex(ctx context.Context) error {
 	var (
 		err error

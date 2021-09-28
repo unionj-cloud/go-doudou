@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// BulkDelete delete es docs specified by ids in bulk
 func (es *Es) BulkDelete(ctx context.Context, ids []string) error {
 	bulkRequest := es.client.Bulk().Index(es.esIndex).Type(es.esType)
 

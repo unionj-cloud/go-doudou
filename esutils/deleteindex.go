@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DeleteIndex removes the index
 func (es *Es) DeleteIndex(ctx context.Context) error {
 	var (
 		err error

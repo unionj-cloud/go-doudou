@@ -26,16 +26,12 @@ import (
 	"time"
 )
 
-type SvcCmd interface {
-	Init()
-	Http()
-}
-
 const (
 	split = iota
 	nosplit
 )
 
+// Svc wraps all config properties for commands
 type Svc struct {
 	Dir          string
 	Handler      bool
@@ -74,6 +70,8 @@ func validateDataType(dir string) {
 	}
 }
 
+// Http generates main function, config files, db connection function, http routes, http handlers, service interface and service implementation
+// from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver Svc) Http() {
 	dir := receiver.Dir
 	if receiver.Doc {
@@ -113,12 +111,12 @@ func (receiver Svc) Http() {
 	}
 }
 
-// CheckIc is checking whether parameter types in each of service interface methods valid or not
+// validateRestApi is checking whether parameter types in each of service interface methods valid or not
 // Only support at most one golang non-built-in type as parameter in a service interface method
 // because go-doudou cannot put more than one parameter into request body except *multipart.FileHeader.
 // If there are *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
-// Not not support anonymous struct as parameter
+// Not support anonymous struct as parameter
 func validateRestApi(ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
@@ -169,10 +167,14 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 	}
 }
 
+// Init inits a go-doudou project
 func (receiver Svc) Init() {
 	codegen.InitSvc(receiver.Dir)
 }
 
+// Push executes go mod vendor command first, then build docker image and push to remote image repository
+// It also generates deployment kind(for monolithic) and statefulset kind(for microservice) yaml files for kubernetes deploy, if these files already exist,
+// it will only change the image version in each file, so you can edit these files manually to fit your need.
 func (receiver Svc) Push() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 
@@ -221,6 +223,8 @@ func (receiver Svc) Push() {
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 
+// Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as statefulset kind using statefulset.yaml file in the project root,
+// so if you want to deploy a monolithic project, please set k8sfile flag.
 func (receiver Svc) Deploy() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
@@ -237,6 +241,8 @@ func (receiver Svc) Deploy() {
 	}
 }
 
+// Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use statefulset.yaml file in the project root,
+// so if you had already set k8sfile flag when you deploy the project, you should set the same k8sfile flag.
 func (receiver Svc) Shutdown() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
@@ -253,6 +259,7 @@ func (receiver Svc) Shutdown() {
 	}
 }
 
+// GenClient generates http client code from OpenAPI3.0 description json file, only support Golang currently.
 func (receiver Svc) GenClient() {
 	docpath := receiver.DocPath
 	if stringutils.IsEmpty(docpath) {
@@ -352,6 +359,7 @@ func (receiver Svc) watch() {
 	}
 }
 
+// Run runs the project locally. Recommend to set watch flag to enable watch mode for rapid development.
 func (receiver Svc) Run() {
 	receiver.Cmd = receiver.run()
 	if receiver.Watch {
@@ -371,6 +379,7 @@ func (receiver Svc) Run() {
 	}
 }
 
+// Seed starts a seed node
 func (receiver Svc) Seed() {
 	config.GddServiceName.Write("seed")
 	config.GddPort.Write("56200")

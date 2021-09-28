@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
+// Name wraps config properties for name command
 type Name struct {
 	File      string
 	Strategy  string
@@ -18,7 +19,8 @@ const (
 	snakeStrategy      = "snake"
 )
 
-// https://github.com/iancoleman/strcase
+// Exec rewrites the json tag of each field of all structs in the file as snake case or lower camel case.
+// Unexported or ignored fields will be skipped.
 func (receiver Name) Exec() {
 	if stringutils.IsEmpty(receiver.File) {
 		panic(errors.New("file flag should not be empty"))

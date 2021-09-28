@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// if paging is nil, randomly return 10 pcs of documents as default
+// Random if paging is nil, randomly return 10 pcs of documents as default
 func (es *Es) Random(ctx context.Context, paging *Paging) ([]map[string]interface{}, error) {
 	var (
 		err       error

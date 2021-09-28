@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// PageResult represents result of pagination
 type PageResult struct {
 	Page        int           `json:"page"` // from 1
 	PageSize    int           `json:"page_size"`
@@ -15,6 +16,7 @@ type PageResult struct {
 	HasNextPage bool          `json:"has_next_page"`
 }
 
+// Page fetch pagination result
 func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 	var (
 		err       error

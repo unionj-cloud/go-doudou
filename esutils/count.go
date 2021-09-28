@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Count counts docs by paging
 func (es *Es) Count(ctx context.Context, paging *Paging) (int64, error) {
 	var (
 		err       error

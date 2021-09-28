@@ -53,6 +53,7 @@ spec:
       port: 6060
       targetPort: 6060`
 
+// GenK8sDeployment generates deployment kind yaml file for kubernetes deploy.
 func GenK8sDeployment(dir string, svcname, image string) {
 	var (
 		f   *os.File

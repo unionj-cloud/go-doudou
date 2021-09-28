@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 )
 
+// SaveOrUpdate saves or updates doc
 func (es *Es) SaveOrUpdate(ctx context.Context, doc interface{}) (string, error) {
 	var (
 		indexRes *elastic.IndexResponse

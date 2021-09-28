@@ -49,6 +49,7 @@ const (
 	BOOL    esFieldType = "boolean"
 )
 
+// Es defines properties for connecting to an es instance
 type Es struct {
 	client   *elastic.Client `json:"client"`
 	esIndex  string          `json:"esIndex"`
@@ -59,10 +60,12 @@ type Es struct {
 	logger   *logrus.Logger  `json:"logger"`
 }
 
+// SetIndex sets index
 func (e *Es) SetIndex(index string) {
 	e.esIndex = index
 }
 
+// SetType sets type
 func (e *Es) SetType(estype string) {
 	e.esType = estype
 }
@@ -80,38 +83,45 @@ func (e *Es) newDefaultClient() {
 	e.client = client
 }
 
+// EsOption represents functions for changing Es properties
 type EsOption func(*Es)
 
+// WithClient sets client
 func WithClient(client *elastic.Client) EsOption {
 	return func(es *Es) {
 		es.client = client
 	}
 }
 
+// WithUsername sets username
 func WithUsername(username string) EsOption {
 	return func(es *Es) {
 		es.username = username
 	}
 }
 
+// WithPassword sets password
 func WithPassword(password string) EsOption {
 	return func(es *Es) {
 		es.password = password
 	}
 }
 
+// WithLogger sets logger
 func WithLogger(logger *logrus.Logger) EsOption {
 	return func(es *Es) {
 		es.logger = logger
 	}
 }
 
+// WithUrls set urls
 func WithUrls(urls []string) EsOption {
 	return func(es *Es) {
 		es.urls = urls
 	}
 }
 
+// NewEs creates an Es instance
 func NewEs(esIndex, esType string, opts ...EsOption) *Es {
 	_esType := esType
 	if stringutils.IsEmpty(_esType) {
@@ -136,35 +146,42 @@ func NewEs(esIndex, esType string, opts ...EsOption) *Es {
 	return es
 }
 
+// IBase wraps functions for getting es index and type
 type IBase interface {
 	GetIndex() string
 	GetType() string
 	SetType(s string)
 }
 
+// Base defines es index and type
 type Base struct {
 	Index string `json:"index"`
 	Type  string `json:"type"`
 }
 
+// GetIndex return index name
 func (b *Base) GetIndex() string {
 	return b.Index
 }
 
+// GetType return es type name
 func (b *Base) GetType() string {
 	return b.Type
 }
 
+// SetType sets es type
 func (b *Base) SetType(s string) {
 	b.Type = s
 }
 
+// Field defines a es field
 type Field struct {
 	Name   string      `json:"name"`
 	Type   esFieldType `json:"type"`
 	Format string      `json:"format"`
 }
 
+// QueryCond defines query conditions
 type QueryCond struct {
 	Pair       map[string][]interface{} `json:"pair"`
 	QueryLogic queryLogic               `json:"queryLogic"`
@@ -172,11 +189,13 @@ type QueryCond struct {
 	Children   []QueryCond              `json:"children"`
 }
 
+// Sort defines sort condition
 type Sort struct {
 	Field     string `json:"field"`
 	Ascending bool   `json:"ascending"`
 }
 
+// Paging defines pagination query conditions
 type Paging struct {
 	StartDate  string      `json:"startDate"`
 	EndDate    string      `json:"endDate"`

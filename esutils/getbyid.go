@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetByID gets a doc by id
 func (es *Es) GetByID(ctx context.Context, id string) (map[string]interface{}, error) {
 	var (
 		getResult *elastic.GetResult

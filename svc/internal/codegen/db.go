@@ -39,6 +39,7 @@ func NewDb(conf config.DbConfig) (*sqlx.DB, error) {
 }
 `
 
+// GenDb generates db connection code
 func GenDb(dir string) {
 	var (
 		err       error

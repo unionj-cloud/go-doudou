@@ -7,7 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/copier"
 )
 
-// aggr only accept map[string]interface{} or elastic.Aggregation
+// Stat aggr only accept map[string]interface{} or elastic.Aggregation
 func (es *Es) Stat(ctx context.Context, paging *Paging, aggr interface{}) (map[string]interface{}, error) {
 	var (
 		err          error

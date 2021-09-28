@@ -9,6 +9,7 @@ import (
 	"io"
 )
 
+// List fetch docs by paging
 func (es *Es) List(ctx context.Context, paging *Paging, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
 	var (
 		err       error

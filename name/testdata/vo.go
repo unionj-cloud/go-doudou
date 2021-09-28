@@ -1,4 +1,4 @@
-package testfiles
+package testdata
 
 // 筛选条件
 type PageFilter struct {
@@ -10,8 +10,8 @@ type PageFilter struct {
 
 //排序条件
 type Order struct {
-	Col  string
-	Sort string
+	Col  string	`json:"-"`
+	sort string
 }
 
 type PageRet struct {
