@@ -37,9 +37,8 @@ func ExprStringP(expr ast.Expr) string {
 	case *ast.ArrayType:
 		if _expr.Len == nil {
 			return "[]" + ExprStringP(_expr.Elt)
-		} else {
-			return "[" + ExprStringP(_expr.Len) + "]" + ExprStringP(_expr.Elt)
 		}
+		return "[" + ExprStringP(_expr.Len) + "]" + ExprStringP(_expr.Elt)
 	case *ast.BasicLit:
 		return _expr.Value
 	case *ast.MapType:
