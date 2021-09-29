@@ -322,35 +322,10 @@ func api2Interface(paths map[string]v3.Path, svcname string) astutils.InterfaceM
 }
 
 func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gparams []v3.Parameter) (astutils.MethodMeta, error) {
-	var results, pathvars, headervars, files, params []astutils.FieldMeta
+	var files, params []astutils.FieldMeta
 	var bodyJSON, bodyParams, qparams *astutils.FieldMeta
-	var comments []string
-	if stringutils.IsNotEmpty(operation.Summary) {
-		comments = append(comments, strings.Split(operation.Summary, "\n")...)
-	}
-	if stringutils.IsNotEmpty(operation.Description) {
-		comments = append(comments, strings.Split(operation.Description, "\n")...)
-	}
-
-	qSchema := v3.Schema{
-		Type:       v3.ObjectT,
-		Properties: make(map[string]*v3.Schema),
-	}
-	for _, item := range gparams {
-		switch item.In {
-		case v3.InQuery:
-			qSchema.Properties[item.Name] = item.Schema
-			if item.Required {
-				qSchema.Required = append(qSchema.Required, item.Name)
-			}
-		case v3.InPath:
-			pathvars = append(pathvars, parameter2Field(item))
-		case v3.InHeader:
-			headervars = append(headervars, parameter2Field(item))
-		default:
-			panic(fmt.Errorf("not support %s parameter yet", item.In))
-		}
-	}
+	comments := commentLines(operation)
+	qSchema, pathvars, headervars := globalParams(gparams)
 
 	for _, item := range operation.Parameters {
 		switch item.In {
@@ -373,64 +348,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 	}
 
 	if httpMethod != "Get" && operation.RequestBody != nil {
-		if stringutils.IsNotEmpty(operation.RequestBody.Ref) {
-			// #/components/requestBodies/Raw3
-			key := strings.TrimPrefix(operation.RequestBody.Ref, "#/components/requestBodies/")
-			if requestBody, exists := requestBodies[key]; exists {
-				operation.RequestBody = &requestBody
-			} else {
-				panic(fmt.Errorf("requestBody %s not exists", operation.RequestBody.Ref))
-			}
-		}
-
-		content := operation.RequestBody.Content
-		if content.JSON != nil {
-			bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
-		} else if content.FormURL != nil {
-			bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
-		} else if content.FormData != nil {
-			schema := *content.FormData.Schema
-			if stringutils.IsNotEmpty(schema.Ref) {
-				schema = schemas[strings.TrimPrefix(content.FormData.Schema.Ref, "#/components/schemas/")]
-			}
-			aSchema := v3.Schema{
-				Type:       v3.ObjectT,
-				Properties: make(map[string]*v3.Schema),
-			}
-			for k, v := range schema.Properties {
-				var gotype string
-				if v.Type == v3.StringT && v.Format == v3.BinaryF {
-					gotype = "*multipart.FileHeader"
-				} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
-					gotype = "[]*multipart.FileHeader"
-				} else {
-					gotype = toGoType(v)
-				}
-				if strings.TrimPrefix(gotype, "[]") == "*multipart.FileHeader" {
-					files = append(files, astutils.FieldMeta{
-						Name: k,
-						Type: gotype,
-					})
-					continue
-				}
-				aSchema.Properties[k] = v
-				if sliceutils.StringContains(schema.Required, k) {
-					aSchema.Required = append(aSchema.Required, k)
-				}
-			}
-			if len(aSchema.Properties) > 0 {
-				bodyParams = schema2Field(&aSchema, "bodyParams")
-			}
-		} else if content.Stream != nil {
-			files = append(files, astutils.FieldMeta{
-				Name: "_uploadFile",
-				Type: "*multipart.FileHeader",
-			})
-		} else if content.TextPlain != nil {
-			bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
-		} else if content.Default != nil {
-			bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
-		}
+		bodyJSON, bodyParams, files = requestBody(operation)
 	}
 
 	if operation.Responses == nil {
@@ -441,33 +359,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		return astutils.MethodMeta{}, errors.Errorf("200 response definition not found in api %s %s", httpMethod, endpoint)
 	}
 
-	if stringutils.IsNotEmpty(operation.Responses.Resp200.Ref) {
-		key := strings.TrimPrefix(operation.Responses.Resp200.Ref, "#/components/responses/")
-		if response, exists := responses[key]; exists {
-			operation.Responses.Resp200 = &response
-		} else {
-			panic(fmt.Errorf("response %s not exists", operation.Responses.Resp200.Ref))
-		}
-	}
-
-	content := operation.Responses.Resp200.Content
-	if content == nil {
-		return astutils.MethodMeta{}, errors.Errorf("200 response content definition not found in api %s %s", httpMethod, endpoint)
-	}
-
-	if content.JSON != nil {
-		results = append(results, *schema2Field(content.JSON.Schema, "ret"))
-	} else if content.Stream != nil {
-		results = append(results, astutils.FieldMeta{
-			Name: "_downloadFile",
-			Type: "*os.File",
-		})
-	} else if content.TextPlain != nil {
-		results = append(results, *schema2Field(content.TextPlain.Schema, "ret"))
-	} else if content.Default != nil {
-		results = append(results, *schema2Field(content.Default.Schema, "ret"))
-	} else {
-		return astutils.MethodMeta{}, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
+	results, err := responseBody(endpoint, httpMethod, operation)
+	if err != nil {
+		return astutils.MethodMeta{}, err
 	}
 
 	if qparams != nil {
@@ -500,6 +394,135 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		Path:        endpoint,
 		QueryParams: qparams,
 	}, nil
+}
+
+func responseBody(endpoint, httpMethod string, operation *v3.Operation) (results []astutils.FieldMeta, err error) {
+	if stringutils.IsNotEmpty(operation.Responses.Resp200.Ref) {
+		key := strings.TrimPrefix(operation.Responses.Resp200.Ref, "#/components/responses/")
+		if response, exists := responses[key]; exists {
+			operation.Responses.Resp200 = &response
+		} else {
+			panic(fmt.Errorf("response %s not exists", operation.Responses.Resp200.Ref))
+		}
+	}
+
+	content := operation.Responses.Resp200.Content
+	if content == nil {
+		return nil, errors.Errorf("200 response content definition not found in api %s %s", httpMethod, endpoint)
+	}
+
+	if content.JSON != nil {
+		results = append(results, *schema2Field(content.JSON.Schema, "ret"))
+	} else if content.Stream != nil {
+		results = append(results, astutils.FieldMeta{
+			Name: "_downloadFile",
+			Type: "*os.File",
+		})
+	} else if content.TextPlain != nil {
+		results = append(results, *schema2Field(content.TextPlain.Schema, "ret"))
+	} else if content.Default != nil {
+		results = append(results, *schema2Field(content.Default.Schema, "ret"))
+	} else {
+		return nil, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
+	}
+	return
+}
+
+func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldMeta, files []astutils.FieldMeta) {
+	if stringutils.IsNotEmpty(operation.RequestBody.Ref) {
+		// #/components/requestBodies/Raw3
+		key := strings.TrimPrefix(operation.RequestBody.Ref, "#/components/requestBodies/")
+		if requestBody, exists := requestBodies[key]; exists {
+			operation.RequestBody = &requestBody
+		} else {
+			panic(fmt.Errorf("requestBody %s not exists", operation.RequestBody.Ref))
+		}
+	}
+
+	content := operation.RequestBody.Content
+	if content.JSON != nil {
+		bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
+	} else if content.FormURL != nil {
+		bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
+	} else if content.FormData != nil {
+		schema := *content.FormData.Schema
+		if stringutils.IsNotEmpty(schema.Ref) {
+			schema = schemas[strings.TrimPrefix(content.FormData.Schema.Ref, "#/components/schemas/")]
+		}
+		aSchema := v3.Schema{
+			Type:       v3.ObjectT,
+			Properties: make(map[string]*v3.Schema),
+		}
+		for k, v := range schema.Properties {
+			var gotype string
+			if v.Type == v3.StringT && v.Format == v3.BinaryF {
+				gotype = "*multipart.FileHeader"
+			} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
+				gotype = "[]*multipart.FileHeader"
+			} else {
+				gotype = toGoType(v)
+			}
+			if strings.TrimPrefix(gotype, "[]") == "*multipart.FileHeader" {
+				files = append(files, astutils.FieldMeta{
+					Name: k,
+					Type: gotype,
+				})
+				continue
+			}
+			aSchema.Properties[k] = v
+			if sliceutils.StringContains(schema.Required, k) {
+				aSchema.Required = append(aSchema.Required, k)
+			}
+		}
+		if len(aSchema.Properties) > 0 {
+			bodyParams = schema2Field(&aSchema, "bodyParams")
+		}
+	} else if content.Stream != nil {
+		files = append(files, astutils.FieldMeta{
+			Name: "_uploadFile",
+			Type: "*multipart.FileHeader",
+		})
+	} else if content.TextPlain != nil {
+		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
+	} else if content.Default != nil {
+		bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
+	}
+	return
+}
+
+func globalParams(gparams []v3.Parameter) (v3.Schema, []astutils.FieldMeta, []astutils.FieldMeta) {
+	var pathvars, headervars []astutils.FieldMeta
+	qSchema := v3.Schema{
+		Type:       v3.ObjectT,
+		Properties: make(map[string]*v3.Schema),
+	}
+	for _, item := range gparams {
+		switch item.In {
+		case v3.InQuery:
+			qSchema.Properties[item.Name] = item.Schema
+			if item.Required {
+				qSchema.Required = append(qSchema.Required, item.Name)
+			}
+		case v3.InPath:
+			pathvars = append(pathvars, parameter2Field(item))
+		case v3.InHeader:
+			headervars = append(headervars, parameter2Field(item))
+		default:
+			panic(fmt.Errorf("not support %s parameter yet", item.In))
+		}
+	}
+	return qSchema, pathvars, headervars
+}
+
+func commentLines(operation *v3.Operation) []string {
+	var comments []string
+	if stringutils.IsNotEmpty(operation.Summary) {
+		comments = append(comments, strings.Split(operation.Summary, "\n")...)
+	}
+	if stringutils.IsNotEmpty(operation.Description) {
+		comments = append(comments, strings.Split(operation.Description, "\n")...)
+	}
+	return comments
 }
 
 func schema2Field(schema *v3.Schema, name string) *astutils.FieldMeta {

@@ -56,52 +56,56 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 	case "multipart.FileHeader":
 		return File
 	default:
-		if strings.HasPrefix(ft, "map[") {
-			elem := ft[strings.Index(ft, "]")+1:]
-			elem = strings.TrimPrefix(elem, "*")
-			return &Schema{
-				Type: ObjectT,
-				AdditionalProperties: SchemaOf(astutils.FieldMeta{
-					Type: elem,
-				}),
-			}
+		return handleDefaultCase(ft)
+	}
+}
+
+func handleDefaultCase(ft string) *Schema {
+	if strings.HasPrefix(ft, "map[") {
+		elem := ft[strings.Index(ft, "]")+1:]
+		elem = strings.TrimPrefix(elem, "*")
+		return &Schema{
+			Type: ObjectT,
+			AdditionalProperties: SchemaOf(astutils.FieldMeta{
+				Type: elem,
+			}),
 		}
-		if strings.HasPrefix(ft, "[") {
-			elem := ft[strings.Index(ft, "]")+1:]
-			elem = strings.TrimPrefix(elem, "*")
-			return &Schema{
-				Type: ArrayT,
-				Items: SchemaOf(astutils.FieldMeta{
-					Type: elem,
-				}),
-			}
+	}
+	if strings.HasPrefix(ft, "[") {
+		elem := ft[strings.Index(ft, "]")+1:]
+		elem = strings.TrimPrefix(elem, "*")
+		return &Schema{
+			Type: ArrayT,
+			Items: SchemaOf(astutils.FieldMeta{
+				Type: elem,
+			}),
 		}
-		re := regexp.MustCompile(`anonystruct«(.*)»`)
-		if re.MatchString(ft) {
-			result := re.FindStringSubmatch(ft)
-			var structmeta astutils.StructMeta
-			json.Unmarshal([]byte(result[1]), &structmeta)
-			schema := NewSchema(structmeta)
-			return &schema
-		}
-		var title string
-		if !strings.Contains(ft, ".") {
-			title = ft
-		}
-		if stringutils.IsEmpty(title) {
-			title = ft[strings.LastIndex(ft, ".")+1:]
-		}
-		if stringutils.IsNotEmpty(title) {
-			if unicode.IsUpper(rune(title[0])) {
-				if sliceutils.StringContains(SchemaNames, title) {
-					return &Schema{
-						Ref: "#/components/schemas/" + title,
-					}
+	}
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
+	if re.MatchString(ft) {
+		result := re.FindStringSubmatch(ft)
+		var structmeta astutils.StructMeta
+		json.Unmarshal([]byte(result[1]), &structmeta)
+		schema := NewSchema(structmeta)
+		return &schema
+	}
+	var title string
+	if !strings.Contains(ft, ".") {
+		title = ft
+	}
+	if stringutils.IsEmpty(title) {
+		title = ft[strings.LastIndex(ft, ".")+1:]
+	}
+	if stringutils.IsNotEmpty(title) {
+		if unicode.IsUpper(rune(title[0])) {
+			if sliceutils.StringContains(SchemaNames, title) {
+				return &Schema{
+					Ref: "#/components/schemas/" + title,
 				}
 			}
 		}
-		return Any
 	}
+	return Any
 }
 
 // CopySchema as SchemaOf returns pointer, so deepcopy the schema the pointer points

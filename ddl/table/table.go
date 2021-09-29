@@ -219,19 +219,15 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 	}
 	for _, field := range structMeta.Fields {
 		var (
-			columnName    string
-			columnType    columnenum.ColumnType
-			columnDefault string
-			nullable      bool
-			unsigned      bool
-			autoincrement bool
-			extra         extraenum.Extra
-			uniqueindex   Index
-			index         Index
-			pk            bool
-			autoSet       bool
+			columnName  string
+			uniqueindex Index
+			index       Index
+			column      Column
 		)
+		column.Table = table
+		column.Meta = field
 		columnName = strcase.ToSnake(field.Name)
+		column.Name = columnName
 		if stringutils.IsNotEmpty(field.Tag) {
 			tags := strings.Split(field.Tag, `" `)
 			var ddTag string
@@ -242,121 +238,16 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 				}
 			}
 			if stringutils.IsNotEmpty(ddTag) {
-				kvs := strings.Split(ddTag, ";")
-				for _, kv := range kvs {
-					pair := strings.Split(kv, ":")
-					if len(pair) > 1 {
-						key := pair[0]
-						value := pair[1]
-						switch key {
-						case "type":
-							columnType = columnenum.ColumnType(value)
-							break
-						case "default":
-							columnDefault = value
-							autoSet = CheckAutoSet(value)
-							break
-						case "extra":
-							extra = extraenum.Extra(value)
-							break
-						case "index":
-							props := strings.Split(value, ",")
-							indexName := props[0]
-							order := props[1]
-							orderInt, err := strconv.Atoi(order)
-							if err != nil {
-								panic(err)
-							}
-							var sort sortenum.Sort
-							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-								sort = sortenum.Asc
-							} else {
-								sort = sortenum.Sort(props[2])
-							}
-							index = Index{
-								Name: indexName,
-								Items: []IndexItem{
-									{
-										Order: orderInt,
-										Sort:  sort,
-									},
-								},
-							}
-							break
-						case "unique":
-							props := strings.Split(value, ",")
-							indexName := props[0]
-							order := props[1]
-							orderInt, err := strconv.Atoi(order)
-							if err != nil {
-								panic(err)
-							}
-							var sort sortenum.Sort
-							if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-								sort = sortenum.Asc
-							} else {
-								sort = sortenum.Sort(props[2])
-							}
-							uniqueindex = Index{
-								Name: indexName,
-								Items: []IndexItem{
-									{
-										Order: orderInt,
-										Sort:  sort,
-									},
-								},
-							}
-							break
-						}
-					} else {
-						key := pair[0]
-						switch key {
-						case "pk":
-							pk = true
-							break
-						case "null":
-							nullable = true
-							break
-						case "unsigned":
-							unsigned = true
-							break
-						case "auto":
-							autoincrement = true
-							break
-						case "index":
-							index = Index{
-								Name: strcase.ToSnake(field.Name) + "_idx",
-								Items: []IndexItem{
-									{
-										Order: 1,
-										Sort:  sortenum.Asc,
-									},
-								},
-							}
-							break
-						case "unique":
-							uniqueindex = Index{
-								Name: strcase.ToSnake(field.Name) + "_idx",
-								Items: []IndexItem{
-									{
-										Order: 1,
-										Sort:  sortenum.Asc,
-									},
-								},
-							}
-							break
-						}
-					}
-				}
+				index, uniqueindex = parseDdTag(ddTag, field, &column)
 			}
 		}
 
 		if strings.HasPrefix(field.Type, "*") {
-			nullable = true
+			column.Nullable = true
 		}
 
-		if stringutils.IsEmpty(string(columnType)) {
-			columnType = toColumnType(strings.TrimPrefix(field.Type, "*"))
+		if stringutils.IsEmpty(string(column.Type)) {
+			column.Type = toColumnType(strings.TrimPrefix(field.Type, "*"))
 		}
 
 		if stringutils.IsNotEmpty(uniqueindex.Name) {
@@ -369,19 +260,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 			indexes = append(indexes, index)
 		}
 
-		columns = append(columns, Column{
-			Table:         table,
-			Name:          columnName,
-			Type:          columnType,
-			Default:       columnDefault,
-			Nullable:      nullable,
-			Unsigned:      unsigned,
-			Autoincrement: autoincrement,
-			Extra:         extra,
-			Pk:            pk,
-			Meta:          field,
-			AutoSet:       autoSet,
-		})
+		columns = append(columns, column)
 	}
 
 	for _, column := range columns {
@@ -391,6 +270,18 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 		}
 	}
 
+	indexesResult := mergeIndexes(indexes, uniqueindexes)
+
+	return Table{
+		Name:    table,
+		Columns: columns,
+		Pk:      pkColumn.Name,
+		Indexes: indexesResult,
+		Meta:    structMeta,
+	}
+}
+
+func mergeIndexes(indexes, uniqueindexes []Index) []Index {
 	uniqueMap := make(map[string][]IndexItem)
 	indexMap := make(map[string][]IndexItem)
 
@@ -434,14 +325,121 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 	}
 
 	indexesResult = append(indexesResult, uniquesResult...)
+	return indexesResult
+}
 
-	return Table{
-		Name:    table,
-		Columns: columns,
-		Pk:      pkColumn.Name,
-		Indexes: indexesResult,
-		Meta:    structMeta,
+func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (Index, Index) {
+	var (
+		index       Index
+		uniqueindex Index
+	)
+	kvs := strings.Split(ddTag, ";")
+	for _, kv := range kvs {
+		pair := strings.Split(kv, ":")
+		if len(pair) > 1 {
+			key := pair[0]
+			value := pair[1]
+			switch key {
+			case "type":
+				column.Type = columnenum.ColumnType(value)
+				break
+			case "default":
+				column.Default = value
+				column.AutoSet = CheckAutoSet(value)
+				break
+			case "extra":
+				column.Extra = extraenum.Extra(value)
+				break
+			case "index":
+				props := strings.Split(value, ",")
+				indexName := props[0]
+				order := props[1]
+				orderInt, err := strconv.Atoi(order)
+				if err != nil {
+					panic(err)
+				}
+				var sort sortenum.Sort
+				if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+					sort = sortenum.Asc
+				} else {
+					sort = sortenum.Sort(props[2])
+				}
+				index = Index{
+					Name: indexName,
+					Items: []IndexItem{
+						{
+							Order: orderInt,
+							Sort:  sort,
+						},
+					},
+				}
+				break
+			case "unique":
+				props := strings.Split(value, ",")
+				indexName := props[0]
+				order := props[1]
+				orderInt, err := strconv.Atoi(order)
+				if err != nil {
+					panic(err)
+				}
+				var sort sortenum.Sort
+				if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+					sort = sortenum.Asc
+				} else {
+					sort = sortenum.Sort(props[2])
+				}
+				uniqueindex = Index{
+					Name: indexName,
+					Items: []IndexItem{
+						{
+							Order: orderInt,
+							Sort:  sort,
+						},
+					},
+				}
+				break
+			}
+		} else {
+			key := pair[0]
+			switch key {
+			case "pk":
+				column.Pk = true
+				break
+			case "null":
+				column.Nullable = true
+				break
+			case "unsigned":
+				column.Unsigned = true
+				break
+			case "auto":
+				column.Autoincrement = true
+				break
+			case "index":
+				index = Index{
+					Name: strcase.ToSnake(field.Name) + "_idx",
+					Items: []IndexItem{
+						{
+							Order: 1,
+							Sort:  sortenum.Asc,
+						},
+					},
+				}
+				break
+			case "unique":
+				uniqueindex = Index{
+					Name: strcase.ToSnake(field.Name) + "_idx",
+					Items: []IndexItem{
+						{
+							Order: 1,
+							Sort:  sortenum.Asc,
+						},
+					},
+				}
+				break
+			}
+		}
 	}
+	return index, uniqueindex
 }
 
 // NewFieldFromColumn creates an astutils.FieldMeta instance from col

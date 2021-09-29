@@ -155,8 +155,7 @@ func getFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// NewNode creates new go-doudou node
-func NewNode(opts ...NodeOption) (*Node, error) {
+func newConf() *memberlist.Config {
 	mconf := memberlist.DefaultWANConfig()
 	minLevel := strings.ToUpper(config.GddLogLevel.Load())
 	if minLevel == "ERROR" {
@@ -211,6 +210,12 @@ func NewNode(opts ...NodeOption) (*Node, error) {
 			mconf.AdvertiseAddr = memhost
 		}
 	}
+	return mconf
+}
+
+// NewNode creates new go-doudou node
+func NewNode(opts ...NodeOption) (*Node, error) {
+	mconf := newConf()
 	service := config.GddServiceName.Load()
 	if stringutils.IsEmpty(service) {
 		return nil, errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))

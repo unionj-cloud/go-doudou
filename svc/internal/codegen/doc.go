@@ -78,40 +78,13 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 		}
 	}
 	if httpMethod == post && simpleCnt == len(method.Params) {
-		title := method.Name + "Req"
-		reqSchema := v3.Schema{
-			Type:       v3.ObjectT,
-			Title:      title,
-			Properties: make(map[string]*v3.Schema),
-		}
-		for _, item := range method.Params {
-			if item.Type == "context.Context" {
-				continue
-			}
-			key := item.Name
-			pschema := v3.CopySchema(item)
-			pschema.Description = strings.Join(item.Comments, "\n")
-			reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
-		}
-		v3.Schemas[title] = reqSchema
-		mt := &v3.MediaType{
-			Schema: &v3.Schema{
-				Ref: "#/components/schemas/" + title,
-			},
-		}
-		var content v3.Content
-		reflect.ValueOf(&content).Elem().FieldByName("FormURL").Set(reflect.ValueOf(mt))
-		ret.RequestBody = &v3.RequestBody{
-			Content:  &content,
-			Required: true,
-		}
+		ret.RequestBody = postFormUrl(method)
 	} else {
 		// Simple parameters such as v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64 and corresponding Array type
 		// will be put into query parameter as url search params no matter what http method is.
 		// Complex parameters such as structs in vo package, map and corresponding slice/array type
 		// will be put into request body as json content type.
 		// File and file array parameter will be put into request body as multipart/form-data content type.
-
 		upload := false
 		for _, item := range method.Params {
 			if item.Type == "context.Context" {
@@ -125,35 +98,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 		}
 
 		if upload {
-			title := method.Name + "Req"
-			reqSchema := v3.Schema{
-				Type:       v3.ObjectT,
-				Title:      title,
-				Properties: make(map[string]*v3.Schema),
-			}
-			for _, item := range method.Params {
-				if item.Type == "context.Context" {
-					continue
-				}
-				pschemaType := v3.SchemaOf(item)
-				pschema := v3.CopySchema(item)
-				pschema.Description = strings.Join(item.Comments, "\n")
-				if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3.IsBuiltin(item) {
-					reqSchema.Properties[strcase.ToLowerCamel(item.Name)] = &pschema
-				}
-			}
-			v3.Schemas[title] = reqSchema
-			mt := &v3.MediaType{
-				Schema: &v3.Schema{
-					Ref: "#/components/schemas/" + title,
-				},
-			}
-			var content v3.Content
-			reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
-			ret.RequestBody = &v3.RequestBody{
-				Content:  &content,
-				Required: true,
-			}
+			ret.RequestBody = uploadFile(method)
 		} else {
 			for _, item := range method.Params {
 				if item.Type == "context.Context" {
@@ -183,6 +128,11 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	}
 
 	ret.Parameters = params
+	ret.Responses = response(method)
+	return ret
+}
+
+func response(method astutils.MethodMeta) *v3.Responses {
 	var respContent v3.Content
 	var hasFile bool
 	var fileDoc string
@@ -224,12 +174,73 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			},
 		}
 	}
-	ret.Responses = &v3.Responses{
+	return &v3.Responses{
 		Resp200: &v3.Response{
 			Content: &respContent,
 		},
 	}
-	return ret
+}
+
+func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
+	title := method.Name + "Req"
+	reqSchema := v3.Schema{
+		Type:       v3.ObjectT,
+		Title:      title,
+		Properties: make(map[string]*v3.Schema),
+	}
+	for _, item := range method.Params {
+		if item.Type == "context.Context" {
+			continue
+		}
+		pschemaType := v3.SchemaOf(item)
+		pschema := v3.CopySchema(item)
+		pschema.Description = strings.Join(item.Comments, "\n")
+		if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3.IsBuiltin(item) {
+			reqSchema.Properties[strcase.ToLowerCamel(item.Name)] = &pschema
+		}
+	}
+	v3.Schemas[title] = reqSchema
+	mt := &v3.MediaType{
+		Schema: &v3.Schema{
+			Ref: "#/components/schemas/" + title,
+		},
+	}
+	var content v3.Content
+	reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
+	return &v3.RequestBody{
+		Content:  &content,
+		Required: true,
+	}
+}
+
+func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
+	title := method.Name + "Req"
+	reqSchema := v3.Schema{
+		Type:       v3.ObjectT,
+		Title:      title,
+		Properties: make(map[string]*v3.Schema),
+	}
+	for _, item := range method.Params {
+		if item.Type == "context.Context" {
+			continue
+		}
+		key := item.Name
+		pschema := v3.CopySchema(item)
+		pschema.Description = strings.Join(item.Comments, "\n")
+		reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
+	}
+	v3.Schemas[title] = reqSchema
+	mt := &v3.MediaType{
+		Schema: &v3.Schema{
+			Ref: "#/components/schemas/" + title,
+		},
+	}
+	var content v3.Content
+	reflect.ValueOf(&content).Elem().FieldByName("FormURL").Set(reflect.ValueOf(mt))
+	return &v3.RequestBody{
+		Content:  &content,
+		Required: true,
+	}
 }
 
 func pathOf(method astutils.MethodMeta) v3.Path {

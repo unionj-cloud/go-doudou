@@ -341,28 +341,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		defer f.Close()
 		tmpl = appendHttpHandlerImplTmpl
 
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, handlerimplfile, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
-		sc := astutils.NewStructCollector(astutils.ExprString)
-		ast.Walk(sc, root)
-		if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
-			var notimplemented []astutils.MethodMeta
-			for _, item := range meta.Methods {
-				for _, handler := range handlers {
-					if item.Name == handler.Name {
-						goto L
-					}
-				}
-				notimplemented = append(notimplemented, item)
-
-			L:
-			}
-
-			meta.Methods = notimplemented
-		}
+		unimplementedMethods(&meta, handlerimplfile)
 	} else {
 		if f, err = os.Create(handlerimplfile); err != nil {
 			panic(err)
@@ -414,6 +393,30 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	}
 
 	original = append(original, buf.Bytes()...)
-	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
+}
+
+func unimplementedMethods(meta *astutils.InterfaceMeta, handlerimplfile string) {
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, handlerimplfile, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := astutils.NewStructCollector(astutils.ExprString)
+	ast.Walk(sc, root)
+	if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
+		var notimplemented []astutils.MethodMeta
+		for _, item := range meta.Methods {
+			for _, handler := range handlers {
+				if item.Name == handler.Name {
+					goto L
+				}
+			}
+			notimplemented = append(notimplemented, item)
+
+		L:
+		}
+
+		meta.Methods = notimplemented
+	}
 }
