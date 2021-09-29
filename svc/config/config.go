@@ -25,7 +25,7 @@ var (
 	// BuildTime stores time at which the program is built
 	BuildTime string
 	// GddVer stores go-doudou version when program is being built
-	GddVer    string
+	GddVer string
 )
 
 type envVariable string
