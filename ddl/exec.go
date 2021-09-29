@@ -126,42 +126,7 @@ func table2struct(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB
 			}
 		}
 
-		var indexes []table.Index
-		colIdxMap := make(map[string][]table.IndexItem)
-		for k, v := range idxMap {
-			if len(v) == 0 {
-				continue
-			}
-			items := make([]table.IndexItem, len(v))
-			for i, idx := range v {
-				var sort sortenum.Sort
-				if idx.Collation == "B" {
-					sort = sortenum.Desc
-				} else {
-					sort = sortenum.Asc
-				}
-				items[i] = table.IndexItem{
-					Unique: !v[0].NonUnique,
-					Name:   k,
-					Column: idx.ColumnName,
-					Order:  idx.SeqInIndex,
-					Sort:   sort,
-				}
-				if val, exists := colIdxMap[idx.ColumnName]; exists {
-					val = append(val, items[i])
-					colIdxMap[idx.ColumnName] = val
-				} else {
-					colIdxMap[idx.ColumnName] = []table.IndexItem{
-						items[i],
-					}
-				}
-			}
-			indexes = append(indexes, table.Index{
-				Unique: !v[0].NonUnique,
-				Name:   k,
-				Items:  items,
-			})
-		}
+		indexes, colIdxMap := idxListAndMap(idxMap)
 
 		var columns []table.DbColumn
 		if err = db.Select(&columns, fmt.Sprintf("SHOW FULL COLUMNS FROM %s", t)); err != nil {
@@ -171,33 +136,7 @@ func table2struct(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB
 		var cols []table.Column
 		var fields []astutils.FieldMeta
 		for _, item := range columns {
-			extra := item.Extra
-			if strings.Contains(extra, "auto_increment") {
-				extra = ""
-			}
-			extra = strings.TrimSpace(strings.TrimPrefix(extra, "DEFAULT_GENERATED"))
-			if stringutils.IsNotEmpty(item.Comment) {
-				extra += fmt.Sprintf(" comment '%s'", item.Comment)
-			}
-			extra = strings.TrimSpace(extra)
-			var defaultVal string
-			if item.Default != nil {
-				defaultVal = *item.Default
-			}
-			col := table.Column{
-				Table:         t,
-				Name:          item.Field,
-				Type:          columnenum.ColumnType(item.Type),
-				Default:       defaultVal,
-				Pk:            table.CheckPk(item.Key),
-				Nullable:      table.CheckNull(item.Null),
-				Unsigned:      table.CheckUnsigned(item.Type),
-				Autoincrement: table.CheckAutoincrement(item.Extra),
-				Extra:         extraenum.Extra(extra),
-				AutoSet:       table.CheckAutoSet(defaultVal),
-				Indexes:       colIdxMap[item.Field],
-			}
-			col.Meta = table.NewFieldFromColumn(col)
+			col := dbColumn2Column(item, colIdxMap, t)
 			fields = append(fields, col.Meta)
 			cols = append(cols, col)
 		}
@@ -232,6 +171,77 @@ func table2struct(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB
 			logrus.Warnf("file %s already exists", dfile)
 		}
 	}
+}
+
+func idxListAndMap(idxMap map[string][]table.DbIndex) ([]table.Index, map[string][]table.IndexItem) {
+	var indexes []table.Index
+	colIdxMap := make(map[string][]table.IndexItem)
+	for k, v := range idxMap {
+		if len(v) == 0 {
+			continue
+		}
+		items := make([]table.IndexItem, len(v))
+		for i, idx := range v {
+			var sort sortenum.Sort
+			if idx.Collation == "B" {
+				sort = sortenum.Desc
+			} else {
+				sort = sortenum.Asc
+			}
+			items[i] = table.IndexItem{
+				Unique: !v[0].NonUnique,
+				Name:   k,
+				Column: idx.ColumnName,
+				Order:  idx.SeqInIndex,
+				Sort:   sort,
+			}
+			if val, exists := colIdxMap[idx.ColumnName]; exists {
+				val = append(val, items[i])
+				colIdxMap[idx.ColumnName] = val
+			} else {
+				colIdxMap[idx.ColumnName] = []table.IndexItem{
+					items[i],
+				}
+			}
+		}
+		indexes = append(indexes, table.Index{
+			Unique: !v[0].NonUnique,
+			Name:   k,
+			Items:  items,
+		})
+	}
+	return indexes, colIdxMap
+}
+
+func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem, t string) table.Column {
+	extra := item.Extra
+	if strings.Contains(extra, "auto_increment") {
+		extra = ""
+	}
+	extra = strings.TrimSpace(strings.TrimPrefix(extra, "DEFAULT_GENERATED"))
+	if stringutils.IsNotEmpty(item.Comment) {
+		extra += fmt.Sprintf(" comment '%s'", item.Comment)
+	}
+	extra = strings.TrimSpace(extra)
+	var defaultVal string
+	if item.Default != nil {
+		defaultVal = *item.Default
+	}
+	col := table.Column{
+		Table:         t,
+		Name:          item.Field,
+		Type:          columnenum.ColumnType(item.Type),
+		Default:       defaultVal,
+		Pk:            table.CheckPk(item.Key),
+		Nullable:      table.CheckNull(item.Null),
+		Unsigned:      table.CheckUnsigned(item.Type),
+		Autoincrement: table.CheckAutoincrement(item.Extra),
+		Extra:         extraenum.Extra(extra),
+		AutoSet:       table.CheckAutoSet(defaultVal),
+		Indexes:       colIdxMap[item.Field],
+	}
+	col.Meta = table.NewFieldFromColumn(col)
+	return col
 }
 
 func struct2Table(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB) {
