@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Parse parses string to time.Duration
 func Parse(t string, defaultDur time.Duration) (time.Duration, error) {
 	var (
 		dur time.Duration

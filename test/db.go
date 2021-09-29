@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// SetupMySQLContainer starts mysql server docker container
 func SetupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (func(), string, int, error) {
 	logger.Info("setup MySQL Container")
 	ctx := context.Background()

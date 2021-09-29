@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func FormatTime(t time.Time) string {
+func formatTime(t time.Time) string {
 	return t.Format(constants.FORMAT)
 }
 
-func BoolToInt(b bool) int {
+func boolToInt(b bool) int {
 	if b {
 		return 1
 	} else {
@@ -20,7 +20,7 @@ func BoolToInt(b bool) int {
 	}
 }
 
-func Eval(t *template.Template) func(string, interface{}) (string, error) {
+func eval(t *template.Template) func(string, interface{}) (string, error) {
 	return func(name string, v interface{}) (string, error) {
 		var buf bytes.Buffer
 		err := t.ExecuteTemplate(&buf, name, v)
@@ -28,10 +28,10 @@ func Eval(t *template.Template) func(string, interface{}) (string, error) {
 	}
 }
 
-func TrimSuffix(suffix, v string) string {
+func trimSuffix(suffix, v string) string {
 	return strings.TrimSuffix(strings.TrimSpace(v), suffix)
 }
 
-func HasPrefix(v, prefix string) bool {
+func hasPrefix(v, prefix string) bool {
 	return strings.HasPrefix(strings.TrimSpace(v), prefix)
 }

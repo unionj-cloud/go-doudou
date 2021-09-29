@@ -5,6 +5,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/config"
 )
 
+// NewLogger creates a logrus.Logger instance
 func NewLogger() *logrus.Logger {
 	logger := logrus.New()
 	formatter := new(logrus.TextFormatter)

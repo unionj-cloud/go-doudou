@@ -7,11 +7,13 @@ import (
 	"runtime"
 )
 
+// Abs converts relative path to absolute path
 func Abs(rel string) string {
 	_, fileName, _, _ := runtime.Caller(1)
 	return filepath.Join(filepath.Dir(fileName), rel)
 }
 
+// FixPath fixes path
 func FixPath(dir string, fallback string) (string, error) {
 	var (
 		wd  string

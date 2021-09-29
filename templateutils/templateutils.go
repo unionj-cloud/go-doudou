@@ -8,6 +8,7 @@ import (
 	"text/template"
 )
 
+// String return result of calling template Execute as string
 func String(tmplname, tmpl string, data interface{}) (string, error) {
 	var (
 		sqlBuf bytes.Buffer
@@ -21,6 +22,7 @@ func String(tmplname, tmpl string, data interface{}) (string, error) {
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
 
+// StringBlock return result of calling template Execute as string
 func StringBlock(tmplname, tmpl string, block string, data interface{}) (string, error) {
 	var (
 		sqlBuf bytes.Buffer
@@ -34,6 +36,7 @@ func StringBlock(tmplname, tmpl string, block string, data interface{}) (string,
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
 
+// StringBlockMysql return result of calling template Execute as string from template file
 func StringBlockMysql(tmpl string, block string, data interface{}) (string, error) {
 	var (
 		sqlBuf  bytes.Buffer
@@ -43,10 +46,10 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	)
 	tpl = template.New(filepath.Base(tmpl))
 	funcMap = make(map[string]interface{})
-	funcMap["FormatTime"] = FormatTime
-	funcMap["BoolToInt"] = BoolToInt
-	funcMap["Eval"] = Eval(tpl)
-	funcMap["TrimSuffix"] = TrimSuffix
+	funcMap["FormatTime"] = formatTime
+	funcMap["BoolToInt"] = boolToInt
+	funcMap["Eval"] = eval(tpl)
+	funcMap["TrimSuffix"] = trimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
 		return t == nil
 	}
@@ -57,6 +60,7 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
 
+// BlockMysql return result of calling template Execute as string from template file
 func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, error) {
 	var (
 		sqlBuf  bytes.Buffer
@@ -66,10 +70,10 @@ func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, 
 	)
 	tpl = template.New(tmplname)
 	funcMap = make(map[string]interface{})
-	funcMap["FormatTime"] = FormatTime
-	funcMap["BoolToInt"] = BoolToInt
-	funcMap["Eval"] = Eval(tpl)
-	funcMap["TrimSuffix"] = TrimSuffix
+	funcMap["FormatTime"] = formatTime
+	funcMap["BoolToInt"] = boolToInt
+	funcMap["Eval"] = eval(tpl)
+	funcMap["TrimSuffix"] = trimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
 		return t == nil
 	}

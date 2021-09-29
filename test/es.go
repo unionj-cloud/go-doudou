@@ -9,6 +9,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/logutils"
 )
 
+// PrepareTestEnvironment prepares test environment
 func PrepareTestEnvironment() (func(), string, int) {
 	logger := logutils.NewLogger()
 	var terminateContainer func() // variable to store function to terminate container
@@ -22,6 +23,7 @@ func PrepareTestEnvironment() (func(), string, int) {
 	return terminateContainer, host, port
 }
 
+// SetupEs6Container starts elasticsearch 6.8.12 docker container
 func SetupEs6Container(logger *logrus.Logger) (func(), string, int, error) {
 	logger.Info("setup Elasticsearch v6 Container")
 	ctx := context.Background()

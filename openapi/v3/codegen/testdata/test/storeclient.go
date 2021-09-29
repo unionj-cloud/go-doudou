@@ -23,41 +23,6 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// Find purchase order by ID
-// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
-func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
-	// ID of order that needs to be fetched
-	// required
-	orderId int64) (ret Order, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
-
-	_resp, _err := _req.Get(_server + "/store/order/{orderId}")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
 // Returns pet inventories by status
 // Returns a map of status codes to quantities
 func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
@@ -108,6 +73,41 @@ func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
 	_req.SetBody(bodyJSON)
 
 	_resp, _err := _req.Post(_server + "/store/order")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// Find purchase order by ID
+// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
+func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
+	// ID of order that needs to be fetched
+	// required
+	orderId int64) (ret Order, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
+
+	_resp, _err := _req.Get(_server + "/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

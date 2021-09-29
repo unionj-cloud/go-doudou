@@ -5,6 +5,7 @@ import (
 	"reflect"
 )
 
+// StringSlice2InterfaceSlice converts string slice to interface slice
 func StringSlice2InterfaceSlice(strSlice []string) []interface{} {
 	ret := make([]interface{}, len(strSlice))
 	for i, v := range strSlice {
@@ -13,6 +14,7 @@ func StringSlice2InterfaceSlice(strSlice []string) []interface{} {
 	return ret
 }
 
+// InterfaceSlice2StringSlice converts interface slice to string slice
 func InterfaceSlice2StringSlice(strSlice []interface{}) []string {
 	ret := make([]string, len(strSlice))
 	for i, v := range strSlice {
@@ -21,6 +23,7 @@ func InterfaceSlice2StringSlice(strSlice []interface{}) []string {
 	return ret
 }
 
+// Contains asserts src contains test
 func Contains(src []interface{}, test interface{}) bool {
 	for _, item := range src {
 		if item == test {
@@ -30,6 +33,7 @@ func Contains(src []interface{}, test interface{}) bool {
 	return false
 }
 
+// ContainsDeep asserts src contains test using reflect.DeepEqual
 func ContainsDeep(src []interface{}, test interface{}) bool {
 	for _, item := range src {
 		if reflect.DeepEqual(item, test) {
@@ -39,6 +43,7 @@ func ContainsDeep(src []interface{}, test interface{}) bool {
 	return false
 }
 
+// StringContains asserts src contains test
 func StringContains(src []string, test string) bool {
 	for _, item := range src {
 		if item == test {
@@ -48,6 +53,8 @@ func StringContains(src []string, test string) bool {
 	return false
 }
 
+// StringFilter filters string slice by callback function fn
+// If fn returns true, the item will be appended to result
 func StringFilter(src []string, fn func(item string) bool) []string {
 	var ret []string
 	for _, item := range src {
@@ -58,6 +65,7 @@ func StringFilter(src []string, fn func(item string) bool) []string {
 	return ret
 }
 
+// IndexOf returns index of element in string slice data
 func IndexOf(element string, data []string) int {
 	for k, v := range data {
 		if element == v {
@@ -67,6 +75,7 @@ func IndexOf(element string, data []string) int {
 	return -1 //not found.
 }
 
+// IndexOfAny returns index of element in slice data
 func IndexOfAny(target interface{}, anySlice interface{}) (int, error) {
 	if reflect.TypeOf(anySlice).Kind() != reflect.Slice {
 		return -1, errors.New("not slice")
@@ -81,6 +90,7 @@ func IndexOfAny(target interface{}, anySlice interface{}) (int, error) {
 	return -1, nil //not found.
 }
 
+// IsEmpty assert src is an empty slice
 func IsEmpty(src interface{}) bool {
 	if slice, ok := takeSliceArg(src); ok {
 		return slice == nil || len(slice) == 0
@@ -88,7 +98,7 @@ func IsEmpty(src interface{}) bool {
 	panic("not slice")
 }
 
-// https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
+// takeSliceArg https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
 func takeSliceArg(arg interface{}) (out []interface{}, ok bool) {
 	slice, success := takeArg(arg, reflect.Slice)
 	if !success {
@@ -111,6 +121,7 @@ func takeArg(arg interface{}, kind reflect.Kind) (val reflect.Value, ok bool) {
 	return
 }
 
+// ConvertAny2Interface converts interface src to interface slice
 func ConvertAny2Interface(src interface{}) ([]interface{}, error) {
 	if reflect.TypeOf(src).Kind() != reflect.Slice {
 		return nil, errors.New("Src not slice")
