@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"

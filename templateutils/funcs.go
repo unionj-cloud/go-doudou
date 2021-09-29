@@ -15,9 +15,8 @@ func formatTime(t time.Time) string {
 func boolToInt(b bool) int {
 	if b {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func eval(t *template.Template) func(string, interface{}) (string, error) {

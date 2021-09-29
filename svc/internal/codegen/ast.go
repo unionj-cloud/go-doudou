@@ -3,7 +3,7 @@ package codegen
 import (
 	"encoding/json"
 	"fmt"
-	. "github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/astutils"
 	"go/ast"
 	"strings"
 )
@@ -48,7 +48,7 @@ func ExprStringP(expr ast.Expr) string {
 		}
 		return "map[string]" + ExprStringP(_expr.Value)
 	case *ast.StructType:
-		structmeta := NewStructMeta(_expr, ExprStringP)
+		structmeta := astutils.NewStructMeta(_expr, ExprStringP)
 		b, _ := json.Marshal(structmeta)
 		return "anonystruct«" + string(b) + "»"
 	case *ast.FuncType:

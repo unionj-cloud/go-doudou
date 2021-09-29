@@ -130,11 +130,11 @@ func (d Ddl) Exec() {
 			idxMap := make(map[string][]table.DbIndex)
 
 			for _, idx := range dbIndice {
-				if val, exists := idxMap[idx.Key_name]; exists {
+				if val, exists := idxMap[idx.KeyName]; exists {
 					val = append(val, idx)
-					idxMap[idx.Key_name] = val
+					idxMap[idx.KeyName] = val
 				} else {
-					idxMap[idx.Key_name] = []table.DbIndex{
+					idxMap[idx.KeyName] = []table.DbIndex{
 						idx,
 					}
 				}
@@ -155,23 +155,23 @@ func (d Ddl) Exec() {
 						sort = sortenum.Asc
 					}
 					items[i] = table.IndexItem{
-						Unique: !v[0].Non_unique,
+						Unique: !v[0].NonUnique,
 						Name:   k,
-						Column: idx.Column_name,
-						Order:  idx.Seq_in_index,
+						Column: idx.ColumnName,
+						Order:  idx.SeqInIndex,
 						Sort:   sort,
 					}
-					if val, exists := colIdxMap[idx.Column_name]; exists {
+					if val, exists := colIdxMap[idx.ColumnName]; exists {
 						val = append(val, items[i])
-						colIdxMap[idx.Column_name] = val
+						colIdxMap[idx.ColumnName] = val
 					} else {
-						colIdxMap[idx.Column_name] = []table.IndexItem{
+						colIdxMap[idx.ColumnName] = []table.IndexItem{
 							items[i],
 						}
 					}
 				}
 				indexes = append(indexes, table.Index{
-					Unique: !v[0].Non_unique,
+					Unique: !v[0].NonUnique,
 					Name:   k,
 					Items:  items,
 				})

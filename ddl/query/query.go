@@ -89,12 +89,11 @@ func (c Criteria) Sql() string {
 		sb.WriteString(")")
 
 		return sb.String()
-	} else {
-		if c.val.Type != valtypeenum.Literal {
-			return fmt.Sprintf("`%s` %s %v", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
-		}
-		return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
 	}
+	if c.val.Type != valtypeenum.Literal {
+		return fmt.Sprintf("`%s` %s %v", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+	}
+	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
 }
 
 // C new a Criteria

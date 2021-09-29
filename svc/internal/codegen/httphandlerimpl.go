@@ -299,6 +299,7 @@ func castFunc(t string) string {
 	return castFuncMap[t]
 }
 
+// GenHttpHandlerImplWithImpl generates http handler implementation
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
 // You may need to convert the type by yourself.
 func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omitempty bool, caseconvertor func(string) string) {

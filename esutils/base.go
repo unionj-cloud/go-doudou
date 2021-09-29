@@ -19,34 +19,50 @@ type queryType int
 type queryLogic int
 
 const (
+	// SHOULD represents should query
 	SHOULD queryLogic = iota + 1
+	// MUST represents must query
 	MUST
+	// MUSTNOT represents must_not query
 	MUSTNOT
 )
 
 const (
+	// TERMS represents terms query
 	TERMS queryType = iota + 1
+	// MATCHPHRASE represents match_phrase query
 	MATCHPHRASE
+	// RANGE represents range query
 	RANGE
+	// PREFIX represents prefix query
 	PREFIX
-	// https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-wildcard-query.html
+	// WILDCARD https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-wildcard-query.html
 	WILDCARD
-	// https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-prefix-query.html
+	// EXISTS https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-prefix-query.html
 	EXISTS
 )
 
 type esFieldType string
 
 const (
-	TEXT    esFieldType = "text"
+	// TEXT represents text field type
+	TEXT esFieldType = "text"
+	// KEYWORD represents keyword field type
 	KEYWORD esFieldType = "keyword"
-	DATE    esFieldType = "date"
-	LONG    esFieldType = "long"
+	// DATE represents date field type
+	DATE esFieldType = "date"
+	// LONG represents long field type
+	LONG esFieldType = "long"
+	// INTEGER represents integer field type
 	INTEGER esFieldType = "integer"
-	SHORT   esFieldType = "short"
-	DOUBLE  esFieldType = "double"
-	FLOAT   esFieldType = "float"
-	BOOL    esFieldType = "boolean"
+	// SHORT represents short field type
+	SHORT esFieldType = "short"
+	// DOUBLE represents double field type
+	DOUBLE esFieldType = "double"
+	// FLOAT represents float field type
+	FLOAT esFieldType = "float"
+	// BOOL represents bool field type
+	BOOL esFieldType = "boolean"
 )
 
 // Es defines properties for connecting to an es instance

@@ -187,12 +187,12 @@ type DbColumn struct {
 
 // DbIndex defines an index refer to https://www.mysqltutorial.org/mysql-index/mysql-show-indexes/
 type DbIndex struct {
-	Table        string `db:"Table"`        // The name of the table
-	Non_unique   bool   `db:"Non_unique"`   // 1 if the index can contain duplicates, 0 if it cannot.
-	Key_name     string `db:"Key_name"`     // The name of the index. The primary key index always has the name of PRIMARY.
-	Seq_in_index int    `db:"Seq_in_index"` // The column sequence number in the index. The first column sequence number starts from 1.
-	Column_name  string `db:"Column_name"`  // The column name
-	Collation    string `db:"Collation"`    // Collation represents how the column is sorted in the index. A means ascending, B means descending, or NULL means not sorted.
+	Table      string `db:"Table"`        // The name of the table
+	NonUnique  bool   `db:"Non_unique"`   // 1 if the index can contain duplicates, 0 if it cannot.
+	KeyName    string `db:"Key_name"`     // The name of the index. The primary key index always has the name of PRIMARY.
+	SeqInIndex int    `db:"Seq_in_index"` // The column sequence number in the index. The first column sequence number starts from 1.
+	ColumnName string `db:"Column_name"`  // The column name
+	Collation  string `db:"Collation"`    // Collation represents how the column is sorted in the index. A means ascending, B means descending, or NULL means not sorted.
 }
 
 // Table defines a table

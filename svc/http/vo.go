@@ -4,7 +4,7 @@ import "net/http"
 
 //go:generate go-doudou name --file $GOFILE -o
 
-// HttpLog
+// HttpLog wraps properties for logging http request and body
 // Example:
 //  POST /usersvc/pageusers HTTP/1.1
 //  Host: localhost:6060

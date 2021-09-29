@@ -6,16 +6,14 @@ import "reflect"
 func ValueOf(data interface{}) reflect.Value {
 	if reflect.ValueOf(data).Kind() == reflect.Ptr {
 		return reflect.ValueOf(data).Elem()
-	} else {
-		return reflect.ValueOf(data)
 	}
+	return reflect.ValueOf(data)
 }
 
 // ValueOfValue returns underlying value of reflect.Value data
 func ValueOfValue(data reflect.Value) reflect.Value {
 	if data.Kind() == reflect.Ptr {
 		return data.Elem()
-	} else {
-		return data
 	}
+	return data
 }

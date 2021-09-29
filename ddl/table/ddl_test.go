@@ -3,6 +3,7 @@ package table
 import (
 	"encoding/json"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
