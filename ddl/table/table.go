@@ -337,107 +337,125 @@ func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (Index, 
 	for _, kv := range kvs {
 		pair := strings.Split(kv, ":")
 		if len(pair) > 1 {
-			key := pair[0]
-			value := pair[1]
-			switch key {
-			case "type":
-				column.Type = columnenum.ColumnType(value)
-				break
-			case "default":
-				column.Default = value
-				column.AutoSet = CheckAutoSet(value)
-				break
-			case "extra":
-				column.Extra = extraenum.Extra(value)
-				break
-			case "index":
-				props := strings.Split(value, ",")
-				indexName := props[0]
-				order := props[1]
-				orderInt, err := strconv.Atoi(order)
-				if err != nil {
-					panic(err)
-				}
-				var sort sortenum.Sort
-				if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-					sort = sortenum.Asc
-				} else {
-					sort = sortenum.Sort(props[2])
-				}
-				index = Index{
-					Name: indexName,
-					Items: []IndexItem{
-						{
-							Order: orderInt,
-							Sort:  sort,
-						},
-					},
-				}
-				break
-			case "unique":
-				props := strings.Split(value, ",")
-				indexName := props[0]
-				order := props[1]
-				orderInt, err := strconv.Atoi(order)
-				if err != nil {
-					panic(err)
-				}
-				var sort sortenum.Sort
-				if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-					sort = sortenum.Asc
-				} else {
-					sort = sortenum.Sort(props[2])
-				}
-				uniqueindex = Index{
-					Name: indexName,
-					Items: []IndexItem{
-						{
-							Order: orderInt,
-							Sort:  sort,
-						},
-					},
-				}
-				break
-			}
+			index, uniqueindex = parsePair(pair, column)
 		} else {
-			key := pair[0]
-			switch key {
-			case "pk":
-				column.Pk = true
-				break
-			case "null":
-				column.Nullable = true
-				break
-			case "unsigned":
-				column.Unsigned = true
-				break
-			case "auto":
-				column.Autoincrement = true
-				break
-			case "index":
-				index = Index{
-					Name: strcase.ToSnake(field.Name) + "_idx",
-					Items: []IndexItem{
-						{
-							Order: 1,
-							Sort:  sortenum.Asc,
-						},
-					},
-				}
-				break
-			case "unique":
-				uniqueindex = Index{
-					Name: strcase.ToSnake(field.Name) + "_idx",
-					Items: []IndexItem{
-						{
-							Order: 1,
-							Sort:  sortenum.Asc,
-						},
-					},
-				}
-				break
-			}
+			index, uniqueindex = parseSingle(pair, column, field)
 		}
+	}
+	return index, uniqueindex
+}
+
+func parseSingle(pair []string, column *Column, field astutils.FieldMeta) (Index, Index) {
+	var (
+		index       Index
+		uniqueindex Index
+	)
+	key := pair[0]
+	switch key {
+	case "pk":
+		column.Pk = true
+		break
+	case "null":
+		column.Nullable = true
+		break
+	case "unsigned":
+		column.Unsigned = true
+		break
+	case "auto":
+		column.Autoincrement = true
+		break
+	case "index":
+		index = Index{
+			Name: strcase.ToSnake(field.Name) + "_idx",
+			Items: []IndexItem{
+				{
+					Order: 1,
+					Sort:  sortenum.Asc,
+				},
+			},
+		}
+		break
+	case "unique":
+		uniqueindex = Index{
+			Name: strcase.ToSnake(field.Name) + "_idx",
+			Items: []IndexItem{
+				{
+					Order: 1,
+					Sort:  sortenum.Asc,
+				},
+			},
+		}
+		break
+	}
+	return index, uniqueindex
+}
+
+func parsePair(pair []string, column *Column) (Index, Index) {
+	var (
+		index       Index
+		uniqueindex Index
+	)
+	key := pair[0]
+	value := pair[1]
+	switch key {
+	case "type":
+		column.Type = columnenum.ColumnType(value)
+		break
+	case "default":
+		column.Default = value
+		column.AutoSet = CheckAutoSet(value)
+		break
+	case "extra":
+		column.Extra = extraenum.Extra(value)
+		break
+	case "index":
+		props := strings.Split(value, ",")
+		indexName := props[0]
+		order := props[1]
+		orderInt, err := strconv.Atoi(order)
+		if err != nil {
+			panic(err)
+		}
+		var sort sortenum.Sort
+		if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+			sort = sortenum.Asc
+		} else {
+			sort = sortenum.Sort(props[2])
+		}
+		index = Index{
+			Name: indexName,
+			Items: []IndexItem{
+				{
+					Order: orderInt,
+					Sort:  sort,
+				},
+			},
+		}
+		break
+	case "unique":
+		props := strings.Split(value, ",")
+		indexName := props[0]
+		order := props[1]
+		orderInt, err := strconv.Atoi(order)
+		if err != nil {
+			panic(err)
+		}
+		var sort sortenum.Sort
+		if len(props) < 3 || stringutils.IsEmpty(props[2]) {
+			sort = sortenum.Asc
+		} else {
+			sort = sortenum.Sort(props[2])
+		}
+		uniqueindex = Index{
+			Name: indexName,
+			Items: []IndexItem{
+				{
+					Order: orderInt,
+					Sort:  sort,
+				},
+			},
+		}
+		break
 	}
 	return index, uniqueindex
 }
