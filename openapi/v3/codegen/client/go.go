@@ -326,22 +326,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 	var bodyJSON, bodyParams, qparams *astutils.FieldMeta
 	comments := commentLines(operation)
 	qSchema, pathvars, headervars := globalParams(gparams)
-
-	for _, item := range operation.Parameters {
-		switch item.In {
-		case v3.InQuery:
-			qSchema.Properties[item.Name] = item.Schema
-			if item.Required {
-				qSchema.Required = append(qSchema.Required, item.Name)
-			}
-		case v3.InPath:
-			pathvars = append(pathvars, parameter2Field(item))
-		case v3.InHeader:
-			headervars = append(headervars, parameter2Field(item))
-		default:
-			panic(fmt.Errorf("not support %s parameter yet", item.In))
-		}
-	}
+	operationParams(operation.Parameters, &qSchema, pathvars, headervars)
 
 	if len(qSchema.Properties) > 0 {
 		qparams = schema2Field(&qSchema, "queryParams")
@@ -394,6 +379,24 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 		Path:        endpoint,
 		QueryParams: qparams,
 	}, nil
+}
+
+func operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, headervars []astutils.FieldMeta) {
+	for _, item := range parameters {
+		switch item.In {
+		case v3.InQuery:
+			qSchema.Properties[item.Name] = item.Schema
+			if item.Required {
+				qSchema.Required = append(qSchema.Required, item.Name)
+			}
+		case v3.InPath:
+			pathvars = append(pathvars, parameter2Field(item))
+		case v3.InHeader:
+			headervars = append(headervars, parameter2Field(item))
+		default:
+			panic(fmt.Errorf("not support %s parameter yet", item.In))
+		}
+	}
 }
 
 func responseBody(endpoint, httpMethod string, operation *v3.Operation) (results []astutils.FieldMeta, err error) {
@@ -563,58 +566,72 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 	}
 }
 
+// toGoType converts schema to golang type
+//	IntegerT Type = "integer"
+//	StringT  Type = "string"
+//	BooleanT Type = "boolean"
+//	NumberT  Type = "number"
+//	ObjectT  Type = "object"
+//	ArrayT   Type = "array"
 func toGoType(schema *v3.Schema) string {
 	if stringutils.IsNotEmpty(schema.Ref) {
 		return strings.TrimPrefix(schema.Ref, "#/components/schemas/")
 	}
-	// IntegerT Type = "integer"
-	//	StringT  Type = "string"
-	//	BooleanT Type = "boolean"
-	//	NumberT  Type = "number"
-	//	ObjectT  Type = "object"
-	//	ArrayT   Type = "array"
 	switch schema.Type {
 	case v3.IntegerT:
-		// Int32F    Format = "int32"
-		//	Int64F    Format = "int64"
-		//	FloatF    Format = "float"
-		//	DoubleF   Format = "double"
-		//	DateTimeF Format = "date-time"
-		//	BinaryF   Format = "binary"
-		switch schema.Format {
-		case v3.Int32F:
-			return "int"
-		case v3.Int64F:
-			return "int64"
-		default:
-			return "int"
-		}
+		return integer2Go(schema)
 	case v3.StringT:
-		switch schema.Format {
-		case v3.DateTimeF:
-			return "*time.Time"
-		case v3.BinaryF:
-			return "*os.File"
-		default:
-			return "string"
-		}
+		return string2Go(schema)
 	case v3.BooleanT:
 		return "bool"
 	case v3.NumberT:
-		switch schema.Format {
-		case v3.FloatF:
-			return "float32"
-		case v3.DoubleF:
-			return "float64"
-		default:
-			return "float64"
-		}
+		return number2Go(schema)
 	case v3.ObjectT:
 		return object2Struct(schema)
 	case v3.ArrayT:
 		return "[]" + toGoType(schema.Items)
 	default:
 		return "interface{}"
+	}
+}
+
+func number2Go(schema *v3.Schema) string {
+	switch schema.Format {
+	case v3.FloatF:
+		return "float32"
+	case v3.DoubleF:
+		return "float64"
+	default:
+		return "float64"
+	}
+}
+
+func string2Go(schema *v3.Schema) string {
+	switch schema.Format {
+	case v3.DateTimeF:
+		return "*time.Time"
+	case v3.BinaryF:
+		return "*os.File"
+	default:
+		return "string"
+	}
+}
+
+// integer2Go converts integer schema to golang basic type
+//	Int32F    Format = "int32"
+//	Int64F    Format = "int64"
+//	FloatF    Format = "float"
+//	DoubleF   Format = "double"
+//	DateTimeF Format = "date-time"
+//	BinaryF   Format = "binary"
+func integer2Go(schema *v3.Schema) string {
+	switch schema.Format {
+	case v3.Int32F:
+		return "int"
+	case v3.Int64F:
+		return "int64"
+	default:
+		return "int"
 	}
 }
 
