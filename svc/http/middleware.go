@@ -34,6 +34,10 @@ func Metrics(inner http.Handler) http.Handler {
 // Logger logs http request body and response body for debugging
 func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.RequestURI(), "/go-doudou/") {
+			inner.ServeHTTP(w, r)
+			return
+		}
 		start := time.Now()
 		rid, _ := requestid.FromContext(r.Context())
 		x, err := httputil.DumpRequest(r, true)

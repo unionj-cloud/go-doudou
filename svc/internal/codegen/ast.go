@@ -24,14 +24,7 @@ func ExprStringP(expr ast.Expr) string {
 	case *ast.StarExpr:
 		return "*" + ExprStringP(_expr.X)
 	case *ast.SelectorExpr:
-		result := ExprStringP(_expr.X) + "." + _expr.Sel.Name
-		if !strings.HasPrefix(result, "vo.") &&
-			result != "context.Context" &&
-			result != "multipart.FileHeader" &&
-			result != "os.File" {
-			panic(fmt.Errorf("not support %s in svc.go file and vo package", result))
-		}
-		return result
+		return parseSelectorExpr(_expr)
 	case *ast.InterfaceType:
 		return "interface{}"
 	case *ast.ArrayType:
@@ -57,4 +50,15 @@ func ExprStringP(expr ast.Expr) string {
 	default:
 		panic(fmt.Errorf("not support expression as struct field type in vo package and in method signature in svc.go file: %+v", expr))
 	}
+}
+
+func parseSelectorExpr(expr *ast.SelectorExpr) string {
+	result := ExprStringP(expr.X) + "." + expr.Sel.Name
+	if !strings.HasPrefix(result, "vo.") &&
+		result != "context.Context" &&
+		result != "multipart.FileHeader" &&
+		result != "os.File" {
+		panic(fmt.Errorf("not support %s in svc.go file and vo package", result))
+	}
+	return result
 }

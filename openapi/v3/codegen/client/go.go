@@ -429,15 +429,7 @@ func responseBody(endpoint, httpMethod string, operation *v3.Operation) (results
 }
 
 func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldMeta, files []astutils.FieldMeta) {
-	if stringutils.IsNotEmpty(operation.RequestBody.Ref) {
-		// #/components/requestBodies/Raw3
-		key := strings.TrimPrefix(operation.RequestBody.Ref, "#/components/requestBodies/")
-		if requestBody, exists := requestBodies[key]; exists {
-			operation.RequestBody = &requestBody
-		} else {
-			panic(fmt.Errorf("requestBody %s not exists", operation.RequestBody.Ref))
-		}
-	}
+	resolveSchemaFromRef(operation)
 
 	content := operation.RequestBody.Content
 	if content.JSON != nil {
@@ -445,38 +437,7 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	} else if content.FormURL != nil {
 		bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
 	} else if content.FormData != nil {
-		schema := *content.FormData.Schema
-		if stringutils.IsNotEmpty(schema.Ref) {
-			schema = schemas[strings.TrimPrefix(content.FormData.Schema.Ref, "#/components/schemas/")]
-		}
-		aSchema := v3.Schema{
-			Type:       v3.ObjectT,
-			Properties: make(map[string]*v3.Schema),
-		}
-		for k, v := range schema.Properties {
-			var gotype string
-			if v.Type == v3.StringT && v.Format == v3.BinaryF {
-				gotype = "*multipart.FileHeader"
-			} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
-				gotype = "[]*multipart.FileHeader"
-			} else {
-				gotype = toGoType(v)
-			}
-			if strings.TrimPrefix(gotype, "[]") == "*multipart.FileHeader" {
-				files = append(files, astutils.FieldMeta{
-					Name: k,
-					Type: gotype,
-				})
-				continue
-			}
-			aSchema.Properties[k] = v
-			if sliceutils.StringContains(schema.Required, k) {
-				aSchema.Required = append(aSchema.Required, k)
-			}
-		}
-		if len(aSchema.Properties) > 0 {
-			bodyParams = schema2Field(&aSchema, "bodyParams")
-		}
+		bodyParams, files = parseFormData(content.FormData)
 	} else if content.Stream != nil {
 		files = append(files, astutils.FieldMeta{
 			Name: "_uploadFile",
@@ -488,6 +449,55 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 		bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
 	}
 	return
+}
+
+func parseFormData(formData *v3.MediaType) (bodyParams *astutils.FieldMeta, files []astutils.FieldMeta) {
+	schema := *formData.Schema
+	if stringutils.IsNotEmpty(schema.Ref) {
+		schema = schemas[strings.TrimPrefix(formData.Schema.Ref, "#/components/schemas/")]
+	}
+	aSchema := v3.Schema{
+		Type:       v3.ObjectT,
+		Properties: make(map[string]*v3.Schema),
+	}
+	for k, v := range schema.Properties {
+		var gotype string
+		if v.Type == v3.StringT && v.Format == v3.BinaryF {
+			gotype = "*multipart.FileHeader"
+		} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
+			gotype = "[]*multipart.FileHeader"
+		} else {
+			gotype = toGoType(v)
+		}
+		if strings.TrimPrefix(gotype, "[]") == "*multipart.FileHeader" {
+			files = append(files, astutils.FieldMeta{
+				Name: k,
+				Type: gotype,
+			})
+			continue
+		}
+		aSchema.Properties[k] = v
+		if sliceutils.StringContains(schema.Required, k) {
+			aSchema.Required = append(aSchema.Required, k)
+		}
+	}
+	if len(aSchema.Properties) > 0 {
+		bodyParams = schema2Field(&aSchema, "bodyParams")
+	}
+	return
+}
+
+// resolveSchemaFromRef resolves schema from ref
+func resolveSchemaFromRef(operation *v3.Operation) {
+	if stringutils.IsNotEmpty(operation.RequestBody.Ref) {
+		// #/components/requestBodies/Raw3
+		key := strings.TrimPrefix(operation.RequestBody.Ref, "#/components/requestBodies/")
+		if requestBody, exists := requestBodies[key]; exists {
+			operation.RequestBody = &requestBody
+		} else {
+			panic(fmt.Errorf("requestBody %s not exists", operation.RequestBody.Ref))
+		}
+	}
 }
 
 func globalParams(gparams []v3.Parameter) (v3.Schema, []astutils.FieldMeta, []astutils.FieldMeta) {
@@ -600,41 +610,45 @@ func toGoType(schema *v3.Schema) string {
 			return "float64"
 		}
 	case v3.ObjectT:
-		if stringutils.IsNotEmpty(schema.Title) {
-			if _, exists := schemas[schema.Title]; exists {
-				return schema.Title
-			}
-		}
-		if schema.AdditionalProperties != nil {
-			if ap, ok := schema.AdditionalProperties.(*v3.Schema); ok {
-				return "map[string]" + toGoType(ap)
-			}
-		}
-		b := new(strings.Builder)
-		b.WriteString("struct {\n")
-		for k, v := range schema.Properties {
-			if stringutils.IsNotEmpty(v.Description) {
-				descs := strings.Split(v.Description, "\n")
-				for _, desc := range descs {
-					b.WriteString(fmt.Sprintf("  // %s\n", desc))
-				}
-			}
-			if sliceutils.StringContains(schema.Required, k) {
-				b.WriteString("  // required\n")
-			}
-			jsontag := k
-			if omitempty {
-				jsontag += ",omitempty"
-			}
-			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag, k))
-		}
-		b.WriteString("}")
-		return b.String()
+		return object2Struct(schema)
 	case v3.ArrayT:
 		return "[]" + toGoType(schema.Items)
 	default:
 		return "interface{}"
 	}
+}
+
+func object2Struct(schema *v3.Schema) string {
+	if stringutils.IsNotEmpty(schema.Title) {
+		if _, exists := schemas[schema.Title]; exists {
+			return schema.Title
+		}
+	}
+	if schema.AdditionalProperties != nil {
+		if ap, ok := schema.AdditionalProperties.(*v3.Schema); ok {
+			return "map[string]" + toGoType(ap)
+		}
+	}
+	b := new(strings.Builder)
+	b.WriteString("struct {\n")
+	for k, v := range schema.Properties {
+		if stringutils.IsNotEmpty(v.Description) {
+			descs := strings.Split(v.Description, "\n")
+			for _, desc := range descs {
+				b.WriteString(fmt.Sprintf("  // %s\n", desc))
+			}
+		}
+		if sliceutils.StringContains(schema.Required, k) {
+			b.WriteString("  // required\n")
+		}
+		jsontag := k
+		if omitempty {
+			jsontag += ",omitempty"
+		}
+		b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag, k))
+	}
+	b.WriteString("}")
+	return b.String()
 }
 
 func toComment(comment string) string {

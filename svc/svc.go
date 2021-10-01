@@ -124,38 +124,7 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)
 	for _, method := range svcInter.Methods {
-		// Append *multipart.FileHeader value to nonBasicTypes only once at most as multipart/form-data support multiple fields as file type
-		var nonBasicTypes []string
-		cpmap := make(map[string]int)
-		for _, param := range method.Params {
-			if param.Type == "context.Context" {
-				continue
-			}
-			if re.MatchString(param.Type) {
-				panic("not support anonymous struct as parameter")
-			}
-			if !v3.IsBuiltin(param) {
-				ptype := param.Type
-				if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
-					elem := ptype[strings.Index(ptype, "]")+1:]
-					if elem == "*multipart.FileHeader" {
-						if _, exists := cpmap[elem]; !exists {
-							cpmap[elem]++
-							nonBasicTypes = append(nonBasicTypes, elem)
-						}
-						continue
-					}
-				}
-				if ptype == "*multipart.FileHeader" {
-					if _, exists := cpmap[ptype]; !exists {
-						cpmap[ptype]++
-						nonBasicTypes = append(nonBasicTypes, ptype)
-					}
-					continue
-				}
-				nonBasicTypes = append(nonBasicTypes, param.Type)
-			}
-		}
+		nonBasicTypes := getNonBasicTypes(method.Params)
 		if len(nonBasicTypes) > 1 {
 			panic("Too many golang non-built-in type parameters, can't decide which one should be put into request body!")
 		}
@@ -165,6 +134,42 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 			}
 		}
 	}
+}
+
+func getNonBasicTypes(params []astutils.FieldMeta) []string {
+	var nonBasicTypes []string
+	cpmap := make(map[string]int)
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
+	for _, param := range params {
+		if param.Type == "context.Context" {
+			continue
+		}
+		if re.MatchString(param.Type) {
+			panic("not support anonymous struct as parameter")
+		}
+		if !v3.IsBuiltin(param) {
+			ptype := param.Type
+			if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
+				elem := ptype[strings.Index(ptype, "]")+1:]
+				if elem == "*multipart.FileHeader" {
+					if _, exists := cpmap[elem]; !exists {
+						cpmap[elem]++
+						nonBasicTypes = append(nonBasicTypes, elem)
+					}
+					continue
+				}
+			}
+			if ptype == "*multipart.FileHeader" {
+				if _, exists := cpmap[ptype]; !exists {
+					cpmap[ptype]++
+					nonBasicTypes = append(nonBasicTypes, ptype)
+				}
+				continue
+			}
+			nonBasicTypes = append(nonBasicTypes, param.Type)
+		}
+	}
+	return nonBasicTypes
 }
 
 // Init inits a go-doudou project

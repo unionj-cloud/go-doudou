@@ -174,45 +174,26 @@ ENTRYPOINT ["/repo/api"]
 // InitSvc inits a service project
 func InitSvc(dir string) {
 	var (
-		err           error
-		modName       string
-		svcName       string
-		gitignorefile string
-		svcfile       string
-		modfile       string
-		vodir         string
-		vofile        string
-		goVersion     string
-		firstLine     string
-		f             *os.File
-		tpl           *template.Template
-		envfile       string
+		err       error
+		modName   string
+		svcName   string
+		svcfile   string
+		modfile   string
+		vodir     string
+		vofile    string
+		goVersion string
+		firstLine string
+		f         *os.File
+		tpl       *template.Template
+		envfile   string
 	)
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
 	_ = os.MkdirAll(dir, os.ModePerm)
 
-	// git init
-	fs := osfs.New(dir)
-	dot, _ := fs.Chroot(".git")
-	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
-
-	_, _ = git.Init(storage, fs)
-
-	// add .gitignore file
-	gitignorefile = filepath.Join(dir, ".gitignore")
-	if _, err = os.Stat(gitignorefile); os.IsNotExist(err) {
-		if f, err = os.Create(gitignorefile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New(".gitignore.tmpl").Parse(gitignoreTmpl)
-		_ = tpl.Execute(f, nil)
-	} else {
-		logrus.Warnf("file %s already exists", ".gitignore")
-	}
+	gitInit(dir)
+	gitIgnore(dir)
 
 	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
 	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
@@ -313,4 +294,35 @@ func InitSvc(dir string) {
 	} else {
 		logrus.Warnf("file %s already exists", dockerfile)
 	}
+}
+
+// gitIgnore adds .gitignore file
+func gitIgnore(dir string) {
+	var (
+		gitignorefile string
+		err           error
+		f             *os.File
+		tpl           *template.Template
+	)
+	gitignorefile = filepath.Join(dir, ".gitignore")
+	if _, err = os.Stat(gitignorefile); os.IsNotExist(err) {
+		if f, err = os.Create(gitignorefile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New(".gitignore.tmpl").Parse(gitignoreTmpl)
+		_ = tpl.Execute(f, nil)
+	} else {
+		logrus.Warnf("file %s already exists", ".gitignore")
+	}
+}
+
+// gitInit inits git repository
+func gitInit(dir string) {
+	fs := osfs.New(dir)
+	dot, _ := fs.Chroot(".git")
+	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
+
+	_, _ = git.Init(storage, fs)
 }
