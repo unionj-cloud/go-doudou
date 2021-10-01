@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"mime/multipart"
 
 	"github.com/go-resty/resty/v2"
@@ -25,12 +24,12 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// Finds Pets by status
-// Multiple status values can be provided with comma separated strings
-func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
+// uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	queryParams struct {
-		Status string `json:"status,omitempty" url:"status"`
-	}) (ret []Pet, err error) {
+		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
 	var (
 		_server string
 		_err    error
@@ -44,8 +43,14 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	_req.SetContext(ctx)
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
+	_f, _err := _uploadFile.Open()
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
 
-	_resp, _err := _req.Get(_server + "/pet/findByStatus")
+	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -99,10 +104,7 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 
 // Find pet by ID
 // Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context,
-	// ID of pet to return
-	// required
-	petId int64) (ret Pet, err error) {
+func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
 	var (
 		_server string
 		_err    error
@@ -114,7 +116,6 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
 
 	_resp, _err := _req.Get(_server + "/pet/{petId}")
 	if _err != nil {
@@ -198,15 +199,12 @@ func (receiver *PetClient) PutPet(ctx context.Context,
 	return
 }
 
-// uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+// Finds Pets by status
+// Multiple status values can be provided with comma separated strings
+func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	queryParams struct {
-		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	// ID of pet to update
-	// required
-	petId int64,
-	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
+		Status string `json:"status,omitempty" url:"status"`
+	}) (ret []Pet, err error) {
 	var (
 		_server string
 		_err    error
@@ -220,15 +218,8 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	_req.SetContext(ctx)
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
-	_f, _err := _uploadFile.Open()
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
 
-	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
+	_resp, _err := _req.Get(_server + "/pet/findByStatus")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
