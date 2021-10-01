@@ -103,7 +103,7 @@ func (e *Es) newDefaultClient() {
 	e.client = client
 }
 
-func (es *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
+func (e *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
 	var (
 		rets []interface{}
 		err  error
@@ -112,7 +112,7 @@ func (es *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.
 	g, ctx := errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		defer close(hits)
-		scroll := es.client.Scroll().Index(es.esIndex).Type(es.esType).Query(boolQuery).Size(1000).KeepAlive("1m")
+		scroll := e.client.Scroll().Index(e.esIndex).Type(e.esType).Query(boolQuery).Size(1000).KeepAlive("1m")
 		for {
 			results, err := scroll.Do(ctx)
 			if err == io.EOF {
@@ -174,13 +174,13 @@ func (es *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.
 	return rets, nil
 }
 
-func (es *Es) doPaging(ctx context.Context, paging *Paging, boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
+func (e *Es) doPaging(ctx context.Context, paging *Paging, boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
 	var (
 		rets         []interface{}
 		searchResult *elastic.SearchResult
 		err          error
 	)
-	ss := es.client.Search().Index(es.esIndex).Type(es.esType).Query(boolQuery)
+	ss := e.client.Search().Index(e.esIndex).Type(e.esType).Query(boolQuery)
 	if paging.Sortby != nil && len(paging.Sortby) > 0 {
 		for _, v := range paging.Sortby {
 			ss = ss.Sort(v.Field, v.Ascending)
