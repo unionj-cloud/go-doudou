@@ -1,7 +1,7 @@
 ## name
 
-Command line tool for generating json tag of struct field. Default strategy is camel case with first letter lowercased. Support snake case as well.
-
+Command line tool for generating json tag of struct field. Default strategy is camel case with first letter lowercased. Support snake case as well.  
+Unexported fields will be skipped, only modify json tag of each exported field.
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->

@@ -1,194 +1,376 @@
 ## go-doudou
 [![GoDoc](https://godoc.org/github.com/unionj-cloud/go-doudou?status.png)](https://godoc.org/github.com/unionj-cloud/go-doudou)
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
+[![Go](https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml)
 [![codecov](https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885)](https://codecov.io/gh/unionj-cloud/go-doudou)
 [![Go Report Card](https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou)](https://goreportcard.com/report/github.com/unionj-cloud/go-doudou)
+[![Release](https://img.shields.io/github/v/release/unionj-cloud/go-doudou?style=flat-square)](https://github.com/unionj-cloud/go-doudou)
+[![Goproxy.cn](https://goproxy.cn/stats/github.com/unionj-cloud/go-doudou/badges/download-count.svg)](https://goproxy.cn)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_shield)
+[![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ)
 
-[中文](./README_zh.md) [EN](./README.md)  
+go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心化微服务框架。它同时支持单体应用。只支持restful服务。
 
-go-doudou（doudou发音/dəudəu/）是基于gossip协议做服务注册与发现，基于openapi 3.0规范做接口定义的go语言去中心化微服务敏捷开发框架。  
-go-doudou通过一组命令行工具可以帮助开发者快速初始化一个或一组restful服务，通过在接口类中定义方法，即相当于设计了一组api，然后通过命令可以
-生成启动服务的main方法，路由和相应的handler，以及go客户端代码。  
-go-doudou主张设计优先，通过预先设计和定义接口，来生成代码，修改定义后，重新覆盖或者增量生成代码的方式来实现快速开发。  
-go-doudou推崇契约精神，通过openapi 3.0协议来描述接口，规范服务提供方和消费方的合作，促使研发团队整体提高交付效率。  
-go-doudou致力于帮助开发者打造去中心化的微服务体系，通过gossip协议将集群内的服务连接起来，采用客户端负载均衡的方式调用其他服务。  
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ### TOC
 
-- [安装](#%E5%AE%89%E8%A3%85)
-- [使用](#%E4%BD%BF%E7%94%A8)
-- [注意](#%E6%B3%A8%E6%84%8F)
-- [接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-- [vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-- [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
-- [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
-- [Demo](#demo)
-- [工具箱](#%E5%B7%A5%E5%85%B7%E7%AE%B1)
-  - [name](#name)
-  - [ddl](#ddl)
-- [TODO](#todo)
-- [Help](#help)
+  - [设计理念](#%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
+  - [特性](#%E7%89%B9%E6%80%A7)
+  - [总览](#%E6%80%BB%E8%A7%88)
+  - [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
+  - [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
+  - [安装](#%E5%AE%89%E8%A3%85)
+  - [用法](#%E7%94%A8%E6%B3%95)
+  - [Hello World](#hello-world)
+    - [初始化项目](#%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE)
+    - [定义方法即设计restful接口](#%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95%E5%8D%B3%E8%AE%BE%E8%AE%A1restful%E6%8E%A5%E5%8F%A3)
+    - [生成代码](#%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81)
+    - [运行](#%E8%BF%90%E8%A1%8C)
+    - [*Deployment](#deployment)
+      - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
+      - [部署](#%E9%83%A8%E7%BD%B2)
+      - [关闭](#%E5%85%B3%E9%97%AD)
+  - [必知](#%E5%BF%85%E7%9F%A5)
+  - [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
+  - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+  - [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
+  - [例子](#%E4%BE%8B%E5%AD%90)
+  - [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)
+    - [name](#name)
+    - [ddl](#ddl)
+  - [TODO](#todo)
+  - [社区](#%E7%A4%BE%E5%8C%BA)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
+### 设计理念
+
+- 设计优先: 我们建议先整体设计API，再着手开发
+- 契约精神: 我们采用OpenAPI 3.0接口描述来规范前后端数据交换，降低前后端团队的沟通成本，提高团队生产力
+- 去中心化: 我们采用gossip协议来做服务注册与发现来建设一个健壮的、可弹性伸缩的去中心化微服务集群。感谢hashicorp公司的开源库memberlist。
+
+
+
+### 特性
+
+- 低代码: 支持通过go语言接口类型生成包括但不限于main函数、路由、http handler、mock接口实现、http请求客户端和json格式的OpenAPI 3.0描述文件等等
+- 支持DNS地址来做服务注册与发现
+- 支持单体应用和微服务应用
+- 内建客户端负载均衡（暂时只有round robin算法实现）
+- 内建http server优雅停止
+- 内建监听go文件变化重启服务（live reloading）
+- 内建基于OpenAPI3.0接口描述文件的在线接口文档
+- 内建微服务集群的在线服务注册列表界面
+- 内建prometheus监控指标中间件: http_requests_total, response_status and http_response_time_seconds
+- 内建docker和kubernetes部署文件生成: dockerfile文件、deployment kind yaml文件和statefulset kind yaml文件
+- 极易学习，上手简单
+
+
+
+### 总览
+![Overview](go-doudou.drawio.png)
+
+
+
+### 推荐架构
+![Recommend Architecture](go-doudou-reconmend.drawio.png)
+
+
+
+### Go版本兼容性
+
+- go 1.13, 1.14, 1.15，需要开启go module支持，GO111MODULE=on
+- go 1.16+
+- < go 1.13: 没有测试
 
 
 
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.5.9
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.7.2
 ```
 
 
-### 使用
 
-1. 以auth服务为例，初始化项目
+### 用法
+
 ```shell
-go-doudou svc init auth
+➜  ~ go-doudou -h                            
+WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
+go-doudou works like a scaffolding tool but more than that. 
+it lets api providers design their apis and help them code less. 
+it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
+consumers can import it into postman to debug and test, or upload it into some code generators to download client sdk.
+it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
+load balancing and so on. it just begins, more features will come out soon.
+
+Usage:
+  go-doudou [flags]
+  go-doudou [command]
+
+Available Commands:
+  ddl         migration tool between database table structure and golang struct
+  help        Help about any command
+  name        bulk add or update struct fields json tag
+  svc         generate or update service
+
+Flags:
+  -h, --help      help for go-doudou
+  -v, --version   version for go-doudou
+
+Use "go-doudou [command] --help" for more information about a command.
 ```
-会生成如下项目结构
+
+
+
+### Hello World
+
+#### 初始化项目
+
 ```shell
-➜  auth git:(master) ✗ ll
-total 24
--rw-r--r--  1 wubin1989  staff   372B  7  2 17:20 Dockerfile
--rw-r--r--  1 wubin1989  staff   399B  7  2 17:20 go.mod
--rw-r--r--  1 wubin1989  staff   241B  7  2 17:20 svc.go
-drwxr-xr-x  3 wubin1989  staff    96B  7  2 17:20 vo
+➜  ~ go-doudou svc init helloworld
+WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
+1.16
+helloworld
 ```
-- Dockerfile：生成docker镜像
-- svc.go：接口设计文件，里面是interface，在里面定义方法
-- vo文件夹：里面定义struct，作为接口的入参和出参，也用于生成openapi3.0规范里的schema
+You can ignore the warning now.
+```shell
+➜  helloworld git:(master) ✗ ls -la -h
+total 40
+drwxr-xr-x   10 wubin1989  staff   320B  8 29 23:27 .
+drwxr-xr-x+ 157 wubin1989  staff   4.9K  8 29 23:27 ..
+-rw-r--r--    1 wubin1989  staff   2.0K  8 29 23:22 .env
+drwxr-xr-x    5 wubin1989  staff   160B  8 29 23:26 .git
+-rw-r--r--    1 wubin1989  staff   268B  8 29 23:22 .gitignore
+drwxr-xr-x    6 wubin1989  staff   192B  8 29 23:27 .idea
+-rw-r--r--    1 wubin1989  staff   707B  8 29 23:22 Dockerfile
+-rw-r--r--    1 wubin1989  staff   442B  8 29 23:22 go.mod
+-rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
+```
+- Dockerfile：docker镜像打包文件
+
+- svc.go: 在该文件里定义Helloworld接口的方法，就是定义需要暴露给前端的restful接口
+
+- vo文件夹: 定义http请求体和返回体的结构体
+
+- .env: 配置文件, go-doudou会加载里面配置的以`GDD_`开头的环境变量
 
 
-2. 在svc.go文件里的interface里定义接口方法，在vo包里定义入参和出参结构体  
-   此处略，见下文的[接口设计约束](#%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)和[vo包结构体设计约束](#vo%E5%8C%85%E7%BB%93%E6%9E%84%E4%BD%93%E8%AE%BE%E8%AE%A1%E7%BA%A6%E6%9D%9F)
-   
 
-3. 生成http接口代码
+#### 定义方法即设计restful接口
+
+详情请阅读[Must Know](#must-know)
+
+```go
+package service
+
+import (
+	"context"
+	"helloworld/vo"
+)
+
+type Helloworld interface {
+	// You can define your service methods as your need. Below is an example.
+	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
+}
+```
+
+
+
+#### 生成代码
+
 ```shell
 go-doudou svc http --handler -c go -o --doc
+go mod tidy
 ```
-此时新增了一些文件夹
+Let's see what are generated.
 ```shell
-➜  auth git:(master) ✗ ls -la -h                  
-total 280
-drwxr-xr-x  17 wubin1989  staff   544B  7  2 17:43 .
-drwxr-xr-x  11 wubin1989  staff   352B  7  2 17:40 ..
--rw-r--r--   1 wubin1989  staff   413B  7  2 17:43 .env
-drwxr-xr-x   5 wubin1989  staff   160B  7  2 17:42 .git
--rw-r--r--   1 wubin1989  staff   268B  7  2 17:40 .gitignore
--rw-r--r--   1 wubin1989  staff   372B  7  2 17:40 Dockerfile
--rwxr-xr-x   1 wubin1989  staff   1.8K  7  2 17:40 auth_openapi3.json
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 client
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 cmd
-drwxr-xr-x   4 wubin1989  staff   128B  7  2 17:40 config
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 db
--rw-r--r--   1 wubin1989  staff   614B  7  2 17:42 go.mod
--rw-r--r--   1 wubin1989  staff   111K  7  2 17:42 go.sum
--rw-r--r--   1 wubin1989  staff   241B  7  2 17:40 svc.go
--rw-r--r--   1 wubin1989  staff   369B  7  2 17:40 svcimpl.go
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 transport
-drwxr-xr-x   3 wubin1989  staff    96B  7  2 17:40 vo
+➜  helloworld git:(master) ✗ ls -la -h
+total 328
+drwxr-xr-x   20 wubin1989  staff   640B  8 31 12:34 .
+drwxr-xr-x+ 157 wubin1989  staff   4.9K  8 31 12:36 ..
+-rw-r--r--    1 wubin1989  staff   2.0K  8 29 23:45 .env
+drwxr-xr-x    5 wubin1989  staff   160B  8 31 12:36 .git
+-rw-r--r--    1 wubin1989  staff   268B  8 29 23:22 .gitignore
+drwxr-xr-x    7 wubin1989  staff   224B  8 31 12:33 .idea
+-rw-r--r--    1 wubin1989  staff   707B  8 29 23:22 Dockerfile
+-rwxr-xr-x    1 wubin1989  staff    13K  8 31 12:35 app.log
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 client
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 cmd
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 config
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 db
+-rw-r--r--    1 wubin1989  staff   536B  8 31 12:35 go.mod
+-rw-r--r--    1 wubin1989  staff   115K  8 31 12:35 go.sum
+-rwxr-xr-x    1 wubin1989  staff   1.9K  8 31 12:34 helloworld_openapi3.go
+-rwxr-xr-x    1 wubin1989  staff   1.8K  8 31 12:34 helloworld_openapi3.json
+-rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
+-rw-r--r--    1 wubin1989  staff   413B  8 29 23:44 svcimpl.go
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 transport
+drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
-- auth_openapi3.json：openapi3.0规范的json格式接口文档
-- client：包含golang的接口客户端代码，封装了[resty库](https://github.com/go-resty/resty)
-- cmd：服务启动入口，需要在main方法里创建依赖的组件或者第三方服务客户端实例，注入本项目服务实例中
+- helloworld_openapi3.json：OpenAPI 3.0 接口描述文件
+- helloworld_openapi3.go: 里面定义了OpenAPI 3.0描述的json字符串，用于提供在线服务
+- client文件夹：封装了[resty](https://github.com/go-resty/resty)这个库的http请求客户端代码
+- cmd：里面有main函数，是整个应用的主入口
 - config：配置文件相关
-- db：生成数据库连接
-- svcimpl.go：自定义服务的实现逻辑
-- transport：包含生成的http routes和handlers
-- .env：定义环境变量  
+- db：数据库连接相关
+- svcimpl.go：在里面写你的业务逻辑，即接口的具体实现
+- transport：http路由和handler
+- .env：配置文件
 
 
-4. 将.env文件里的配置项GDD_SEED的值删掉，因为目前还没有种子  
-   
 
-5. 启动服务
+#### 运行
+
+记得先把.env文件里的环境变量GDD_MEM_SEED设为空字符串，因为这是第一个服务节点，它自己就是种子节点。
+
 ```shell
-➜  auth git:(master) ✗ go run cmd/main.go
-INFO[0000] Node wubindeMacBook-Pro.local joined, supplying auth service 
-WARN[0000] No seed found                                
-INFO[0000] Memberlist created. Local node is Node wubindeMacBook-Pro.local, providing auth service at 192.168.101.6, memberlist port 57157, service port 6060 
+➜  helloworld git:(master) ✗ go run cmd/main.go
+INFO[2021-08-31 21:35:47] Node 192.168.2.20 joined, supplying helloworld service 
+WARN[2021-08-31 21:35:47] No seed found                                
+INFO[2021-08-31 21:35:47] Memberlist created. Local node is Node 192.168.2.20, providing helloworld service at http://192.168.2.20:6060, memberlist port 50324 
  _____                     _                    _
 |  __ \                   | |                  | |
 | |  \/  ___   ______   __| |  ___   _   _   __| |  ___   _   _
 | | __  / _ \ |______| / _` | / _ \ | | | | / _` | / _ \ | | | |
 | |_\ \| (_) |        | (_| || (_) || |_| || (_| || (_) || |_| |
  \____/ \___/          \__,_| \___/  \__,_| \__,_| \___/  \__,_|
-INFO[2021-07-02 17:46:53] ================ Registered Routes ================ 
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] |   NAME    | METHOD |     PATTERN     |     
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] | PageUsers | POST   | /auth/pageusers |     
-INFO[2021-07-02 17:46:53] +-----------+--------+-----------------+     
-INFO[2021-07-02 17:46:53] =================================================== 
-INFO[2021-07-02 17:46:53] Started in 468.696µs                         
-INFO[2021-07-02 17:46:53] Http server is listening on :6060 
-```  
+INFO[2021-08-31 21:35:47] ================ Registered Routes ================ 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] |    NAME     | METHOD |         PATTERN         | 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] | PageUsers   | POST   | /page/users             | 
+INFO[2021-08-31 21:35:47] | GetDoc      | GET    | /go-doudou/doc          | 
+INFO[2021-08-31 21:35:47] | GetOpenAPI  | GET    | /go-doudou/openapi.json | 
+INFO[2021-08-31 21:35:47] | Prometheus  | GET    | /go-doudou/prometheus   | 
+INFO[2021-08-31 21:35:47] | GetRegistry | GET    | /go-doudou/registry     | 
+INFO[2021-08-31 21:35:47] +-------------+--------+-------------------------+ 
+INFO[2021-08-31 21:35:47] =================================================== 
+INFO[2021-08-31 21:35:47] Started in 431.269µs                         
+INFO[2021-08-31 21:35:47] Http server is listening on :6060
+```
 
-从第6步开始是部署服务相关的步骤，需要本地有docker环境，连接到本地或者远程的k8s服务  
+![screenshot-doc](./screenshot-doc.png)
 
+#### ![screenshot-registry](./screenshot-registry.png)Deployment
 
-6. 打镜像
+##### docker镜像打包并推到你的远程仓库
+
 ```shell
-go-doudou svc push -r yourprivaterepositoryaddress
-```  
+➜  helloworld git:(master) ✗ go-doudou svc push -r wubin1989
+[+] Building 0.8s (13/13) FINISHED                                                                                                       
+ => [internal] load build definition from Dockerfile                                                                                0.0s
+ => => transferring dockerfile: 37B                                                                                                 0.0s
+ => [internal] load .dockerignore                                                                                                   0.0s
+ => => transferring context: 2B                                                                                                     0.0s
+ => [internal] load metadata for docker.io/library/golang:1.13.4-alpine                                                             0.0s
+ => [1/8] FROM docker.io/library/golang:1.13.4-alpine                                                                               0.0s
+ => [internal] load build context                                                                                                   0.7s
+ => => transferring context: 22.43MB                                                                                                0.6s
+ => CACHED [2/8] WORKDIR /repo                                                                                                      0.0s
+ => CACHED [3/8] ADD go.mod .                                                                                                       0.0s
+ => CACHED [4/8] ADD go.sum .                                                                                                       0.0s
+ => CACHED [5/8] ADD . ./                                                                                                           0.0s
+ => CACHED [6/8] RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories                                   0.0s
+ => CACHED [7/8] RUN apk add --no-cache bash tzdata                                                                                 0.0s
+ => CACHED [8/8] RUN export GDD_VER=$(go list -mod=vendor -m -f '{{ .Version }}' github.com/unionj-cloud/go-doudou) && CGO_ENABLED  0.0s
+ => exporting to image                                                                                                              0.0s
+ => => exporting layers                                                                                                             0.0s
+ => => writing image sha256:00365c58d0410d978aea462ec93323e20d879b15421e8eba29d8a17918660af8                                        0.0s
+ => => naming to docker.io/library/helloworld                                                                                       0.0s
 
+Use 'docker scan' to run Snyk tests against images to find vulnerabilities and learn how to fix them
+The push refers to repository [docker.io/wubin1989/helloworld]
+d0a9599b03e1: Pushed 
+c3055fdf1a79: Layer already exists 
+1c265a7f4c3e: Layer already exists 
+f567cf5a5cf1: Layer already exists 
+0b4acd902364: Layer already exists 
+bbf9670b59e9: Layer already exists 
+fdd6fb6fca5b: Layer already exists 
+a17f85ec7605: Layer already exists 
+2895b872dff5: Layer already exists 
+eed8c158e67f: Layer already exists 
+2033402d2275: Layer already exists 
+77cae8ab23bf: Layer already exists 
+v20210831125525: digest: sha256:5f75f7b43708d0619555f9bccbf0347e8db65319b83c65251015982ca6d23370 size: 2829
+time="2021-08-31 12:55:53" level=info msg="image wubin1989/helloworld:v20210831125525 has been pushed successfully\n"
+time="2021-08-31 12:55:53" level=info msg="k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service helloworld to k8s cluster\n"
+```
 
-7. 部署到k8s
+然后你会看到生成了两个k8s部署文件。
+
+```
+➜  helloworld git:(master) ✗ ll
+total 328
+-rw-r--r--  1 wubin1989  staff   707B  8 29 23:22 Dockerfile
+-rwxr-xr-x  1 wubin1989  staff    15K  8 31 12:55 app.log
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 client
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 cmd
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 config
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 db
+-rw-r--r--  1 wubin1989  staff   536B  8 31 12:35 go.mod
+-rw-r--r--  1 wubin1989  staff   115K  8 31 12:35 go.sum
+-rw-r--r--  1 wubin1989  staff   817B  8 31 12:55 helloworld_deployment.yaml
+-rwxr-xr-x  1 wubin1989  staff   1.9K  8 31 12:34 helloworld_openapi3.go
+-rwxr-xr-x  1 wubin1989  staff   1.8K  8 31 12:34 helloworld_openapi3.json
+-rw-r--r--  1 wubin1989  staff   867B  8 31 12:55 helloworld_statefulset.yaml
+-rw-r--r--  1 wubin1989  staff   253B  8 29 23:22 svc.go
+-rw-r--r--  1 wubin1989  staff   413B  8 29 23:44 svcimpl.go
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:44 transport
+drwxr-xr-x  6 wubin1989  staff   192B  8 31 12:55 vendor
+drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:22 vo
+```
+
+- helloworld_deployment.yaml: 无状态的服务，推荐用于单体应用部署
+- helloworld_statefulset.yaml: 有状态的服务，推荐用于微服务应用部署
+
+##### 部署
+
 ```shell
 go-doudou svc deploy 
-```  
+```
 
+##### 关闭
 
-8. 关闭服务
 ```shell
 go-doudou svc shutdown
-```  
-
-
-9. 伸缩服务
-```shell
-go-doudou svc scale -n 3
 ```
 
 
-### 注意
 
-暂时只支持http的restful接口，不支持grpc和protobuffer
+### 必知
 
+当你在svc.go文件里定义方法（即restful接口）时，有几个需要注意和了解的地方：
 
-### 接口设计约束
-
-1. 支持Post, Get, Delete, Put四种http请求方法，从接口方法名称来判断，默认是post请求，如果方法名以Post/Get/Delete/Put开头，
-   则http请求方法分别为相对应的post/get/delete/put的其中一种  
-2. 第一个入参的类型是context.Context，这个不要改，可以合理利用这个参数实现一些效果，比如当客户端取消请求，处理逻辑可以及时停止，节省服务器资源
-3. 入参和出参的类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体以及上述类型相应的切片类型和指针类型。
-   go-doudou生成代码和openapi文档的时候会扫描vo包里的结构体，如果接口的入参和出参里用了vo包以外的包里的结构体，go-doudou扫描不到结构体的字段。 
-4. 特别的，入参还支持multipart.FileHeader类型，用于文件上传。出参还支持os.File类型，用于文件下载
-5. 入参和出参的类型，不支持func类型，channel类型，接口类型和匿名结构体
-6. 因为go的net/http包里的取Form参数相关的方法，比如FormValue，取到的参数值都是string类型的，go-doudou采用了cobra和viper的作者spf13大神的[cast](https://github.com/spf13/cast) 库做类型转换，
-   生成的handlerimpl.go文件里的代码里解析表单参数的地方可能会报编译错误，可以给go-doudou提[issue](https://github.com/unionj-cloud/go-doudou/issues) ，也可以自己手动修改。
-   当增删改了svc.go里的接口方法，重新执行代码生成命令`go-doudou svc http --handler -c go -o --doc`时，handlerimpl.go文件里的代码是增量生成的，
-   即之前生成的代码和自己手动修改过的代码都不会被覆盖
-7. handler.go文件里的代码在每次执行go-doudou svc http命令的时候都会重新生成，请不要手动修改里面的代码
-8. 除handler.go和handlerimpl.go之外的其他文件，都是先判断是否存在，不存在才生成，存在就什么都不做
+1. 只支持GET, POST, PUT, DELETE四种http请求方法。如果方法名以Get/Post/Put/Delete开头, http请求方法就会是相对应的GET/POST/PUT/DELETE。 如果方法名没有以其中任何一个开头, http请求方法默认为POST。
+2. 任何一个方法的第一个入参的类型必须是context.Context。
+3. 只支持Go语言[内建基本类型](https://golang.org/pkg/builtin/), 以string类型为key的字典, vo包中的结构体, 相对应的切片和指针类型作为入参和出参。因为当go-doudou生成代码和OpenAPI3.0接口描述文件的时候，它只会扫描vo包下的结构体，如果入参或者出参里有来自vo包以外的其他结构体的话，go-doudou获取不到结构体字段信息。
+4. 作为特例，go-doudou支持multipart.FileHeader类型来作为入参，用于上传文件，以及支持os.File类型作为出参，用于下载文件。
+5. 不支持类型别名作为结构体字段类型。
+6. 不支持函数类型，通道类型，接口类型和匿名结构体类型作为入参和出参。
+7. 当执行命令`go-doudou svc http --handler`，handlerimpl.go里的已有代码不会被覆盖也不会被修改。如果你在svc.go文件里新增了方法，新代码会加到handlerimpl.go文件最后。
+8. 当执行命令`go-doudou svc http --handler`，handler.go文件会重新生成，所以请不要在里面手动修改或者添加任何代码。
+9. 当执行命令`go-doudou svc http`, 除了handler.go文件和handlerimpl.go文件，go-doudou会先判断同名文件是否存在，如果不存在才会生成，存在就会跳过。
 
 
-### vo包结构体设计约束
-
-1. 结构体字段类型，仅支持go语言[内建类型](https://golang.org/pkg/builtin/) ，key为string类型的字典类型，vo包里自定义结构体，**匿名结构体**以及上述类型相应的切片类型和指针类型。
-2. 结构体字段类型，不支持func类型，channel类型，接口类型
-3. 结构体字段类型，不支持类型别名
 
 ### 服务注册与发现
-go-doudou同时支持单体模式和微服务模式，以环境变量的方式配置。  
-- `GDD_MODE=micro`：为微服务模式  
-- `GDD_MODE=mono`：为单体模式  
-在生成的cmd/main.go文件里有如下所示代码：  
+
+Go-doudou同时支持开发单体应用和微服务应用。
+- `GDD_MODE=micro`：表示开启微服务应用模式
+- `GDD_MODE=mono`：表示开启单体应用模式
+
+在main方法里有服务注册相关代码。
+
 ```go
 if ddconfig.GddMode.Load() == "micro" {
     node, err := registry.NewNode()
@@ -198,28 +380,31 @@ if ddconfig.GddMode.Load() == "micro" {
     logrus.Infof("Memberlist created. Local node is %s\n", node)
 }
 ```
-当只有其他服务依赖自己的时候，只需要把自己的服务通过`registry.NewNode()`方法注册上去即可。  
-如果自己需要依赖其他服务，则除了需要把自己的服务注册到微服务集群之外，还需要加上实现服务发现的代码：
+如果依赖了其他服务，可以参考如下代码：
+
 ```go
-// 注册自己并加入集群
+// service register
 node, err := registry.NewNode()
 if err != nil {
     logrus.Panicln(fmt.Sprintf("%+v", err))
 }
 logrus.Infof("%s joined cluster\n", node.String())
 
-// 需要依赖usersvc服务，那么就创建一个usersvc服务的provider
+// 调用NewMemberlistServiceProvider时传入你依赖的服务的服务名，返回该服务的provider
 usersvcProvider := ddhttp.NewMemberlistServiceProvider("usersvc", node)
-// 将usersvc服务的provider注入到usersvc服务的客户端实例里
+// 注入该provider到该服务的客户端
 usersvcClient := client.NewUsersvc(client.WithProvider(usersvcProvider))
 
-// 将usersvc服务的客户端实例注入到自己的服务实例里
+// 注入该客户端到你的服务实例
 svc := service.NewOrdersvc(conf, conn, usersvcClient)
 ```
 
 
+
 ### 客户端负载均衡
-暂时只实现了一种round robin的负载均衡策略，欢迎提pr:)
+
+暂时只有round robin一种负载均衡算法。欢迎贡献代码。
+
 ```go
 func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 	nodes, err := m.registry.Discover(m.name)
@@ -234,38 +419,74 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 ```
 
 
-### Demo
 
-请参考[go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) 
+### 配置项
+
+go-doudou用.env文件管理框架用到的环境变量
+
+| 环境变量    | 描述                                                  | 默认值   | 是否必须 |
+| ----------------------- | ------------------------------------------------------------ | --------- | -------- |
+| GDD_BANNER              | 是否在控制台打印banner | off       |          |
+| GDD_BANNER_TEXT         | banner文本                                                             | Go-doudou |          |
+| GDD_LOG_LEVEL           | 日志等级：可能的值有panic, fatal, error, warn, warning, info, debug, trace | info      |          |
+| GDD_LOG_PATH            | 如果配置文件里没有出现GDD_LOG_PATH这个环境变量，则没有日志文件输出到磁盘     |           |          |
+| GDD_GRACE_TIMEOUT       | 优雅关闭的超时时间                    | 15s       |          |
+| GDD_WRITE_TIMEOUT       | http服务器的写操作超时时间                               | 15s       |          |
+| GDD_READ_TIMEOUT        | http服务器的读操作超时时间                                          | 15s       |          |
+| GDD_IDLE_TIMEOUT        | http服务器的空闲连接超时时间                                         | 60s       |          |
+| GDD_ROUTE_ROOT_PATH     | 接口请求路径的前缀        | ""        |          |
+| GDD_SERVICE_NAME        | 注册服务到集群时的服务名称         |           | Yes      |
+| GDD_HOST                | http服务器监听地址 | ""        |          |
+| GDD_PORT                | http服务器监听端口 | ""        |          |
+| GDD_MODE                | "mono"表示单体应用，"micro"表示微服务应用 |           |          |
+| GDD_MANAGE_ENABLE       | 开启管理端点，如：/go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus和/go-doudou/registry。 | false     |          |
+| GDD_MANAGE_USER         | 管理端点的basic auth校验的用户名              | ""        |          |
+| GDD_MANAGE_PASS         | 管理端点的basic auth校验的密码              | ""        |          |
+| GDD_MEM_SEED            | 种子节点的地址。如果没有设置或者设置为空字符串，则创建一个新的memberlist集群，供其他节点来加入 | ""        |          |
+| GDD_MEM_NAME            | 节点名称。仅用于本地开发和调试。如果没有设置或者值为空字符串，则取服务器的hostname | ""        |          |
+| GDD_MEM_HOST            | 设置memberlist的AdvertiseAddr属性。如果GDD_MEM_HOST的值以点开头，如：.seed-svc-headless.default.svc.cluster.local，则会在前面补上服务器的hostname，如：seed-2.seed-svc-headless.default.svc.cluster.local，用于支持k8s的有状态服务 | ""        |          |
+| GDD_MEM_PORT            | 如果没有设置或者值为空字符串，则会设置为一个随机取得的可用端口。推荐自己设置一个端口 | ""        |          |
+| GDD_MEM_DEAD_TIMEOUT    | 如果在GDD_MEM_DEAD_TIMEOUT设置的超时时间范围内，没有收到已经判定为dead的节点的复活消息，则会从缓存里把这个节点信息彻底删掉| 30        |          |
+| GDD_MEM_SYNC_INTERVAL   | 每隔GDD_MEM_SYNC_INTERVAL设置的时间，本地节点会随机选择一个远程节点做数据同步 | 5         |          |
+| GDD_MEM_RECLAIM_TIMEOUT | 如果超过GDD_MEM_RECLAIM_TIMEOUT设置的时间，被判定为dead的节点会被具有相同名称但具有不同地址的节点替换掉 | 3         |          |
 
 
-### 工具箱
 
-kit包有一些命令行工具，执行上面👆的安装命令后，就可以用了。
+### 例子
+
+请参考 [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
+
+
+
+### 值得一提的工具
 
 #### name
 
-根据指定的命名规则生成结构体字段后面的`json`tag。[查看文档](./name/README.md)
+可以一把生成或者替换结构体字段的json标签的命令行工具。 请参考[文档](./name/README_zh.md)。
+
+
 
 #### ddl
 
-基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 实现的同步数据库表结构和Go结构体的工具。还可以生成dao层代码。
-[查看文档](./ddl/doc/README.md)
+封装了[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 的从结构体生成或者更新mysql数据库表结构，或者反过来，从数据库表结构生成结构体的命令行工具。请参考[文档](./ddl/doc/README_zh.md)。
+
+
 
 ### TODO
-Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
-
-### Help
-希望大家跟我一起完善go-doudou，欢迎提pr和issue，欢迎扫码加作者微信提意见和需求。  
-![qrcode.png](qrcode.png) 
-
-社区钉钉群二维码，群号：31405977
-
-![dingtalk.png](dingtalk.png)
+请参考 [go-doudou看板](https://github.com/unionj-cloud/go-doudou/projects/1)
 
 
 
+### 社区
 
+欢迎通过fork或者提交pr和issue来参与go-doudou项目。 如果你喜欢go-doudou，请记得点个星！
+
+欢迎联系我：
+- facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
+- twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
+- 邮箱地址: 328454505@qq.com
+- 微信二维码:  
+  ![qrcode.png](qrcode.png)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_large)

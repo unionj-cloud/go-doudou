@@ -1,7 +1,7 @@
 ## name
 
-根据指定的命名规则生成结构体字段后面的`json`tag。默认生成策略是**首字母小写的驼峰命名策略**，同时支持蛇形命名。
-
+根据指定的命名规则生成结构体字段后面的`json`tag。默认生成策略是**首字母小写的驼峰命名策略**，同时支持蛇形命名。  
+未导出的字段会跳过，只修改导出字段的json标签。
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -101,7 +101,6 @@ type TestName struct {
 
 + [x] 支持omitempty
 + [x] 蛇形命名策略
-+ [ ] 只针对上方标注了`//go:generate name -file $GOFILE`的结构体生效，而不是对整个文件的结构体都生效
 
 
 

@@ -20,7 +20,9 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
   - [Philosophy](#philosophy)
   - [Features](#features)
-  - [Support Golang Version](#support-golang-version)
+  - [Overview](#overview)
+  - [Recommend Architecture](#recommend-architecture)
+  - [Golang Version Support](#golang-version-support)
   - [Install](#install)
   - [Usage](#usage)
   - [Hello World](#hello-world)
@@ -58,7 +60,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 
 ### Features
 
-- Low-code: design service interface to generate main function, routes, http handlers, service implementation stub, http client, OpenAPI 3.0 json spec and more.
+- Low-code: design service interface to generate main function, routes, http handlers, mock service implementation, http client, OpenAPI 3.0 json spec and more.
 - Support DNS address for service register and discovery
 - Support monolith and microservices architecture
 - Built-in client load balancing: currently only round-robin
@@ -69,6 +71,16 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 - Built-in prometheus middlewares: http_requests_total, response_status and http_response_time_seconds
 - Built-in docker and k8s deployment support: dockerfile, deployment kind yaml file and statefulset kind yaml file
 - Easy to learn, simple to use
+
+
+
+### Overview
+![Overview](go-doudou.drawio.png)
+
+
+
+### Recommend Architecture
+![Recommend Architecture](go-doudou-reconmend.drawio.png)
 
 
 
@@ -206,7 +218,7 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 transport
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
 - helloworld_openapi3.json：OpenAPI 3.0 spec json documentation
-- helloworld_openapi3.go: assgin OpenAPI 3.0 spec json string to a variable for serving online
+- helloworld_openapi3.go: assign OpenAPI 3.0 spec json string to a variable for serving online
 - client：golang http client based on [resty](https://github.com/go-resty/resty)
 - cmd：main.go file here
 - config：config loading related
@@ -346,7 +358,7 @@ There are some constraints or notable things when you define your methods as exp
 4. As special cases, it supports multipart.FileHeader for uploading file as input parameter, supports os.File for downloading file as output parameter.
 5. NOT support alias types as field of a struct.
 6. NOT support func, channel, interface and anonymous struct type as input and output parameter.
-7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added or modified methods in svc.go, new code will be appended to handlerimpl.go.
+7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added methods in svc.go, new code will be appended to handlerimpl.go.
 8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify handler.go file.
 9. When execute  `go-doudou svc http`, before generating one file other than handler.go and handlerimpl.go files, go-doudou will check if it exists first, if already exists, do nothing.
 

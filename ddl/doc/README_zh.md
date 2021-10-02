@@ -1,18 +1,19 @@
 ## ddl
 
-基于[jmoiron/sqlx](https://github.com/jmoiron/sqlx)实现的同步数据库表结构和Go结构体的工具。暂不支持索引的更新，不支持外键。
-**dao层代码新增transaction支持**，在sqlx.Tx和sqlx.DB外包了一层抽象。
+DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx).
+
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ### TOC
 
-- [快速上手](#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)
-- [命令行参数](#%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0)
+- [Features](#features)
+- [Flags](#flags)
+- [Quickstart](#quickstart)
 - [API](#api)
-  - [示例](#%E7%A4%BA%E4%BE%8B)
-  - [结构体标签](#%E7%BB%93%E6%9E%84%E4%BD%93%E6%A0%87%E7%AD%BE)
+  - [Example](#example)
+  - [Tags](#tags)
     - [pk](#pk)
     - [auto](#auto)
     - [type](#type)
@@ -22,88 +23,35 @@
     - [unique](#unique)
     - [null](#null)
     - [unsigned](#unsigned)
-  - [dao层接口](#dao%E5%B1%82%E6%8E%A5%E5%8F%A3)
-    - [InsertXXX](#insertxxx)
-    - [UpsertXXX](#upsertxxx)
-    - [UpsertXXXNoneZero](#upsertxxxnonezero)
-    - [DeleteXXXs](#deletexxxs)
-    - [UpdateXXX](#updatexxx)
-    - [UpdateXXXNoneZero](#updatexxxnonezero)
-    - [UpdateXXXs](#updatexxxs)
-    - [UpdateXXXsNoneZero](#updatexxxsnonezero)
-    - [GetXXX](#getxxx)
-    - [SelectXXXs](#selectxxxs)
-    - [CountXXXs](#countxxxs)
-    - [PageXXXs](#pagexxxs)
+  - [Dao layer code](#dao-layer-code)
+    - [CRUD](#crud)
     - [Transaction](#transaction)
-  - [查询Dsl](#%E6%9F%A5%E8%AF%A2dsl)
-    - [示例](#%E7%A4%BA%E4%BE%8B-1)
-    - [API](#api-1)
-      - [Q接口](#q%E6%8E%A5%E5%8F%A3)
-      - [criteria结构体](#criteria%E7%BB%93%E6%9E%84%E4%BD%93)
-      - [where结构体](#where%E7%BB%93%E6%9E%84%E4%BD%93)
-      - [Page结构体](#page%E7%BB%93%E6%9E%84%E4%BD%93)
+  - [Query Dsl](#query-dsl)
+    - [Example](#example-1)
+    - [Q](#q)
+    - [criteria](#criteria)
+    - [Val](#val)
+    - [where](#where)
 - [TODO](#todo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 
-### 快速上手
+### Features
 
-- ```
-  git clone git@github.com:unionj-cloud/go-doudou.git
-  ```
+- Create/Update table from go struct
+- Create/Update go struct from table
+- Generate dao layer code with basic crud operations
 
-- ```
-  cd go-doudou/example
-  ```
 
-- 当前example目录结构
 
-  ![example1](./example1.jpeg)
+### Flags
 
-- ```
-  go-doudou ddl --dao --pre=biz_ --domain=ddl/domain --env=ddl/.env
-  ```
-
-- 执行以上命令后example目录结构
-
-  ![example2](./example2.jpeg)
-
-  生成的表结构
-
-![table](./table.jpeg)
-
-- ```
-   go run ddl/main.go
-  ```
-
-  可以看到命令行输出
-
-  ```
-  ➜  example git:(main) ✗ go run ddl/main.go
-  INFO[2021-04-13 17:52:42] {Items:[{ID:5 Name:Biden Phone:13893997878 Age:70 No:46 School:Harvard Univ. IsStudent:true Base:{CreateAt:2021-04-13 17:25:46 +0800 CST UpdateAt:2021-04-13 17:25:46 +0800 CST DeleteAt:<nil>}}] PageNo:1 PageSize:1 Total:1 HasNext:false} 
-  ```
-
-  
-
-  数据库表里插入两条记录
-
-  ![data](./data.jpeg)
-
-  
-
-### 命令行参数
-
-```
+```shell
 ➜  ~ go-doudou ddl -h
-A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.
+WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
+migration tool between database table structure and golang struct
 
 Usage:
   go-doudou ddl [flags]
@@ -116,148 +64,190 @@ Flags:
   -h, --help            help for ddl
       --pre string      Table name prefix. e.g.: prefix biz_ for biz_product.
   -r, --reverse         If true, generate domain code from database. If false, update or create database tables from domain code.
-
-Global Flags:
-      --config string   config file (default is $HOME/.go-doudou.yaml)
 ```
+
+
+
+### Quickstart
+
+- Install go-doudou
+
+  ```shell
+  go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.0
+  ```
+
+- Clone demo repository
+
+  ```
+  git clone git@github.com:unionj-cloud/ddldemo.git
+  ```
+
+- Update database table struct and generate dao layer code
+
+  ```shell
+  go-doudou ddl --dao --pre=ddl_
+  ```
+
+  ```shell
+  ➜  ddldemo git:(main) ls -la dao
+  total 56
+  drwxr-xr-x   6 wubin1989  staff   192  9  1 00:28 .
+  drwxr-xr-x  14 wubin1989  staff   448  9  1 00:28 ..
+  -rw-r--r--   1 wubin1989  staff   953  9  1 00:28 base.go
+  -rw-r--r--   1 wubin1989  staff    45  9  1 00:28 userdao.go
+  -rw-r--r--   1 wubin1989  staff  9125  9  1 00:28 userdaoimpl.go
+  -rw-r--r--   1 wubin1989  staff  5752  9  1 00:28 userdaosql.go
+  ```
+
+- Run main function
+
+  ```
+  ➜  ddldemo git:(main) go run main.go       
+  INFO[0000] user jack's id is 14                         
+  INFO[0000] returned user jack's id is 14                
+  INFO[0000] returned user jack's average score is 97.534
+  ```
+
+- Delete domain and dao folder
+
+  ```shell
+  ➜  ddldemo git:(main) rm -rf dao && rm -rf domain
+  ```
+
+- Generate go struct and dao layer code from database
+
+  ```shell
+  go-doudou ddl --reverse --dao --pre=ddl_
+  ```
+
+  ```shell
+  ➜  ddldemo git:(main) ✗ ll
+  total 272
+  -rw-r--r--  1 wubin1989  staff   1.0K  9  1 00:27 LICENSE
+  -rw-r--r--  1 wubin1989  staff    85B  9  1 00:27 Makefile
+  -rw-r--r--  1 wubin1989  staff     9B  9  1 00:27 README.md
+  drwxr-xr-x  6 wubin1989  staff   192B  9  1 00:35 dao
+  drwxr-xr-x  3 wubin1989  staff    96B  9  1 00:35 domain
+  -rw-r--r--  1 wubin1989  staff   339B  9  1 00:27 go.mod
+  -rw-r--r--  1 wubin1989  staff   116K  9  1 00:27 go.sum
+  -rw-r--r--  1 wubin1989  staff   2.0K  9  1 00:27 main.go
+  ```
+
+- Run main function again
+
+  ```
+  ➜  ddldemo git:(main) ✗ go run main.go                          
+  INFO[0000] user jack's id is 15                         
+  INFO[0000] returned user jack's id is 15                
+  INFO[0000] returned user jack's average score is 97.534 
+  ```
 
 
 
 ### API
 
-#### 示例
+#### Example
 
-```
+```go
 //dd:table
 type User struct {
 	ID        int    `dd:"pk;auto"`
 	Name      string `dd:"index:name_phone_idx,2;default:'jack'"`
-	Phone     string `dd:"index:name_phone_idx,1;default:'13552053960';extra:comment '手机号'"`
+	Phone     string `dd:"index:name_phone_idx,1;default:'13552053960';extra:comment 'cellphone number'"`
 	Age       int    `dd:"index"`
 	No        int    `dd:"unique"`
-	School    string `dd:"null;default:'harvard';extra:comment '学校'"`
+	School    string `dd:"null;default:'harvard';extra:comment 'school'"`
 	IsStudent bool
 
 	Base
 }
 ```
 
-- 结构体定义上方需加注释"//dd:table"
-- 结构体字段标签名为"dd"
 
 
-
-#### 结构体标签
+#### Tags
 
 ##### pk
 
-表示主键
+Primary key
 
 ##### auto
 
-表示自增
+Autoincrement
 
 ##### type
 
-表示数据库字段类型。非必填。默认映射规则如下表：
+Column type. Not required.
 
-| 支持的Go语言类型（含指针） | 数据库字段类型 |
-| :------------------------: | :------------: |
-|            Int             |      Int       |
-|           Int64            |     bigint     |
-|          float32           |     Float      |
-|          float64           |     Double     |
-|           string           |  varchar(255)  |
-|            bool            |    tinyint     |
-|         time.Time          |    datetime    |
+| Go Type（pointer） | Column Type  |
+| :----------------: | :----------: |
+| int, int16, int32  |     int      |
+|       int64        |    bigint    |
+|      float32       |    float     |
+|      float64       |    double    |
+|       string       | varchar(255) |
+|     bool, int8     |   tinyint    |
+|     time.Time      |   datetime   |
+|  decimal.Decimal   | decimal(6,2) |
 
 ##### default
 
-表示默认值。需自己区分数据库内建函数还是字面量。如果是数据库内建函数或者是由数据库内建函数组成的表达式，则不需要带单引号。如果是字面量，则需要自己加上单引号。
+Default value. If value was database built-in function or expression made by built-in functions, not need single quote marks. If value was literal value, it should be quoted by single quote marks.
 
 ##### extra
 
-表示其他字段信息，比如"on update CURRENT_TIMESTAMP"，"comment '手机号'"  
-**注意：因为ddl工具使用英文";"和":"来解析标签，所以comment中请勿使用英文";"和":"**
+Extra definition. Example: "on update CURRENT_TIMESTAMP"，"comment 'cellphone number'"  
+**Note：don't use ; and : in comment**
 
 ##### index
 
-表示索引
-
-- 格式："index:索引名称,排序,升降序" 或者 "index"
-- 索引名称：字符串。如果多个字段用同一个索引名称，表示该索引是联合索引。非必填。如果没有声明索引名称，则默认名称为：column名称+_idx
-- 排序：整型。如果声明了索引名称，则必填
-- 升降序：字符串。只支持"asc"和"desc"。非必填。默认"asc"
+- Format："index:Name,Order,Sort" or "index"
+- Name: index name. string. If multiple fields use the same index name, the index will be created as composite index. Not required. Default index name is column name + _idx
+- Order：int
+- Sort：string. Only accept asc and desc. Not required. Default is asc
 
 ##### unique
 
-表示唯一索引。格式和用法同index
+Unique index. Usage is the same as index.
 
 ##### null
 
-表示可以存入null值。注意：如果是该结构体字段的类型是指针类型，则默认是nullable的
+Nullable. **Note: if the field is a pointer, null is default.**
 
 ##### unsigned
 
-表示无符号
+Unsigned
 
 
 
-#### dao层接口
+#### Dao layer code
 
-##### InsertXXX
+##### CRUD
 
-插入记录
+```go
+type Base interface {
+	Insert(ctx context.Context, data interface{}) (int64, error)
+	Upsert(ctx context.Context, data interface{}) (int64, error)
+	UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)
+	DeleteMany(ctx context.Context, where query.Q) (int64, error)
+	Update(ctx context.Context, data interface{}) (int64, error)
+	UpdateNoneZero(ctx context.Context, data interface{}) (int64, error)
+	UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error)
+	UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error)
+	Get(ctx context.Context, id interface{}) (interface{}, error)
+	SelectMany(ctx context.Context, where ...query.Q) (interface{}, error)
+	CountMany(ctx context.Context, where ...query.Q) (int, error)
+	PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
+}
+```
 
-##### UpsertXXX
 
-如果存在冲突的字段值，比如主键值或者加了唯一索引的字段值，则执行更新操作，否则执行插入操作
-
-##### UpsertXXXNoneZero
-
-同UpsertXXX。区别是只插入或者更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-
-##### DeleteXXXs
-
-删除多条记录
-
-##### UpdateXXX
-
-更新记录
-
-##### UpdateXXXNoneZero
-
-同UpdateXXX。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-
-##### UpdateXXXs
-
-更新多条记录
-
-##### UpdateXXXsNoneZero
-
-同UpdateXXXs。区别是只更新非Go语言规范定义的非[零值](https://golang.org/ref/spec#The_zero_value)
-
-##### GetXXX
-
-查询记录
-
-##### SelectXXXs
-
-查询多条记录
-
-##### CountXXXs
-
-Count多条记录
-
-##### PageXXXs
-
-分页
 
 ##### Transaction
-示例：
+Example：
 ```go
 func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, sheet string) (err error) {
-	types := []string{"食品", "用具"}
+	types := []string{"food", "tool"}
 	var (
 		xlsx *excelize.File
 		rows [][]string
@@ -274,7 +264,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 	colNum := len(rows[0])
 	rows = rows[1:]
 	gdddb := ddl.GddDB{receiver.db}
-	// 开启事务
+	// begin transaction
 	tx, err = gdddb.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(err, "")
@@ -292,7 +282,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 			}
 		}
 	}()
-	// 将tx作为ddl.Querier接口的实例传入dao层实现类
+	// inject tx as ddl.Querier into dao layer implementation instance
 	mdao := dao.NewMaterialDao(tx)
 	for _, item := range rows {
 		if len(item) == 0 {
@@ -317,7 +307,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 			Type:        int8(sliceutils.IndexOf(sheet, types)),
 			Note:        note,
 		}); err != nil {
-			// 报错rollback
+			// rollback if err != nil
 			if _err := tx.Rollback(); _err != nil {
 				return errors.Wrap(_err, "")
 			}
@@ -325,7 +315,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 		}
 	}
 END:
-	// 最后commit
+	// commit
 	if err = tx.Commit(); err != nil {
 		if _err := tx.Rollback(); _err != nil {
 			return errors.Wrap(_err, "")
@@ -336,9 +326,11 @@ END:
 }
 ```
 
-#### 查询Dsl
 
-##### 示例
+
+#### Query Dsl
+
+##### Example
 
 ```go
 func ExampleCriteria() {
@@ -384,13 +376,7 @@ func ExampleCriteria() {
 
 
 
-##### API
-
-主要包括1个接口和6个结构体
-
-
-
-###### Q接口
+##### Q
 
 ```go
 type Q interface {
@@ -400,15 +386,9 @@ type Q interface {
 }
 ```
 
-- 调用Sql方法返回最终拼接而成的where语句
 
-- And方法表示sql里的"and"
 
-- Or方法表示sql里的"or"
-
-  
-
-###### criteria结构体
+##### criteria
 
 ```go
 type criteria struct {
@@ -418,9 +398,9 @@ type criteria struct {
 }
 ```
 
-- col表示表字段名称
-- val表示表字段值
-- asym表示算数运算符，可选值：
+- col: column name
+- val: value
+- asym：
   - Eq: `=`
   - Ne: `!=`
   - Gt: `>`
@@ -433,7 +413,7 @@ type criteria struct {
 
 
 
-Val结构体
+##### Val
 
 ```go
 type Val struct {
@@ -442,15 +422,15 @@ type Val struct {
 }
 ```
 
-- Data表示表字段值
-- Type表示值类型，可选值
-  - Func: 表示数据库内建函数或由内建函数构成的表达式
-  - Null: 表示数据库的null
-  - Literal: 表示区别于Func和Null的值
+- Data: value
+- Type
+  - Func: database built-in function or expression made by built-in functions
+  - Null: null
+  - Literal: Literal value
 
 
 
-###### where结构体
+##### where
 
 ```
 type where struct {
@@ -459,67 +439,19 @@ type where struct {
 }
 ```
 
-- lsym表示逻辑运算符，可选值：
+- lsym
   - And: `and`
   - Or: `or`
-- children表示子查询条件，通过lsym表示的逻辑关系构成组，每两个子条件为一组。每一个子条件既可以是一个`criteria`，也可以是一个`where`。只要实现了Q接口就可以做一个子条件，通过lsym与另外一个子条件构成一组。
 
+- children: sub queries
 
-
-###### Page结构体
-
-```go
-type Page struct {
-	Orders []Order
-	Offset int
-	Size   int
-}
-```
-
-- Orders表示排序
-- Offset表示偏移
-- Size表示一页有多少行
-
-
-
-Order结构体
-
-```go
-type Order struct {
-	Col  string
-	Sort sortenum.Sort
-}
-```
-
-- Col表示表字段
-- Sort表示升降序, 可选值：asc/desc
-
-
-
-PageRet结构体
-
-```go
-type PageRet struct {
-	Items    interface{}
-	PageNo   int
-	PageSize int
-	Total    int
-	HasNext  bool
-}
-```
-
-- Items表示行数据
-- PageNo表示当前页页码
-- PageSize表示一页有多少行
-- Total表示总数
-- HasNext表示是否有下一页
 
 
 ### TODO
 
-+ [x] dao层支持transaction
-+ [ ] 支持索引的更新
-+ [ ] 支持外键
++ [x] Support transaction in dao layer
++ [ ] Support index update
++ [ ] Support foreign key
 
 
 
