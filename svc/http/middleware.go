@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -111,6 +112,19 @@ func BasicAuth(inner http.Handler) http.Handler {
 				return
 			}
 		}
+		inner.ServeHTTP(w, r)
+	})
+}
+
+// Recover handles panic from processing incoming http request
+func Recover(inner http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logrus.Errorf("stacktrace from panic: %s\n", string(debug.Stack()))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		}()
 		inner.ServeHTTP(w, r)
 	})
 }
