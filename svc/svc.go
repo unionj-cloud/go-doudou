@@ -16,7 +16,6 @@ import (
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"golang.org/x/sys/windows"
 	"os"
 	"os/exec"
 	"os/user"
@@ -301,27 +300,26 @@ func (receiver Svc) run() *exec.Cmd {
 	return cmd
 }
 
-func terminateWinProc(pid int) error {
-	dll, err := windows.LoadDLL("kernel32.dll")
-	if err != nil {
-		return err
-	}
-	defer dll.Release()
-	f, err := dll.FindProc("GenerateConsoleCtrlEvent")
-	if err != nil {
-		return err
-	}
-	r1, _, err := f.Call(windows.CTRL_BREAK_EVENT, uintptr(pid))
-	if r1 == 0 {
-		return err
-	}
-	return nil
-}
+//func terminateWinProc(pid int) error {
+//	dll, err := windows.LoadDLL("kernel32.dll")
+//	if err != nil {
+//		return err
+//	}
+//	defer dll.Release()
+//	f, err := dll.FindProc("GenerateConsoleCtrlEvent")
+//	if err != nil {
+//		return err
+//	}
+//	r1, _, err := f.Call(windows.CTRL_BREAK_EVENT, uintptr(pid))
+//	if r1 == 0 {
+//		return err
+//	}
+//	return nil
+//}
 
+// TODO there is a bug here on windows
 func (receiver Svc) restart() *exec.Cmd {
 	//if runtime.GOOS == "windows" {
-	//	// TODO there is a bug here
-	//	// Not recommend use live reloading feature on windows
 	//	if err := terminateWinProc(receiver.Cmd.Process.Pid); err != nil {
 	//		panic(err)
 	//	}
