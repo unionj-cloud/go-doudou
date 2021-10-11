@@ -291,7 +291,7 @@ func (receiver Svc) run() *exec.Cmd {
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-	cmd = exec.Command("main")
+	cmd = exec.Command(filepath.FromSlash("./main"))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
