@@ -16,6 +16,7 @@ import (
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"golang.org/x/sys/windows"
 	"os"
 	"os/exec"
 	"os/user"
@@ -285,13 +286,13 @@ func (receiver Svc) GenClient() {
 }
 
 func (receiver Svc) run() *exec.Cmd {
-	cmd := exec.Command("go", "build", "-o", "cmd/cmd", "cmd/main.go")
+	cmd := exec.Command("go", "build", filepath.FromSlash("cmd/main.go"))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-	cmd = exec.Command("cmd/cmd")
+	cmd = exec.Command("main")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
@@ -300,9 +301,36 @@ func (receiver Svc) run() *exec.Cmd {
 	return cmd
 }
 
+func terminateWinProc(pid int) error {
+	dll, err := windows.LoadDLL("kernel32.dll")
+	if err != nil {
+		return err
+	}
+	defer dll.Release()
+	f, err := dll.FindProc("GenerateConsoleCtrlEvent")
+	if err != nil {
+		return err
+	}
+	r1, _, err := f.Call(windows.CTRL_BREAK_EVENT, uintptr(pid))
+	if r1 == 0 {
+		return err
+	}
+	return nil
+}
+
 func (receiver Svc) restart() *exec.Cmd {
-	pid := receiver.Cmd.Process.Pid
-	if err := syscall.Kill(pid, syscall.SIGINT); err != nil {
+	//if runtime.GOOS == "windows" {
+	//	// TODO there is a bug here
+	//	// Not recommend use live reloading feature on windows
+	//	if err := terminateWinProc(receiver.Cmd.Process.Pid); err != nil {
+	//		panic(err)
+	//	}
+	//} else {
+	//	if err := receiver.Cmd.Process.Signal(syscall.SIGINT); err != nil {
+	//		panic(err)
+	//	}
+	//}
+	if err := receiver.Cmd.Process.Signal(syscall.SIGINT); err != nil {
 		panic(err)
 	}
 	return receiver.run()

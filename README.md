@@ -67,7 +67,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 - Support monolith and microservices architecture
 - Built-in client load balancing: currently only round-robin
 - Built-in graceful shutdown
-- Built-in live reloading by watching go files
+- Built-in live reloading by watching go files(not support windows)
 - Built-in service apis documentation UI
 - Built-in service registry UI
 - Built-in prometheus middlewares: http_requests_total, response_status and http_response_time_seconds
@@ -97,7 +97,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Install
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.7.2
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.7.3
 ```
 
 

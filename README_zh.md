@@ -66,7 +66,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 - 支持单体应用和微服务应用
 - 内建客户端负载均衡（暂时只有round robin算法实现）
 - 内建http server优雅停止
-- 内建监听go文件变化重启服务（live reloading）
+- 内建监听go文件变化重启服务（live reloading）(暂不支持windows平台)
 - 内建基于OpenAPI3.0接口描述文件的在线接口文档
 - 内建微服务集群的在线服务注册列表界面
 - 内建prometheus监控指标中间件: http_requests_total, response_status and http_response_time_seconds
@@ -96,7 +96,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou/...@v0.7.2
+go get -v -u github.com/unionj-cloud/go-doudou/...@v0.7.3
 ```
 
 
