@@ -32,7 +32,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
     - [Define methods](#define-methods)
     - [Generate code](#generate-code)
     - [Run](#run)
-    - [*Deployment](#deployment)
+    - [Deployment](#deployment)
       - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
       - [Deploy](#deploy)
       - [Shutdown](#shutdown)
@@ -262,8 +262,9 @@ INFO[2021-08-31 21:35:47] Http server is listening on :6060
 ```
 
 ![screenshot-doc](./screenshot-doc.png)
+![screenshot-registry](./screenshot-registry.png)
 
-#### ![screenshot-registry](./screenshot-registry.png)Deployment
+#### Deployment
 
 ##### Build docker image and push to your repository
 
