@@ -457,7 +457,7 @@ go-doudou用.env文件管理框架用到的环境变量
 
 ### 例子
 
-请参考 [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
+请参考 [go-doudou-guide](https://gitee.com/unionj-cloud/go-doudou-guide)
 
 
 
