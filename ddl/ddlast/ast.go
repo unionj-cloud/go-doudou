@@ -3,8 +3,26 @@ package ddlast
 import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/sliceutils"
+	"sort"
 	"strings"
 )
+
+type sortableFieldMeta []astutils.FieldMeta
+
+// Len return length of sortableFieldMeta
+func (it sortableFieldMeta) Len() int {
+	return len(it)
+}
+
+// Less define asc or desc order
+func (it sortableFieldMeta) Less(i, j int) bool {
+	return it[i].Name < it[j].Name
+}
+
+// Swap change position of elements at i and j
+func (it sortableFieldMeta) Swap(i, j int) {
+	it[i], it[j] = it[j], it[i]
+}
 
 // FlatEmbed flat embed struct
 func FlatEmbed(structs []astutils.StructMeta) []astutils.StructMeta {
@@ -44,11 +62,15 @@ func FlatEmbed(structs []astutils.StructMeta) []astutils.StructMeta {
 			}
 		}
 
+		var embedFields []astutils.FieldMeta
 		for key, field := range embedFieldMap {
 			if _, exists := fieldMap[key]; !exists {
-				_structMeta.Fields = append(_structMeta.Fields, field)
+				embedFields = append(embedFields, field)
 			}
 		}
+
+		sort.Stable(sortableFieldMeta(embedFields))
+		_structMeta.Fields = append(_structMeta.Fields, embedFields...)
 		result = append(result, _structMeta)
 	}
 

@@ -23,10 +23,8 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// Creates list of users with given input array
-// Creates list of users with given input array
-func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
-	bodyJSON []User) (ret User, err error) {
+// Get user by user name
+func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err error) {
 	var (
 		_server string
 		_err    error
@@ -38,9 +36,8 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Post(_server + "/user/createWithList")
+	_resp, _err := _req.Get(_server + "/user/{username}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -89,8 +86,10 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 	return
 }
 
-// Get user by user name
-func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err error) {
+// Creates list of users with given input array
+// Creates list of users with given input array
+func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
+	bodyJSON []User) (ret User, err error) {
 	var (
 		_server string
 		_err    error
@@ -102,8 +101,9 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err 
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Get(_server + "/user/{username}")
+	_resp, _err := _req.Post(_server + "/user/createWithList")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

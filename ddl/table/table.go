@@ -219,10 +219,10 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 	}
 	for _, field := range structMeta.Fields {
 		var (
-			columnName  string
-			uniqueindex Index
-			index       Index
-			column      Column
+			columnName     string
+			_uniqueindexes []Index
+			_indexes       []Index
+			column         Column
 		)
 		column.Table = table
 		column.Meta = field
@@ -238,7 +238,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 				}
 			}
 			if stringutils.IsNotEmpty(ddTag) {
-				index, uniqueindex = parseDdTag(ddTag, field, &column)
+				_indexes, _uniqueindexes = parseDdTag(ddTag, field, &column)
 			}
 		}
 
@@ -250,14 +250,18 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 			column.Type = toColumnType(strings.TrimPrefix(field.Type, "*"))
 		}
 
-		if stringutils.IsNotEmpty(uniqueindex.Name) {
-			uniqueindex.Items[0].Column = columnName
-			uniqueindexes = append(uniqueindexes, uniqueindex)
+		for _, idx := range _indexes {
+			if stringutils.IsNotEmpty(idx.Name) {
+				idx.Items[0].Column = columnName
+				indexes = append(indexes, idx)
+			}
 		}
 
-		if stringutils.IsNotEmpty(index.Name) {
-			index.Items[0].Column = columnName
-			indexes = append(indexes, index)
+		for _, uidx := range _uniqueindexes {
+			if stringutils.IsNotEmpty(uidx.Name) {
+				uidx.Items[0].Column = columnName
+				uniqueindexes = append(uniqueindexes, uidx)
+			}
 		}
 
 		columns = append(columns, column)
@@ -279,6 +283,23 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 		Indexes: indexesResult,
 		Meta:    structMeta,
 	}
+}
+
+type sortableIndexes []Index
+
+// Len return length of sortableIndexes
+func (it sortableIndexes) Len() int {
+	return len(it)
+}
+
+// Less define asc or desc order
+func (it sortableIndexes) Less(i, j int) bool {
+	return it[i].Name < it[j].Name
+}
+
+// Swap change position of elements at i and j
+func (it sortableIndexes) Swap(i, j int) {
+	it[i], it[j] = it[j], it[i]
 }
 
 func mergeIndexes(indexes, uniqueindexes []Index) []Index {
@@ -324,32 +345,27 @@ func mergeIndexes(indexes, uniqueindexes []Index) []Index {
 		})
 	}
 
+	sort.Stable(sortableIndexes(indexesResult))
+	sort.Stable(sortableIndexes(uniquesResult))
+
 	indexesResult = append(indexesResult, uniquesResult...)
 	return indexesResult
 }
 
-func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (Index, Index) {
-	var (
-		index       Index
-		uniqueindex Index
-	)
+func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (indexes []Index, uniqueIndexes []Index) {
 	kvs := strings.Split(ddTag, ";")
 	for _, kv := range kvs {
 		pair := strings.Split(kv, ":")
 		if len(pair) > 1 {
-			index, uniqueindex = parsePair(pair, column)
+			parsePair(pair, column, &indexes, &uniqueIndexes)
 		} else {
-			index, uniqueindex = parseSingle(pair, column, field)
+			parseSingle(pair, column, field, &indexes, &uniqueIndexes)
 		}
 	}
-	return index, uniqueindex
+	return
 }
 
-func parseSingle(pair []string, column *Column, field astutils.FieldMeta) (Index, Index) {
-	var (
-		index       Index
-		uniqueindex Index
-	)
+func parseSingle(pair []string, column *Column, field astutils.FieldMeta, indexes *[]Index, uniqueIndexes *[]Index) {
 	key := pair[0]
 	switch key {
 	case "pk":
@@ -365,7 +381,7 @@ func parseSingle(pair []string, column *Column, field astutils.FieldMeta) (Index
 		column.Autoincrement = true
 		break
 	case "index":
-		index = Index{
+		*indexes = append(*indexes, Index{
 			Name: strcase.ToSnake(field.Name) + "_idx",
 			Items: []IndexItem{
 				{
@@ -373,10 +389,10 @@ func parseSingle(pair []string, column *Column, field astutils.FieldMeta) (Index
 					Sort:  sortenum.Asc,
 				},
 			},
-		}
+		})
 		break
 	case "unique":
-		uniqueindex = Index{
+		*uniqueIndexes = append(*uniqueIndexes, Index{
 			Name: strcase.ToSnake(field.Name) + "_idx",
 			Items: []IndexItem{
 				{
@@ -384,17 +400,12 @@ func parseSingle(pair []string, column *Column, field astutils.FieldMeta) (Index
 					Sort:  sortenum.Asc,
 				},
 			},
-		}
+		})
 		break
 	}
-	return index, uniqueindex
 }
 
-func parsePair(pair []string, column *Column) (Index, Index) {
-	var (
-		index       Index
-		uniqueindex Index
-	)
+func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[]Index) {
 	key := pair[0]
 	value := pair[1]
 	switch key {
@@ -422,7 +433,7 @@ func parsePair(pair []string, column *Column) (Index, Index) {
 		} else {
 			sort = sortenum.Sort(props[2])
 		}
-		index = Index{
+		*indexes = append(*indexes, Index{
 			Name: indexName,
 			Items: []IndexItem{
 				{
@@ -430,7 +441,7 @@ func parsePair(pair []string, column *Column) (Index, Index) {
 					Sort:  sort,
 				},
 			},
-		}
+		})
 		break
 	case "unique":
 		props := strings.Split(value, ",")
@@ -446,7 +457,7 @@ func parsePair(pair []string, column *Column) (Index, Index) {
 		} else {
 			sort = sortenum.Sort(props[2])
 		}
-		uniqueindex = Index{
+		*uniqueIndexes = append(*uniqueIndexes, Index{
 			Name: indexName,
 			Items: []IndexItem{
 				{
@@ -454,10 +465,9 @@ func parsePair(pair []string, column *Column) (Index, Index) {
 					Sort:  sort,
 				},
 			},
-		}
+		})
 		break
 	}
-	return index, uniqueindex
 }
 
 // NewFieldFromColumn creates an astutils.FieldMeta instance from col

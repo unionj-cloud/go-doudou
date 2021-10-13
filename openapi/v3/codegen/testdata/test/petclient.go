@@ -90,11 +90,11 @@ func (receiver *PetClient) PutPet(ctx context.Context,
 	return
 }
 
-// Finds Pets by tags
-// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
+// Finds Pets by status
+// Multiple status values can be provided with comma separated strings
+func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	queryParams struct {
-		Tags []string `json:"tags,omitempty" url:"tags"`
+		Status string `json:"status,omitempty" url:"status"`
 	}) (ret []Pet, err error) {
 	var (
 		_server string
@@ -110,7 +110,38 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err := _req.Get(_server + "/pet/findByTags")
+	_resp, _err := _req.Get(_server + "/pet/findByStatus")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+
+	_resp, _err := _req.Get(_server + "/pet/{petId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -168,11 +199,11 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	return
 }
 
-// Finds Pets by status
-// Multiple status values can be provided with comma separated strings
-func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
+// Finds Pets by tags
+// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	queryParams struct {
-		Status string `json:"status,omitempty" url:"status"`
+		Tags []string `json:"tags,omitempty" url:"tags"`
 	}) (ret []Pet, err error) {
 	var (
 		_server string
@@ -188,38 +219,7 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err := _req.Get(_server + "/pet/findByStatus")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-
-	_resp, _err := _req.Get(_server + "/pet/{petId}")
+	_resp, _err := _req.Get(_server + "/pet/findByTags")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

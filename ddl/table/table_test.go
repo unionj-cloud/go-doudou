@@ -18,7 +18,7 @@ import (
 	"testing"
 )
 
-func TestNewTableFromStruct(t *testing.T) {
+func ExampleNewTableFromStruct() {
 	testDir := pathutils.Abs("../testdata/domain")
 	var files []string
 	var err error
@@ -38,8 +38,40 @@ func TestNewTableFromStruct(t *testing.T) {
 	flattened := ddlast.FlatEmbed(sc.Structs)
 
 	for _, sm := range flattened {
-		NewTableFromStruct(sm)
+		tab := NewTableFromStruct(sm)
+		fmt.Println(len(tab.Indexes))
+		var statement string
+		if statement, err = tab.CreateSql(); err != nil {
+			panic(err)
+		}
+		fmt.Println(statement)
 	}
+
+	// Output:
+	// 5
+	// CREATE TABLE `user` (
+	// `id` INT NOT NULL AUTO_INCREMENT,
+	// `name` VARCHAR(255) NOT NULL DEFAULT 'jack',
+	// `phone` VARCHAR(255) NOT NULL DEFAULT '13552053960' comment '手机号',
+	// `age` INT NOT NULL,
+	// `no` int NOT NULL,
+	// `unique_col` int NOT NULL,
+	// `unique_col_2` int NOT NULL,
+	// `school` VARCHAR(255) NULL DEFAULT 'harvard' comment '学校',
+	// `is_student` TINYINT NOT NULL,
+	// `rule` varchar(255) NOT NULL comment '链接匹配规则，匹配的链接采用该css规则来爬',
+	// `rule_type` varchar(45) NOT NULL comment '链接匹配规则类型，支持prefix前缀匹配和regex正则匹配',
+	// `arrive_at` datetime NULL comment '到货时间',
+	// `status` tinyint(4) NOT NULL comment '0,
+	// `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+	// `delete_at` DATETIME NULL,
+	// `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	// PRIMARY KEY (`id`),
+	// INDEX `age_idx` (`age` asc),
+	// INDEX `name_phone_idx` (`phone` asc,`name` asc),
+	// UNIQUE INDEX `no_idx` (`no` asc),
+	// UNIQUE INDEX `rule_idx` (`rule` asc),
+	// UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc));
 }
 
 func TestTable_CreateSql(t1 *testing.T) {
