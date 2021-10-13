@@ -3,6 +3,7 @@ package ddhttp
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/felixge/httpsnoop"
 	"github.com/sirupsen/logrus"
@@ -122,7 +123,7 @@ func Recover(inner http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", err, string(debug.Stack()))
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 			}
 		}()
 		inner.ServeHTTP(w, r)
