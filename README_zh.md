@@ -31,7 +31,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
     - [定义方法即设计restful接口](#%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95%E5%8D%B3%E8%AE%BE%E8%AE%A1restful%E6%8E%A5%E5%8F%A3)
     - [生成代码](#%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81)
     - [运行](#%E8%BF%90%E8%A1%8C)
-    - [*Deployment](#deployment)
+    - [Deployment](#deployment)
       - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
       - [部署](#%E9%83%A8%E7%BD%B2)
       - [关闭](#%E5%85%B3%E9%97%AD)
@@ -96,7 +96,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v -u github.com/unionj-cloud/go-doudou@v0.7.3
+go get -v github.com/unionj-cloud/go-doudou@v0.7.3
 ```
 
 
@@ -261,8 +261,9 @@ INFO[2021-08-31 21:35:47] Http server is listening on :6060
 ```
 
 ![screenshot-doc](./screenshot-doc.png)
+![screenshot-registry](./screenshot-registry.png)
 
-#### ![screenshot-registry](./screenshot-registry.png)Deployment
+#### Deployment
 
 ##### docker镜像打包并推到你的远程仓库
 
@@ -456,7 +457,7 @@ go-doudou用.env文件管理框架用到的环境变量
 
 ### 例子
 
-请参考 [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
+请参考 [go-doudou-guide](https://gitee.com/unionj-cloud/go-doudou-guide)
 
 
 
