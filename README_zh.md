@@ -96,7 +96,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.3
+go get -v github.com/unionj-cloud/go-doudou@v0.7.4
 ```
 
 
