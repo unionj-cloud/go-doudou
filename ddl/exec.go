@@ -67,15 +67,14 @@ func (d Ddl) Exec() {
 
 	var tables []table.Table
 	if !d.Reverse {
-		struct2Table(d, tables, existTables, db)
+		tables = struct2Table(d, existTables, db)
 	} else {
-		table2struct(d, tables, existTables, db)
+		tables = table2struct(d, existTables, db)
 	}
 
 	if d.Dao {
 		genDao(d, tables)
 	}
-
 }
 
 func genDao(d Ddl, tables []table.Table) {
@@ -99,7 +98,7 @@ func genDao(d Ddl, tables []table.Table) {
 	}
 }
 
-func table2struct(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB) {
+func table2struct(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
 	var err error
 	if err = os.MkdirAll(d.Dir, os.ModePerm); err != nil {
 		logrus.Panicln(err)
@@ -171,6 +170,7 @@ func table2struct(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB
 			logrus.Warnf("file %s already exists", dfile)
 		}
 	}
+	return
 }
 
 func idxListAndMap(idxMap map[string][]table.DbIndex) ([]table.Index, map[string][]table.IndexItem) {
@@ -244,7 +244,7 @@ func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem
 	return col
 }
 
-func struct2Table(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB) {
+func struct2Table(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
 	var (
 		files []string
 		err   error
@@ -296,4 +296,5 @@ func struct2Table(d Ddl, tables []table.Table, existTables []string, db *sqlx.DB
 			}
 		}
 	}
+	return
 }
