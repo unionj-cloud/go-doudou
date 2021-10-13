@@ -121,7 +121,7 @@ func Recover(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				logrus.Errorf("stacktrace from panic: %s\n", string(debug.Stack()))
+				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", err, string(debug.Stack()))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}()
