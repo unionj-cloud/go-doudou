@@ -318,3 +318,11 @@ func NewPageRet(page Page) PageRet {
 		PageSize: page.Size,
 	}
 }
+
+// String is an alias of string
+type String string
+
+// Sql implements Base
+func (s String) Sql() string {
+	return string(s)
+}
