@@ -63,3 +63,29 @@ func TestSecret2Password(t *testing.T) {
 		})
 	}
 }
+
+func TestUUIDByString(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				input: "http://219.142.101.111/gongkai/fdzdgknr/zfhcxjsbwj/202110/20211013_762458.html",
+			},
+			want: "bddcb874-43f2-5fee-aeab-b0a6c4e5103b",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UUIDByString(tt.args.input); got != tt.want {
+				t.Errorf("UUIDByString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
