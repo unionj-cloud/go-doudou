@@ -30,8 +30,10 @@ const gddPathPrefix = "/go-doudou/"
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rootRouter := mux.NewRouter().StrictSlash(true)
+	bizRouter := rootRouter.PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true)
 	var routes []model.Route
 	if config.GddManage.Load() == "true" {
+		bizRouter.Use(prometheus.PrometheusMiddleware)
 		gddRouter := rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
 		gddRouter.Use(BasicAuth)
 		var mergedRoutes []model.Route
@@ -48,7 +50,7 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		routes = append(routes, mergedRoutes...)
 	}
 	return &DefaultHttpSrv{
-		Router:     rootRouter.PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true),
+		Router:     bizRouter,
 		rootRouter: rootRouter,
 		routes:     routes,
 	}
