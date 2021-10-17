@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -119,7 +120,11 @@ func printRoutes(routes []model.Route) {
 	logrus.Infoln("================ Registered Routes ================")
 	data := [][]string{}
 	for _, r := range routes {
-		data = append(data, []string{r.Name, r.Method, config.GddRouteRootPath.Load() + r.Pattern})
+		if strings.HasPrefix(r.Pattern, gddPathPrefix) {
+			data = append(data, []string{r.Name, r.Method, r.Pattern})
+		} else {
+			data = append(data, []string{r.Name, r.Method, path.Clean(config.GddRouteRootPath.Load() + r.Pattern)})
+		}
 	}
 
 	tableString := &strings.Builder{}

@@ -21,20 +21,18 @@ import (
 // DefaultHttpSrv wraps gorilla mux router
 type DefaultHttpSrv struct {
 	*mux.Router
-	gddRouter *mux.Router
-	routes    []model.Route
+	rootRouter *mux.Router
+	routes     []model.Route
 }
 
 const gddPathPrefix = "/go-doudou/"
 
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
-func NewDefaultHttpSrv() Srv {
-	rootRouter := mux.NewRouter().PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true)
-	var gddRouter *mux.Router
+func NewDefaultHttpSrv() *DefaultHttpSrv {
+	rootRouter := mux.NewRouter().StrictSlash(true)
 	var routes []model.Route
 	if config.GddManage.Load() == "true" {
-		rootRouter.Use(prometheus.PrometheusMiddleware)
-		gddRouter = rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
+		gddRouter := rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
 		gddRouter.Use(BasicAuth)
 		var mergedRoutes []model.Route
 		mergedRoutes = append(mergedRoutes, onlinedoc.Routes()...)
@@ -50,9 +48,9 @@ func NewDefaultHttpSrv() Srv {
 		routes = append(routes, mergedRoutes...)
 	}
 	return &DefaultHttpSrv{
-		rootRouter,
-		gddRouter,
-		routes,
+		Router:     rootRouter.PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true),
+		rootRouter: rootRouter,
+		routes:     routes,
 	}
 }
 
@@ -96,7 +94,7 @@ func (srv *DefaultHttpSrv) Run() {
 
 	printRoutes(srv.routes)
 
-	server := newServer(srv)
+	server := newServer(srv.rootRouter)
 
 	logrus.Infof("Started in %s\n", time.Since(start))
 
