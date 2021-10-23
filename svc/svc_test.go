@@ -212,14 +212,9 @@ func TestSvc_Seed(t *testing.T) {
 	})
 }
 
-func ExampleSvc_Push() {
+func TestSvc_Push(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.Push("wubin1989")
-	// Output:
-	// testing helper process
-	// testing helper process
-	// testing helper process
-	// testing helper process
 }
 
 func TestHelperProcess(*testing.T) {
@@ -230,25 +225,18 @@ func TestHelperProcess(*testing.T) {
 	fmt.Println("testing helper process")
 }
 
-func ExampleSvc_run() {
+func TestSvc_run(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.run()
-	// Output:
-	// testing helper process
-	// testing helper process
 }
 
-func ExampleSvc_restart() {
+func TestSvc_restart(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.cmd = s.run()
 	s.restart()
-	// Output:
-	// testing helper process
-	// testing helper process
-	// testing helper process
 }
 
-func ExampleSvc_watch() {
+func TestSvc_watch(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata/change"))
 	s.w = watcher.New()
 	go s.watch()
@@ -258,12 +246,9 @@ func ExampleSvc_watch() {
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
 	s.w.Close()
-	// Output:
-	// FILE "change.go" WRITE [/Users/wubin1989/workspace/cloud/go-doudou/svc/testdata/change/change.go]
-	// testing helper process
 }
 
-func ExampleSvc_Run() {
+func TestSvc_Run(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata/change"))
 	s.w = watcher.New()
 	defer s.w.Close()
@@ -273,19 +258,9 @@ func ExampleSvc_Run() {
 	defer f.Close()
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
-	// Output:
-	// testing helper process
-	// testing helper process
-	// FILE "change.go" WRITE [/Users/wubin1989/workspace/cloud/go-doudou/svc/testdata/change/change.go]
-	// testing helper process
-	// testing helper process
-	// testing helper process
 }
 
-func ExampleSvc_Run_unwatch() {
+func TestSvc_Run_unwatch(t *testing.T) {
 	s := NewMockSvc("")
 	s.Run(false)
-	// Output:
-	// testing helper process
-	// testing helper process
 }
