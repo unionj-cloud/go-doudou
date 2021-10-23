@@ -97,7 +97,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.6
+go get -v github.com/unionj-cloud/go-doudou@v0.7.7
 ```
 
 
