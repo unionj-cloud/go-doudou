@@ -9,7 +9,7 @@
 [![Goproxy.cn](https://goproxy.cn/stats/github.com/unionj-cloud/go-doudou/badges/download-count.svg)](https://goproxy.cn)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Funionj-cloud%2Fgo-doudou?ref=badge_shield)
-[![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ)
+[![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://join.slack.com/t/go-doudou/shared_invite/zt-xzohc7ds-u7~aio6B8PELp5UtAdY~uw)
   
 [EN](./README.md) [中文](./README_zh.md)  
 go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports restful service only.
@@ -485,7 +485,7 @@ Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/pr
 
 Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a star!
 
-Slack invitation link: https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ
+Slack invitation link: https://join.slack.com/t/go-doudou/shared_invite/zt-xzohc7ds-u7~aio6B8PELp5UtAdY~uw
 
 Welcome to contact me from
 - facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
