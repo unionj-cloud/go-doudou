@@ -1,10 +1,13 @@
 package svc
 
 import (
+	"fmt"
+	"github.com/radovskyb/watcher"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -151,35 +154,31 @@ func Test_checkIc1(t *testing.T) {
 }
 
 func TestSvc_Deploy(t *testing.T) {
-	dir := testDir + "deploy"
-	receiver := Svc{
-		Dir: dir,
-	}
+	dir := testDir + "/deploy"
+	receiver := NewSvc()
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Panics(t, func() {
-		receiver.Deploy()
-	})
+	receiver.Deploy("")
 }
 
-func TestSvc_Shutdown(t *testing.T) {
-	dir := testDir + "shutdown"
+func ExampleSvc_Shutdown() {
+	dir := testDir + "/shutdown"
 	receiver := Svc{
-		Dir: dir,
+		Dir:    dir,
+		runner: MockRunner{},
 	}
 	receiver.Init()
 	defer os.RemoveAll(dir)
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Panics(t, func() {
-		receiver.Shutdown()
-	})
+	os.Chdir(dir)
+	receiver.Shutdown("")
+	// Output:
+	// 1.16
+	// shutdown
+	// testing helper process
 }
 
 func Test_validateDataType(t *testing.T) {
@@ -214,4 +213,126 @@ func TestSvc_Seed(t *testing.T) {
 		go s.Seed()
 		time.Sleep(2 * time.Second)
 	})
+}
+
+func ExampleSvc_Push() {
+	s := Svc{
+		runner: MockRunner{},
+		Dir:    pathutils.Abs("./testdata"),
+	}
+	s.Push("wubin1989")
+	// Output:
+	// testing helper process
+	// testing helper process
+	// testing helper process
+	// testing helper process
+}
+
+type MockRunner struct {
+}
+
+func (r MockRunner) Run(command string, args ...string) error {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (r MockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	return cmd, nil
+}
+
+func TestHelperProcess(*testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+	defer os.Exit(0)
+	fmt.Println("testing helper process")
+}
+
+func ExampleSvc_run() {
+	s := Svc{
+		runner: MockRunner{},
+		Dir:    pathutils.Abs("./testdata"),
+	}
+	s.run()
+	// Output:
+	// testing helper process
+	// testing helper process
+}
+
+func ExampleSvc_restart() {
+	s := Svc{
+		runner: MockRunner{},
+		Dir:    pathutils.Abs("./testdata"),
+	}
+	s.cmd = s.run()
+	s.restart()
+	// Output:
+	// testing helper process
+	// testing helper process
+	// testing helper process
+}
+
+func ExampleSvc_watch() {
+	s := Svc{
+		runner: MockRunner{},
+		w:      watcher.New(),
+		Dir:    pathutils.Abs("./testdata/change"),
+	}
+	go s.watch()
+	time.Sleep(1 * time.Second)
+	f, _ := os.Create(filepath.Join(s.Dir, "change.go"))
+	defer f.Close()
+	f.WriteString("test")
+	time.Sleep(6 * time.Second)
+	s.w.Close()
+	// Output:
+	// FILE "change.go" WRITE [/Users/wubin1989/workspace/cloud/go-doudou/svc/testdata/change/change.go]
+	// testing helper process
+}
+
+func ExampleSvc_Run() {
+	s := Svc{
+		runner: MockRunner{},
+		w:      watcher.New(),
+		Dir:    pathutils.Abs("./testdata/change"),
+	}
+	defer s.w.Close()
+	go s.Run(true)
+	time.Sleep(1 * time.Second)
+	f, _ := os.Create(filepath.Join(s.Dir, "change.go"))
+	defer f.Close()
+	f.WriteString("test")
+	time.Sleep(6 * time.Second)
+	// Output:
+	// testing helper process
+	// testing helper process
+	// FILE "change.go" WRITE [/Users/wubin1989/workspace/cloud/go-doudou/svc/testdata/change/change.go]
+	// testing helper process
+}
+
+func ExampleSvc_Run_unwatch() {
+	s := Svc{
+		runner: MockRunner{},
+	}
+	s.Run(false)
+	// Output:
+	// testing helper process
+	// testing helper process
 }

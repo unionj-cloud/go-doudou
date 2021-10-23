@@ -162,6 +162,19 @@ var appendHttpHandlerImplTmpl = `
 			{{- else }}
 			{{$p.Name}} = _req.Form["{{$p.Name}}"]
 			{{- end }}
+		} else {
+			if _, exists := _req.Form["{{$p.Name}}[]"]; exists {
+				{{- if $p.Type | isSupport }}
+				if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}[]"]); err != nil {
+					http.Error(_writer, err.Error(), http.StatusBadRequest)
+					return
+				} else {
+					{{$p.Name}} = casted
+				}
+				{{- else }}
+				{{$p.Name}} = _req.Form["{{$p.Name}}[]"]
+				{{- end }}
+			}
 		}
 		{{- else }}
 		{{- if not $formParsed }}

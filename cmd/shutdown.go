@@ -11,10 +11,8 @@ var shutdownCmd = &cobra.Command{
 	Short: "wrap kubectl delete command to shutdown service",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.Svc{
-			K8sfile: k8sfile,
-		}
-		s.Shutdown()
+		s := svc.NewSvc()
+		s.Shutdown(k8sfile)
 	},
 }
 

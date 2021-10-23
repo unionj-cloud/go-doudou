@@ -8,20 +8,14 @@ import (
 
 var watch bool
 
-func newSvc() svc.Svc {
-	return svc.Svc{
-		Watch:      watch,
-		RestartSig: make(chan int),
-	}
-}
-
 // runCmd runs the service
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "run go-doudou program",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		newSvc().Run()
+		s := svc.NewSvc()
+		s.Run(watch)
 	},
 }
 

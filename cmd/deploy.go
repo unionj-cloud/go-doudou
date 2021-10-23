@@ -11,10 +11,8 @@ var deployCmd = &cobra.Command{
 	Short: "wrap command kubectl apply to deploy service to k8s",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.Svc{
-			K8sfile: k8sfile,
-		}
-		s.Deploy()
+		s := svc.NewSvc()
+		s.Deploy(k8sfile)
 	},
 }
 

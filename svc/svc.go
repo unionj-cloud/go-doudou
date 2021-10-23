@@ -9,6 +9,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/esutils"
+	"github.com/unionj-cloud/go-doudou/executils"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/stringutils"
@@ -40,21 +41,20 @@ type Svc struct {
 	Doc          bool
 	Jsonattrcase string
 
-	DocPath   string
-	Es        *esutils.Es
-	ImageRepo string
+	DocPath string
+	Es      *esutils.Es
 
-	K8sfile   string
 	N         int
 	Env       string
 	ClientPkg string
 
-	Watch bool
-
-	*exec.Cmd
-	RestartSig chan int
+	cmd        *exec.Cmd
+	restartSig chan int
 
 	RoutePatternStrategy int
+
+	runner executils.Runner
+	w      *watcher.Watcher
 }
 
 func validateDataType(dir string) {
@@ -177,48 +177,48 @@ func (receiver Svc) Init() {
 	codegen.InitSvc(receiver.Dir)
 }
 
+func NewSvc() Svc {
+	return Svc{
+		runner:     executils.CmdRunner{},
+		restartSig: make(chan int),
+	}
+}
+
 // Push executes go mod vendor command first, then build docker image and push to remote image repository
 // It also generates deployment kind(for monolithic) and statefulset kind(for microservice) yaml files for kubernetes deploy, if these files already exist,
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
-func (receiver Svc) Push() {
+func (receiver Svc) Push(repo string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
-
-	cmd := exec.Command("go", "mod", "vendor")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	err := receiver.runner.Run("go", "mod", "vendor")
+	if err != nil {
 		panic(err)
 	}
 
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	loginUser, _ := user.Current()
 	if loginUser != nil {
-		cmd = exec.Command("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", svcname, ".")
+		err = receiver.runner.Run("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", svcname, ".")
+		if err != nil {
+			panic(err)
+		}
 	} else {
-		cmd = exec.Command("docker", "build", "-t", svcname, ".")
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		panic(err)
+		err = receiver.runner.Run("docker", "build", "-t", svcname, ".")
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	if stringutils.IsEmpty(receiver.ImageRepo) {
+	if stringutils.IsEmpty(repo) {
 		logrus.Warnln("no private docker image repository address provided")
 		return
 	}
-	image := fmt.Sprintf("%s/%s:%s", receiver.ImageRepo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
-	cmd = exec.Command("docker", "tag", svcname, image)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	image := fmt.Sprintf("%s/%s:%s", repo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
+	err = receiver.runner.Run("docker", "tag", svcname, image)
+	if err != nil {
 		panic(err)
 	}
-
-	cmd = exec.Command("docker", "push", image)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	err = receiver.runner.Run("docker", "push", image)
+	if err != nil {
 		panic(err)
 	}
 	logrus.Infof("image %s has been pushed successfully\n", image)
@@ -230,36 +230,28 @@ func (receiver Svc) Push() {
 
 // Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as statefulset kind using statefulset.yaml file in the project root,
 // so if you want to deploy a monolithic project, please set k8sfile flag.
-func (receiver Svc) Deploy() {
+func (receiver Svc) Deploy(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
-	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
 	}
 	logrus.Infof("Execute command: kubectl apply -f %s\n", k8sfile)
-	cmd := exec.Command("kubectl", "apply", "-f", k8sfile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	if err := receiver.runner.Run("kubectl", "apply", "-f", k8sfile); err != nil {
 		panic(err)
 	}
 }
 
 // Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use statefulset.yaml file in the project root,
 // so if you had already set k8sfile flag when you deploy the project, you should set the same k8sfile flag.
-func (receiver Svc) Shutdown() {
+func (receiver Svc) Shutdown(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
-	k8sfile := receiver.K8sfile
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
 	}
 	logrus.Infof("Execute command: kubectl delete -f %s\n", k8sfile)
-	cmd := exec.Command("kubectl", "delete", "-f", k8sfile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	if err := receiver.runner.Run("kubectl", "delete", "-f", k8sfile); err != nil {
 		panic(err)
 	}
 }
@@ -285,19 +277,15 @@ func (receiver Svc) GenClient() {
 }
 
 func (receiver Svc) run() *exec.Cmd {
-	cmd := exec.Command("go", "build", filepath.FromSlash("cmd/main.go"))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	err := receiver.runner.Run("go", "build", filepath.FromSlash("cmd/main.go"))
+	if err != nil {
 		panic(err)
 	}
-	cmd = exec.Command(filepath.FromSlash("./main"))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
+	start, err := receiver.runner.Start(filepath.FromSlash("./main"))
+	if err != nil {
 		panic(err)
 	}
-	return cmd
+	return start
 }
 
 //func terminateWinProc(pid int) error {
@@ -328,15 +316,16 @@ func (receiver Svc) restart() *exec.Cmd {
 	//		panic(err)
 	//	}
 	//}
-	if err := receiver.Cmd.Process.Signal(syscall.SIGINT); err != nil {
-		panic(err)
+	if receiver.cmd != nil {
+		if err := receiver.cmd.Process.Signal(syscall.SIGINT); err != nil {
+			panic(err)
+		}
 	}
 	return receiver.run()
 }
 
 func (receiver Svc) watch() {
-	w := watcher.New()
-
+	w := receiver.w
 	// SetMaxEvents to 1 to allow at most 1 event's to be received
 	// on the Event channel per watching cycle.
 	//
@@ -356,15 +345,12 @@ func (receiver Svc) watch() {
 			select {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
-				bcmd := exec.Command("go", "build", "cmd/main.go")
-				bcmd.Stdout = os.Stdout
-				bcmd.Stderr = os.Stderr
-				if err := bcmd.Run(); err != nil {
+				if err := receiver.runner.Run("go", "build", "cmd/main.go"); err != nil {
 					logrus.Warnln(err)
 					continue
 				}
 				_ = os.Remove("main")
-				receiver.RestartSig <- 1
+				receiver.restartSig <- 1
 			case err := <-w.Error:
 				logrus.Panicln(err)
 			case <-w.Closed:
@@ -391,20 +377,23 @@ func (receiver Svc) watch() {
 }
 
 // Run runs the project locally. Recommend to set watch flag to enable watch mode for rapid development.
-func (receiver Svc) Run() {
-	receiver.Cmd = receiver.run()
-	if receiver.Watch {
+func (receiver Svc) Run(watch bool) {
+	receiver.cmd = receiver.run()
+	if watch {
+		if receiver.w == nil {
+			receiver.w = watcher.New()
+		}
 		go receiver.watch()
 		for {
 			select {
-			case <-receiver.RestartSig:
-				receiver.Cmd = receiver.restart()
+			case <-receiver.restartSig:
+				receiver.cmd = receiver.restart()
 			default:
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	} else {
-		if err := receiver.Cmd.Wait(); err != nil {
+		if err := receiver.cmd.Wait(); err != nil {
 			panic(err)
 		}
 	}
