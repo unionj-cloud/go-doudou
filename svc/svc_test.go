@@ -152,30 +152,22 @@ func Test_checkIc1(t *testing.T) {
 	}
 }
 
-func ExampleSvc_Deploy() {
+func TestSvc_Deploy(t *testing.T) {
 	dir := testDir + "/deploy"
 	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	os.Chdir(dir)
 	receiver.Deploy("")
-	// Output:
-	// 1.16
-	// deploy
-	// testing helper process
 }
 
-func ExampleSvc_Shutdown() {
+func TestSvc_Shutdown(t *testing.T) {
 	dir := testDir + "/shutdown"
 	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	os.Chdir(dir)
 	receiver.Shutdown("")
-	// Output:
-	// 1.16
-	// shutdown
-	// testing helper process
 }
 
 func Test_validateDataType(t *testing.T) {
