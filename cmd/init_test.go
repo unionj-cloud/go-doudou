@@ -7,7 +7,7 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	dir := testDir + "initcmd"
+	dir := testDir + "/initcmd"
 	// go-doudou svc init ordersvc
 	_, _, err := ExecuteCommandC(rootCmd, []string{"svc", "init", dir}...)
 	if err != nil {
@@ -18,10 +18,10 @@ func TestInitCmd(t *testing.T) {
 
 import (
 	"context"
-	"testdatainitcmd/vo"
+	"initcmd/vo"
 )
 
-type Testdatainitcmd interface {
+type Initcmd interface {
 	// You can define your service methods as your need. Below is an example.
 	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
 }

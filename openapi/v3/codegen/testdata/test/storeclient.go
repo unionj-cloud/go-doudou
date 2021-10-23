@@ -22,9 +22,10 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// Find purchase order by ID
-// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
-func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context) (ret Order, err error) {
+// Returns pet inventories by status
+// Returns a map of status codes to quantities
+func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
+}, err error) {
 	var (
 		_server string
 		_err    error
@@ -37,7 +38,7 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context) (ret Orde
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 
-	_resp, _err := _req.Get(_server + "/store/order/{orderId}")
+	_resp, _err := _req.Get(_server + "/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -86,10 +87,9 @@ func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
 	return
 }
 
-// Returns pet inventories by status
-// Returns a map of status codes to quantities
-func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
-}, err error) {
+// Find purchase order by ID
+// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
+func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context) (ret Order, err error) {
 	var (
 		_server string
 		_err    error
@@ -102,7 +102,7 @@ func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 
-	_resp, _err := _req.Get(_server + "/store/inventory")
+	_resp, _err := _req.Get(_server + "/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

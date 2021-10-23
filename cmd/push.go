@@ -11,7 +11,7 @@ var pushCmd = &cobra.Command{
 	Short: "wrap docker build, docker tag, docker push commands and generate or update k8s deploy yaml file",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.NewSvc()
+		s := svc.NewSvc("")
 		s.Push(imageRepo)
 	},
 }

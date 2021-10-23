@@ -14,7 +14,7 @@ var runCmd = &cobra.Command{
 	Short: "run go-doudou program",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.NewSvc()
+		s := svc.NewSvc("")
 		s.Run(watch)
 	},
 }

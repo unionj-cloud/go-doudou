@@ -21,9 +21,7 @@ var initCmd = &cobra.Command{
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.Svc{
-			Dir: svcdir,
-		}
+		s := svc.NewSvc(svcdir)
 		s.Init()
 	},
 }

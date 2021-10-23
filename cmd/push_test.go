@@ -8,10 +8,8 @@ import (
 )
 
 func TestPushCmd(t *testing.T) {
-	dir := testDir + "pushcmd"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
+	dir := testDir + "/pushcmd"
+	receiver := svc.NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)

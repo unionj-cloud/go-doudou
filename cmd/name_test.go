@@ -8,10 +8,8 @@ import (
 )
 
 func TestNameCmd(t *testing.T) {
-	dir := testDir + "namecmd"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
+	dir := testDir + "/namecmd"
+	receiver := svc.NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
@@ -26,10 +24,8 @@ func TestNameCmd(t *testing.T) {
 }
 
 func TestGetImportPath(t *testing.T) {
-	dir := testDir + "importpath"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
+	dir := testDir + "/importpath"
+	receiver := svc.NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
@@ -49,7 +45,7 @@ func TestGetImportPath(t *testing.T) {
 			args: args{
 				file: dir + "/domain",
 			},
-			want: "testdataimportpath/domain",
+			want: "importpath/domain",
 		},
 	}
 	for _, tt := range tests {

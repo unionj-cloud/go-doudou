@@ -7,7 +7,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -37,7 +36,7 @@ func TestSvc_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			receiver := Svc{
-				Dir: tt.fields.Dir,
+				dir: tt.fields.Dir,
 			}
 			receiver.Init()
 			defer os.RemoveAll(tt.fields.Dir)
@@ -83,7 +82,7 @@ func TestSvc_Http(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			receiver := Svc{
-				Dir:          tt.fields.Dir,
+				dir:          tt.fields.Dir,
 				Handler:      tt.fields.Handler,
 				Client:       tt.fields.Client,
 				Omitempty:    tt.fields.Omitempty,
@@ -153,24 +152,22 @@ func Test_checkIc1(t *testing.T) {
 	}
 }
 
-func TestSvc_Deploy(t *testing.T) {
+func ExampleSvc_Deploy() {
 	dir := testDir + "/deploy"
-	receiver := NewSvc()
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	os.Chdir(dir)
 	receiver.Deploy("")
+	// Output:
+	// 1.16
+	// deploy
+	// testing helper process
 }
 
 func ExampleSvc_Shutdown() {
 	dir := testDir + "/shutdown"
-	receiver := Svc{
-		Dir:    dir,
-		runner: MockRunner{},
-	}
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	os.Chdir(dir)
@@ -196,7 +193,7 @@ func Test_validateDataType_shouldpanic(t *testing.T) {
 func Test_GenClient(t *testing.T) {
 	defer os.RemoveAll(filepath.Join(testDir, "client"))
 	s := Svc{
-		Dir:       testDir,
+		dir:       testDir,
 		DocPath:   filepath.Join(testDir, "testfilesdoc1_openapi3.json"),
 		Omitempty: true,
 		Client:    "go",
@@ -216,45 +213,13 @@ func TestSvc_Seed(t *testing.T) {
 }
 
 func ExampleSvc_Push() {
-	s := Svc{
-		runner: MockRunner{},
-		Dir:    pathutils.Abs("./testdata"),
-	}
+	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.Push("wubin1989")
 	// Output:
 	// testing helper process
 	// testing helper process
 	// testing helper process
 	// testing helper process
-}
-
-type MockRunner struct {
-}
-
-func (r MockRunner) Run(command string, args ...string) error {
-	cs := []string{"-test.run=TestHelperProcess", "--"}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-	return nil
-}
-
-func (r MockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
-	cs := []string{"-test.run=TestHelperProcess", "--"}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		panic(err)
-	}
-	return cmd, nil
 }
 
 func TestHelperProcess(*testing.T) {
@@ -266,10 +231,7 @@ func TestHelperProcess(*testing.T) {
 }
 
 func ExampleSvc_run() {
-	s := Svc{
-		runner: MockRunner{},
-		Dir:    pathutils.Abs("./testdata"),
-	}
+	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.run()
 	// Output:
 	// testing helper process
@@ -277,10 +239,7 @@ func ExampleSvc_run() {
 }
 
 func ExampleSvc_restart() {
-	s := Svc{
-		runner: MockRunner{},
-		Dir:    pathutils.Abs("./testdata"),
-	}
+	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.cmd = s.run()
 	s.restart()
 	// Output:
@@ -290,14 +249,11 @@ func ExampleSvc_restart() {
 }
 
 func ExampleSvc_watch() {
-	s := Svc{
-		runner: MockRunner{},
-		w:      watcher.New(),
-		Dir:    pathutils.Abs("./testdata/change"),
-	}
+	s := NewMockSvc(pathutils.Abs("./testdata/change"))
+	s.w = watcher.New()
 	go s.watch()
 	time.Sleep(1 * time.Second)
-	f, _ := os.Create(filepath.Join(s.Dir, "change.go"))
+	f, _ := os.Create(filepath.Join(s.dir, "change.go"))
 	defer f.Close()
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
@@ -308,15 +264,12 @@ func ExampleSvc_watch() {
 }
 
 func ExampleSvc_Run() {
-	s := Svc{
-		runner: MockRunner{},
-		w:      watcher.New(),
-		Dir:    pathutils.Abs("./testdata/change"),
-	}
+	s := NewMockSvc(pathutils.Abs("./testdata/change"))
+	s.w = watcher.New()
 	defer s.w.Close()
 	go s.Run(true)
 	time.Sleep(1 * time.Second)
-	f, _ := os.Create(filepath.Join(s.Dir, "change.go"))
+	f, _ := os.Create(filepath.Join(s.dir, "change.go"))
 	defer f.Close()
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
@@ -325,12 +278,12 @@ func ExampleSvc_Run() {
 	// testing helper process
 	// FILE "change.go" WRITE [/Users/wubin1989/workspace/cloud/go-doudou/svc/testdata/change/change.go]
 	// testing helper process
+	// testing helper process
+	// testing helper process
 }
 
 func ExampleSvc_Run_unwatch() {
-	s := Svc{
-		runner: MockRunner{},
-	}
+	s := NewMockSvc("")
 	s.Run(false)
 	// Output:
 	// testing helper process

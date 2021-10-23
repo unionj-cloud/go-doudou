@@ -31,10 +31,8 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 }
 
 func TestDdlCmd(t *testing.T) {
-	dir := testDir + "ddlcmd"
-	receiver := svc.Svc{
-		Dir: dir,
-	}
+	dir := testDir + "/ddlcmd"
+	receiver := svc.NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)

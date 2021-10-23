@@ -34,7 +34,7 @@ const (
 
 // Svc wraps all config properties for commands
 type Svc struct {
-	Dir          string
+	dir          string
 	Handler      bool
 	Client       string
 	Omitempty    bool
@@ -73,7 +73,7 @@ func validateDataType(dir string) {
 // Http generates main function, config files, db connection function, http routes, http handlers, service interface and service implementation
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver Svc) Http() {
-	dir := receiver.Dir
+	dir := receiver.dir
 	if receiver.Doc {
 		validateDataType(dir)
 	}
@@ -174,12 +174,52 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 
 // Init inits a go-doudou project
 func (receiver Svc) Init() {
-	codegen.InitSvc(receiver.Dir)
+	codegen.InitSvc(receiver.dir)
 }
 
-func NewSvc() Svc {
+// NewSvc new Svc instance
+func NewSvc(dir string) Svc {
 	return Svc{
+		dir:        dir,
 		runner:     executils.CmdRunner{},
+		restartSig: make(chan int),
+	}
+}
+
+type mockRunner struct {
+}
+
+func (r mockRunner) Run(command string, args ...string) error {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (r mockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	return cmd, nil
+}
+
+// NewMockSvc new Svc instance for unit test purpose
+func NewMockSvc(dir string) Svc {
+	return Svc{
+		dir:        dir,
+		runner:     mockRunner{},
 		restartSig: make(chan int),
 	}
 }
@@ -188,7 +228,7 @@ func NewSvc() Svc {
 // It also generates deployment kind(for monolithic) and statefulset kind(for microservice) yaml files for kubernetes deploy, if these files already exist,
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
 func (receiver Svc) Push(repo string) {
-	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	err := receiver.runner.Run("go", "mod", "vendor")
 	if err != nil {
 		panic(err)
@@ -223,15 +263,15 @@ func (receiver Svc) Push(repo string) {
 	}
 	logrus.Infof("image %s has been pushed successfully\n", image)
 
-	codegen.GenK8sDeployment(receiver.Dir, svcname, image)
-	codegen.GenK8sStatefulset(receiver.Dir, svcname, image)
+	codegen.GenK8sDeployment(receiver.dir, svcname, image)
+	codegen.GenK8sStatefulset(receiver.dir, svcname, image)
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 
 // Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as statefulset kind using statefulset.yaml file in the project root,
 // so if you want to deploy a monolithic project, please set k8sfile flag.
 func (receiver Svc) Deploy(k8sfile string) {
-	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
@@ -245,7 +285,7 @@ func (receiver Svc) Deploy(k8sfile string) {
 // Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use statefulset.yaml file in the project root,
 // so if you had already set k8sfile flag when you deploy the project, you should set the same k8sfile flag.
 func (receiver Svc) Shutdown(k8sfile string) {
-	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.Dir, "svc.go"), astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
 		k8sfile = svcname + "_statefulset.yaml"
@@ -260,7 +300,7 @@ func (receiver Svc) Shutdown(k8sfile string) {
 func (receiver Svc) GenClient() {
 	docpath := receiver.DocPath
 	if stringutils.IsEmpty(docpath) {
-		matches, err := filepath.Glob(filepath.Join(receiver.Dir, "*_openapi3.json"))
+		matches, err := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
 		if err != nil {
 			panic(err)
 		}
@@ -272,7 +312,7 @@ func (receiver Svc) GenClient() {
 		panic("openapi 3.0 spec json file path is empty")
 	}
 	if receiver.Client == "go" {
-		client.GenGoClient(receiver.Dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
+		client.GenGoClient(receiver.dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
 	}
 }
 
@@ -360,7 +400,7 @@ func (receiver Svc) watch() {
 	}()
 
 	// Watch this folder for changes.
-	if err := w.AddRecursive(receiver.Dir); err != nil {
+	if err := w.AddRecursive(receiver.dir); err != nil {
 		logrus.Panicln(err)
 	}
 
