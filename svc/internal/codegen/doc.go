@@ -108,9 +108,10 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				pschema.Description = strings.Join(item.Comments, "\n")
 				if v3.IsBuiltin(item) {
 					params = append(params, v3.Parameter{
-						Name:   strcase.ToLowerCamel(item.Name),
-						In:     v3.InQuery,
-						Schema: &pschema,
+						Name:        strcase.ToLowerCamel(item.Name),
+						In:          v3.InQuery,
+						Schema:      &pschema,
+						Description: pschema.Description,
 					})
 				} else {
 					var content v3.Content
