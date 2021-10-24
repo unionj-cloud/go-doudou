@@ -362,7 +362,7 @@ go-doudou svc shutdown
 6. 不支持函数类型，通道类型，接口类型和匿名结构体类型作为入参和出参。
 7. 当执行命令`go-doudou svc http --handler`，handlerimpl.go里的已有代码不会被覆盖也不会被修改。如果你在svc.go文件里新增了方法，新代码会加到handlerimpl.go文件最后。
 8. 当执行命令`go-doudou svc http --handler`，handler.go文件会重新生成，所以请不要在里面手动修改或者添加任何代码。
-9. 当执行命令`go-doudou svc http`, 除了handler.go文件和handlerimpl.go文件，go-doudou会先判断同名文件是否存在，如果不存在才会生成，存在就会跳过。
+9. 当执行命令`go-doudou svc http`, 除了handler.go文件，go-doudou会先判断同名文件是否存在，如果不存在才会生成，存在就会跳过。
 
 
 

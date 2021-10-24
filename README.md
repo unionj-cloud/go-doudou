@@ -363,7 +363,7 @@ There are some constraints or notable things when you define your methods as exp
 6. NOT support func, channel, interface and anonymous struct type as input and output parameter.
 7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added methods in svc.go, new code will be appended to handlerimpl.go.
 8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify handler.go file.
-9. When execute  `go-doudou svc http`, before generating one file other than handler.go and handlerimpl.go files, go-doudou will check if it exists first, if already exists, do nothing.
+9. When execute  `go-doudou svc http`, only handler.go file will be overwritten and others will be checked if exists, if already exists, do nothing.
 
 
 
