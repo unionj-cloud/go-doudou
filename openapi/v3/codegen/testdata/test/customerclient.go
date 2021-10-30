@@ -25,7 +25,7 @@ func (receiver *CustomerClient) SetClient(client *resty.Client) {
 func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
 	queryParams struct {
 		// required
-		Token string `json:"token,omitempty" url:"token"`
+		Token string `json:"token" url:"token"`
 	}) (ret bool, err error) {
 	var (
 		_server string

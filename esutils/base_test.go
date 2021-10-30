@@ -441,3 +441,30 @@ func TestEs_newDefaultClient(t *testing.T) {
 		NewEs("test", "test", WithUrls([]string{"wrongurl"}))
 	})
 }
+
+func TestPaging_String(t *testing.T) {
+	p := Paging{
+		StartDate: "2021-01-01",
+		EndDate:   "2021-10-31",
+		DateField: "submitTime",
+		QueryConds: []QueryCond{
+			{
+				Pair: map[string][]interface{}{
+					"surveyId.keyword":  {"abc"},
+					"questonId.keyword": {"123456"},
+					"district.keyword":  {"迎泽区"},
+				},
+				QueryLogic: MUST,
+				QueryType:  TERMS,
+			},
+			{
+				Pair: map[string][]interface{}{
+					"score": {-1},
+				},
+				QueryLogic: MUSTNOT,
+				QueryType:  TERMS,
+			},
+		},
+	}
+	fmt.Println(p.String())
+}

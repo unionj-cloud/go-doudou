@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Jeffail/gabs/v2"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -328,6 +329,13 @@ type Paging struct {
 	Skip       int         `json:"skip"`
 	Limit      int         `json:"limit"`
 	Sortby     []Sort      `json:"sortby"`
+}
+
+// String prints query in json format for debug purpose
+func (p Paging) String() string {
+	bq := query(p.StartDate, p.EndDate, p.DateField, p.QueryConds)
+	src, _ := bq.Source()
+	return gabs.Wrap(src).StringIndent("", "  ")
 }
 
 func querynode(boolQuery *elastic.BoolQuery, qc QueryCond) {
