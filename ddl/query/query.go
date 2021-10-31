@@ -112,9 +112,12 @@ func C() Criteria {
 
 // Col set column name
 func (c Criteria) Col(col string) Criteria {
-	c.col = col
 	if strings.Contains(col, ".") {
-		c.talias = strings.Split(col, ".")[0]
+		i := strings.Index(col, ".")
+		c.talias = col[:i]
+		c.col = col[i+1:]
+	} else {
+		c.col = col
 	}
 	return c
 }
@@ -300,14 +303,21 @@ func (p Page) Sql() string {
 			if i > 0 {
 				sb.WriteString(",")
 			}
-			var alias string
+			var (
+				alias string
+				col   string
+			)
 			if strings.Contains(order.Col, ".") {
-				alias = strings.Split(order.Col, ".")[0]
+				idx := strings.Index(order.Col, ".")
+				alias = order.Col[:idx]
+				col = order.Col[idx+1:]
+			} else {
+				col = order.Col
 			}
 			if stringutils.IsNotEmpty(alias) {
-				sb.WriteString(fmt.Sprintf("%s.`%s` %s", alias, order.Col, order.Sort))
+				sb.WriteString(fmt.Sprintf("%s.`%s` %s", alias, col, order.Sort))
 			} else {
-				sb.WriteString(fmt.Sprintf("`%s` %s", order.Col, order.Sort))
+				sb.WriteString(fmt.Sprintf("`%s` %s", col, order.Sort))
 			}
 		}
 	}

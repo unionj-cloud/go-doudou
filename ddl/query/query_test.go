@@ -88,6 +88,13 @@ func ExampleCriteria() {
 	where = where.Append(String("for update"))
 	fmt.Println(where.Sql())
 
+
+	where = C().Col("cc.survey_id").Eq(Literal("abc")).
+		And(C().Col("cc.year").Eq(Literal(2021))).
+		And(C().Col("cc.month").Eq(Literal(10))).
+		And(C().Col("cc.stat_type").Eq(Literal(2)))
+	fmt.Println(where.Sql())
+
 	// Output:
 	// ((`name` = 'wubin' or `school` = 'havard') and `age` = '18')
 	// ((`name` = 'wubin' or `school` = 'havard') and `delete_at` is not null)
@@ -104,5 +111,6 @@ func ExampleCriteria() {
 	// (((`name` = 'wubin' or `school` = 'havard') and `age` = '18') or `score` >= '90')
 	// (`project_id` = '1' and `delete_at` is null) order by `create_at` desc limit 0,1
 	// (`project_id` = '1' and `delete_at` is null) for update
-	// (cc.`cc.project_id` = '1' and cc.`cc.delete_at` is null) for update
+	// (cc.`project_id` = '1' and cc.`delete_at` is null) for update
+	// (((cc.`survey_id` = 'abc' and cc.`year` = '2021') and cc.`month` = '10') and cc.`stat_type` = '2')
 }
