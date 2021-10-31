@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/ddl/valtypeenum"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"reflect"
 	"strings"
 )
@@ -55,9 +56,11 @@ func null() Val {
 
 // Criteria wrap a group of column, value and operator such as name = 20
 type Criteria struct {
-	col  string
-	val  Val
-	asym arithsymbol.ArithSymbol
+	// table alias
+	talias string
+	col    string
+	val    Val
+	asym   arithsymbol.ArithSymbol
 }
 
 // Sql implement Base interface, return sql expression
@@ -91,7 +94,13 @@ func (c Criteria) Sql() string {
 		return sb.String()
 	}
 	if c.val.Type != valtypeenum.Literal {
+		if stringutils.IsNotEmpty(c.talias) {
+			return fmt.Sprintf("%s.`%s` %s %v", c.talias, c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+		}
 		return fmt.Sprintf("`%s` %s %v", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+	}
+	if stringutils.IsNotEmpty(c.talias) {
+		return fmt.Sprintf("%s.`%s` %s '%v'", c.talias, c.col, c.asym, reflectutils.ValueOf(c.val.Data))
 	}
 	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
 }
@@ -104,6 +113,9 @@ func C() Criteria {
 // Col set column name
 func (c Criteria) Col(col string) Criteria {
 	c.col = col
+	if strings.Contains(col, ".") {
+		c.talias = strings.Split(col, ".")[0]
+	}
 	return c
 }
 
@@ -288,7 +300,15 @@ func (p Page) Sql() string {
 			if i > 0 {
 				sb.WriteString(",")
 			}
-			sb.WriteString(fmt.Sprintf("%s %s", order.Col, order.Sort))
+			var alias string
+			if strings.Contains(order.Col, ".") {
+				alias = strings.Split(order.Col, ".")[0]
+			}
+			if stringutils.IsNotEmpty(alias) {
+				sb.WriteString(fmt.Sprintf("%s.`%s` %s", alias, order.Col, order.Sort))
+			} else {
+				sb.WriteString(fmt.Sprintf("`%s` %s", order.Col, order.Sort))
+			}
 		}
 	}
 

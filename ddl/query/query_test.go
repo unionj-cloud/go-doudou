@@ -83,6 +83,11 @@ func ExampleCriteria() {
 	where = where.Append(String("for update"))
 	fmt.Println(where.Sql())
 
+	where = C().Col("cc.project_id").Eq(Literal(1))
+	where = where.And(C().Col("cc.delete_at").IsNull())
+	where = where.Append(String("for update"))
+	fmt.Println(where.Sql())
+
 	// Output:
 	// ((`name` = 'wubin' or `school` = 'havard') and `age` = '18')
 	// ((`name` = 'wubin' or `school` = 'havard') and `delete_at` is not null)
@@ -93,10 +98,11 @@ func ExampleCriteria() {
 	// (`name` != 'wubin' or `create_at` <= now())
 	// (`name` != 'wubin' or `create_at` > now())
 	// (`name` != 'wubin' or `create_at` >= now())
-	// order by create_at desc,score asc limit 30,5
+	// order by `create_at` desc,`score` asc limit 30,5
 	// 7
-	// order by score asc limit 20,10
+	// order by `score` asc limit 20,10
 	// (((`name` = 'wubin' or `school` = 'havard') and `age` = '18') or `score` >= '90')
-	// (`project_id` = '1' and `delete_at` is null) order by create_at desc limit 0,1
+	// (`project_id` = '1' and `delete_at` is null) order by `create_at` desc limit 0,1
 	// (`project_id` = '1' and `delete_at` is null) for update
+	// (cc.`cc.project_id` = '1' and cc.`cc.delete_at` is null) for update
 }
