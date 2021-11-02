@@ -24,6 +24,7 @@ var initCmd = &cobra.Command{
 			logrus.Panicln(err)
 		}
 		s := svc.NewSvc(svcdir)
+		s.ModName = modName
 		s.Init()
 	},
 }

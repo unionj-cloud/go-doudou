@@ -171,6 +171,132 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-X 'github.com/union
 ENTRYPOINT ["/repo/api"]
 `
 
+// InitProj inits a service project
+// dir is root path
+// modName is module name
+func InitProj(dir string, modName string) {
+	var (
+		err       error
+		svcName   string
+		svcfile   string
+		modfile   string
+		vodir     string
+		vofile    string
+		goVersion string
+		firstLine string
+		f         *os.File
+		tpl       *template.Template
+		envfile   string
+	)
+	if stringutils.IsEmpty(dir) {
+		dir, _ = os.Getwd()
+	}
+	_ = os.MkdirAll(dir, os.ModePerm)
+
+	gitInit(dir)
+	gitIgnore(dir)
+
+	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
+	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
+	if stringutils.IsEmpty(modName) {
+		modName = filepath.Base(dir)
+	}
+	modfile = filepath.Join(dir, "go.mod")
+	if _, err = os.Stat(modfile); os.IsNotExist(err) {
+		if f, err = os.Create(modfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New("go.mod.tmpl").Parse(modTmpl)
+		_ = tpl.Execute(f, struct {
+			ModName   string
+			GoVersion string
+		}{
+			ModName:   modName,
+			GoVersion: goVersion,
+		})
+	} else {
+		logrus.Warnf("file %s already exists", modfile)
+	}
+
+	envfile = filepath.Join(dir, ".env")
+	if _, err = os.Stat(envfile); os.IsNotExist(err) {
+		if f, err = os.Create(envfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New(".env.tmpl").Parse(envTmpl)
+		_ = tpl.Execute(f, struct {
+			SvcName string
+		}{
+			SvcName: modName,
+		})
+	} else {
+		logrus.Warnf("file %s already exists", envfile)
+	}
+
+	vodir = filepath.Join(dir, "vo")
+	if err = os.MkdirAll(vodir, os.ModePerm); err != nil {
+		panic(err)
+	}
+	vofile = filepath.Join(vodir, "vo.go")
+	if _, err = os.Stat(vofile); os.IsNotExist(err) {
+		if f, err = os.Create(vofile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New("vo.go.tmpl").Parse(voTmpl)
+		_ = tpl.Execute(f, nil)
+	} else {
+		logrus.Warnf("file %s already exists", vofile)
+	}
+
+	svcName = strcase.ToCamel(filepath.Base(dir))
+	svcfile = filepath.Join(dir, "svc.go")
+	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
+		if f, err = os.Open(modfile); err != nil {
+			panic(err)
+		}
+		reader := bufio.NewReader(f)
+		if firstLine, err = reader.ReadString('\n'); err != nil {
+			panic(err)
+		}
+		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+
+		if f, err = os.Create(svcfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
+		_ = tpl.Execute(f, struct {
+			VoPackage string
+			SvcName   string
+		}{
+			VoPackage: modName + "/vo",
+			SvcName:   svcName,
+		})
+	} else {
+		logrus.Warnf("file %s already exists", svcfile)
+	}
+
+	dockerfile := filepath.Join(dir, "Dockerfile")
+	if _, err = os.Stat(dockerfile); os.IsNotExist(err) {
+		if f, err = os.Create(dockerfile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
+		_ = tpl.Execute(f, nil)
+	} else {
+		logrus.Warnf("file %s already exists", dockerfile)
+	}
+}
+
 // InitSvc inits a service project
 func InitSvc(dir string) {
 	var (

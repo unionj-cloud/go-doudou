@@ -171,7 +171,7 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 
 // Init inits a project
 func (receiver Svc) Init() {
-	codegen.InitSvc(receiver.dir)
+	codegen.InitProj(receiver.dir, receiver.ModName)
 }
 
 // NewSvc new Svc instance
