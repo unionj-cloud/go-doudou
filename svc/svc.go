@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/constants"
-	"github.com/unionj-cloud/go-doudou/esutils"
 	"github.com/unionj-cloud/go-doudou/executils"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
@@ -42,9 +41,7 @@ type Svc struct {
 	Jsonattrcase string
 
 	DocPath string
-	Es      *esutils.Es
 
-	N         int
 	Env       string
 	ClientPkg string
 
@@ -55,6 +52,8 @@ type Svc struct {
 
 	runner executils.Runner
 	w      *watcher.Watcher
+
+	ModName string
 }
 
 func validateDataType(dir string) {
@@ -74,9 +73,7 @@ func validateDataType(dir string) {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver Svc) Http() {
 	dir := receiver.dir
-	if receiver.Doc {
-		validateDataType(dir)
-	}
+	validateDataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validateRestApi(ic)
@@ -172,7 +169,7 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 	return nonBasicTypes
 }
 
-// Init inits a go-doudou project
+// Init inits a project
 func (receiver Svc) Init() {
 	codegen.InitSvc(receiver.dir)
 }

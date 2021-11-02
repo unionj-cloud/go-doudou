@@ -197,7 +197,6 @@ func InitSvc(dir string) {
 
 	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
 	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
-	fmt.Println(goVersion)
 	modName = filepath.Base(dir)
 	modfile = filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {

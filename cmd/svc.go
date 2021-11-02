@@ -18,16 +18,7 @@ var svcCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(svcCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// svcCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// svcCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	
 	deployCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	shutdownCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	pushCmd.Flags().StringVarP(&imageRepo, "repo", "r", "", `your private docker image repository`)
