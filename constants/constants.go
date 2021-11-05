@@ -42,3 +42,6 @@ const FORMAT11 = "20060102150405"
 
 // FORMAT12 is a pattern for formatting time
 const FORMAT12 = "2006/1/2"
+
+// FORMAT13 is a pattern for formatting time
+const FORMAT13 = "06-01-02"
