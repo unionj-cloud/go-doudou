@@ -2,6 +2,7 @@ package esutils
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -41,6 +42,8 @@ func TestPage(t *testing.T) {
 							QueryType:  MATCHPHRASE,
 						},
 					},
+					//Includes: []string{"text"},
+					Excludes: []string{"text"},
 				},
 			},
 			want: PageResult{
@@ -70,11 +73,12 @@ func TestPage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := es.Page(context.Background(), tt.args.paging)
+			got, err := es.Page(context.Background(), tt.args.paging)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Page() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			fmt.Println(got)
 		})
 	}
 }

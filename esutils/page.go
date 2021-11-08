@@ -41,7 +41,14 @@ func (es *Es) Page(ctx context.Context, paging *Paging) (PageResult, error) {
 	var rets []interface{}
 
 	var searchResult *elastic.SearchResult
-	ss := es.client.Search().Index(es.esIndex).Type(es.esType).Query(boolQuery)
+	fsc := elastic.NewFetchSourceContext(true)
+	if len(paging.Includes) > 0 {
+		fsc = fsc.Include(paging.Includes...)
+	}
+	if len(paging.Excludes) > 0 {
+		fsc = fsc.Exclude(paging.Excludes...)
+	}
+	ss := es.client.Search().Index(es.esIndex).Type(es.esType).Query(boolQuery).FetchSourceContext(fsc)
 	if paging.Sortby != nil && len(paging.Sortby) > 0 {
 		for _, v := range paging.Sortby {
 			ss = ss.Sort(v.Field, v.Ascending)

@@ -104,7 +104,7 @@ func (e *Es) newDefaultClient() {
 	e.client = client
 }
 
-func (e *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
+func (e *Es) fetchAll(fsc *elastic.FetchSourceContext, boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
 	var (
 		rets []interface{}
 		err  error
@@ -113,7 +113,7 @@ func (e *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.R
 	g, ctx := errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		defer close(hits)
-		scroll := e.client.Scroll().Index(e.esIndex).Type(e.esType).Query(boolQuery).Size(1000).KeepAlive("1m")
+		scroll := e.client.Scroll().Index(e.esIndex).Type(e.esType).Query(boolQuery).FetchSourceContext(fsc).Size(1000).KeepAlive("1m")
 		for {
 			results, err := scroll.Do(ctx)
 			if err == io.EOF {
@@ -175,13 +175,13 @@ func (e *Es) fetchAll(boolQuery *elastic.BoolQuery, callback func(message json.R
 	return rets, nil
 }
 
-func (e *Es) doPaging(ctx context.Context, paging *Paging, boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
+func (e *Es) doPaging(ctx context.Context, fsc *elastic.FetchSourceContext, paging *Paging, boolQuery *elastic.BoolQuery, callback func(message json.RawMessage) (interface{}, error)) ([]interface{}, error) {
 	var (
 		rets         []interface{}
 		searchResult *elastic.SearchResult
 		err          error
 	)
-	ss := e.client.Search().Index(e.esIndex).Type(e.esType).Query(boolQuery)
+	ss := e.client.Search().Index(e.esIndex).Type(e.esType).Query(boolQuery).FetchSourceContext(fsc)
 	if paging.Sortby != nil && len(paging.Sortby) > 0 {
 		for _, v := range paging.Sortby {
 			ss = ss.Sort(v.Field, v.Ascending)
@@ -329,6 +329,9 @@ type Paging struct {
 	Skip       int         `json:"skip"`
 	Limit      int         `json:"limit"`
 	Sortby     []Sort      `json:"sortby"`
+	// https://www.elastic.co/guide/en/elasticsearch/reference/6.8/search-request-source-filtering.html
+	Includes []string `json:"includes"`
+	Excludes []string `json:"excludes"`
 }
 
 // String prints query in json format for debug purpose
