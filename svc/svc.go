@@ -12,10 +12,7 @@ import (
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/internal/codegen"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"os"
 	"os/exec"
 	"os/user"
@@ -434,18 +431,4 @@ func (receiver Svc) Run(watch bool) {
 			panic(err)
 		}
 	}
-}
-
-// Seed starts a seed node
-func (receiver Svc) Seed() {
-	config.GddServiceName.Write("seed")
-	config.GddPort.Write("56200")
-	config.GddMemPort.Write("56199")
-	node, err := registry.NewNode()
-	if err != nil {
-		logrus.Panicln(fmt.Sprintf("%+v", err))
-	}
-	logrus.Infof("Memberlist created. Local node is %s\n", node)
-	srv := ddhttp.NewDefaultHttpSrv()
-	srv.Run()
 }

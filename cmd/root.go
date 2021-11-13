@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/svc"
 )
 
 // rootCmd is the base command when called without any subcommands
@@ -18,8 +17,6 @@ consumers can import it into postman to debug and test, or upload it into some c
 it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
 load balancing and so on. it just begins, more features will come out soon.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.Svc{}
-		s.Seed()
 	},
 }
 

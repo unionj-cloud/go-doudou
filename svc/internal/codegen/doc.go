@@ -10,7 +10,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/constants"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/stringutils"
-	"github.com/unionj-cloud/go-doudou/svc/config"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -332,17 +331,9 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	api = v3.API{
 		Openapi: "3.0.2",
 		Info: &v3.Info{
-			Title:          svcname,
-			Description:    strings.Join(ic.Interfaces[0].Comments, "\n"),
-			TermsOfService: "",
-			Contact:        nil,
-			License:        nil,
-			Version:        fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
-		},
-		Servers: []v3.Server{
-			{
-				URL: config.GddRouteRootPath.Load(),
-			},
+			Title:       svcname,
+			Description: strings.Join(ic.Interfaces[0].Comments, "\n"),
+			Version:     fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
 		},
 		Paths: paths,
 		Components: &v3.Components{

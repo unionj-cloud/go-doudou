@@ -4,3 +4,4 @@ example/doudou/dao/
 **/cover.out
 **/coverage.txt
 gen
+cmd/testdata/testsvc/cmd/cmd
