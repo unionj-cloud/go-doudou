@@ -196,14 +196,6 @@ func Test_GenClient(t *testing.T) {
 	})
 }
 
-func TestSvc_Seed(t *testing.T) {
-	assert.NotPanics(t, func() {
-		s := Svc{}
-		go s.Seed()
-		time.Sleep(2 * time.Second)
-	})
-}
-
 func TestSvc_Push(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
 	s.Push("wubin1989")

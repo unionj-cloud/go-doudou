@@ -27,6 +27,7 @@ import (
 )
 
 func main() {
+	ddconfig.InitEnv()
 	conf := config.LoadFromEnv()
 	conn, err := db.NewDb(conf.DbConf)
 	if err != nil {

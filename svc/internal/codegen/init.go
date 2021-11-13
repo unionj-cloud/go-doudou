@@ -94,7 +94,22 @@ require (
 	github.com/unionj-cloud/cast v1.3.2
 )`
 
-const gitignoreTmpl = "# Binaries for programs and plugins\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary, built with `go test -c`\n*.test\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Dependency directories (remove the comment below to include it)\n# vendor/"
+const gitignoreTmpl = `# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+**/*.local
+.DS_Store
+.idea`
 
 const envTmpl = `GDD_BANNER=on
 GDD_BANNER_TEXT=Go-doudou

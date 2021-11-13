@@ -2,21 +2,23 @@ package config
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 )
 
-func init() {
-	wd, _ := os.Getwd()
-	err := godotenv.Load(filepath.Join(wd, ".env"))
-	if err != nil {
-		err = godotenv.Load(filepath.Join(wd, "../.env"))
-		if err != nil {
-			logrus.Warnln(errors.Wrap(err, "Error loading .env file"))
-		}
+func InitEnv() {
+	env := os.Getenv("GDD_ENV")
+	if "" == env {
+		env = "dev"
 	}
+	wd, _ := os.Getwd()
+	_ = godotenv.Load(filepath.Join(wd, ".env."+env+".local"))
+	if "test" != env {
+		_ = godotenv.Load(filepath.Join(wd, ".env.local"))
+	}
+	_ = godotenv.Load(filepath.Join(wd, ".env."+env))
+	_ = godotenv.Load() // The Original .env
 }
 
 var (
