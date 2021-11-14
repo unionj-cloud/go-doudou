@@ -135,10 +135,16 @@ func table2struct(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB)
 			panic(fmt.Sprintf("%+v", err))
 		}
 
+		fks := foreignKeys(ctx, db, d.Conf.Schema, t)
+		fkMap := make(map[string]table.ForeignKey)
+		for _, item := range fks {
+			fkMap[item.Fk] = item
+		}
+
 		var cols []table.Column
 		var fields []astutils.FieldMeta
 		for _, item := range columns {
-			col := dbColumn2Column(item, colIdxMap, t)
+			col := dbColumn2Column(item, colIdxMap, t, fkMap[item.Field])
 			fields = append(fields, col.Meta)
 			cols = append(cols, col)
 		}
@@ -162,6 +168,7 @@ func table2struct(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB)
 			Pk:      pkColumn.Name,
 			Indexes: indexes,
 			Meta:    domain,
+			Fks:     fks,
 		})
 
 		dfile := filepath.Join(d.Dir, strings.ToLower(domain.Name)+".go")
@@ -172,6 +179,48 @@ func table2struct(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB)
 		} else {
 			logrus.Warnf("file %s already exists", dfile)
 		}
+	}
+	return
+}
+
+func foreignKeys(ctx context.Context, db *sqlx.DB, schema, t string) (fks []table.ForeignKey) {
+	var (
+		dbForeignKeys []table.DbForeignKey
+		err           error
+	)
+	rawSql := `
+		SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+		FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+		WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_SCHEMA = ? AND TABLE_NAME = ?
+	`
+	if err = db.SelectContext(ctx, &dbForeignKeys, db.Rebind(rawSql), schema, schema, t); err != nil {
+		panic(fmt.Sprintf("%+v", err))
+	}
+	for _, item := range dbForeignKeys {
+		var (
+			dbActions []table.DbAction
+			dbAction  table.DbAction
+		)
+		rawSql = `
+			select CONSTRAINT_NAME, UPDATE_RULE, DELETE_RULE, TABLE_NAME, REFERENCED_TABLE_NAME 
+			from information_schema.REFERENTIAL_CONSTRAINTS 
+			where CONSTRAINT_SCHEMA=? and TABLE_NAME=? and CONSTRAINT_NAME=?
+		`
+		if err = db.SelectContext(ctx, &dbActions, db.Rebind(rawSql), schema, t, item.ConstraintName); err != nil {
+			panic(fmt.Sprintf("%+v", err))
+		}
+		if len(dbActions) > 0 {
+			dbAction = dbActions[0]
+		}
+		fks = append(fks, table.ForeignKey{
+			Table:           t,
+			Constraint:      item.ConstraintName,
+			Fk:              item.ColumnName,
+			ReferencedTable: item.ReferencedTableName,
+			ReferencedCol:   item.ReferencedColumnName,
+			UpdateRule:      dbAction.UpdateRule,
+			DeleteRule:      dbAction.DeleteRule,
+		})
 	}
 	return
 }
@@ -216,7 +265,7 @@ func idxListAndMap(idxMap map[string][]table.DbIndex) ([]table.Index, map[string
 	return indexes, colIdxMap
 }
 
-func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem, t string) table.Column {
+func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem, t string, fk table.ForeignKey) table.Column {
 	extra := item.Extra
 	if strings.Contains(extra, "auto_increment") {
 		extra = ""
@@ -242,6 +291,7 @@ func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem
 		Extra:         extraenum.Extra(extra),
 		AutoSet:       table.CheckAutoSet(defaultVal),
 		Indexes:       colIdxMap[item.Field],
+		Fk:            fk,
 	}
 	col.Meta = table.NewFieldFromColumn(col)
 	return col
@@ -252,6 +302,7 @@ func struct2Table(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB)
 		files []string
 		err   error
 		tx    *sqlx.Tx
+		root  *ast.File
 	)
 	if err = filepath.Walk(d.Dir, astutils.Visit(&files)); err != nil {
 		panic(fmt.Sprintf("%+v", err))
@@ -259,8 +310,7 @@ func struct2Table(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB)
 	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-		if err != nil {
+		if root, err = parser.ParseFile(fset, file, nil, parser.ParseComments); err != nil {
 			panic(fmt.Sprintf("%+v", err))
 		}
 		ast.Walk(sc, root)

@@ -71,7 +71,7 @@ func ExampleNewTableFromStruct() {
 	// INDEX `name_phone_idx` (`phone` asc,`name` asc),
 	// UNIQUE INDEX `no_idx` (`no` asc),
 	// UNIQUE INDEX `rule_idx` (`rule` asc),
-	// UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc));
+	// UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc))
 }
 
 func TestTable_CreateSql(t1 *testing.T) {
@@ -174,7 +174,7 @@ func TestTable_CreateSql(t1 *testing.T) {
 					},
 				},
 			},
-			want:    "CREATE TABLE `users` (\n`id` INT NOT NULL AUTO_INCREMENT,\n`name` VARCHAR(255) NULL DEFAULT 'wubin',\n`phone` VARCHAR(255) NULL DEFAULT '13552053960' comment '手机号',\n`age` INT NULL,\n`no` INT NOT NULL,\nPRIMARY KEY (`id`),\nINDEX `name_phone_idx` (`name` asc,`phone` desc),\nUNIQUE INDEX `uni_no` (`no` asc));",
+			want:    "CREATE TABLE `users` (\n`id` INT NOT NULL AUTO_INCREMENT,\n`name` VARCHAR(255) NULL DEFAULT 'wubin',\n`phone` VARCHAR(255) NULL DEFAULT '13552053960' comment '手机号',\n`age` INT NULL,\n`no` INT NOT NULL,\nPRIMARY KEY (`id`),\nINDEX `name_phone_idx` (`name` asc,`phone` desc),\nUNIQUE INDEX `uni_no` (`no` asc))",
 			wantErr: false,
 		},
 	}

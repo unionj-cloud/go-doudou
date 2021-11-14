@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
@@ -194,6 +195,7 @@ type Column struct {
 	Meta          astutils.FieldMeta
 	AutoSet       bool
 	Indexes       []IndexItem
+	Fk            ForeignKey
 }
 
 var altersqltmpl = `{{define "change"}}
@@ -238,6 +240,39 @@ type DbIndex struct {
 	Collation  string `db:"Collation"`    // Collation represents how the column is sorted in the index. A means ascending, B means descending, or NULL means not sorted.
 }
 
+// DbForeignKey from INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+type DbForeignKey struct {
+	TableName            string `db:"TABLE_NAME"`
+	ColumnName           string `db:"COLUMN_NAME"`
+	ConstraintName       string `db:"CONSTRAINT_NAME"`
+	ReferencedTableName  string `db:"REFERENCED_TABLE_NAME"`
+	ReferencedColumnName string `db:"REFERENCED_COLUMN_NAME"`
+}
+
+// DbAction from information_schema.REFERENTIAL_CONSTRAINTS
+type DbAction struct {
+	TableName           string `db:"TABLE_NAME"`
+	ConstraintName      string `db:"CONSTRAINT_NAME"`
+	ReferencedTableName string `db:"REFERENCED_TABLE_NAME"`
+	UpdateRule          string `db:"UPDATE_RULE"`
+	DeleteRule          string `db:"DELETE_RULE"`
+}
+
+type ForeignKey struct {
+	// Table the child table
+	Table string
+	// Constraint name of foreign key constraint
+	Constraint string
+	// Fk foreign key
+	Fk string
+	// ReferencedTable the referenced table
+	ReferencedTable string
+	// ReferencedCol the referenced column of ReferencedTable
+	ReferencedCol string
+	UpdateRule    string
+	DeleteRule    string
+}
+
 // Table defines a table
 type Table struct {
 	Name    string
@@ -245,6 +280,7 @@ type Table struct {
 	Pk      string
 	Indexes []Index
 	Meta    astutils.StructMeta
+	Fks     []ForeignKey
 }
 
 // NewTableFromStruct creates a Table instance from structMeta
@@ -253,6 +289,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 		columns       []Column
 		uniqueindexes []Index
 		indexes       []Index
+		fks           []ForeignKey
 		pkColumn      Column
 		table         string
 	)
@@ -265,6 +302,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 			columnName     string
 			_uniqueindexes []Index
 			_indexes       []Index
+			_fks           []ForeignKey
 			column         Column
 		)
 		column.Table = table
@@ -281,7 +319,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 				}
 			}
 			if stringutils.IsNotEmpty(ddTag) {
-				_indexes, _uniqueindexes = parseDdTag(ddTag, field, &column)
+				_indexes, _uniqueindexes, _fks = parseDdTag(ddTag, field, &column)
 			}
 		}
 
@@ -307,6 +345,12 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 			}
 		}
 
+		for _, fk := range _fks {
+			if stringutils.IsNotEmpty(fk.Fk) {
+				fks = append(fks, fk)
+			}
+		}
+
 		columns = append(columns, column)
 	}
 
@@ -325,6 +369,7 @@ func NewTableFromStruct(structMeta astutils.StructMeta, prefix ...string) Table 
 		Pk:      pkColumn.Name,
 		Indexes: indexesResult,
 		Meta:    structMeta,
+		Fks:     fks,
 	}
 }
 
@@ -395,12 +440,12 @@ func mergeIndexes(indexes, uniqueindexes []Index) []Index {
 	return indexesResult
 }
 
-func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (indexes []Index, uniqueIndexes []Index) {
+func parseDdTag(ddTag string, field astutils.FieldMeta, column *Column) (indexes []Index, uniqueIndexes []Index, fks []ForeignKey) {
 	kvs := strings.Split(ddTag, ";")
 	for _, kv := range kvs {
 		pair := strings.Split(kv, ":")
 		if len(pair) > 1 {
-			parsePair(pair, column, &indexes, &uniqueIndexes)
+			parsePair(pair, column, &indexes, &uniqueIndexes, &fks)
 		} else {
 			parseSingle(pair, column, field, &indexes, &uniqueIndexes)
 		}
@@ -448,9 +493,12 @@ func parseSingle(pair []string, column *Column, field astutils.FieldMeta, indexe
 	}
 }
 
-func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[]Index) {
+func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[]Index, fks *[]ForeignKey) {
 	key := pair[0]
 	value := pair[1]
+	if stringutils.IsEmpty(value) {
+		panic(fmt.Sprintf("%+v", errors.New("value should not be empty")))
+	}
 	switch key {
 	case "type":
 		column.Type = columnenum.ColumnType(value)
@@ -470,18 +518,18 @@ func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[
 		if err != nil {
 			panic(err)
 		}
-		var sort sortenum.Sort
+		var sor sortenum.Sort
 		if len(props) < 3 || stringutils.IsEmpty(props[2]) {
-			sort = sortenum.Asc
+			sor = sortenum.Asc
 		} else {
-			sort = sortenum.Sort(props[2])
+			sor = sortenum.Sort(props[2])
 		}
 		*indexes = append(*indexes, Index{
 			Name: indexName,
 			Items: []IndexItem{
 				{
 					Order: orderInt,
-					Sort:  sort,
+					Sort:  sor,
 				},
 			},
 		})
@@ -508,6 +556,29 @@ func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[
 					Sort:  sort,
 				},
 			},
+		})
+		break
+	case "fk":
+		props := strings.Split(value, ",")
+		refTable := props[0]
+		var refCol string
+		if len(props) > 1 {
+			refCol = props[1]
+		} else {
+			refCol = "id"
+		}
+		var constraint string
+		if len(props) > 2 {
+			constraint = props[2]
+		} else {
+			constraint = fmt.Sprintf("fk_%s_%s_%s", column.Name, refTable, refCol)
+		}
+		*fks = append(*fks, ForeignKey{
+			Table:           column.Table,
+			Constraint:      constraint,
+			Fk:              column.Name,
+			ReferencedTable: refTable,
+			ReferencedCol:   refCol,
 		})
 		break
 	}
@@ -557,7 +628,9 @@ func NewFieldFromColumn(col Column) astutils.FieldMeta {
 		indexClause += fmt.Sprintf("%s,%d,%s", idx.Name, idx.Order, string(idx.Sort))
 		feats = append(feats, indexClause)
 	}
-
+	if stringutils.IsNotEmpty(col.Fk.Constraint) {
+		feats = append(feats, fmt.Sprintf("fk:%s,%s,%s,ON DELETE %s ON UPDATE %s", col.Fk.ReferencedTable, col.Fk.ReferencedCol, col.Fk.Constraint, col.Fk.DeleteRule, col.Fk.UpdateRule))
+	}
 	return astutils.FieldMeta{
 		Name: strcase.ToCamel(col.Name),
 		Type: goType,
@@ -573,7 +646,12 @@ PRIMARY KEY (` + "`" + `{{.Pk}}` + "`" + `){{if .Indexes}},{{end}}
 {{- range $i, $ind := .Indexes}}
 {{- if $i}},{{end}}
 {{if $ind.Unique}}UNIQUE {{end}}INDEX ` + "`" + `{{$ind.Name}}` + "`" + ` ({{ range $j, $it := $ind.Items }}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{ end }})
-{{- end }});`
+{{- end }}{{if .Fks}},{{end}}
+{{- range $i, $fk := .Fks}}
+{{- if $i}},{{end}}
+CONSTRAINT ` + "`" + `{{$fk.Constraint}}` + "`" + ` FOREIGN KEY (` + "`" + `{{$fk.Fk}}` + "`" + `)
+REFERENCES ` + "`" + `{{$fk.ReferencedTable}}` + "`" + `(` + "`" + `{{$fk.ReferencedCol}}` + "`" + `)
+{{- end }})`
 
 // CreateSql return create table sql
 func (t *Table) CreateSql() (string, error) {
