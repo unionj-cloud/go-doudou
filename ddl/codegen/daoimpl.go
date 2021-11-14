@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"{{.DomainPackage}}"
-	"github.com/unionj-cloud/go-doudou/ddl"
 	"github.com/unionj-cloud/go-doudou/ddl/query"
+	"github.com/unionj-cloud/go-doudou/ddl/wrapper"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
 	"strings"
@@ -28,10 +28,10 @@ import (
 )
 
 type {{.DomainName}}DaoImpl struct {
-	db ddl.Querier
+	db wrapper.Querier
 }
 
-func New{{.DomainName}}Dao(querier ddl.Querier) {{.DomainName}}Dao {
+func New{{.DomainName}}Dao(querier wrapper.Querier) {{.DomainName}}Dao {
 	return {{.DomainName}}DaoImpl{
 		db: querier,
 	}

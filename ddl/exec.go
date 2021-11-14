@@ -1,8 +1,10 @@
 package ddl
 
 import (
+	"context"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/ddl/extraenum"
@@ -13,7 +15,9 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"reflect"
 	"strings"
+	"time"
 
 	// here must import mysql
 	_ "github.com/go-sql-driver/mysql"
@@ -54,7 +58,7 @@ func (d Ddl) Exec() {
 	conn += `&loc=Asia%2FShanghai&parseTime=True`
 	db, err = sqlx.Connect("mysql", conn)
 	if err != nil {
-		logrus.Panicln(err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 	defer db.Close()
 	db.MapperFunc(strcase.ToSnake)
@@ -62,14 +66,16 @@ func (d Ddl) Exec() {
 
 	var existTables []string
 	if err = db.Select(&existTables, "show tables"); err != nil {
-		logrus.Panicln(err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 
 	var tables []table.Table
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	if !d.Reverse {
-		tables = struct2Table(d, existTables, db)
+		tables = struct2Table(timeoutCtx, d, existTables, db)
 	} else {
-		tables = table2struct(d, existTables, db)
+		tables = table2struct(timeoutCtx, d, existTables, db)
 	}
 
 	if d.Dao {
@@ -80,36 +86,33 @@ func (d Ddl) Exec() {
 func genDao(d Ddl, tables []table.Table) {
 	var err error
 	if err = codegen.GenBaseGo(d.Dir, d.Df); err != nil {
-		logrus.Errorf("FATAL: %+v\n", err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 	for _, t := range tables {
 		if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
-			logrus.Errorf("FATAL: %+v\n", err)
-			break
+			panic(fmt.Sprintf("%+v", err))
 		}
 		if err = codegen.GenDaoImplGo(d.Dir, t, d.Df); err != nil {
-			logrus.Errorf("FATAL: %+v\n", err)
-			break
+			panic(fmt.Sprintf("%+v", err))
 		}
 		if err = codegen.GenDaoSQL(d.Dir, t, d.Df); err != nil {
-			logrus.Errorf("FATAL: %+v\n", err)
-			break
+			panic(fmt.Sprintf("%+v", err))
 		}
 	}
 }
 
-func table2struct(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
+func table2struct(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
 	var err error
 	if err = os.MkdirAll(d.Dir, os.ModePerm); err != nil {
-		logrus.Panicln(err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 	for _, t := range existTables {
 		if stringutils.IsNotEmpty(d.Pre) && !strings.HasPrefix(t, d.Pre) {
 			continue
 		}
 		var dbIndice []table.DbIndex
-		if err = db.Select(&dbIndice, fmt.Sprintf("SHOW INDEXES FROM %s", t)); err != nil {
-			logrus.Panicln(err)
+		if err = db.SelectContext(ctx, &dbIndice, fmt.Sprintf("SHOW INDEXES FROM %s", t)); err != nil {
+			panic(fmt.Sprintf("%+v", err))
 		}
 
 		idxMap := make(map[string][]table.DbIndex)
@@ -128,8 +131,8 @@ func table2struct(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Tabl
 		indexes, colIdxMap := idxListAndMap(idxMap)
 
 		var columns []table.DbColumn
-		if err = db.Select(&columns, fmt.Sprintf("SHOW FULL COLUMNS FROM %s", t)); err != nil {
-			logrus.Panicln(err)
+		if err = db.SelectContext(ctx, &columns, fmt.Sprintf("SHOW FULL COLUMNS FROM %s", t)); err != nil {
+			panic(fmt.Sprintf("%+v", err))
 		}
 
 		var cols []table.Column
@@ -164,7 +167,7 @@ func table2struct(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Tabl
 		dfile := filepath.Join(d.Dir, strings.ToLower(domain.Name)+".go")
 		if _, err = os.Stat(dfile); os.IsNotExist(err) {
 			if err = codegen.GenDomainGo(d.Dir, domain); err != nil {
-				logrus.Errorf("FATAL: %+v\n", err)
+				panic(fmt.Sprintf("%+v", err))
 			}
 		} else {
 			logrus.Warnf("file %s already exists", dfile)
@@ -182,18 +185,18 @@ func idxListAndMap(idxMap map[string][]table.DbIndex) ([]table.Index, map[string
 		}
 		items := make([]table.IndexItem, len(v))
 		for i, idx := range v {
-			var sort sortenum.Sort
+			var sor sortenum.Sort
 			if idx.Collation == "B" {
-				sort = sortenum.Desc
+				sor = sortenum.Desc
 			} else {
-				sort = sortenum.Asc
+				sor = sortenum.Asc
 			}
 			items[i] = table.IndexItem{
 				Unique: !v[0].NonUnique,
 				Name:   k,
 				Column: idx.ColumnName,
 				Order:  idx.SeqInIndex,
-				Sort:   sort,
+				Sort:   sor,
 			}
 			if val, exists := colIdxMap[idx.ColumnName]; exists {
 				val = append(val, items[i])
@@ -244,21 +247,21 @@ func dbColumn2Column(item table.DbColumn, colIdxMap map[string][]table.IndexItem
 	return col
 }
 
-func struct2Table(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
+func struct2Table(ctx context.Context, d Ddl, existTables []string, db *sqlx.DB) (tables []table.Table) {
 	var (
 		files []string
 		err   error
+		tx    *sqlx.Tx
 	)
-	err = filepath.Walk(d.Dir, astutils.Visit(&files))
-	if err != nil {
-		logrus.Panicln(err)
+	if err = filepath.Walk(d.Dir, astutils.Visit(&files)); err != nil {
+		panic(fmt.Sprintf("%+v", err))
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
 		root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 		if err != nil {
-			logrus.Panicln(err)
+			panic(fmt.Sprintf("%+v", err))
 		}
 		ast.Walk(sc, root)
 	}
@@ -267,11 +270,24 @@ func struct2Table(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Tabl
 	for _, sm := range flattened {
 		tables = append(tables, table.NewTableFromStruct(sm, d.Pre))
 	}
+
+	if tx, err = db.BeginTxx(ctx, nil); err != nil {
+		panic(fmt.Sprintf("%+v", err))
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			if _err := tx.Rollback(); _err != nil {
+				err = errors.Wrap(_err, "")
+			}
+			panic(fmt.Sprintf("%+v", err))
+		}
+	}()
+
 	for _, t := range tables {
 		if sliceutils.StringContains(existTables, t.Name) {
 			var columns []table.DbColumn
-			if err = db.Select(&columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
-				logrus.Panicln(err)
+			if err = tx.SelectContext(ctx, &columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
+				panic(fmt.Sprintf("%+v", err))
 			}
 			var existColumnNames []interface{}
 			for _, dbCol := range columns {
@@ -281,20 +297,76 @@ func struct2Table(d Ddl, existTables []string, db *sqlx.DB) (tables []table.Tabl
 
 			for _, col := range t.Columns {
 				if existColSet.Contains(col.Name) {
-					if err = table.ChangeColumn(db, col); err != nil {
-						logrus.Infof("FATAL: %+v\n", err)
+					if err = table.ChangeColumn(ctx, tx, col); err != nil {
+						panic(fmt.Sprintf("%+v", err))
 					}
 				} else {
-					if err = table.AddColumn(db, col); err != nil {
-						logrus.Infof("FATAL: %+v\n", err)
+					if err = table.AddColumn(ctx, tx, col); err != nil {
+						panic(fmt.Sprintf("%+v", err))
 					}
 				}
 			}
+			updateIndexFromStruct(ctx, tx, t)
 		} else {
-			if err = table.CreateTable(db, t); err != nil {
-				logrus.Errorf("FATAL: %+v\n", err)
+			if err = table.CreateTable(ctx, tx, t); err != nil {
+				panic(fmt.Sprintf("%+v", err))
 			}
 		}
 	}
+	if err = tx.Commit(); err != nil {
+		panic(fmt.Sprintf("%+v", err))
+	}
 	return
+}
+
+func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t table.Table) {
+	var dbIndexes []table.DbIndex
+	if err := tx.SelectContext(ctx, &dbIndexes, fmt.Sprintf("SHOW INDEXES FROM %s", t.Name)); err != nil {
+		panic(fmt.Sprintf("%+v", err))
+	}
+
+	keyIndexMap := make(map[string][]table.DbIndex)
+	for _, index := range dbIndexes {
+		if index.KeyName == "PRIMARY" {
+			continue
+		}
+		if val, exists := keyIndexMap[index.KeyName]; exists {
+			val = append(val, index)
+			keyIndexMap[index.KeyName] = val
+		} else {
+			keyIndexMap[index.KeyName] = []table.DbIndex{index}
+		}
+	}
+
+	for _, index := range t.Indexes {
+		if current, exists := keyIndexMap[index.Name]; exists {
+			copied := table.NewIndexFromDbIndexes(current)
+			if reflect.DeepEqual(index, copied) {
+				continue
+			}
+			index.Table = t.Name
+			if err := table.DropAddIndex(ctx, tx, index); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		} else {
+			index.Table = t.Name
+			if err := table.AddIndex(ctx, tx, index); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		}
+	}
+
+	var idxKeys []string
+	for _, index := range t.Indexes {
+		idxKeys = append(idxKeys, index.Name)
+	}
+	for k, v := range keyIndexMap {
+		if !sliceutils.StringContains(idxKeys, k) {
+			index := table.NewIndexFromDbIndexes(v)
+			index.Table = t.Name
+			if err := table.DropIndex(ctx, tx, index); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		}
+	}
 }

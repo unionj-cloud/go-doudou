@@ -673,3 +673,150 @@ func TestCheckAutoSet(t *testing.T) {
 		})
 	}
 }
+
+func TestNewIndexFromDbIndexes(t *testing.T) {
+	type args struct {
+		dbIndexes []DbIndex
+	}
+	tests := []struct {
+		name string
+		args args
+		want Index
+	}{
+		{
+			name: "",
+			args: args{
+				dbIndexes: []DbIndex{
+					{
+						Table:      "ddl_user",
+						NonUnique:  false,
+						KeyName:    "age_idx",
+						SeqInIndex: 1,
+						ColumnName: "age",
+						Collation:  "A",
+					},
+				},
+			},
+			want: Index{
+				Unique: true,
+				Name:   "age_idx",
+				Items: []IndexItem{
+					{
+						Column: "age",
+						Order:  1,
+						Sort:   sortenum.Asc,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewIndexFromDbIndexes(tt.args.dbIndexes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewIndexFromDbIndexes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIndex_DropIndexSql(t *testing.T) {
+	type fields struct {
+		Table  string
+		Unique bool
+		Name   string
+		Items  []IndexItem
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "",
+			fields: fields{
+				Table:  "ddl_user",
+				Unique: true,
+				Name:   "age_idx",
+				Items: []IndexItem{
+					{
+						Column: "age",
+						Order:  1,
+						Sort:   sortenum.Asc,
+					},
+				},
+			},
+			want:    "ALTER TABLE `ddl_user` DROP INDEX `age_idx`;",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idx := &Index{
+				Table:  tt.fields.Table,
+				Unique: tt.fields.Unique,
+				Name:   tt.fields.Name,
+				Items:  tt.fields.Items,
+			}
+			got, err := idx.DropIndexSql()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DropIndexSql() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DropIndexSql() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIndex_AddIndexSql(t *testing.T) {
+	type fields struct {
+		Table  string
+		Unique bool
+		Name   string
+		Items  []IndexItem
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "",
+			fields: fields{
+				Table:  "ddl_user",
+				Unique: true,
+				Name:   "age_idx",
+				Items: []IndexItem{
+					{
+						Column: "age",
+						Order:  1,
+						Sort:   sortenum.Asc,
+					},
+				},
+			},
+			want:    "ALTER TABLE `ddl_user` ADD UNIQUE INDEX `age_idx` (`age` asc);",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idx := &Index{
+				Table:  tt.fields.Table,
+				Unique: tt.fields.Unique,
+				Name:   tt.fields.Name,
+				Items:  tt.fields.Items,
+			}
+			got, err := idx.AddIndexSql()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AddIndexSql() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AddIndexSql() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -450,9 +450,9 @@ func TestPaging_String(t *testing.T) {
 		QueryConds: []QueryCond{
 			{
 				Pair: map[string][]interface{}{
-					"surveyId.keyword":  {"abc"},
-					"questonId.keyword": {"123456"},
-					"district.keyword":  {"迎泽区"},
+					"user.keyword":     {"wubin1989"},
+					"phone.keyword":    {"123456"},
+					"district.keyword": {"Beijing"},
 				},
 				QueryLogic: MUST,
 				QueryType:  TERMS,

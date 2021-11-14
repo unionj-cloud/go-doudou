@@ -50,9 +50,52 @@ func (it IndexItems) Swap(i, j int) {
 
 // Index define an index
 type Index struct {
+	Table  string
 	Unique bool
 	Name   string
 	Items  []IndexItem
+}
+
+const indexsqltmpl = `{{define "drop"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` DROP INDEX ` + "`" + `{{.Name}}` + "`" + `;
+{{end}}
+
+{{define "add"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` ADD {{if .Unique}}UNIQUE{{end}} INDEX ` + "`" + `{{.Name}}` + "`" + ` ({{range $j, $it := .Items}}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{end}});
+{{end}}`
+
+func (idx *Index) DropIndexSql() (string, error) {
+	return templateutils.StringBlock("index.tmpl", indexsqltmpl, "drop", idx)
+}
+
+func (idx *Index) AddIndexSql() (string, error) {
+	return templateutils.StringBlock("index.tmpl", indexsqltmpl, "add", idx)
+}
+
+func NewIndexFromDbIndexes(dbIndexes []DbIndex) Index {
+	unique := !dbIndexes[0].NonUnique
+	idxName := dbIndexes[0].KeyName
+	items := make([]IndexItem, len(dbIndexes))
+	for i, idx := range dbIndexes {
+		var sor sortenum.Sort
+		if idx.Collation == "B" {
+			sor = sortenum.Desc
+		} else {
+			sor = sortenum.Asc
+		}
+		items[i] = IndexItem{
+			Column: idx.ColumnName,
+			Order:  idx.SeqInIndex,
+			Sort:   sor,
+		}
+	}
+	it := IndexItems(items)
+	sort.Stable(it)
+	return Index{
+		Unique: unique,
+		Name:   idxName,
+		Items:  it,
+	}
 }
 
 func toColumnType(goType string) columnenum.ColumnType {

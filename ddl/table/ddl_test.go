@@ -1,6 +1,7 @@
 package table
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
@@ -11,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/ddl/config"
+	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
+	"github.com/unionj-cloud/go-doudou/ddl/wrapper"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/test"
 	"os"
@@ -68,8 +71,7 @@ func ExampleCreateTable() {
 	if err = json.Unmarshal([]byte(expectjson), &table); err != nil {
 		panic(err)
 	}
-
-	if err := CreateTable(db, table); (err != nil) != false {
+	if err := CreateTable(context.Background(), db, table); (err != nil) != false {
 		panic(fmt.Sprintf("CreateTable() error = %v, wantErr %v", err, false))
 	}
 
@@ -140,7 +142,7 @@ func TestChangeColumn(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			if err = ChangeColumn(tt.args.db, tt.args.col); (err != nil) != tt.wantErr {
+			if err = ChangeColumn(context.Background(), tt.args.db, tt.args.col); (err != nil) != tt.wantErr {
 				t.Errorf("ChangeColumn() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if err != nil {
@@ -187,8 +189,157 @@ func TestAddColumn(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			if err = AddColumn(tt.args.db, tt.args.col); (err != nil) != tt.wantErr {
+			if err = AddColumn(context.Background(), tt.args.db, tt.args.col); (err != nil) != tt.wantErr {
 				t.Errorf("ChangeColumn() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDropIndex(t *testing.T) {
+	terminator, db, err := setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	type args struct {
+		ctx context.Context
+		db  wrapper.Querier
+		idx Index
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				ctx: context.Background(),
+				db:  db,
+				idx: Index{
+					Table:  "ddl_user",
+					Unique: true,
+					Name:   "age_idx",
+					Items: []IndexItem{
+						{
+							Column: "age",
+							Order:  1,
+							Sort:   sortenum.Asc,
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := DropIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("DropIndex() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestAddIndex(t *testing.T) {
+	terminator, db, err := setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	type args struct {
+		ctx context.Context
+		db  wrapper.Querier
+		idx Index
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				ctx: context.Background(),
+				db:  db,
+				idx: Index{
+					Table:  "ddl_user",
+					Unique: true,
+					Name:   "school_idx",
+					Items: []IndexItem{
+						{
+							Column: "school",
+							Order:  1,
+							Sort:   sortenum.Asc,
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := AddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("AddIndex() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDropAddIndex(t *testing.T) {
+	terminator, db, err := setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	type args struct {
+		ctx context.Context
+		db  wrapper.Querier
+		idx Index
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				ctx: context.Background(),
+				db:  db,
+				idx: Index{
+					Table:  "ddl_user",
+					Unique: true,
+					Name:   "age_idx",
+					Items: []IndexItem{
+						{
+							Column: "age",
+							Order:  1,
+							Sort:   sortenum.Asc,
+						},
+						{
+							Column: "school",
+							Order:  2,
+							Sort:   sortenum.Asc,
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := DropAddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("DropAddIndex() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
