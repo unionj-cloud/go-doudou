@@ -1,5 +1,7 @@
 package v3
 
+import "io"
+
 // Contact https://spec.openapis.org/oas/v3.0.3#contact-object
 type Contact struct {
 	Email string `json:"email,omitempty"`
@@ -336,3 +338,8 @@ var (
 		Items: File,
 	}
 )
+
+type FileModel struct {
+	Filename string
+	Reader   io.Reader
+}

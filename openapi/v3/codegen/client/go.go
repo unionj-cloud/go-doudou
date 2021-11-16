@@ -47,6 +47,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/fileutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"io"
 	"mime/multipart"
 	"net/url"
@@ -119,21 +120,11 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- if $m.Files }}
 			{{- range $p := $m.Files }}
 				{{- if contains $p.Type "["}}
-				for _, _fh := range {{$p.Name}} {
-					_f, _err := _fh.Open()
-					if _err != nil {
-						err = errors.Wrap(_err, "")
-						return
-					}
-					_req.SetFileReader("{{$p.Name}}", _fh.Filename, _f)
+				for _, _f := range {{$p.Name}} {
+					_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
 				}
 				{{- else}}
-				_f, _err := {{$p.Name}}.Open()
-				if _err != nil {
-					err = errors.Wrap(_err, "")
-					return
-				}
-				_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
+				_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, {{$p.Name}}.Reader)
 				{{- end}}
 			{{- end }}
 		{{- end }}
@@ -448,7 +439,7 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	} else if content.Stream != nil {
 		files = append(files, astutils.FieldMeta{
 			Name: "file",
-			Type: "*multipart.FileHeader",
+			Type: "*v3.FileModel",
 		})
 	} else if content.TextPlain != nil {
 		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
@@ -470,13 +461,13 @@ func parseFormData(formData *v3.MediaType) (bodyParams *astutils.FieldMeta, file
 	for k, v := range schema.Properties {
 		var gotype string
 		if v.Type == v3.StringT && v.Format == v3.BinaryF {
-			gotype = "*multipart.FileHeader"
+			gotype = "*v3.FileModel"
 		} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
-			gotype = "[]*multipart.FileHeader"
+			gotype = "[]*v3.FileModel"
 		} else {
 			gotype = toGoType(v)
 		}
-		if strings.TrimPrefix(gotype, "[]") == "*multipart.FileHeader" {
+		if strings.TrimPrefix(gotype, "[]") == "*v3.FileModel" {
 			files = append(files, astutils.FieldMeta{
 				Name: k,
 				Type: gotype,
