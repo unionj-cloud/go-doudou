@@ -1,113 +1,83 @@
 package test
 
-import (
-	"os"
-	"time"
-)
+type RecognizeCharacterResultVO struct {
+	Probability float32 `json:"probability" url:"probability"`
 
-type Address struct {
-	City string `json:"city,omitempty" url:"city"`
+	Text string `json:"text" url:"text"`
 
-	State string `json:"state,omitempty" url:"state"`
-
-	Street string `json:"street,omitempty" url:"street"`
-
-	Zip string `json:"zip,omitempty" url:"zip"`
+	TextRectangles TextRectanglesVO `json:"textRectangles" url:"textRectangles"`
 }
 
-type ApiResponse struct {
-	Code int `json:"code,omitempty" url:"code"`
+type RecognizePdfResultVO struct {
+	Angle int64 `json:"angle" url:"angle"`
 
-	Message string `json:"message,omitempty" url:"message"`
+	Height int64 `json:"height" url:"height"`
 
-	Type string `json:"type,omitempty" url:"type"`
+	OrgHeight int64 `json:"orgHeight" url:"orgHeight"`
+
+	OrgWidth int64 `json:"orgWidth" url:"orgWidth"`
+
+	PageIndex int64 `json:"pageIndex" url:"pageIndex"`
+
+	Width int64 `json:"width" url:"width"`
+
+	WordsInfo []RecognizePdfWordsInfoVO `json:"wordsInfo" url:"wordsInfo"`
 }
 
-type Category struct {
-	Id int64 `json:"id,omitempty" url:"id"`
+type RecognizePdfWordsInfoPositionsVO struct {
+	X int64 `json:"x" url:"x"`
 
-	Name string `json:"name,omitempty" url:"name"`
+	Y int64 `json:"y" url:"y"`
 }
 
-type Customer struct {
-	Address []Address `json:"address,omitempty" url:"address"`
+type RecognizePdfWordsInfoVO struct {
+	Angle int64 `json:"angle" url:"angle"`
 
-	Id int64 `json:"id,omitempty" url:"id"`
+	Height int64 `json:"height" url:"height"`
 
-	Username string `json:"username,omitempty" url:"username"`
+	Positions []RecognizePdfWordsInfoPositionsVO `json:"positions" url:"positions"`
+
+	Width int64 `json:"width" url:"width"`
+
+	Word string `json:"word" url:"word"`
+
+	X int64 `json:"x" url:"x"`
+
+	Y int64 `json:"y" url:"y"`
 }
 
-type Order struct {
-	Complete bool `json:"complete,omitempty" url:"complete"`
-	// 客户信息结构体
-	// 用于描述客户相关的信息
-	Customer struct {
-		// 用户ID
-		Id int64 `json:"id,omitempty" url:"id"`
-		// 用户名
-		Username string `json:"username,omitempty" url:"username"`
-		// 用户地址
-		// 例如：北京海淀区xxx街道
-		// 某某小区
-		Address []Address `json:"address,omitempty" url:"address"`
-	} `json:"customer,omitempty" url:"customer"`
+type ResultListRecognizeCharacterResultVO struct {
+	Code int `json:"code" url:"code"`
 
-	Id int64 `json:"id,omitempty" url:"id"`
+	Data []RecognizeCharacterResultVO `json:"data" url:"data"`
 
-	PetId int64 `json:"petId,omitempty" url:"petId"`
-
-	Quantity int `json:"quantity,omitempty" url:"quantity"`
-
-	ShipDate *time.Time `json:"shipDate,omitempty" url:"shipDate"`
-	// Order Status
-	Status string `json:"status,omitempty" url:"status"`
+	Msg string `json:"msg" url:"msg"`
 }
 
-type Pet struct {
-	Category Category `json:"category,omitempty" url:"category"`
+type ResultRecognizePdfResultVO struct {
+	Code int `json:"code" url:"code"`
 
-	Id int64 `json:"id,omitempty" url:"id"`
+	Data RecognizePdfResultVO `json:"data" url:"data"`
 
-	// required
-	Name string `json:"name,omitempty" url:"name"`
-
-	// required
-	PhotoUrls []string `json:"photoUrls,omitempty" url:"photoUrls"`
-	// pet status in the store
-	// this is another line for test use
-	Status string `json:"status,omitempty" url:"status"`
-
-	Tags []Tag `json:"tags,omitempty" url:"tags"`
+	Msg string `json:"msg" url:"msg"`
 }
 
-type Tag struct {
-	Id int64 `json:"id,omitempty" url:"id"`
+type Resultstring struct {
+	Code int `json:"code" url:"code"`
 
-	Name string `json:"name,omitempty" url:"name"`
+	Data string `json:"data" url:"data"`
+
+	Msg string `json:"msg" url:"msg"`
 }
 
-type User struct {
-	Additional1 struct {
-	} `json:"additional1,omitempty" url:"additional1"`
+type TextRectanglesVO struct {
+	Angle int `json:"angle" url:"angle"`
 
-	Additional2 struct {
-	} `json:"additional2,omitempty" url:"additional2"`
+	Height int `json:"height" url:"height"`
 
-	Avatar *os.File `json:"avatar,omitempty" url:"avatar"`
+	Left int `json:"left" url:"left"`
 
-	Email string `json:"email,omitempty" url:"email"`
+	Top int `json:"top" url:"top"`
 
-	FirstName string `json:"firstName,omitempty" url:"firstName"`
-
-	Id int64 `json:"id,omitempty" url:"id"`
-
-	LastName string `json:"lastName,omitempty" url:"lastName"`
-
-	Password string `json:"password,omitempty" url:"password"`
-
-	Phone string `json:"phone,omitempty" url:"phone"`
-	// User Status
-	UserStatus int `json:"userStatus,omitempty" url:"userStatus"`
-
-	Username string `json:"username,omitempty" url:"username"`
+	Width int `json:"width" url:"width"`
 }

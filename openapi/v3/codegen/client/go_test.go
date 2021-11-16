@@ -19,6 +19,12 @@ func Test_genGoVo(t *testing.T) {
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
+func Test_genGoVo_clean(t *testing.T) {
+	testdir := pathutils.Abs("../testdata")
+	api := loadAPI(path.Join(testdir, "test5.json"))
+	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
+}
+
 func Test_genGoVo_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
 	api := loadAPI(path.Join(testdir, "petstore3.json"))
@@ -127,6 +133,27 @@ func Test_genGoHttp4(t *testing.T) {
 
 	for svcname, paths := range svcmap {
 		genGoHTTP(paths, svcname, filepath.Join(pathutils.Abs("../testdata"), "test"), "", "test")
+	}
+}
+
+func Test_genGoHttp5(t *testing.T) {
+	testdir := pathutils.Abs("../testdata")
+	api := loadAPI(path.Join(testdir, "test5.json"))
+	schemas = api.Components.Schemas
+	requestBodies = api.Components.RequestBodies
+	svcmap := make(map[string]map[string]v3.Path)
+	for endpoint, path := range api.Paths {
+		svcname := strings.Split(strings.Trim(endpoint, "/"), "/")[0]
+		if value, exists := svcmap[svcname]; exists {
+			value[endpoint] = path
+		} else {
+			svcmap[svcname] = make(map[string]v3.Path)
+			svcmap[svcname][endpoint] = path
+		}
+	}
+
+	for svcname, paths := range svcmap {
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
 }
 

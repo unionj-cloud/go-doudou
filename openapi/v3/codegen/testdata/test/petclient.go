@@ -24,12 +24,12 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// Finds Pets by tags
-// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
+// PostPetPetIdUploadImage uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	queryParams struct {
-		Tags []string `json:"tags,omitempty" url:"tags"`
-	}) (ret []Pet, err error) {
+		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
 	var (
 		_server string
 		_err    error
@@ -43,8 +43,14 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	_req.SetContext(ctx)
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
+	_f, _err := _uploadFile.Open()
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
 
-	_resp, _err := _req.Get(_server + "/pet/findByTags")
+	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -60,38 +66,7 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	return
 }
 
-// Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-
-	_resp, _err := _req.Get(_server + "/pet/{petId}")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// Add a new pet to the store
+// PostPet Add a new pet to the store
 // Add a new pet to the store
 func (receiver *PetClient) PostPet(ctx context.Context,
 	bodyJSON Pet) (ret Pet, err error) {
@@ -124,7 +99,7 @@ func (receiver *PetClient) PostPet(ctx context.Context,
 	return
 }
 
-// Update an existing pet
+// PutPet Update an existing pet
 // Update an existing pet by Id
 func (receiver *PetClient) PutPet(ctx context.Context,
 	bodyJSON Pet) (ret Pet, err error) {
@@ -157,7 +132,38 @@ func (receiver *PetClient) PutPet(ctx context.Context,
 	return
 }
 
-// Finds Pets by status
+// GetPetPetId Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+
+	_resp, _err := _req.Get(_server + "/pet/{petId}")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// GetPetFindByStatus Finds Pets by status
 // Multiple status values can be provided with comma separated strings
 func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	queryParams struct {
@@ -193,12 +199,12 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
 	return
 }
 
-// uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+// GetPetFindByTags Finds Pets by tags
+// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	queryParams struct {
-		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	_uploadFile *multipart.FileHeader) (ret ApiResponse, err error) {
+		Tags []string `json:"tags,omitempty" url:"tags"`
+	}) (ret []Pet, err error) {
 	var (
 		_server string
 		_err    error
@@ -212,14 +218,8 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	_req.SetContext(ctx)
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
-	_f, _err := _uploadFile.Open()
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	_req.SetFileReader("_uploadFile", _uploadFile.Filename, _f)
 
-	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
+	_resp, _err := _req.Get(_server + "/pet/findByTags")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

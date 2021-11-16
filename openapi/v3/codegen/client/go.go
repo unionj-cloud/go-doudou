@@ -69,8 +69,12 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 }
 
 {{- range $m := .Meta.Methods }}
-	{{- range $c := $m.Comments }}
+	{{- range $i, $c := $m.Comments }}
+	{{- if eq $i 0}}
+	// {{$m.Name}} {{$c}}
+	{{- else}}
 	// {{$c}}
+	{{- end}}
 	{{- end }}
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, {{ range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
@@ -575,7 +579,7 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 //	ArrayT   Type = "array"
 func toGoType(schema *v3.Schema) string {
 	if stringutils.IsNotEmpty(schema.Ref) {
-		return strings.TrimPrefix(schema.Ref, "#/components/schemas/")
+		return clean(strings.TrimPrefix(schema.Ref, "#/components/schemas/"))
 	}
 	switch schema.Type {
 	case v3.IntegerT:
@@ -680,12 +684,20 @@ func toComment(comment string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
+func clean(str string) string {
+	return strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(str, "«", ""), "»", ""))
+}
+
+func toCamel(str string) string {
+	return strcase.ToCamel(clean(str))
+}
+
 func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
 	if err := os.MkdirAll(filepath.Dir(output), os.ModePerm); err != nil {
 		panic(err)
 	}
 	funcMap := make(map[string]interface{})
-	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["toCamel"] = toCamel
 	funcMap["toGoType"] = toGoType
 	funcMap["toComment"] = toComment
 	funcMap["stringContains"] = sliceutils.StringContains
