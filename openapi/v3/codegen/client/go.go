@@ -447,7 +447,7 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 		bodyParams, files = parseFormData(content.FormData)
 	} else if content.Stream != nil {
 		files = append(files, astutils.FieldMeta{
-			Name: "_uploadFile",
+			Name: "file",
 			Type: "*multipart.FileHeader",
 		})
 	} else if content.TextPlain != nil {
