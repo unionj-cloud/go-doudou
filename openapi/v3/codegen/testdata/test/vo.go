@@ -1,83 +1,113 @@
 package test
 
-type RecognizeCharacterResultVO struct {
-	Probability float32 `json:"probability" url:"probability"`
+import (
+	"os"
+	"time"
+)
 
-	Text string `json:"text" url:"text"`
+type Address struct {
+	City string `json:"city" url:"city"`
 
-	TextRectangles TextRectanglesVO `json:"textRectangles" url:"textRectangles"`
+	State string `json:"state" url:"state"`
+
+	Street string `json:"street" url:"street"`
+
+	Zip string `json:"zip" url:"zip"`
 }
 
-type RecognizePdfResultVO struct {
-	Angle int64 `json:"angle" url:"angle"`
-
-	Height int64 `json:"height" url:"height"`
-
-	OrgHeight int64 `json:"orgHeight" url:"orgHeight"`
-
-	OrgWidth int64 `json:"orgWidth" url:"orgWidth"`
-
-	PageIndex int64 `json:"pageIndex" url:"pageIndex"`
-
-	Width int64 `json:"width" url:"width"`
-
-	WordsInfo []RecognizePdfWordsInfoVO `json:"wordsInfo" url:"wordsInfo"`
-}
-
-type RecognizePdfWordsInfoPositionsVO struct {
-	X int64 `json:"x" url:"x"`
-
-	Y int64 `json:"y" url:"y"`
-}
-
-type RecognizePdfWordsInfoVO struct {
-	Angle int64 `json:"angle" url:"angle"`
-
-	Height int64 `json:"height" url:"height"`
-
-	Positions []RecognizePdfWordsInfoPositionsVO `json:"positions" url:"positions"`
-
-	Width int64 `json:"width" url:"width"`
-
-	Word string `json:"word" url:"word"`
-
-	X int64 `json:"x" url:"x"`
-
-	Y int64 `json:"y" url:"y"`
-}
-
-type ResultListRecognizeCharacterResultVO struct {
+type ApiResponse struct {
 	Code int `json:"code" url:"code"`
 
-	Data []RecognizeCharacterResultVO `json:"data" url:"data"`
+	Message string `json:"message" url:"message"`
 
-	Msg string `json:"msg" url:"msg"`
+	Type string `json:"type" url:"type"`
 }
 
-type ResultRecognizePdfResultVO struct {
-	Code int `json:"code" url:"code"`
+type Category struct {
+	Id int64 `json:"id" url:"id"`
 
-	Data RecognizePdfResultVO `json:"data" url:"data"`
-
-	Msg string `json:"msg" url:"msg"`
+	Name string `json:"name" url:"name"`
 }
 
-type Resultstring struct {
-	Code int `json:"code" url:"code"`
+type Customer struct {
+	Address []Address `json:"address" url:"address"`
 
-	Data string `json:"data" url:"data"`
+	Id int64 `json:"id" url:"id"`
 
-	Msg string `json:"msg" url:"msg"`
+	Username string `json:"username" url:"username"`
 }
 
-type TextRectanglesVO struct {
-	Angle int `json:"angle" url:"angle"`
+type Order struct {
+	Complete bool `json:"complete" url:"complete"`
+	// 客户信息结构体
+	// 用于描述客户相关的信息
+	Customer struct {
+		// 用户ID
+		Id int64 `json:"id" url:"id"`
+		// 用户名
+		Username string `json:"username" url:"username"`
+		// 用户地址
+		// 例如：北京海淀区xxx街道
+		// 某某小区
+		Address []Address `json:"address" url:"address"`
+	} `json:"customer" url:"customer"`
 
-	Height int `json:"height" url:"height"`
+	Id int64 `json:"id" url:"id"`
 
-	Left int `json:"left" url:"left"`
+	PetId int64 `json:"petId" url:"petId"`
 
-	Top int `json:"top" url:"top"`
+	Quantity int `json:"quantity" url:"quantity"`
 
-	Width int `json:"width" url:"width"`
+	ShipDate *time.Time `json:"shipDate" url:"shipDate"`
+	// Order Status
+	Status string `json:"status" url:"status"`
+}
+
+type Pet struct {
+	Category Category `json:"category" url:"category"`
+
+	Id int64 `json:"id" url:"id"`
+
+	// required
+	Name string `json:"name" url:"name"`
+
+	// required
+	PhotoUrls []string `json:"photoUrls" url:"photoUrls"`
+	// pet status in the store
+	// this is another line for test use
+	Status string `json:"status" url:"status"`
+
+	Tags []Tag `json:"tags" url:"tags"`
+}
+
+type Tag struct {
+	Id int64 `json:"id" url:"id"`
+
+	Name string `json:"name" url:"name"`
+}
+
+type User struct {
+	Additional1 struct {
+	} `json:"additional1" url:"additional1"`
+
+	Additional2 struct {
+	} `json:"additional2" url:"additional2"`
+
+	Avatar *os.File `json:"avatar" url:"avatar"`
+
+	Email string `json:"email" url:"email"`
+
+	FirstName string `json:"firstName" url:"firstName"`
+
+	Id int64 `json:"id" url:"id"`
+
+	LastName string `json:"lastName" url:"lastName"`
+
+	Password string `json:"password" url:"password"`
+
+	Phone string `json:"phone" url:"phone"`
+	// User Status
+	UserStatus int `json:"userStatus" url:"userStatus"`
+
+	Username string `json:"username" url:"username"`
 }

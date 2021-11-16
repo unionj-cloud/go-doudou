@@ -23,7 +23,7 @@ import (
 var votmpl = `package {{.Pkg}}
 
 {{- range $k, $v := .Schemas }}
-{{ $v.Description | toComment }}
+{{ toComment $v.Description ($k | toCamel)}}
 type {{$k | toCamel}} struct {
 {{- range $pk, $pv := $v.Properties }}
 	{{ $pv.Description | toComment }}
@@ -672,14 +672,18 @@ func object2Struct(schema *v3.Schema) string {
 	return b.String()
 }
 
-func toComment(comment string) string {
+func toComment(comment string, title ...string) string {
 	if stringutils.IsEmpty(comment) {
 		return ""
 	}
 	b := new(strings.Builder)
 	lines := strings.Split(comment, "\n")
-	for _, line := range lines {
-		b.WriteString(fmt.Sprintf("// %s\n", line))
+	for i, line := range lines {
+		if len(title) > 0 && i == 0 {
+			b.WriteString(fmt.Sprintf("// %s %s\n", title[0], line))
+		} else {
+			b.WriteString(fmt.Sprintf("// %s\n", line))
+		}
 	}
 	return strings.TrimSuffix(b.String(), "\n")
 }

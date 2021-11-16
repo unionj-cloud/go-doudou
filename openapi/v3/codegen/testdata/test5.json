@@ -404,10 +404,12 @@
       "TextRectanglesVO": {
         "title": "TextRectanglesVO",
         "type": "object",
+        "description": "test test test",
         "properties": {
           "angle": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "description": "test test angle"
           },
           "height": {
             "type": "integer",
