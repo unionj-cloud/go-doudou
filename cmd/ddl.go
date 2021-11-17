@@ -1,14 +1,13 @@
 package cmd
 
 import (
-	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/ddl"
 	"github.com/unionj-cloud/go-doudou/ddl/config"
 	"github.com/unionj-cloud/go-doudou/pathutils"
-	"os"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
 )
 
 var dir string
@@ -24,22 +23,14 @@ var ddlCmd = &cobra.Command{
 	Short: "migration tool between database table structure and golang struct",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		if env, err = pathutils.FixPath(env, ".env"); err != nil {
-			logrus.Panicln(err)
-		}
-		if _, err = os.Stat(env); err == nil {
-			if err = godotenv.Load(env); err != nil {
-				logrus.Panicln("Error loading .env file", err)
-			}
+		ddconfig.InitEnv()
+		var conf config.DbConfig
+		err := envconfig.Process("db", &conf)
+		if err != nil {
+			logrus.Panicln("Error processing env", err)
 		}
 		if dir, err = pathutils.FixPath(dir, "domain"); err != nil {
 			logrus.Panicln(err)
-		}
-		var conf config.DbConfig
-		err = envconfig.Process("db", &conf)
-		if err != nil {
-			logrus.Panicln("Error processing env", err)
 		}
 		d := ddl.Ddl{dir, reverse, dao, pre, df, conf}
 		d.Exec()
