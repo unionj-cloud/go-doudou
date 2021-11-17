@@ -53,7 +53,7 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return Float32
 	case "float64":
 		return Float64
-	case "multipart.FileHeader":
+	case "multipart.FileHeader", "v3.FileModel":
 		return File
 	default:
 		return handleDefaultCase(ft)

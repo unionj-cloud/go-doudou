@@ -127,12 +127,47 @@ var appendHttpHandlerImplTmpl = `
 		}
 		{{- $multipartFormParsed = true }}
 		{{- end }}
-		{{$p.Name}}Files := _req.MultipartForm.File["{{$p.Name}}"]
 		{{- if contains $p.Type "["}}
-		{{$p.Name}} = {{$p.Name}}Files
+		{{$p.Name}} = _req.MultipartForm.File["{{$p.Name}}"]
 		{{- else}}
+		{{$p.Name}}Files := _req.MultipartForm.File["{{$p.Name}}"]
 		if len({{$p.Name}}Files) > 0 {
 			{{$p.Name}} = {{$p.Name}}Files[0]
+		}
+		{{- end}}
+		{{- else if contains $p.Type "*v3.FileModel" }}
+		{{- if not $multipartFormParsed }}
+		if err := _req.ParseMultipartForm(32 << 20); err != nil {
+			http.Error(_writer, err.Error(), http.StatusBadRequest)
+			return
+		}
+		{{- $multipartFormParsed = true }}
+		{{- end }}
+		{{$p.Name}}FileHeaders := _req.MultipartForm.File["{{$p.Name}}"]
+		{{- if contains $p.Type "["}}
+		for _, _fh :=range {{$p.Name}}FileHeaders {
+			_f, err := _fh.Open()
+			if err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			}
+			{{$p.Name}} = append({{$p.Name}}, &v3.FileModel{
+				Filename: _fh.Filename,
+				Reader: _f,
+			})
+		}
+		{{- else}}
+		if len({{$p.Name}}FileHeaders) > 0 {
+			_fh := {{$p.Name}}FileHeaders[0]
+			_f, err := _fh.Open()
+			if err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			}
+			{{$p.Name}} = &v3.FileModel{
+				Filename: _fh.Filename,
+				Reader: _f,
+			}
 		}
 		{{- end}}
 		{{- else if eq $p.Type "context.Context" }}

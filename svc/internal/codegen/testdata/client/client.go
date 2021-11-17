@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -163,7 +164,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	}
 	return _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileModel, ps string, pf2 *v3.FileModel) (ri int, rs string, re error) {
+func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileModel, ps string, pf2 *v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
 	var (
 		_server string
 		_err    error
@@ -180,6 +181,20 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 	}
 	_urlValues.Set("ps", fmt.Sprintf("%v", ps))
 	_req.SetFileReader("pf2", pf2.Filename, pf2.Reader)
+	if _f, _err := pf3.Open(); _err != nil {
+		re = errors.Wrap(_err, "")
+		return
+	} else {
+		_req.SetFileReader("pf3", pf3.Filename, _f)
+	}
+	for _, _fh := range pf4 {
+		_f, _err := _fh.Open()
+		if _err != nil {
+			re = errors.Wrap(_err, "")
+			return
+		}
+		_req.SetFileReader("pf4", _fh.Filename, _f)
+	}
 	_path := "/usersvc/uploadavatar"
 	if _req.Body != nil {
 		_req.SetQueryParamsFromValues(_urlValues)

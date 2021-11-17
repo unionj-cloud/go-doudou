@@ -15,7 +15,7 @@ import (
 // Not support alias type (all alias type fields of a struct will be outputted as v3.Any in openapi 3.0 json document)
 // Support anonymous struct type
 // as struct field type in vo package
-// or as parameter type in method signature in svc.go file besides context.Context, multipart.FileHeader, os.File
+// or as parameter type in method signature in svc.go file besides context.Context, multipart.FileHeader, v3.FileModel, os.File
 // when go-doudou command line flag doc is true
 func ExprStringP(expr ast.Expr) string {
 	switch _expr := expr.(type) {
@@ -56,6 +56,7 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	result := ExprStringP(expr.X) + "." + expr.Sel.Name
 	if !strings.HasPrefix(result, "vo.") &&
 		result != "context.Context" &&
+		result != "v3.FileModel" &&
 		result != "multipart.FileHeader" &&
 		result != "os.File" {
 		panic(fmt.Errorf("not support %s in svc.go file and vo package", result))

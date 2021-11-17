@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/svc/testdata/vo"
 	"mime/multipart"
 	"os"
@@ -16,9 +17,9 @@ type Usersvc interface {
 	// comment1
 	// comment2
 	GetUser(ctx context.Context,
-	// 用户ID
+		// 用户ID
 		userId string,
-	// 图片地址
+		// 图片地址
 		photo string,
 	) (code int, data string, msg error)
 
@@ -26,7 +27,7 @@ type Usersvc interface {
 	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)
 
 	// comment4
-	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)
+	UploadAvatar(context.Context, []*multipart.FileHeader, []*multipart.FileHeader, *multipart.FileHeader, *v3.FileModel, string) (int, string, error)
 
 	// comment5
 	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)

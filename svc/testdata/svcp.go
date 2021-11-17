@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/svc/testdata/vo"
-	"mime/multipart"
 	"os"
 )
 
@@ -16,9 +16,9 @@ type UsersvcPanic interface {
 	// comment1
 	// comment2
 	GetUser(ctx context.Context,
-	// 用户ID
+		// 用户ID
 		userId string,
-	// 图片地址
+		// 图片地址
 		photo string,
 	) (code int, data string, msg error)
 
@@ -26,13 +26,13 @@ type UsersvcPanic interface {
 	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)
 
 	// comment4
-	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)
+	UploadAvatar(context.Context, []*v3.FileModel, string) (int, string, error)
 
 	// comment5
 	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)
 
 	// Wrong1
-	Wrong1(ctx context.Context, userId string, query vo.PageQuery, files []*multipart.FileHeader) (*os.File, error)
+	Wrong1(ctx context.Context, userId string, query vo.PageQuery, files []*v3.FileModel) (*os.File, error)
 
 	// Wrong2
 	Wrong2(ctx context.Context, ch chan string) (*os.File, error)

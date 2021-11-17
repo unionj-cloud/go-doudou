@@ -107,8 +107,8 @@ func (receiver Svc) Http() {
 
 // validateRestApi is checking whether parameter types in each of service interface methods valid or not
 // Only support at most one golang non-built-in type as parameter in a service interface method
-// because go-doudou cannot put more than one parameter into request body except *multipart.FileHeader.
-// If there are *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
+// because go-doudou cannot put more than one parameter into request body except *v3.FileModel and *multipart.FileHeader.
+// If there are *v3.FileModel or *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
 // Not support anonymous struct as parameter
 func validateRestApi(ic astutils.InterfaceCollector) {
@@ -145,7 +145,8 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 			ptype := param.Type
 			if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
 				elem := ptype[strings.Index(ptype, "]")+1:]
-				if elem == "*multipart.FileHeader" {
+				if elem == "*v3.FileModel" || elem == "*multipart.FileHeader" {
+					elem = "file"
 					if _, exists := cpmap[elem]; !exists {
 						cpmap[elem]++
 						nonBasicTypes = append(nonBasicTypes, elem)
@@ -153,7 +154,8 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 					continue
 				}
 			}
-			if ptype == "*multipart.FileHeader" {
+			if ptype == "*v3.FileModel" || ptype == "*multipart.FileHeader" {
+				ptype = "file"
 				if _, exists := cpmap[ptype]; !exists {
 					cpmap[ptype]++
 					nonBasicTypes = append(nonBasicTypes, ptype)

@@ -50,7 +50,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 {{- range $m := .Meta.Methods }}
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
-    {{- $p.Name}} {{$p.Type | file}}
+    {{- $p.Name}} {{$p.Type}}
     {{- end }}) ({{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
@@ -70,7 +70,33 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		_urlValues := url.Values{}
 		_req := receiver.client.R()
 		{{- range $p := $m.Params }}
-		{{- if contains ($p.Type | file) "*v3.FileModel" }}
+		{{- if contains $p.Type "*multipart.FileHeader" }}
+		{{- if contains $p.Type "["}}
+		for _, _fh := range {{$p.Name}} {
+			_f, _err := _fh.Open()
+			if _err != nil {
+				{{- range $r := $m.Results }}
+					{{- if eq $r.Type "error" }}
+						{{ $r.Name }} = errors.Wrap(_err, "")
+					{{- end }}
+				{{- end }}
+				return
+			}
+			_req.SetFileReader("{{$p.Name}}", _fh.Filename, _f)
+		}
+		{{- else}}
+		if _f, _err := {{$p.Name}}.Open(); _err != nil {
+			{{- range $r := $m.Results }}
+				{{- if eq $r.Type "error" }}
+					{{ $r.Name }} = errors.Wrap(_err, "")
+				{{- end }}
+			{{- end }}
+			return
+		} else {
+			_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
+		}
+		{{- end}}
+		{{- else if contains $p.Type "*v3.FileModel" }}
 		{{- if contains $p.Type "["}}
 		for _, _f := range {{$p.Name}} {
 			_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
@@ -290,7 +316,6 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
-	funcMap["file"] = file
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
@@ -310,8 +335,4 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 
 	source = strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), clientfile)
-}
-
-func file(gotype string) string {
-	return strings.TrimSpace(strings.ReplaceAll(gotype, "multipart.FileHeader", "v3.FileModel"))
 }
