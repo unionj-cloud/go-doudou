@@ -26,6 +26,7 @@ type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
 	Rebind(query string) string
+	BindNamed(query string, arg interface{}) (string, []interface{}, error)
 	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
 }
 

@@ -257,6 +257,7 @@ var appendHttpHandlerImplTmpl = `
 					http.Error(_writer, "No file returned", http.StatusInternalServerError)
 					return
 				}
+				defer {{$r.Name}}.Close()
 				var _fi os.FileInfo
 				_fi, _err := {{$r.Name}}.Stat()
 				if _err != nil {

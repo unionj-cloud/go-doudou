@@ -5,8 +5,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/arithsymbol"
 	"github.com/unionj-cloud/go-doudou/ddl/logicsymbol"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/ddl/valtypeenum"
-	"github.com/unionj-cloud/go-doudou/reflectutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"reflect"
 	"strings"
@@ -14,7 +12,8 @@ import (
 
 // Base sql expression
 type Base interface {
-	Sql() string
+	Sql() (string, []interface{})
+	//NamedSql() (string, []interface{})
 }
 
 // Q used for building sql expression
@@ -25,84 +24,50 @@ type Q interface {
 	Append(q Base) Where
 }
 
-// Val wrap column value
-type Val struct {
-	Data interface{}
-	Type valtypeenum.ValType
-}
-
-// Literal new literal value
-func Literal(data interface{}) Val {
-	return Val{
-		Data: data,
-		Type: valtypeenum.Literal,
-	}
-}
-
-// Func new database built-in function value
-func Func(data string) Val {
-	return Val{
-		Data: data,
-		Type: valtypeenum.Func,
-	}
-}
-
-func null() Val {
-	return Val{
-		Data: "null",
-		Type: valtypeenum.Null,
-	}
-}
-
 // Criteria wrap a group of column, value and operator such as name = 20
 type Criteria struct {
 	// table alias
 	talias string
 	col    string
-	val    Val
+	val    interface{}
 	asym   arithsymbol.ArithSymbol
 }
 
 // Sql implement Base interface, return sql expression
-func (c Criteria) Sql() string {
+func (c Criteria) Sql() (string, []interface{}) {
 	if c.asym == arithsymbol.In {
+		var args []interface{}
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("`%s` %s (", c.col, c.asym))
 
 		var vals []string
-		switch reflect.TypeOf(c.val.Data).Kind() {
+		switch reflect.TypeOf(c.val).Kind() {
 		case reflect.Slice:
-			data := reflect.ValueOf(c.val.Data)
+			data := reflect.ValueOf(c.val)
 			for i := 0; i < data.Len(); i++ {
-				if c.val.Type != valtypeenum.Literal {
-					vals = append(vals, fmt.Sprintf("%v", reflectutils.ValueOfValue(data.Index(i))))
-				} else {
-					vals = append(vals, fmt.Sprintf("'%v'", reflectutils.ValueOfValue(data.Index(i))))
-				}
+				vals = append(vals, "?")
+				args = append(args, data.Index(i).Interface())
 			}
 		default:
-			if c.val.Type != valtypeenum.Literal {
-				vals = append(vals, fmt.Sprintf("%v", reflectutils.ValueOf(c.val.Data)))
-			} else {
-				vals = append(vals, fmt.Sprintf("'%v'", reflectutils.ValueOf(c.val.Data)))
-			}
+			vals = append(vals, "?")
+			args = append(args, c.val)
 		}
 
 		sb.WriteString(strings.Join(vals, ","))
 		sb.WriteString(")")
 
-		return sb.String()
-	}
-	if c.val.Type != valtypeenum.Literal {
-		if stringutils.IsNotEmpty(c.talias) {
-			return fmt.Sprintf("%s.`%s` %s %v", c.talias, c.col, c.asym, reflectutils.ValueOf(c.val.Data))
-		}
-		return fmt.Sprintf("`%s` %s %v", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+		return sb.String(), args
 	}
 	if stringutils.IsNotEmpty(c.talias) {
-		return fmt.Sprintf("%s.`%s` %s '%v'", c.talias, c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+		if c.asym == arithsymbol.Is || c.asym == arithsymbol.Not {
+			return fmt.Sprintf("%s.`%s` %s null", c.talias, c.col, c.asym), nil
+		}
+		return fmt.Sprintf("%s.`%s` %s ?", c.talias, c.col, c.asym), []interface{}{c.val}
 	}
-	return fmt.Sprintf("`%s` %s '%v'", c.col, c.asym, reflectutils.ValueOf(c.val.Data))
+	if c.asym == arithsymbol.Is || c.asym == arithsymbol.Not {
+		return fmt.Sprintf("`%s` %s null", c.col, c.asym), nil
+	}
+	return fmt.Sprintf("`%s` %s ?", c.col, c.asym), []interface{}{c.val}
 }
 
 // C new a Criteria
@@ -123,42 +88,42 @@ func (c Criteria) Col(col string) Criteria {
 }
 
 // Eq set = operator and column value
-func (c Criteria) Eq(val Val) Criteria {
+func (c Criteria) Eq(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Eq
 	return c
 }
 
 // Ne set != operator and column value
-func (c Criteria) Ne(val Val) Criteria {
+func (c Criteria) Ne(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Ne
 	return c
 }
 
 // Gt set > operator and column value
-func (c Criteria) Gt(val Val) Criteria {
+func (c Criteria) Gt(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gt
 	return c
 }
 
 // Lt set < operator and column value
-func (c Criteria) Lt(val Val) Criteria {
+func (c Criteria) Lt(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lt
 	return c
 }
 
 // Gte set >= operator and column value
-func (c Criteria) Gte(val Val) Criteria {
+func (c Criteria) Gte(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Gte
 	return c
 }
 
 // Lte set <= operator and column value
-func (c Criteria) Lte(val Val) Criteria {
+func (c Criteria) Lte(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.Lte
 	return c
@@ -166,20 +131,18 @@ func (c Criteria) Lte(val Val) Criteria {
 
 // IsNull set is null
 func (c Criteria) IsNull() Criteria {
-	c.val = null()
 	c.asym = arithsymbol.Is
 	return c
 }
 
 // IsNotNull set is not null
 func (c Criteria) IsNotNull() Criteria {
-	c.val = null()
 	c.asym = arithsymbol.Not
 	return c
 }
 
 // In set in operator and column value, val should be a slice type value
-func (c Criteria) In(val Val) Criteria {
+func (c Criteria) In(val interface{}) Criteria {
 	c.val = val
 	c.asym = arithsymbol.In
 	return c
@@ -222,11 +185,16 @@ type Where struct {
 }
 
 // Sql implement Base interface, return string sql expression
-func (w Where) Sql() string {
+func (w Where) Sql() (string, []interface{}) {
+	var args []interface{}
+	w0, args0 := w.children[0].Sql()
+	args = append(args, args0...)
+	w1, args1 := w.children[1].Sql()
+	args = append(args, args1...)
 	if w.lsym != logicsymbol.Append {
-		return fmt.Sprintf("(%s %s %s)", w.children[0].Sql(), w.lsym, w.children[1].Sql())
+		return fmt.Sprintf("(%s %s %s)", w0, w.lsym, w1), args
 	}
-	return fmt.Sprintf("%s%s%s", w.children[0].Sql(), w.lsym, w.children[1].Sql())
+	return fmt.Sprintf("%s%s%s", w0, w.lsym, w1), args
 }
 
 // And concat another sql expression builder with And
@@ -293,9 +261,9 @@ func (p Page) Limit(offset, size int) Page {
 }
 
 // Sql implement Base interface, order by age desc limit 2,1
-func (p Page) Sql() string {
+func (p Page) Sql() (string, []interface{}) {
 	var sb strings.Builder
-
+	var args []interface{}
 	if len(p.Orders) > 0 {
 		sb.WriteString("order by ")
 
@@ -325,10 +293,11 @@ func (p Page) Sql() string {
 	sb.WriteString(" ")
 
 	if p.Size > 0 {
-		sb.WriteString(fmt.Sprintf("limit %d,%d", p.Offset, p.Size))
+		sb.WriteString("limit ?,?")
+		args = append(args, p.Offset, p.Size)
 	}
 
-	return strings.TrimSpace(sb.String())
+	return strings.TrimSpace(sb.String()), args
 }
 
 // PageRet wrap page query result
@@ -353,6 +322,6 @@ func NewPageRet(page Page) PageRet {
 type String string
 
 // Sql implements Base
-func (s String) Sql() string {
-	return string(s)
+func (s String) Sql() (string, []interface{}) {
+	return string(s), nil
 }
