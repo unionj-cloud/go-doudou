@@ -22,6 +22,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/ddl/query"
 	"github.com/unionj-cloud/go-doudou/ddl/wrapper"
 	"github.com/unionj-cloud/go-doudou/reflectutils"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/templateutils"
 	"strings"
 	"math"
@@ -47,14 +48,14 @@ func (receiver {{.DomainName}}DaoImpl) Insert(ctx context.Context, data interfac
 		{{- end }}
 	)
 	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Insert{{.DomainName}}", nil); err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "")
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+		return 0, errors.Wrap(err, "")
 	}
 	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
+		return 0, errors.Wrap(err, "")
 	}
 	if lastInsertID > 0 {
 		if {{.DomainName | ToLower}}, ok := data.(*domain.{{.DomainName}}); ok {
@@ -69,7 +70,7 @@ func (receiver {{.DomainName}}DaoImpl) Insert(ctx context.Context, data interfac
 	return result.RowsAffected()
 }
 
-// With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row,
+// Upsert With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row,
 // 2 if an existing row is updated, and 0 if an existing row is set to its current values.
 // If you specify the CLIENT_FOUND_ROWS flag to the mysql_real_connect() C API function when connecting to mysqld,
 // the affected-rows value is 1 (not 0) if an existing row is set to its current values.
@@ -84,14 +85,14 @@ func (receiver {{.DomainName}}DaoImpl) Upsert(ctx context.Context, data interfac
 		{{- end }}
 	)
 	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Upsert{{.DomainName}}", nil); err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "")
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+		return 0, errors.Wrap(err, "")
 	}
 	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
+		return 0, errors.Wrap(err, "")
 	}
 	if lastInsertID > 0 {
 		if {{.DomainName | ToLower}}, ok := data.(*domain.{{.DomainName}}); ok {
@@ -115,15 +116,19 @@ func (receiver {{.DomainName}}DaoImpl) UpsertNoneZero(ctx context.Context, data 
 		lastInsertID int64
 		{{- end }}
 	)
-	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Upsert{{.DomainName}}NoneZero", data); err != nil {
-		return 0, err
+	value := reflectutils.ValueOf(data).Interface()
+	if _, ok := value.(domain.{{.DomainName}}); !ok {
+		return 0, errors.New("underlying type of data should be domain.{{.DomainName}}")
 	}
-	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Upsert{{.DomainName}}NoneZero", data); err != nil {
+		return 0, errors.Wrap(err, "")
+	}
+	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	{{- if .PkCol.Autoincrement }}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling result.LastInsertId")
+		return 0, errors.Wrap(err, "")
 	}
 	if lastInsertID > 0 {
 		if {{.DomainName | ToLower}}, ok := data.(*domain.{{.DomainName}}); ok {
@@ -140,13 +145,14 @@ func (receiver {{.DomainName}}DaoImpl) UpsertNoneZero(ctx context.Context, data 
 
 func (receiver {{.DomainName}}DaoImpl) DeleteMany(ctx context.Context, where query.Q) (int64, error) {
 	var (
-		statement string
-		err       error
-		result    sql.Result
+		err    error
+		result sql.Result
+		w      string
+		args   []interface{}
 	)
-	statement = fmt.Sprintf("delete from {{.TableName}} where %s;", where.Sql())
-	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.ExecContext")
+	w, args = where.Sql()
+	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(fmt.Sprintf("delete from {{.TableName}} where %s;", w)), args...); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	return result.RowsAffected()
 }
@@ -158,10 +164,10 @@ func (receiver {{.DomainName}}DaoImpl) Update(ctx context.Context, data interfac
 		result    sql.Result
 	)
 	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}", nil); err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "")
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+		return 0, errors.Wrap(err, "")
 	}
 	return result.RowsAffected()
 }
@@ -172,11 +178,15 @@ func (receiver {{.DomainName}}DaoImpl) UpdateNoneZero(ctx context.Context, data 
 		err       error
 		result    sql.Result
 	)
-	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}NoneZero", data); err != nil {
-		return 0, err
+	value := reflectutils.ValueOf(data).Interface()
+	if _, ok := value.(domain.{{.DomainName}}); !ok {
+		return 0, errors.New("underlying type of data should be domain.{{.DomainName}}")
 	}
-	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}NoneZero", data); err != nil {
+		return 0, errors.Wrap(err, "")
+	}
+	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	return result.RowsAffected()
 }
@@ -186,24 +196,24 @@ func (receiver {{.DomainName}}DaoImpl) UpdateMany(ctx context.Context, data inte
 		statement string
 		err       error
 		result    sql.Result
-		{{.DomainName | ToLower}}   domain.{{.DomainName}}
-		ok        bool
+		q         string
+		args      []interface{}
+		wargs     []interface{}
+		w         string
 	)
-	value := reflectutils.ValueOf(data).Interface()
-	if {{.DomainName | ToLower}}, ok = value.(domain.{{.DomainName}}); !ok {
-		return 0, errors.New("incorrect type of parameter data")
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}s", nil); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
-	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}s", struct {
-		domain.{{.DomainName}}
-		Where string
-	}{
-		{{.DomainName}}:  {{.DomainName | ToLower}},
-		Where: where.Sql(),
-	}); err != nil {
-		return 0, err
+	if q, args, err = receiver.db.BindNamed(statement, data); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
-	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	w, wargs = where.Sql()
+	if stringutils.IsNotEmpty(w) {
+		q += " where " + w
+	}
+	args = append(args, wargs...)
+	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(q), args...); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	return result.RowsAffected()
 }
@@ -213,24 +223,28 @@ func (receiver {{.DomainName}}DaoImpl) UpdateManyNoneZero(ctx context.Context, d
 		statement string
 		err       error
 		result    sql.Result
-		{{.DomainName | ToLower}}   domain.{{.DomainName}}
-		ok        bool
+		q         string
+		args      []interface{}
+		wargs     []interface{}
+		w         string
 	)
 	value := reflectutils.ValueOf(data).Interface()
-	if {{.DomainName | ToLower}}, ok = value.(domain.{{.DomainName}}); !ok {
-		return 0, errors.New("incorrect type of parameter data")
+	if _, ok := value.(domain.{{.DomainName}}); !ok {
+		return 0, errors.New("underlying type of data should be domain.{{.DomainName}}")
 	}
-	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}sNoneZero", struct {
-		domain.{{.DomainName}}
-		Where string
-	}{
-		{{.DomainName}}:  {{.DomainName | ToLower}},
-		Where: where.Sql(),
-	}); err != nil {
-		return 0, err
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}sNoneZero", data); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
-	if result, err = receiver.db.ExecContext(ctx, statement); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.Exec")
+	if q, args, err = receiver.db.BindNamed(statement, data); err != nil {
+		return 0, errors.Wrap(err, "")
+	}
+	w, wargs = where.Sql()
+	if stringutils.IsNotEmpty(w) {
+		q += " where " + w
+	}
+	args = append(args, wargs...)
+	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(q), args...); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	return result.RowsAffected()
 }
@@ -242,10 +256,10 @@ func (receiver {{.DomainName}}DaoImpl) Get(ctx context.Context, id interface{}) 
 		{{.DomainName | ToLower}}      domain.{{.DomainName}}
 	)
 	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Get{{.DomainName}}", nil); err != nil {
-		return domain.{{.DomainName}}{}, err
+		return domain.{{.DomainName}}{}, errors.Wrap(err, "")
 	}
 	if err = receiver.db.GetContext(ctx, &{{.DomainName | ToLower}}, receiver.db.Rebind(statement), id); err != nil {
-		return domain.{{.DomainName}}{}, errors.Wrap(err, "error returned from calling db.Select")
+		return domain.{{.DomainName}}{}, errors.Wrap(err, "")
 	}
 	return {{.DomainName | ToLower}}, nil
 }
@@ -255,16 +269,19 @@ func (receiver {{.DomainName}}DaoImpl) SelectMany(ctx context.Context, where ...
 		statements []string
 		err       error
 		{{.DomainName | ToLower}}s     []domain.{{.DomainName}}
+		args       []interface{}
 	)
     statements = append(statements, "select * from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
-        for _, item :=range where {
-            statements = append(statements, item.Sql())
-        }
+        for _, item := range where {
+			q, wargs := item.Sql()
+			statements = append(statements, q)
+			args = append(args, wargs...)
+		}
     }
-	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, strings.Join(statements, " ")); err != nil {
-		return nil, errors.Wrap(err, "error returned from calling db.SelectContext")
+	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, strings.Join(statements, " "), args...); err != nil {
+		return nil, errors.Wrap(err, "")
 	}
 	return {{.DomainName | ToLower}}s, nil
 }
@@ -274,16 +291,19 @@ func (receiver {{.DomainName}}DaoImpl) CountMany(ctx context.Context, where ...q
 		statements []string
 		err       error
 		total     int
+		args       []interface{}
 	)
 	statements = append(statements, "select count(1) from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
-        for _, item :=range where {
-            statements = append(statements, item.Sql())
-        }
+        for _, item := range where {
+			q, wargs := item.Sql()
+			statements = append(statements, q)
+			args = append(args, wargs...)
+		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " ")); err != nil {
-		return 0, errors.Wrap(err, "error returned from calling db.GetContext")
+	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
+		return 0, errors.Wrap(err, "")
 	}
 	return total, nil
 }
@@ -294,29 +314,38 @@ func (receiver {{.DomainName}}DaoImpl) PageMany(ctx context.Context, page query.
 		err       error
 		{{.DomainName | ToLower}}s     []domain.{{.DomainName}}
 		total     int
+		args       []interface{}
 	)
 	statements = append(statements, "select * from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
-        for _, item :=range where {
-            statements = append(statements, item.Sql())
-        }
+        for _, item := range where {
+			q, wargs := item.Sql()
+			statements = append(statements, q)
+			args = append(args, wargs...)
+		}
     }
-    statements = append(statements, page.Sql())
-	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, strings.Join(statements, " ")); err != nil {
-		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.SelectContext")
+	p, pargs := page.Sql()
+	statements = append(statements, p)
+	args = append(args, pargs...)
+	q := strings.Join(statements, " ")
+	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, q, args...); err != nil {
+		return query.PageRet{}, errors.Wrap(err, "")
 	}
-
+	
+	args = nil
     statements = nil
 	statements = append(statements, "select count(1) from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
-        for _, item :=range where {
-            statements = append(statements, item.Sql())
-        }
+        for _, item := range where {
+			q, wargs := item.Sql()
+			statements = append(statements, q)
+			args = append(args, wargs...)
+		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " ")); err != nil {
-		return query.PageRet{}, errors.Wrap(err, "error returned from calling db.GetContext")
+	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
+		return query.PageRet{}, errors.Wrap(err, "")
 	}
 
 	pageRet := query.NewPageRet(page)

@@ -23,12 +23,10 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context,
-	queryParams struct {
-		Username string `json:"username,omitempty" url:"username"`
-		Password string `json:"password,omitempty" url:"password"`
-	}) (ret string, err error) {
+// PostUserCreateWithList Creates list of users with given input array
+// Creates list of users with given input array
+func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
+	bodyJSON []User) (ret User, err error) {
 	var (
 		_server string
 		_err    error
@@ -40,10 +38,9 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Get(_server + "/user/login")
+	_resp, _err := _req.Post(_server + "/user/createWithList")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -52,7 +49,10 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 		err = errors.New(_resp.String())
 		return
 	}
-	ret = _resp.String()
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
 	return
 }
 
@@ -86,10 +86,12 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err 
 	return
 }
 
-// PostUserCreateWithList Creates list of users with given input array
-// Creates list of users with given input array
-func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
-	bodyJSON []User) (ret User, err error) {
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context,
+	queryParams struct {
+		Username string `json:"username,omitempty" url:"username"`
+		Password string `json:"password,omitempty" url:"password"`
+	}) (ret string, err error) {
 	var (
 		_server string
 		_err    error
@@ -101,9 +103,10 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err := _req.Post(_server + "/user/createWithList")
+	_resp, _err := _req.Get(_server + "/user/login")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -112,10 +115,7 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 		err = errors.New(_resp.String())
 		return
 	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	ret = _resp.String()
 	return
 }
 

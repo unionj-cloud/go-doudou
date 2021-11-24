@@ -77,7 +77,7 @@ func ExampleCriteria() {
 	where = C().Col("cc.survey_id").Eq("abc").
 		And(C().Col("cc.year").Eq(2021)).
 		And(C().Col("cc.month").Eq(10)).
-		And(C().Col("cc.stat_type").Eq(2))
+		And(C().Col("cc.stat_type").Eq(2)).Append(String("for update"))
 	fmt.Println(where.Sql())
 
 	// Output:
@@ -94,5 +94,5 @@ func ExampleCriteria() {
 	//(`project_id` = ? and `delete_at` is null) order by `create_at` desc limit ?,? [1 0 1]
 	//(`project_id` = ? and `delete_at` is null) for update [1]
 	//(cc.`project_id` = ? and cc.`delete_at` is null) for update [1]
-	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) [abc 2021 10 2]
+	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) for update [abc 2021 10 2]
 }
