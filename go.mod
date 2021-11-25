@@ -38,6 +38,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/miekg/dns v1.1.42 // indirect

@@ -27,7 +27,7 @@ func SetupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (f
 		BindMounts: map[string]string{
 			initdb: "/docker-entrypoint-initdb.d",
 		},
-		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(120 * time.Second),
+		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(60 * time.Second),
 	}
 
 	mysqlC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/ddl/table"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/svc"
-	"github.com/unionj-cloud/go-doudou/test"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -39,22 +37,12 @@ func TestDdlCmd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	logger := logrus.New()
-	var terminateContainer func() // variable to store function to terminate container
-	var host string
-	var port int
-	terminateContainer, host, port, err = test.SetupMySQLContainer(logger, pathutils.Abs("../test/sql"), "")
-	defer terminateContainer() // make sure container will be terminated at the end
+	terminator, db, err := table.Setup()
 	if err != nil {
-		logger.Error("failed to setup MySQL container")
-		t.Fatal(err)
+		panic(err)
 	}
-	os.Setenv("DB_HOST", host)
-	os.Setenv("DB_PORT", fmt.Sprint(port))
-	os.Setenv("DB_USER", "root")
-	os.Setenv("DB_PASSWD", "1234")
-	os.Setenv("DB_SCHEMA", "test")
-	os.Setenv("DB_CHARSET", "utf8mb4")
+	defer terminator()
+	defer db.Close()
 	// go-doudou ddl --dao --pre=ddl_ --domain=ddl/domain --env=ddl/.env
 	_, _, err = ExecuteCommandC(rootCmd, []string{"ddl", "--reverse", "--dao", "--pre=ddl_"}...)
 	if err != nil {

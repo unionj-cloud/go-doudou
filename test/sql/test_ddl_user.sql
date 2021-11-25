@@ -21,3 +21,12 @@ create index age_idx
 create index name_phone_idx
     on ddl_user (phone, name);
 
+create table ddl_book
+(
+    id      int auto_increment
+        primary key,
+    name    varchar(45)  null,
+    user_id int null,
+    constraint fk_user
+        foreign key (user_id) references ddl_user (id)
+);

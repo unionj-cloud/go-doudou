@@ -5,61 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/ddl/columnenum"
-	"github.com/unionj-cloud/go-doudou/ddl/config"
 	"github.com/unionj-cloud/go-doudou/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/ddl/wrapper"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/test"
-	"os"
+	"reflect"
 	"testing"
 )
 
-func setup() (func(), *sqlx.DB, error) {
-	logger := logrus.New()
-	var terminateContainer func() // variable to store function to terminate container
-	var host string
-	var port int
-	var err error
-	terminateContainer, host, port, err = test.SetupMySQLContainer(logger, pathutils.Abs("../../test/sql"), "")
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to setup MySQL container")
-	}
-	os.Setenv("DB_HOST", host)
-	os.Setenv("DB_PORT", fmt.Sprint(port))
-	os.Setenv("DB_USER", "root")
-	os.Setenv("DB_PASSWD", "1234")
-	os.Setenv("DB_SCHEMA", "test")
-	os.Setenv("DB_CHARSET", "utf8mb4")
-	var conf config.DbConfig
-	err = envconfig.Process("db", &conf)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Error processing env")
-	}
-	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
-		conf.User,
-		conf.Passwd,
-		conf.Host,
-		conf.Port,
-		conf.Schema,
-		conf.Charset)
-	conn += `&loc=Asia%2FShanghai&parseTime=True`
-	var db *sqlx.DB
-	db, err = sqlx.Connect("mysql", conn)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "")
-	}
-	db.MapperFunc(strcase.ToSnake)
-	return terminateContainer, db, nil
-}
-
 func ExampleCreateTable() {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +36,7 @@ func ExampleCreateTable() {
 }
 
 func TestChangeColumn(t *testing.T) {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +111,7 @@ func TestChangeColumn(t *testing.T) {
 }
 
 func TestAddColumn(t *testing.T) {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -197,7 +153,7 @@ func TestAddColumn(t *testing.T) {
 }
 
 func TestDropIndex(t *testing.T) {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -245,7 +201,7 @@ func TestDropIndex(t *testing.T) {
 }
 
 func TestAddIndex(t *testing.T) {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -293,7 +249,7 @@ func TestAddIndex(t *testing.T) {
 }
 
 func TestDropAddIndex(t *testing.T) {
-	terminator, db, err := setup()
+	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
 	}
@@ -341,6 +297,799 @@ func TestDropAddIndex(t *testing.T) {
 			if err := DropAddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
 				t.Errorf("DropAddIndex() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func Test_foreignKeys(t *testing.T) {
+	terminator, db, err := Setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	type args struct {
+		ctx    context.Context
+		db     *sqlx.DB
+		schema string
+		t      string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantFks []ForeignKey
+	}{
+		{
+			name: "",
+			args: args{
+				ctx:    context.Background(),
+				db:     db,
+				schema: "test",
+				t:      "ddl_book",
+			},
+			wantFks: []ForeignKey{
+				{
+					Table:           "ddl_book",
+					Constraint:      "fk_user",
+					Fk:              "user_id",
+					ReferencedTable: "ddl_user",
+					ReferencedCol:   "id",
+					UpdateRule:      "NO ACTION",
+					DeleteRule:      "NO ACTION",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotFks := foreignKeys(tt.args.ctx, tt.args.db, tt.args.schema, tt.args.t); !reflect.DeepEqual(gotFks, tt.wantFks) {
+				t.Errorf("foreignKeys() = %v, want %v", gotFks, tt.wantFks)
+			}
+		})
+	}
+}
+
+func TestTable2struct(t *testing.T) {
+	terminator, db, err := Setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+	expectJson := `[
+  {
+    "Name": "ddl_book",
+    "Columns": [
+      {
+        "Table": "ddl_book",
+        "Name": "id",
+        "Type": "int",
+        "Default": "",
+        "Pk": true,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": true,
+        "Extra": "",
+        "Meta": {
+          "Name": "Id",
+          "Type": "int",
+          "Tag": "dd:\"pk;auto;type:int\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": true,
+            "Name": "PRIMARY",
+            "Column": "id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_book",
+        "Name": "name",
+        "Type": "varchar(45)",
+        "Default": "",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "Name",
+          "Type": "*string",
+          "Tag": "dd:\"type:varchar(45)\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_book",
+        "Name": "user_id",
+        "Type": "int",
+        "Default": "",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "UserId",
+          "Type": "*int",
+          "Tag": "dd:\"type:int;index:fk_user,1,asc;fk:ddl_user,id,fk_user,ON DELETE NO ACTION ON UPDATE NO ACTION\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": false,
+            "Name": "fk_user",
+            "Column": "user_id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "ddl_book",
+          "Constraint": "fk_user",
+          "Fk": "user_id",
+          "ReferencedTable": "ddl_user",
+          "ReferencedCol": "id",
+          "UpdateRule": "NO ACTION",
+          "DeleteRule": "NO ACTION"
+        }
+      }
+    ],
+    "Pk": "id",
+    "Indexes": [
+      {
+        "Table": "",
+        "Unique": true,
+        "Name": "PRIMARY",
+        "Items": [
+          {
+            "Unique": true,
+            "Name": "PRIMARY",
+            "Column": "id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ]
+      },
+      {
+        "Table": "",
+        "Unique": false,
+        "Name": "fk_user",
+        "Items": [
+          {
+            "Unique": false,
+            "Name": "fk_user",
+            "Column": "user_id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ]
+      }
+    ],
+    "Meta": {
+      "Name": "Book",
+      "Fields": [
+        {
+          "Name": "Id",
+          "Type": "int",
+          "Tag": "dd:\"pk;auto;type:int\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "Name",
+          "Type": "*string",
+          "Tag": "dd:\"type:varchar(45)\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "UserId",
+          "Type": "*int",
+          "Tag": "dd:\"type:int;index:fk_user,1,asc;fk:ddl_user,id,fk_user,ON DELETE NO ACTION ON UPDATE NO ACTION\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        }
+      ],
+      "Comments": null,
+      "Methods": null,
+      "IsExport": false
+    },
+    "Fks": [
+      {
+        "Table": "ddl_book",
+        "Constraint": "fk_user",
+        "Fk": "user_id",
+        "ReferencedTable": "ddl_user",
+        "ReferencedCol": "id",
+        "UpdateRule": "NO ACTION",
+        "DeleteRule": "NO ACTION"
+      }
+    ]
+  },
+  {
+    "Name": "ddl_user",
+    "Columns": [
+      {
+        "Table": "ddl_user",
+        "Name": "id",
+        "Type": "int",
+        "Default": "",
+        "Pk": true,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": true,
+        "Extra": "",
+        "Meta": {
+          "Name": "Id",
+          "Type": "int",
+          "Tag": "dd:\"pk;auto;type:int\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": true,
+            "Name": "PRIMARY",
+            "Column": "id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "name",
+        "Type": "varchar(255)",
+        "Default": "jack",
+        "Pk": false,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "Name",
+          "Type": "string",
+          "Tag": "dd:\"type:varchar(255);default:'jack';index:name_phone_idx,2,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": false,
+            "Name": "name_phone_idx",
+            "Column": "name",
+            "Order": 2,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "phone",
+        "Type": "varchar(255)",
+        "Default": "13552053960",
+        "Pk": false,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "comment 'mobile phone'",
+        "Meta": {
+          "Name": "Phone",
+          "Type": "string",
+          "Tag": "dd:\"type:varchar(255);default:'13552053960';extra:comment 'mobile phone';index:name_phone_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": false,
+            "Name": "name_phone_idx",
+            "Column": "phone",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "age",
+        "Type": "int",
+        "Default": "",
+        "Pk": false,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "Age",
+          "Type": "int",
+          "Tag": "dd:\"type:int;index:age_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": false,
+            "Name": "age_idx",
+            "Column": "age",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "no",
+        "Type": "int",
+        "Default": "",
+        "Pk": false,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "No",
+          "Type": "int",
+          "Tag": "dd:\"type:int;unique:no_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": [
+          {
+            "Unique": true,
+            "Name": "no_idx",
+            "Column": "no",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ],
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "school",
+        "Type": "varchar(255)",
+        "Default": "harvard",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "comment 'school'",
+        "Meta": {
+          "Name": "School",
+          "Type": "*string",
+          "Tag": "dd:\"type:varchar(255);default:'harvard';extra:comment 'school'\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "is_student",
+        "Type": "tinyint",
+        "Default": "",
+        "Pk": false,
+        "Nullable": false,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "IsStudent",
+          "Type": "int8",
+          "Tag": "dd:\"type:tinyint\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "create_at",
+        "Type": "datetime",
+        "Default": "CURRENT_TIMESTAMP",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "CreateAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime;default:CURRENT_TIMESTAMP\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": true,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "update_at",
+        "Type": "datetime",
+        "Default": "CURRENT_TIMESTAMP",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "on update CURRENT_TIMESTAMP",
+        "Meta": {
+          "Name": "UpdateAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime;default:CURRENT_TIMESTAMP;extra:on update CURRENT_TIMESTAMP\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": true,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      },
+      {
+        "Table": "ddl_user",
+        "Name": "delete_at",
+        "Type": "datetime",
+        "Default": "",
+        "Pk": false,
+        "Nullable": true,
+        "Unsigned": false,
+        "Autoincrement": false,
+        "Extra": "",
+        "Meta": {
+          "Name": "DeleteAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        "AutoSet": false,
+        "Indexes": null,
+        "Fk": {
+          "Table": "",
+          "Constraint": "",
+          "Fk": "",
+          "ReferencedTable": "",
+          "ReferencedCol": "",
+          "UpdateRule": "",
+          "DeleteRule": ""
+        }
+      }
+    ],
+    "Pk": "id",
+    "Indexes": [
+      {
+        "Table": "",
+        "Unique": true,
+        "Name": "PRIMARY",
+        "Items": [
+          {
+            "Unique": true,
+            "Name": "PRIMARY",
+            "Column": "id",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ]
+      },
+      {
+        "Table": "",
+        "Unique": true,
+        "Name": "no_idx",
+        "Items": [
+          {
+            "Unique": true,
+            "Name": "no_idx",
+            "Column": "no",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ]
+      },
+      {
+        "Table": "",
+        "Unique": false,
+        "Name": "age_idx",
+        "Items": [
+          {
+            "Unique": false,
+            "Name": "age_idx",
+            "Column": "age",
+            "Order": 1,
+            "Sort": "asc"
+          }
+        ]
+      },
+      {
+        "Table": "",
+        "Unique": false,
+        "Name": "name_phone_idx",
+        "Items": [
+          {
+            "Unique": false,
+            "Name": "name_phone_idx",
+            "Column": "phone",
+            "Order": 1,
+            "Sort": "asc"
+          },
+          {
+            "Unique": false,
+            "Name": "name_phone_idx",
+            "Column": "name",
+            "Order": 2,
+            "Sort": "asc"
+          }
+        ]
+      }
+    ],
+    "Meta": {
+      "Name": "User",
+      "Fields": [
+        {
+          "Name": "Id",
+          "Type": "int",
+          "Tag": "dd:\"pk;auto;type:int\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "Name",
+          "Type": "string",
+          "Tag": "dd:\"type:varchar(255);default:'jack';index:name_phone_idx,2,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "Phone",
+          "Type": "string",
+          "Tag": "dd:\"type:varchar(255);default:'13552053960';extra:comment 'mobile phone';index:name_phone_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "Age",
+          "Type": "int",
+          "Tag": "dd:\"type:int;index:age_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "No",
+          "Type": "int",
+          "Tag": "dd:\"type:int;unique:no_idx,1,asc\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "School",
+          "Type": "*string",
+          "Tag": "dd:\"type:varchar(255);default:'harvard';extra:comment 'school'\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "IsStudent",
+          "Type": "int8",
+          "Tag": "dd:\"type:tinyint\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "CreateAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime;default:CURRENT_TIMESTAMP\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "UpdateAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime;default:CURRENT_TIMESTAMP;extra:on update CURRENT_TIMESTAMP\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        },
+        {
+          "Name": "DeleteAt",
+          "Type": "*time.Time",
+          "Tag": "dd:\"type:datetime\"",
+          "Comments": null,
+          "IsExport": false,
+          "DocName": ""
+        }
+      ],
+      "Comments": null,
+      "Methods": null,
+      "IsExport": false
+    },
+    "Fks": null
+  }
+]
+`
+	var wantTables []Table
+	_ = json.Unmarshal([]byte(expectJson), &wantTables)
+
+	type args struct {
+		ctx         context.Context
+		dir         string
+		pre         string
+		schema      string
+		existTables []string
+		db          *sqlx.DB
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantTables []Table
+	}{
+		{
+			name: "",
+			args: args{
+				ctx:         context.Background(),
+				pre:         "ddl",
+				schema:      "test",
+				existTables: []string{"ddl_book", "ddl_user"},
+				db:          db,
+			},
+			wantTables: wantTables,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTables := Table2struct(tt.args.ctx, tt.args.pre, tt.args.schema, tt.args.existTables, tt.args.db)
+			assert.Equal(t, len(gotTables), len(tt.wantTables))
+			var nameEqualCount int
+			for _, item := range gotTables {
+				for _, _item := range tt.wantTables {
+					if _item.Name == item.Name {
+						nameEqualCount++
+						assert.ElementsMatch(t, item.Indexes, _item.Indexes)
+						assert.ElementsMatch(t, item.Fks, _item.Fks)
+						assert.ElementsMatch(t, item.Columns, _item.Columns)
+						break
+					}
+				}
+			}
+			assert.Equal(t, nameEqualCount, len(gotTables))
 		})
 	}
 }
