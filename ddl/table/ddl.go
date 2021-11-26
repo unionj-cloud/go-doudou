@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
-	"github.com/go-git/go-git/v5/utils/merkletrie/index"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
@@ -123,12 +122,12 @@ func dropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 }
 
 // dropAddFk drop and then add an existing foreign key with the same constraint
-func dropAddFk(ctx context.Context, db wrapper.Querier, idx Index) error {
+func dropAddFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 	var err error
-	if err = dropIndex(ctx, db, idx); err != nil {
+	if err = dropFk(ctx, db, fk); err != nil {
 		return errors.Wrap(err, "")
 	}
-	if err = addIndex(ctx, db, idx); err != nil {
+	if err = addFk(ctx, db, fk); err != nil {
 		return errors.Wrap(err, "")
 	}
 	return nil
@@ -151,12 +150,12 @@ func addFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 }
 
 // dropFk drop an existing foreign key
-func dropFk(ctx context.Context, db wrapper.Querier, idx Index) error {
+func dropFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 	var (
 		statement string
 		err       error
 	)
-	if statement, err = idx.DropIndexSql(); err != nil {
+	if statement, err = fk.DropFkSql(); err != nil {
 		return errors.Wrap(err, "")
 	}
 	fmt.Println(statement)
@@ -421,8 +420,9 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 					}
 				}
 			}
-			updateIndexFromStruct(ctx, tx, t)
-			updateFkFromStruct(ctx, tx, t, schema)
+			fks := foreignKeys(ctx, tx, schema, t.Name)
+			updateIndexFromStruct(ctx, tx, t, fks)
+			updateFkFromStruct(ctx, tx, t, fks)
 		} else {
 			if err = CreateTable(ctx, tx, t); err != nil {
 				panic(fmt.Sprintf("%+v", err))
@@ -433,8 +433,7 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 	return
 }
 
-func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, schema string) {
-	fks := foreignKeys(ctx, tx, schema, t.Name)
+func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []ForeignKey) {
 	fkMap := make(map[string]ForeignKey)
 	for _, fk := range fks {
 		fkMap[fk.Constraint] = fk
@@ -448,8 +447,7 @@ func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, schema string
 			if reflect.DeepEqual(fk, current) {
 				continue
 			}
-			index.Table = t.Name
-			if err := dropAddFk(ctx, tx, index); err != nil {
+			if err := dropAddFk(ctx, tx, fk); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		} else {
@@ -459,9 +457,20 @@ func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, schema string
 		}
 	}
 
+	var constraints []string
+	for _, fk := range t.Fks {
+		constraints = append(constraints, fk.Constraint)
+	}
+	for k, v := range fkMap {
+		if !sliceutils.StringContains(constraints, k) {
+			if err := dropFk(ctx, tx, v); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		}
+	}
 }
 
-func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
+func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []ForeignKey) {
 	var dbIndexes []DbIndex
 	if err := tx.SelectContext(ctx, &dbIndexes, fmt.Sprintf("SHOW INDEXES FROM %s", t.Name)); err != nil {
 		panic(fmt.Sprintf("%+v", err))
@@ -480,34 +489,46 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
 		}
 	}
 
-	for _, index := range t.Indexes {
-		if current, exists := keyIndexMap[index.Name]; exists {
+	for _, idx := range t.Indexes {
+		if current, exists := keyIndexMap[idx.Name]; exists {
 			copied := NewIndexFromDbIndexes(current)
-			if reflect.DeepEqual(index, copied) {
+			if reflect.DeepEqual(idx, copied) {
 				continue
 			}
-			index.Table = t.Name
-			if err := dropAddIndex(ctx, tx, index); err != nil {
+			idx.Table = t.Name
+			if err := dropAddIndex(ctx, tx, idx); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		} else {
-			index.Table = t.Name
-			if err := addIndex(ctx, tx, index); err != nil {
+			idx.Table = t.Name
+			if err := addIndex(ctx, tx, idx); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		}
 	}
 
 	var idxKeys []string
-	for _, index := range t.Indexes {
-		idxKeys = append(idxKeys, index.Name)
+	for _, idx := range t.Indexes {
+		idxKeys = append(idxKeys, idx.Name)
 	}
 	for k, v := range keyIndexMap {
 		if !sliceutils.StringContains(idxKeys, k) {
-			index := NewIndexFromDbIndexes(v)
-			index.Table = t.Name
-			if err := dropIndex(ctx, tx, index); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+			shouldDrop := true
+			if len(v) == 1 {
+				idx := v[0]
+				for _, fk := range fks {
+					if fk.Table == idx.Table && fk.Fk == idx.ColumnName {
+						shouldDrop = false
+						break
+					}
+				}
+			}
+			if shouldDrop {
+				idx := NewIndexFromDbIndexes(v)
+				idx.Table = t.Name
+				if err := dropIndex(ctx, tx, idx); err != nil {
+					panic(fmt.Sprintf("%+v", err))
+				}
 			}
 		}
 	}

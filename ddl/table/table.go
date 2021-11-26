@@ -274,16 +274,12 @@ type ForeignKey struct {
 	FullRule      string
 }
 
-// TODO
 const fksqltmpl = `{{define "drop"}}
-ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` DROP INDEX ` + "`" + `{{.Name}}` + "`" + `;
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` DROP FOREIGN KEY {{.Constraint}};
 {{end}}
 
 {{define "add"}}
-ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` ADD {{if .Unique}}UNIQUE{{end}} INDEX ` + "`" + `{{.Name}}` + "`" + ` ({{range $j, $it := .Items}}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{end}});
-ALTER TABLE Orders
-ADD FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
-
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` ADD CONSTRAINT {{.Constraint}} FOREIGN KEY ({{.Fk}}) REFERENCES {{.ReferencedTable}}({{.ReferencedCol}}) {{.FullRule}};
 {{end}}`
 
 func (fk *ForeignKey) DropFkSql() (string, error) {

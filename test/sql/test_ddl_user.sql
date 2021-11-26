@@ -23,10 +23,18 @@ create index name_phone_idx
 
 create table ddl_book
 (
-    id      int auto_increment
+    id           int auto_increment
         primary key,
-    name    varchar(45)  null,
-    user_id int null,
+    name         varchar(45) null,
+    user_id      int         null,
+    publisher_id int         null,
     constraint fk_user
         foreign key (user_id) references ddl_user (id)
+);
+
+create table ddl_publisher
+(
+    id   int auto_increment
+        primary key,
+    name varchar(45) null
 );
