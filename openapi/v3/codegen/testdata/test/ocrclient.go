@@ -25,8 +25,8 @@ func (receiver *OcrClient) SetClient(client *resty.Client) {
 }
 func (receiver *OcrClient) PostOcrCharacterText(ctx context.Context,
 	queryParams struct {
-		MinHeight      int     `json:"minHeight,omitempty" url:"minHeight"`
 		MinProbability float32 `json:"minProbability,omitempty" url:"minProbability"`
+		MinHeight      int     `json:"minHeight,omitempty" url:"minHeight"`
 	},
 	bodyJSON *os.File) (ret Resultstring, err error) {
 	var (

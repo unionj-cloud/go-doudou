@@ -24,10 +24,12 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// PostPet Add a new pet to the store
-// Add a new pet to the store
-func (receiver *PetClient) PostPet(ctx context.Context,
-	bodyJSON Pet) (ret Pet, err error) {
+// PostPetPetIdUploadImage uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+	queryParams struct {
+		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	file *v3.FileModel) (ret ApiResponse, err error) {
 	var (
 		_server string
 		_err    error
@@ -39,42 +41,11 @@ func (receiver *PetClient) PostPet(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetFileReader("file", file.Filename, file.Reader)
 
-	_resp, _err := _req.Post(_server + "/pet")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// PutPet Update an existing pet
-// Update an existing pet by Id
-func (receiver *PetClient) PutPet(ctx context.Context,
-	bodyJSON Pet) (ret Pet, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
-
-	_resp, _err := _req.Put(_server + "/pet")
+	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -157,12 +128,10 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error)
 	return
 }
 
-// PostPetPetIdUploadImage uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
-	queryParams struct {
-		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	file *v3.FileModel) (ret ApiResponse, err error) {
+// PostPet Add a new pet to the store
+// Add a new pet to the store
+func (receiver *PetClient) PostPet(ctx context.Context,
+	bodyJSON Pet) (ret Pet, err error) {
 	var (
 		_server string
 		_err    error
@@ -174,11 +143,42 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-	_req.SetFileReader("file", file.Filename, file.Reader)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
+	_resp, _err := _req.Post(_server + "/pet")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// PutPet Update an existing pet
+// Update an existing pet by Id
+func (receiver *PetClient) PutPet(ctx context.Context,
+	bodyJSON Pet) (ret Pet, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_req.SetBody(bodyJSON)
+
+	_resp, _err := _req.Put(_server + "/pet")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

@@ -377,6 +377,7 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 				}
 			}
 			updateIndexFromStruct(ctx, tx, t)
+			updateFkFromStruct(ctx, tx, t)
 		} else {
 			if err = CreateTable(ctx, tx, t); err != nil {
 				panic(fmt.Sprintf("%+v", err))
@@ -385,6 +386,10 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 	}
 	_ = tx.Commit()
 	return
+}
+
+func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
+
 }
 
 func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
