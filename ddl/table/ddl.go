@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/go-git/go-git/v5/utils/merkletrie/index"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
@@ -77,20 +78,20 @@ func AddColumn(ctx context.Context, db wrapper.Querier, col Column) error {
 	return err
 }
 
-// DropAddIndex drop and then add an existing index with the same key_name
-func DropAddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
+// dropAddIndex drop and then add an existing index with the same key_name
+func dropAddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	var err error
-	if err = DropIndex(ctx, db, idx); err != nil {
+	if err = dropIndex(ctx, db, idx); err != nil {
 		return errors.Wrap(err, "")
 	}
-	if err = AddIndex(ctx, db, idx); err != nil {
+	if err = addIndex(ctx, db, idx); err != nil {
 		return errors.Wrap(err, "")
 	}
 	return nil
 }
 
-// AddIndex add an new index
-func AddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
+// addIndex add a new index
+func addIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	var (
 		statement string
 		err       error
@@ -105,8 +106,52 @@ func AddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	return nil
 }
 
-// DropIndex drop an existing index
-func DropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
+// dropIndex drop an existing index
+func dropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
+	var (
+		statement string
+		err       error
+	)
+	if statement, err = idx.DropIndexSql(); err != nil {
+		return errors.Wrap(err, "")
+	}
+	fmt.Println(statement)
+	if _, err = db.ExecContext(ctx, statement); err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+// dropAddFk drop and then add an existing foreign key with the same constraint
+func dropAddFk(ctx context.Context, db wrapper.Querier, idx Index) error {
+	var err error
+	if err = dropIndex(ctx, db, idx); err != nil {
+		return errors.Wrap(err, "")
+	}
+	if err = addIndex(ctx, db, idx); err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+// addFk add a new foreign key
+func addFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
+	var (
+		statement string
+		err       error
+	)
+	if statement, err = fk.AddFkSql(); err != nil {
+		return errors.Wrap(err, "")
+	}
+	fmt.Println(statement)
+	if _, err = db.ExecContext(ctx, statement); err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+// dropFk drop an existing foreign key
+func dropFk(ctx context.Context, db wrapper.Querier, idx Index) error {
 	var (
 		statement string
 		err       error
@@ -390,7 +435,30 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 
 func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, schema string) {
 	fks := foreignKeys(ctx, tx, schema, t.Name)
-	fks = fks
+	fkMap := make(map[string]ForeignKey)
+	for _, fk := range fks {
+		fkMap[fk.Constraint] = fk
+	}
+	for _, fk := range t.Fks {
+		if current, exists := fkMap[fk.Constraint]; exists {
+			current.DeleteRule = ""
+			current.UpdateRule = ""
+			fk.DeleteRule = ""
+			fk.UpdateRule = ""
+			if reflect.DeepEqual(fk, current) {
+				continue
+			}
+			index.Table = t.Name
+			if err := dropAddFk(ctx, tx, index); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		} else {
+			if err := addFk(ctx, tx, fk); err != nil {
+				panic(fmt.Sprintf("%+v", err))
+			}
+		}
+	}
+
 }
 
 func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
@@ -419,12 +487,12 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
 				continue
 			}
 			index.Table = t.Name
-			if err := DropAddIndex(ctx, tx, index); err != nil {
+			if err := dropAddIndex(ctx, tx, index); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		} else {
 			index.Table = t.Name
-			if err := AddIndex(ctx, tx, index); err != nil {
+			if err := addIndex(ctx, tx, index); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		}
@@ -438,7 +506,7 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
 		if !sliceutils.StringContains(idxKeys, k) {
 			index := NewIndexFromDbIndexes(v)
 			index.Table = t.Name
-			if err := DropIndex(ctx, tx, index); err != nil {
+			if err := dropIndex(ctx, tx, index); err != nil {
 				panic(fmt.Sprintf("%+v", err))
 			}
 		}

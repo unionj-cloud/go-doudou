@@ -274,6 +274,26 @@ type ForeignKey struct {
 	FullRule      string
 }
 
+// TODO
+const fksqltmpl = `{{define "drop"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` DROP INDEX ` + "`" + `{{.Name}}` + "`" + `;
+{{end}}
+
+{{define "add"}}
+ALTER TABLE ` + "`" + `{{.Table}}` + "`" + ` ADD {{if .Unique}}UNIQUE{{end}} INDEX ` + "`" + `{{.Name}}` + "`" + ` ({{range $j, $it := .Items}}{{if $j}},{{end}}` + "`" + `{{$it.Column}}` + "`" + ` {{$it.Sort}}{{end}});
+ALTER TABLE Orders
+ADD FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+
+{{end}}`
+
+func (fk *ForeignKey) DropFkSql() (string, error) {
+	return templateutils.StringBlock("fk.tmpl", fksqltmpl, "drop", fk)
+}
+
+func (fk *ForeignKey) AddFkSql() (string, error) {
+	return templateutils.StringBlock("fk.tmpl", fksqltmpl, "add", fk)
+}
+
 // Table defines a table
 type Table struct {
 	Name    string

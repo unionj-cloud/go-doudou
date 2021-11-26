@@ -207,8 +207,8 @@ func TestDropIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DropIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
-				t.Errorf("DropIndex() error = %v, wantErr %v", err, tt.wantErr)
+			if err := dropIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("dropIndex() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -255,8 +255,8 @@ func TestAddIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := AddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
-				t.Errorf("AddIndex() error = %v, wantErr %v", err, tt.wantErr)
+			if err := addIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("addIndex() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -308,8 +308,8 @@ func TestDropAddIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DropAddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
-				t.Errorf("DropAddIndex() error = %v, wantErr %v", err, tt.wantErr)
+			if err := dropAddIndex(tt.args.ctx, tt.args.db, tt.args.idx); (err != nil) != tt.wantErr {
+				t.Errorf("dropAddIndex() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
