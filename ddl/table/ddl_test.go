@@ -1121,7 +1121,7 @@ func ExampleStruct2Table() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain", "ddl_", []string{"ddl_user", "ddl_book"}, db)
+	_ = Struct2Table(context.Background(), "../testdata/domain", "ddl_", []string{"ddl_user", "ddl_book"}, db, "test")
 	// Output:
 	//CREATE TABLE `ddl_order` (
 	//`id` INT NOT NULL AUTO_INCREMENT,

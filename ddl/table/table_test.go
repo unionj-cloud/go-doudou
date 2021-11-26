@@ -48,30 +48,44 @@ func ExampleNewTableFromStruct() {
 	}
 
 	// Output:
-	// 5
-	// CREATE TABLE `user` (
-	// `id` INT NOT NULL AUTO_INCREMENT,
-	// `name` VARCHAR(255) NOT NULL DEFAULT 'jack',
-	// `phone` VARCHAR(255) NOT NULL DEFAULT '13552053960' comment '手机号',
-	// `age` INT NOT NULL,
-	// `no` int NOT NULL,
-	// `unique_col` int NOT NULL,
-	// `unique_col_2` int NOT NULL,
-	// `school` VARCHAR(255) NULL DEFAULT 'harvard' comment '学校',
-	// `is_student` TINYINT NOT NULL,
-	// `rule` varchar(255) NOT NULL comment '链接匹配规则，匹配的链接采用该css规则来爬',
-	// `rule_type` varchar(45) NOT NULL comment '链接匹配规则类型，支持prefix前缀匹配和regex正则匹配',
-	// `arrive_at` datetime NULL comment '到货时间',
-	// `status` tinyint(4) NOT NULL comment '0,
-	// `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-	// `delete_at` DATETIME NULL,
-	// `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	// PRIMARY KEY (`id`),
-	// INDEX `age_idx` (`age` asc),
-	// INDEX `name_phone_idx` (`phone` asc,`name` asc),
-	// UNIQUE INDEX `no_idx` (`no` asc),
-	// UNIQUE INDEX `rule_idx` (`rule` asc),
-	// UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc))
+	//0
+	//CREATE TABLE `order` (
+	//`id` INT NOT NULL AUTO_INCREMENT,
+	//`amount` BIGINT NOT NULL,
+	//`user_id` int NOT NULL,
+	//`create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+	//`delete_at` DATETIME NULL,
+	//`update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	//PRIMARY KEY (`id`),
+	//CONSTRAINT `fk_ddl_user` FOREIGN KEY (`user_id`)
+	//REFERENCES `ddl_user`(`id`)
+	//ON DELETE CASCADE ON UPDATE NO ACTION)
+	//5
+	//CREATE TABLE `user` (
+	//`id` INT NOT NULL AUTO_INCREMENT,
+	//`name` VARCHAR(255) NOT NULL DEFAULT 'jack',
+	//`phone` VARCHAR(255) NOT NULL DEFAULT '13552053960' comment '手机号',
+	//`age` INT NOT NULL,
+	//`no` int NOT NULL,
+	//`unique_col` int NOT NULL,
+	//`unique_col_2` int NOT NULL,
+	//`school` VARCHAR(255) NULL DEFAULT 'harvard' comment '学校',
+	//`is_student` TINYINT NOT NULL,
+	//`rule` varchar(255) NOT NULL comment '链接匹配规则，匹配的链接采用该css规则来爬',
+	//`rule_type` varchar(45) NOT NULL comment '链接匹配规则类型，支持prefix前缀匹配和regex正则匹配',
+	//`arrive_at` datetime NULL comment '到货时间',
+	//`status` tinyint(4) NOT NULL comment '0进行中
+	//1完结
+	//2取消',
+	//`create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+	//`delete_at` DATETIME NULL,
+	//`update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	//PRIMARY KEY (`id`),
+	//INDEX `age_idx` (`age` asc),
+	//INDEX `name_phone_idx` (`phone` asc,`name` asc),
+	//UNIQUE INDEX `no_idx` (`no` asc),
+	//UNIQUE INDEX `rule_idx` (`rule` asc),
+	//UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc))
 }
 
 func TestTable_CreateSql(t1 *testing.T) {

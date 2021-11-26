@@ -191,7 +191,7 @@ func Table2struct(ctx context.Context, pre, schema string, existTables []string,
 	return
 }
 
-func foreignKeys(ctx context.Context, db *sqlx.DB, schema, t string) (fks []ForeignKey) {
+func foreignKeys(ctx context.Context, db wrapper.Querier, schema, t string) (fks []ForeignKey) {
 	var (
 		dbForeignKeys []DbForeignKey
 		err           error
@@ -317,7 +317,7 @@ func dbColumn2Column(item DbColumn, colIdxMap map[string][]IndexItem, t string, 
 	return col
 }
 
-func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db *sqlx.DB) (tables []Table) {
+func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db *sqlx.DB, schema string) (tables []Table) {
 	var (
 		files []string
 		err   error
@@ -377,7 +377,7 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 				}
 			}
 			updateIndexFromStruct(ctx, tx, t)
-			updateFkFromStruct(ctx, tx, t)
+			updateFkFromStruct(ctx, tx, t, schema)
 		} else {
 			if err = CreateTable(ctx, tx, t); err != nil {
 				panic(fmt.Sprintf("%+v", err))
@@ -388,8 +388,9 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 	return
 }
 
-func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {
-
+func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, schema string) {
+	fks := foreignKeys(ctx, tx, schema, t.Name)
+	fks = fks
 }
 
 func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table) {

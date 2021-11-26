@@ -61,7 +61,7 @@ func (d Ddl) Exec() {
 	defer cancel()
 	_ = os.MkdirAll(d.Dir, os.ModePerm)
 	if !d.Reverse {
-		tables = table.Struct2Table(timeoutCtx, d.Dir, d.Pre, existTables, db)
+		tables = table.Struct2Table(timeoutCtx, d.Dir, d.Pre, existTables, db, d.Conf.Schema)
 	} else {
 		tables = table.Table2struct(timeoutCtx, d.Pre, d.Conf.Schema, existTables, db)
 		for _, item := range tables {
