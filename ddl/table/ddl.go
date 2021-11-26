@@ -38,7 +38,7 @@ func CreateTable(ctx context.Context, db wrapper.Querier, t Table) error {
 	if statement, err = t.CreateSql(); err != nil {
 		return err
 	}
-	logrus.Infoln(statement)
+	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func ChangeColumn(ctx context.Context, db wrapper.Querier, col Column) error {
 	if statement, err = col.ChangeColumnSql(); err != nil {
 		return err
 	}
-	logrus.Infoln(statement)
+	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func AddColumn(ctx context.Context, db wrapper.Querier, col Column) error {
 	if statement, err = col.AddColumnSql(); err != nil {
 		return err
 	}
-	logrus.Infoln(statement)
+	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func AddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	if statement, err = idx.AddIndexSql(); err != nil {
 		return errors.Wrap(err, "")
 	}
-	logrus.Infoln(statement)
+	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
 		return errors.Wrap(err, "")
 	}
@@ -114,7 +114,7 @@ func DropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	if statement, err = idx.DropIndexSql(); err != nil {
 		return errors.Wrap(err, "")
 	}
-	logrus.Infoln(statement)
+	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
 		return errors.Wrap(err, "")
 	}
@@ -220,6 +220,17 @@ func foreignKeys(ctx context.Context, db *sqlx.DB, schema, t string) (fks []Fore
 		if len(dbActions) > 0 {
 			dbAction = dbActions[0]
 		}
+		var rules []string
+		if stringutils.IsNotEmpty(dbAction.DeleteRule) {
+			rules = append(rules, fmt.Sprintf("ON DELETE %s", dbAction.DeleteRule))
+		}
+		if stringutils.IsNotEmpty(dbAction.UpdateRule) {
+			rules = append(rules, fmt.Sprintf("ON UPDATE %s", dbAction.UpdateRule))
+		}
+		var fullRule string
+		if len(rules) > 0 {
+			fullRule = strings.Join(rules, " ")
+		}
 		fks = append(fks, ForeignKey{
 			Table:           t,
 			Constraint:      item.ConstraintName,
@@ -228,6 +239,7 @@ func foreignKeys(ctx context.Context, db *sqlx.DB, schema, t string) (fks []Fore
 			ReferencedCol:   item.ReferencedColumnName,
 			UpdateRule:      dbAction.UpdateRule,
 			DeleteRule:      dbAction.DeleteRule,
+			FullRule:        fullRule,
 		})
 	}
 	return

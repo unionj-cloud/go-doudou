@@ -271,6 +271,7 @@ type ForeignKey struct {
 	ReferencedCol string
 	UpdateRule    string
 	DeleteRule    string
+	FullRule      string
 }
 
 // Table defines a table
@@ -573,12 +574,17 @@ func parsePair(pair []string, column *Column, indexes *[]Index, uniqueIndexes *[
 		} else {
 			constraint = fmt.Sprintf("fk_%s_%s_%s", column.Name, refTable, refCol)
 		}
+		var fullRule string
+		if len(props) > 3 {
+			fullRule = props[3]
+		}
 		*fks = append(*fks, ForeignKey{
 			Table:           column.Table,
 			Constraint:      constraint,
 			Fk:              column.Name,
 			ReferencedTable: refTable,
 			ReferencedCol:   refCol,
+			FullRule:        fullRule,
 		})
 		break
 	}
@@ -629,7 +635,7 @@ func NewFieldFromColumn(col Column) astutils.FieldMeta {
 		feats = append(feats, indexClause)
 	}
 	if stringutils.IsNotEmpty(col.Fk.Constraint) {
-		feats = append(feats, fmt.Sprintf("fk:%s,%s,%s,ON DELETE %s ON UPDATE %s", col.Fk.ReferencedTable, col.Fk.ReferencedCol, col.Fk.Constraint, col.Fk.DeleteRule, col.Fk.UpdateRule))
+		feats = append(feats, fmt.Sprintf("fk:%s,%s,%s,%s", col.Fk.ReferencedTable, col.Fk.ReferencedCol, col.Fk.Constraint, col.Fk.FullRule))
 	}
 	return astutils.FieldMeta{
 		Name: strcase.ToCamel(col.Name),
@@ -651,6 +657,9 @@ PRIMARY KEY (` + "`" + `{{.Pk}}` + "`" + `){{if .Indexes}},{{end}}
 {{- if $i}},{{end}}
 CONSTRAINT ` + "`" + `{{$fk.Constraint}}` + "`" + ` FOREIGN KEY (` + "`" + `{{$fk.Fk}}` + "`" + `)
 REFERENCES ` + "`" + `{{$fk.ReferencedTable}}` + "`" + `(` + "`" + `{{$fk.ReferencedCol}}` + "`" + `)
+{{- if $fk.FullRule}}
+{{$fk.FullRule}}
+{{- end }}
 {{- end }})`
 
 // CreateSql return create table sql
