@@ -30,6 +30,7 @@ create table ddl_book
     publisher_id int         null,
     constraint fk_user
         foreign key (user_id) references ddl_user (id)
+        ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 create table ddl_publisher

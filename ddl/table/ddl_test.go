@@ -463,7 +463,7 @@ func ExampleStruct2Table() {
 	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc);
 }
 
-func Example_struct2Table() {
+func ExampleStruct2TableDrapAddFk() {
 	terminator, db, err := Setup()
 	if err != nil {
 		panic(err)
@@ -533,6 +533,150 @@ func Example_struct2Table() {
 	//CHANGE COLUMN `update_at` `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `rule_idx` (`rule` asc);
 	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc);
+}
+
+func ExampleStruct2TableShouldDropDropFkAddFk() {
+	terminator, db, err := Setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	_ = Struct2Table(context.Background(), "../testdata/domain3", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	// Output:
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `user_id` `user_id` int NOT NULL;
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `publisher_id` `publisher_id` INT NOT NULL;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_book` ADD CONSTRAINT fk_publisher FOREIGN KEY (publisher_id) REFERENCES ddl_publisher(id) ON DELETE CASCADE ON UPDATE NO ACTION;
+	//ALTER TABLE `ddl_book` DROP FOREIGN KEY fk_user;
+	//ALTER TABLE `ddl_publisher`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_publisher`
+	//CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL DEFAULT 'jack';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `phone` `phone` VARCHAR(255) NOT NULL DEFAULT '13552053960' comment '手机号';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `age` `age` INT NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `no` `no` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `unique_col` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `unique_col_2` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `school` `school` VARCHAR(255) NULL DEFAULT 'harvard' comment '学校';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `is_student` `is_student` TINYINT NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `rule` varchar(255) NOT NULL comment '链接匹配规则，匹配的链接采用该css规则来爬';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `rule_type` varchar(45) NOT NULL comment '链接匹配规则类型，支持prefix前缀匹配和regex正则匹配';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `arrive_at` datetime NULL comment '到货时间';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `status` tinyint(4) NOT NULL comment '0进行中
+	//1完结
+	//2取消';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `create_at` `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `delete_at` `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `update_at` `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `rule_idx` (`rule` asc);
+	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc);
+	//ALTER TABLE `ddl_user` DROP INDEX `age_idx`;
+}
+
+func ExampleStruct2TableContinue() {
+	terminator, db, err := Setup()
+	if err != nil {
+		panic(err)
+	}
+	defer terminator()
+	defer db.Close()
+
+	_ = Struct2Table(context.Background(), "../testdata/domain4", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	// Output:
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `user_id` `user_id` int NOT NULL;
+	//ALTER TABLE `ddl_book`
+	//CHANGE COLUMN `publisher_id` `publisher_id` INT NOT NULL;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_book`
+	//ADD COLUMN `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_publisher`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_publisher`
+	//CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_publisher`
+	//ADD COLUMN `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL DEFAULT 'jack';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `phone` `phone` VARCHAR(255) NOT NULL DEFAULT '13552053960' comment '手机号';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `age` `age` INT NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `no` `no` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `unique_col` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `unique_col_2` int NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `school` `school` VARCHAR(255) NULL DEFAULT 'harvard' comment '学校';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `is_student` `is_student` TINYINT NOT NULL;
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `rule` varchar(255) NOT NULL comment '链接匹配规则，匹配的链接采用该css规则来爬';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `rule_type` varchar(45) NOT NULL comment '链接匹配规则类型，支持prefix前缀匹配和regex正则匹配';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `arrive_at` datetime NULL comment '到货时间';
+	//ALTER TABLE `ddl_user`
+	//ADD COLUMN `status` tinyint(4) NOT NULL comment '0进行中
+	//1完结
+	//2取消';
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `create_at` `create_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `delete_at` `delete_at` DATETIME NULL;
+	//ALTER TABLE `ddl_user`
+	//CHANGE COLUMN `update_at` `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `rule_idx` (`rule` asc);
+	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc);
+	//ALTER TABLE `ddl_user` DROP INDEX `age_idx`;
 }
 
 func Test_addFk(t *testing.T) {
