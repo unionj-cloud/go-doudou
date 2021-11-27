@@ -674,6 +674,8 @@ func ExampleStruct2TableFkContinue() {
 	//CHANGE COLUMN `delete_at` `delete_at` DATETIME NULL;
 	//ALTER TABLE `ddl_user`
 	//CHANGE COLUMN `update_at` `update_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+	//ALTER TABLE `ddl_user` DROP INDEX `name_phone_idx`;
+	//ALTER TABLE `ddl_user` ADD  INDEX `name_phone_idx` (`school` asc,`name` asc);
 	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `rule_idx` (`rule` asc);
 	//ALTER TABLE `ddl_user` ADD UNIQUE INDEX `unique_col_idx` (`unique_col` asc,`unique_col_2` asc);
 	//ALTER TABLE `ddl_user` DROP INDEX `age_idx`;
