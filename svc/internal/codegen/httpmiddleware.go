@@ -29,13 +29,8 @@ func GenHttpMiddleware(dir string) {
 			panic(err)
 		}
 		defer f.Close()
-
-		if tpl, err = template.New("middleware.go.tmpl").Parse(httpMwTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			panic(err)
-		}
+		tpl, _ = template.New("middleware.go.tmpl").Parse(httpMwTmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", mwfile)
 	}

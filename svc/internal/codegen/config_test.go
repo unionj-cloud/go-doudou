@@ -57,3 +57,7 @@ func LoadFromEnv() *Config {
 		t.Errorf("want %s, got %s\n", expect, string(content))
 	}
 }
+
+func TestGenConfig1(t *testing.T) {
+	GenConfig(filepath.Join(testDir))
+}

@@ -60,13 +60,8 @@ func GenConfig(dir string) {
 			panic(err)
 		}
 		defer f.Close()
-
-		if tpl, err = template.New("config.go.tmpl").Parse(configTmpl); err != nil {
-			panic(err)
-		}
-		if err = tpl.Execute(f, nil); err != nil {
-			panic(err)
-		}
+		tpl, _ = template.New("config.go.tmpl").Parse(configTmpl)
+		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", configfile)
 	}
