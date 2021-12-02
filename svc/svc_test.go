@@ -247,7 +247,6 @@ func TestSvc_Deploy(t *testing.T) {
 	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
 	receiver.Deploy("")
 }
 
@@ -256,7 +255,6 @@ func TestSvc_Shutdown(t *testing.T) {
 	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
 	receiver.Shutdown("")
 }
 
@@ -377,7 +375,6 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 }
 
 func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
-	os.Chdir(filepath.Join("testdata", "openapi"))
 	type fields struct {
 		dir                  string
 		Handler              bool
@@ -400,13 +397,17 @@ func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
 		fields fields
 	}{
 		{
-			name:   "",
-			fields: fields{},
+			name: "",
+			fields: fields{
+				dir: filepath.Join("testdata", "openapi"),
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			receiver := Svc{}
+			receiver := Svc{
+				dir: tt.fields.dir,
+			}
 			assert.NotPanics(t, func() {
 				receiver.GenClient()
 			})
