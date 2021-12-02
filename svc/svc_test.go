@@ -377,7 +377,7 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 }
 
 func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
-	os.Chdir("testdata")
+	os.Chdir(filepath.Join("testdata", "openapi"))
 	type fields struct {
 		dir                  string
 		Handler              bool
