@@ -34,7 +34,8 @@ func TestGenK8sStatefulset(t *testing.T) {
 }
 
 func TestGenK8sStatefulset2(t *testing.T) {
-	defer os.Remove(filepath.Join("testdata", "nostatefulset", "corpus_statefulset.yaml"))
+	os.MkdirAll(filepath.Join("testdata", "nostatefulset"), os.ModePerm)
+	defer os.RemoveAll(filepath.Join("testdata", "nostatefulset"))
 	type args struct {
 		dir     string
 		svcname string
