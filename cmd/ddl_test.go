@@ -8,6 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -68,7 +69,7 @@ type User struct {
 	DeleteAt  *time.Time ` + "`" + `dd:"type:datetime"` + "`" + `
 }
 `
-	domainfile := dir + "/domain/user.go"
+	domainfile := filepath.Join(dir, "domain", "user.go")
 	f, err := os.Open(domainfile)
 	if err != nil {
 		t.Fatal(err)

@@ -3,6 +3,7 @@ package codegen
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -40,7 +41,7 @@ func NewDb(conf config.DbConfig) (*sqlx.DB, error) {
 	return db, nil
 }
 `
-	configfile := dir + "/db/db.go"
+	configfile := filepath.Join(dir, "db", "db.go")
 	f, err := os.Open(configfile)
 	if err != nil {
 		t.Fatal(err)

@@ -3,6 +3,7 @@ package codegen
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -43,7 +44,7 @@ func LoadFromEnv() *Config {
 	}
 }
 `
-	configfile := dir + "/config/config.go"
+	configfile := filepath.Join(dir, "config", "config.go")
 	f, err := os.Open(configfile)
 	if err != nil {
 		t.Fatal(err)

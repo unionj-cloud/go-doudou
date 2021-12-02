@@ -42,7 +42,7 @@ func TestGenHttpHandlerImpl(t *testing.T) {
 	dir := testDir + "handlerImpl12"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	GenHttpHandlerImpl(dir, ic)
 	expect := `package httpsrv
 
@@ -65,7 +65,7 @@ func NewTestdatahandlerImpl12Handler(testdatahandlerImpl12 service.Testdatahandl
 	}
 }
 `
-	file := dir + "/transport/httpsrv/handlerimpl.go"
+	file := filepath.Join(dir, "transport", "httpsrv", "handlerimpl.go")
 	f, err := os.Open(file)
 	if err != nil {
 		t.Fatal(err)

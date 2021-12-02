@@ -3,6 +3,7 @@ package cmd
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ type Initcmd interface {
 	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
 }
 `
-	svcfile := dir + "/svc.go"
+	svcfile := filepath.Join(dir, "svc.go")
 	f, err := os.Open(svcfile)
 	if err != nil {
 		t.Fatal(err)

@@ -75,7 +75,7 @@ func NewTestsvcHandler(testsvc service.Testsvc) TestsvcHandler {
 	}
 }
 `
-	handlerimplfile := dir + "/transport/httpsrv/handlerimpl.go"
+	handlerimplfile := filepath.Join(dir, "transport", "httpsrv", "handlerimpl.go")
 	f, err := os.Open(handlerimplfile)
 	if err != nil {
 		t.Fatal(err)
@@ -175,7 +175,7 @@ func NewTestsvc(opts ...ddhttp.DdClientOption) *TestsvcClient {
 }
 `
 
-	clientfile := dir + "/client/client.go"
+	clientfile := filepath.Join(dir, "client", "client.go")
 	f, err = os.Open(clientfile)
 	if err != nil {
 		t.Fatal(err)

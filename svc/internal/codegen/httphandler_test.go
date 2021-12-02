@@ -6,6 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -86,7 +87,7 @@ func TestGenHttpHandler(t *testing.T) {
 	dir := testDir + "httphandler"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	GenHttpHandler(dir, ic, 1)
 	expect := `package httpsrv
 
@@ -111,7 +112,7 @@ func Routes(handler TestdatahttphandlerHandler) []ddmodel.Route {
 	}
 }
 `
-	file := dir + "/transport/httpsrv/handler.go"
+	file := filepath.Join(dir, "transport", "httpsrv", "handler.go")
 	f, err := os.Open(file)
 	if err != nil {
 		t.Fatal(err)

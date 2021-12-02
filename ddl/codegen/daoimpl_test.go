@@ -28,7 +28,7 @@ func TestGenDaoImplGo(t *testing.T) {
 		logrus.Panicln(err)
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
-	usergo := dir + "/user.go"
+	usergo := filepath.Join(dir, "user.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, usergo, nil, parser.ParseComments)
 	if err != nil {
@@ -36,7 +36,7 @@ func TestGenDaoImplGo(t *testing.T) {
 	}
 	ast.Walk(sc, root)
 
-	basego := dir + "/base.go"
+	basego := filepath.Join(dir, "base.go")
 	fset = token.NewFileSet()
 	root, err = parser.ParseFile(fset, basego, nil, parser.ParseComments)
 	if err != nil {

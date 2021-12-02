@@ -4,6 +4,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func TestGenMain(t *testing.T) {
 	dir := testDir + "main"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(dir+"/svc.go", astutils.ExprString)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	GenMain(dir, ic)
 	expect := `package main
 
@@ -65,7 +66,7 @@ func main() {
 	srv.Run()
 }
 `
-	file := dir + "/cmd/main.go"
+	file := filepath.Join(dir, "cmd", "main.go")
 	f, err := os.Open(file)
 	if err != nil {
 		t.Fatal(err)

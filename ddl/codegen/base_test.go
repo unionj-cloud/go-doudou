@@ -21,14 +21,14 @@ func TestGenBaseGo(t *testing.T) {
 	}{
 		{
 			args: args{
-				domainpath: dir + "/domain",
+				domainpath: filepath.Join(dir, "domain"),
 				folder:     nil,
 			},
 			wantErr: false,
 		},
 		{
 			args: args{
-				domainpath: dir + "/domain",
+				domainpath: filepath.Join(dir, "domain"),
 				folder:     []string{"testdao"},
 			},
 			wantErr: false,

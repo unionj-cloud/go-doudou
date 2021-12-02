@@ -4,6 +4,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/svc"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -17,7 +18,7 @@ func TestNameCmd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// go-doudou name -f /Users/wubin1989/workspace/chengdutreeyee/team3-cloud-analyse/vo/vo.go -o
-	_, _, err = ExecuteCommandC(rootCmd, []string{"name", "-f", dir + "/vo/vo.go", "-o"}...)
+	_, _, err = ExecuteCommandC(rootCmd, []string{"name", "-f", filepath.Join(dir, "vo", "vo.go"), "-o"}...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +44,7 @@ func TestGetImportPath(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				file: dir + "/domain",
+				file: filepath.Join(dir, "/domain"),
 			},
 			want: "importpath/domain",
 		},
