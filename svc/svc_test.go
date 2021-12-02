@@ -5,8 +5,10 @@ import (
 	"github.com/radovskyb/watcher"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/astutils"
+	"github.com/unionj-cloud/go-doudou/executils"
 	"github.com/unionj-cloud/go-doudou/pathutils"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -78,6 +80,16 @@ func TestSvc_Http(t *testing.T) {
 				Doc:       false,
 			},
 		},
+		{
+			name: "",
+			fields: fields{
+				Dir:       testDir + "4",
+				Handler:   false,
+				Client:    "go",
+				Omitempty: false,
+				Doc:       false,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -128,6 +140,84 @@ func Test_checkIc(t *testing.T) {
 
 func Test_checkIc1(t *testing.T) {
 	svcfile := testDir + "/svcp.go"
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Panics(t, func() {
+				validateRestApi(ic)
+			})
+		})
+	}
+}
+
+func Test_checkIc_no_interface(t *testing.T) {
+	svcfile := filepath.Join(testDir, "nosvc", "svc.go")
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Panics(t, func() {
+				validateRestApi(ic)
+			})
+		})
+	}
+}
+
+func Test_checkIc_input_anonystruct(t *testing.T) {
+	svcfile := filepath.Join(testDir, "inputanonystruct", "svc.go")
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Panics(t, func() {
+				validateRestApi(ic)
+			})
+		})
+	}
+}
+
+func Test_checkIc_output_anonystruct(t *testing.T) {
+	svcfile := filepath.Join(testDir, "outputanonystruct", "svc.go")
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 	type args struct {
 		ic astutils.InterfaceCollector
@@ -247,4 +337,79 @@ func TestSvc_Run(t *testing.T) {
 func TestSvc_Run_unwatch(t *testing.T) {
 	s := NewMockSvc("")
 	s.Run(false)
+}
+
+func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
+	type fields struct {
+		dir                  string
+		Handler              bool
+		Client               string
+		Omitempty            bool
+		Doc                  bool
+		Jsonattrcase         string
+		DocPath              string
+		Env                  string
+		ClientPkg            string
+		cmd                  *exec.Cmd
+		restartSig           chan int
+		RoutePatternStrategy int
+		runner               executils.Runner
+		w                    *watcher.Watcher
+		ModName              string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name:   "",
+			fields: fields{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			receiver := Svc{}
+			assert.Panics(t, func() {
+				receiver.GenClient()
+			})
+		})
+	}
+}
+
+func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
+	os.Chdir("testdata")
+	type fields struct {
+		dir                  string
+		Handler              bool
+		Client               string
+		Omitempty            bool
+		Doc                  bool
+		Jsonattrcase         string
+		DocPath              string
+		Env                  string
+		ClientPkg            string
+		cmd                  *exec.Cmd
+		restartSig           chan int
+		RoutePatternStrategy int
+		runner               executils.Runner
+		w                    *watcher.Watcher
+		ModName              string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name:   "",
+			fields: fields{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			receiver := Svc{}
+			assert.NotPanics(t, func() {
+				receiver.GenClient()
+			})
+		})
+	}
 }

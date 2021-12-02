@@ -57,10 +57,7 @@ func validateDataType(dir string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), codegen.ExprStringP)
 	vodir := filepath.Join(dir, "vo")
 	var files []string
-	err := filepath.Walk(vodir, astutils.Visit(&files))
-	if err != nil {
-		logrus.Panicln(err)
-	}
+	_ = filepath.Walk(vodir, astutils.Visit(&files))
 	for _, file := range files {
 		astutils.BuildStructCollector(file, codegen.ExprStringP)
 	}
@@ -296,10 +293,7 @@ func (receiver Svc) Shutdown(k8sfile string) {
 func (receiver Svc) GenClient() {
 	docpath := receiver.DocPath
 	if stringutils.IsEmpty(docpath) {
-		matches, err := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
-		if err != nil {
-			panic(err)
-		}
+		matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
 		if len(matches) > 0 {
 			docpath = matches[0]
 		}
