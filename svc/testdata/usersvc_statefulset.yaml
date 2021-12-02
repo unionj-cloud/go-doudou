@@ -14,7 +14,7 @@ spec:
         app: usersvc
     spec:
       containers:
-      - image: wubin1989/usersvc:v20211202233508
+      - image: wubin1989/usersvc:v20211202234627
         imagePullPolicy: Always
         name: usersvc
         ports:

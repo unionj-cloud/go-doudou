@@ -138,6 +138,32 @@ func Test_checkIc(t *testing.T) {
 	}
 }
 
+func Test_checkIc2(t *testing.T) {
+	svcfile := filepath.Join(testDir, "checkIc2", "svc.go")
+	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
+	type args struct {
+		ic astutils.InterfaceCollector
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "",
+			args: args{
+				ic: ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				validateRestApi(ic)
+			})
+		})
+	}
+}
+
 func Test_checkIc1(t *testing.T) {
 	svcfile := testDir + "/svcp.go"
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
@@ -413,4 +439,10 @@ func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestNewSvc(t *testing.T) {
+	assert.NotPanics(t, func() {
+		NewSvc("")
+	})
 }
