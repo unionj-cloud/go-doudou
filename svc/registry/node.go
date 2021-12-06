@@ -73,6 +73,9 @@ func (r *registry) Discover(svc string) ([]*Node, error) {
 	}
 	var nodes []*Node
 	for _, member := range r.memberlist.Members() {
+		if member.State != memberlist.StateAlive {
+			continue
+		}
 		logrus.Debugf("Member: %s %s\n", member.Name, member.Addr)
 		var mmeta mergedMeta
 		if err := json.Unmarshal(member.Meta, &mmeta); err != nil {
@@ -157,6 +160,9 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	mconf := memberlist.DefaultWANConfig()
+	// if both udp and tcp ping failed, the node should be suspected,
+	// no need to send indirect ping message for RESTFul microservice use case
+	mconf.IndirectChecks = 0
 	minLevel := strings.ToUpper(config.GddLogLevel.Load())
 	if minLevel == "ERROR" {
 		minLevel = "ERR"
@@ -187,6 +193,13 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(reclaimTimeoutStr) {
 		if reclaimTimeout, err := strconv.Atoi(reclaimTimeoutStr); err == nil {
 			mconf.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
+		}
+	}
+	mconf.ProbeInterval = 1 * time.Second
+	probeIntervalStr := config.GddMemProbeInterval.Load()
+	if stringutils.IsNotEmpty(probeIntervalStr) {
+		if probeInterval, err := strconv.Atoi(probeIntervalStr); err == nil {
+			mconf.ProbeInterval = time.Duration(probeInterval) * time.Second
 		}
 	}
 	nodename := config.GddMemName.Load()

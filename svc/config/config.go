@@ -87,6 +87,7 @@ const (
 	// GddMemReclaimTimeout dead node will be replaced with new node with the same name but different full address in GddMemReclaimTimeout second
 	// expose DeadNodeReclaimTime property of memberlist.Config
 	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
+	GddMemProbeInterval  envVariable = "GDD_MEM_PROBE_INTERVAL"
 )
 
 // Load loads value from environment variable
