@@ -98,6 +98,10 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ```shell
 go get -v github.com/unionj-cloud/go-doudou@v0.7.10
 ```
+If you meet 410 Gone error, try below command:
+```shell
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+```
 
 
 
