@@ -95,7 +95,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.9
+go get -v github.com/unionj-cloud/go-doudou@v0.7.10
 ```
 
 
@@ -426,31 +426,37 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 
 go-doudou用.env文件管理框架用到的环境变量
 
-| 环境变量    | 描述                                                  | 默认值   | 是否必须 |
-| ----------------------- | ------------------------------------------------------------ | --------- | -------- |
-| GDD_BANNER              | 是否在控制台打印banner | off       |          |
-| GDD_BANNER_TEXT         | banner文本                                                             | Go-doudou |          |
-| GDD_LOG_LEVEL           | 日志等级：可能的值有panic, fatal, error, warn, warning, info, debug, trace | info      |          |
-| GDD_LOG_PATH            | 如果配置文件里没有出现GDD_LOG_PATH这个环境变量，则没有日志文件输出到磁盘     |           |          |
-| GDD_GRACE_TIMEOUT       | 优雅关闭的超时时间                    | 15s       |          |
-| GDD_WRITE_TIMEOUT       | http服务器的写操作超时时间                               | 15s       |          |
-| GDD_READ_TIMEOUT        | http服务器的读操作超时时间                                          | 15s       |          |
-| GDD_IDLE_TIMEOUT        | http服务器的空闲连接超时时间                                         | 60s       |          |
-| GDD_ROUTE_ROOT_PATH     | 接口请求路径的前缀        | ""        |          |
-| GDD_SERVICE_NAME        | 注册服务到集群时的服务名称         |           | Yes      |
-| GDD_HOST                | http服务器监听地址 | ""        |          |
-| GDD_PORT                | http服务器监听端口 | ""        |          |
-| GDD_MODE                | "mono"表示单体应用，"micro"表示微服务应用 |           |          |
-| GDD_MANAGE_ENABLE       | 开启管理端点，如：/go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus和/go-doudou/registry。 | false     |          |
-| GDD_MANAGE_USER         | 管理端点的basic auth校验的用户名              | ""        |          |
-| GDD_MANAGE_PASS         | 管理端点的basic auth校验的密码              | ""        |          |
-| GDD_MEM_SEED            | 种子节点的地址。如果没有设置或者设置为空字符串，则创建一个新的memberlist集群，供其他节点来加入 | ""        |          |
-| GDD_MEM_NAME            | 节点名称。仅用于本地开发和调试。如果没有设置或者值为空字符串，则取服务器的hostname | ""        |          |
+| 环境变量    | 描述                                                                                                                                                                                      | 默认值   | 是否必须 |
+| ----------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| --------- | -------- |
+| GDD_BANNER              | 是否在控制台打印banner                                                                                                                                                                          | off       |          |
+| GDD_BANNER_TEXT         | banner文本                                                                                                                                                                                | Go-doudou |          |
+| GDD_LOG_LEVEL           | 日志等级：可能的值有panic, fatal, error, warn, warning, info, debug, trace                                                                                                                        | info      |          |
+| GDD_LOG_PATH            | 如果配置文件里没有出现GDD_LOG_PATH这个环境变量，则没有日志文件输出到磁盘                                                                                                                                              |           |          |
+| GDD_GRACE_TIMEOUT       | 优雅关闭的超时时间                                                                                                                                                                               | 15s       |          |
+| GDD_WRITE_TIMEOUT       | http服务器的写操作超时时间                                                                                                                                                                         | 15s       |          |
+| GDD_READ_TIMEOUT        | http服务器的读操作超时时间                                                                                                                                                                         | 15s       |          |
+| GDD_IDLE_TIMEOUT        | http服务器的空闲连接超时时间                                                                                                                                                                        | 60s       |          |
+| GDD_ROUTE_ROOT_PATH     | 接口请求路径的前缀                                                                                                                                                                               | ""        |          |
+| GDD_SERVICE_NAME        | 注册服务到集群时的服务名称                                                                                                                                                                           |           | Yes      |
+| GDD_HOST                | http服务器监听地址                                                                                                                                                                             | ""        |          |
+| GDD_PORT                | http服务器监听端口                                                                                                                                                                             | ""        |          |
+| GDD_MODE                | "mono"表示单体应用，"micro"表示微服务应用                                                                                                                                                             |           |          |
+| GDD_MANAGE_ENABLE       | 开启管理端点，如：/go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus和/go-doudou/registry。                                                                                            | false     |          |
+| GDD_MANAGE_USER         | 管理端点的basic auth校验的用户名                                                                                                                                                                   | ""        |          |
+| GDD_MANAGE_PASS         | 管理端点的basic auth校验的密码                                                                                                                                                                    | ""        |          |
+| GDD_MEM_SEED            | 种子节点的地址。如果没有设置或者设置为空字符串，则创建一个新的memberlist集群，供其他节点来加入                                                                                                                                    | ""        |          |
+| GDD_MEM_NAME            | 节点名称。仅用于本地开发和调试。如果没有设置或者值为空字符串，则取服务器的hostname                                                                                                                                           | ""        |          |
 | GDD_MEM_HOST            | 设置memberlist的AdvertiseAddr属性。如果GDD_MEM_HOST的值以点开头，如：.seed-svc-headless.default.svc.cluster.local，则会在前面补上服务器的hostname，如：seed-2.seed-svc-headless.default.svc.cluster.local，用于支持k8s的有状态服务 | ""        |          |
-| GDD_MEM_PORT            | 如果没有设置或者值为空字符串，则会设置为一个随机取得的可用端口。推荐自己设置一个端口 | ""        |          |
-| GDD_MEM_DEAD_TIMEOUT    | 如果在GDD_MEM_DEAD_TIMEOUT设置的超时时间范围内，没有收到已经判定为dead的节点的复活消息，则会从缓存里把这个节点信息彻底删掉| 30        |          |
-| GDD_MEM_SYNC_INTERVAL   | 每隔GDD_MEM_SYNC_INTERVAL设置的时间，本地节点会随机选择一个远程节点做数据同步 | 5         |          |
-| GDD_MEM_RECLAIM_TIMEOUT | 如果超过GDD_MEM_RECLAIM_TIMEOUT设置的时间，被判定为dead的节点会被具有相同名称但具有不同地址的节点替换掉 | 3         |          |
+| GDD_MEM_PORT            | 如果没有设置或者值为空字符串，则会设置为一个随机取得的可用端口。推荐自己设置一个端口                                                                                                                                              | ""        |          |
+| GDD_MEM_DEAD_TIMEOUT    | 如果在GDD_MEM_DEAD_TIMEOUT设置的超时时间范围内，没有收到已经判定为dead的节点的复活消息，则会从缓存里把这个节点信息彻底删掉                                                                                                               | 30        |          |
+| GDD_MEM_SYNC_INTERVAL   | 每隔GDD_MEM_SYNC_INTERVAL，本地节点会随机选择一个远程节点做数据同步                                                                                                                                       | 5         |          |
+| GDD_MEM_RECLAIM_TIMEOUT | 如果超过GDD_MEM_RECLAIM_TIMEOUT，被判定为dead的节点会被具有相同名称但具有不同地址的节点替换掉                                                                                                                       | 3         |          |
+| GDD_MEM_PROBE_INTERVAL | 每隔GDD_MEM_PROBE_INTERVAL做一次心跳检测                                                                                                                                                         | 1s        |          |
+| GDD_MEM_PROBE_TIMEOUT | 一次心跳检测的超时时间                                                                                                                                                                             | 3s        |          |
+| GDD_MEM_TCP_TIMEOUT | 一次TCP请求的超时时间                                                                                                                                                                            | 30s       |          |
+| GDD_MEM_GOSSIP_NODES | 设置一次批量发送gossip消息的目标节点的数量                                                                                                                                                                | 4         |          |
+| GDD_MEM_GOSSIP_INTERVAL | 每隔GDD_MEM_GOSSIP_INTERVAL批量发送一次gossip消息                                                                                                                                                 | 500ms       |          |
+| GDD_MEM_SUSPICION_MULT | 计算一个节点从心跳检测失败到宣告该节点已经挂掉的时长的系数                                                                                                                                                           | 6         |          |
 
 
 

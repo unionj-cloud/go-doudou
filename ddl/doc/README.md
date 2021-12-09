@@ -50,7 +50,6 @@ DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://g
 
 ```shell
 ➜  ~ go-doudou ddl -h
-WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
 migration tool between database table structure and golang struct
 
 Usage:
@@ -73,7 +72,7 @@ Flags:
 - Install go-doudou
 
   ```shell
-  go get -v -u github.com/unionj-cloud/go-doudou/...@v0.6.0
+  go get -v github.com/unionj-cloud/go-doudou@v0.7.10
   ```
 
 - Clone demo repository
@@ -147,19 +146,62 @@ Flags:
 ### API
 
 #### Example
-
 ```go
+package domain
+
+import "time"
+
+type Base struct {
+	CreateAt *time.Time `dd:"default:CURRENT_TIMESTAMP"`
+	UpdateAt *time.Time `dd:"default:CURRENT_TIMESTAMP;extra:ON UPDATE CURRENT_TIMESTAMP"`
+	DeleteAt *time.Time
+}
+```
+```go
+package domain
+
+//dd:table
+type Book struct {
+  ID          int `dd:"pk;auto"`
+  UserId      int `dd:"type:int"`
+  PublisherId int	`dd:"fk:ddl_publisher,id,fk_publisher,ON DELETE CASCADE ON UPDATE NO ACTION"`
+
+  Base
+}
+```
+```go
+package domain
+
+//dd:table
+type Publisher struct {
+  ID   int `dd:"pk;auto"`
+  Name string
+
+  Base
+}
+```
+```go
+package domain
+
+import "time"
+
 //dd:table
 type User struct {
-	ID        int    `dd:"pk;auto"`
-	Name      string `dd:"index:name_phone_idx,2;default:'jack'"`
-	Phone     string `dd:"index:name_phone_idx,1;default:'13552053960';extra:comment 'cellphone number'"`
-	Age       int    `dd:"index"`
-	No        int    `dd:"unique"`
-	School    string `dd:"null;default:'harvard';extra:comment 'school'"`
-	IsStudent bool
+  ID         int    `dd:"pk;auto"`
+  Name       string `dd:"index:name_phone_idx,2;default:'jack'"`
+  Phone      string `dd:"index:name_phone_idx,1;default:'13552053960';extra:comment '手机号'"`
+  Age        int    `dd:"unsigned"`
+  No         int    `dd:"type:int;unique"`
+  UniqueCol  int    `dd:"type:int;unique:unique_col_idx,1"`
+  UniqueCol2 int    `dd:"type:int;unique:unique_col_idx,2"`
+  School     string `dd:"null;default:'harvard';extra:comment '学校'"`
+  IsStudent  bool
+  ArriveAt *time.Time `dd:"type:datetime;extra:comment '到货时间'"`
+  Status   int8       `dd:"type:tinyint(4);extra:comment '0进行中
+1完结
+2取消'"`
 
-	Base
+  Base
 }
 ```
 
@@ -218,6 +260,14 @@ Nullable. **Note: if the field is a pointer, null is default.**
 
 Unsigned
 
+##### fk
+
+- Format："fk:ReferenceTableName,ReferenceTablePrimaryKey,Constraint,Action"  
+- ReferenceTableName: reference table name
+- ReferenceTablePrimaryKey: reference table primary key such as `id`
+- Constraint: foreign key constraint such as `fk_publisher`
+- Action: for example: `ON DELETE CASCADE ON UPDATE NO ACTION`
+
 
 
 #### Dao layer code
@@ -225,19 +275,26 @@ Unsigned
 ##### CRUD
 
 ```go
+package dao
+
+import (
+  "context"
+  "github.com/unionj-cloud/go-doudou/ddl/query"
+)
+
 type Base interface {
-	Insert(ctx context.Context, data interface{}) (int64, error)
-	Upsert(ctx context.Context, data interface{}) (int64, error)
-	UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)
-	DeleteMany(ctx context.Context, where query.Q) (int64, error)
-	Update(ctx context.Context, data interface{}) (int64, error)
-	UpdateNoneZero(ctx context.Context, data interface{}) (int64, error)
-	UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error)
-	UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error)
-	Get(ctx context.Context, id interface{}) (interface{}, error)
-	SelectMany(ctx context.Context, where ...query.Q) (interface{}, error)
-	CountMany(ctx context.Context, where ...query.Q) (int, error)
-	PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
+  Insert(ctx context.Context, data interface{}) (int64, error)
+  Upsert(ctx context.Context, data interface{}) (int64, error)
+  UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)
+  DeleteMany(ctx context.Context, where query.Q) (int64, error)
+  Update(ctx context.Context, data interface{}) (int64, error)
+  UpdateNoneZero(ctx context.Context, data interface{}) (int64, error)
+  UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error)
+  UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error)
+  Get(ctx context.Context, id interface{}) (interface{}, error)
+  SelectMany(ctx context.Context, where ...query.Q) (interface{}, error)
+  CountMany(ctx context.Context, where ...query.Q) (int, error)
+  PageMany(ctx context.Context, page query.Page, where ...query.Q) (query.PageRet, error)
 }
 ```
 
@@ -263,7 +320,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 	}
 	colNum := len(rows[0])
 	rows = rows[1:]
-	gdddb := ddl.GddDB{receiver.db}
+    gdddb := wrapper.GddDB{receiver.db}
 	// begin transaction
 	tx, err = gdddb.BeginTxx(ctx, nil)
 	if err != nil {
@@ -271,10 +328,7 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			if _err := tx.Rollback(); _err != nil {
-				err = errors.Wrap(_err, "")
-				return
-			}
+			_ = tx.Rollback()
 			if e, ok := r.(error); ok {
 				err = errors.Wrap(e, "")
 			} else {
@@ -308,18 +362,14 @@ func (receiver *StockImpl) processExcel(ctx context.Context, f multipart.File, s
 			Note:        note,
 		}); err != nil {
 			// rollback if err != nil
-			if _err := tx.Rollback(); _err != nil {
-				return errors.Wrap(_err, "")
-			}
+			_ = tx.Rollback()
 			return errors.Wrap(err, "")
 		}
 	}
 END:
 	// commit
 	if err = tx.Commit(); err != nil {
-		if _err := tx.Rollback(); _err != nil {
-			return errors.Wrap(_err, "")
-		}
+        _ = tx.Rollback()
 		return errors.Wrap(err, "")
 	}
 	return err
@@ -334,124 +384,105 @@ END:
 
 ```go
 func ExampleCriteria() {
-	
-	query := C().Col("name").Eq(Literal("wubin")).
-              Or(C().Col("school").Eq(Literal("havard"))).
-              And(C().Col("age").Eq(Literal(18)))
+
+	query := C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).And(C().Col("age").Eq(18))
 	fmt.Println(query.Sql())
 
-	query = C().Col("name").Eq(Literal("wubin")).
-              Or(C().Col("school").Eq(Literal("havard"))).
-              And(C().Col("delete_at").IsNotNull())
+	query = C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
-	query = C().Col("name").Eq(Literal("wubin")).
-              Or(C().Col("school").In(Literal("havard"))).
-              And(C().Col("delete_at").IsNotNull())
+	query = C().Col("name").Eq("wubin").Or(C().Col("school").In("havard")).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
-	query = C().Col("name").Eq(Literal("wubin")).
-              Or(C().Col("school").In(Literal([]string{"havard", "beijing unv"}))).
-              And(C().Col("delete_at").IsNotNull())
+	query = C().Col("name").Eq("wubin").Or(C().Col("school").In([]string{"havard", "beijing unv"})).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
 
-	var d int
-	var e int
-	d = 10
-	e = 5
-
-	query = C().Col("name").Eq(Literal("wubin")).
-              Or(C().Col("age").In(Literal([]*int{&d, &e}))).
-              And(C().Col("delete_at").IsNotNull())
+	query = C().Col("name").Eq("wubin").Or(C().Col("age").In([]int{5, 10})).And(C().Col("delete_at").IsNotNull())
 	fmt.Println(query.Sql())
+
+	query = C().Col("name").Ne("wubin").Or(C().Col("create_at").Lt("now()"))
+	fmt.Println(query.Sql())
+
+	page := Page{
+		Orders: []Order{
+			{
+				Col:  "create_at",
+				Sort: sortenum.Desc,
+			},
+		},
+		Offset: 20,
+		Size:   10,
+	}
+	page = page.Order(Order{
+		Col:  "score",
+		Sort: sortenum.Asc,
+	})
+	page = page.Limit(30, 5)
+	fmt.Println(page.Sql())
+	pageRet := NewPageRet(page)
+	fmt.Println(pageRet.PageNo)
+
+	fmt.Println(P().Order(Order{
+		Col:  "score",
+		Sort: sortenum.Asc,
+	}).Limit(20, 10).Sql())
+
+	query = C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).
+		And(C().Col("age").Eq(18)).
+		Or(C().Col("score").Gte(90))
+	fmt.Println(query.Sql())
+
+	page = P().Order(Order{
+		Col:  "create_at",
+		Sort: sortenum.Desc,
+	}).Limit(0, 1)
+	var where Q
+	where = C().Col("project_id").Eq(1)
+	where = where.And(C().Col("delete_at").IsNull())
+	where = where.Append(page)
+	fmt.Println(where.Sql())
+
+	where = C().Col("project_id").Eq(1)
+	where = where.And(C().Col("delete_at").IsNull())
+	where = where.Append(String("for update"))
+	fmt.Println(where.Sql())
+
+	where = C().Col("cc.project_id").Eq(1)
+	where = where.And(C().Col("cc.delete_at").IsNull())
+	where = where.Append(String("for update"))
+	fmt.Println(where.Sql())
+
+	where = C().Col("cc.survey_id").Eq("abc").
+		And(C().Col("cc.year").Eq(2021)).
+		And(C().Col("cc.month").Eq(10)).
+		And(C().Col("cc.stat_type").Eq(2)).Append(String("for update"))
+	fmt.Println(where.Sql())
 
 	// Output:
-	// ((`name` = 'wubin' or `school` = 'havard') and `age` = '18')
-	// ((`name` = 'wubin' or `school` = 'havard') and `delete_at` is not null)
-	// ((`name` = 'wubin' or `school` in ('havard')) and `delete_at` is not null)
-	// ((`name` = 'wubin' or `school` in ('havard','beijing unv')) and `delete_at` is not null)
-	// ((`name` = 'wubin' or `age` in ('10','5')) and `delete_at` is not null)
+	//((`name` = ? or `school` = ?) and `age` = ?) [wubin havard 18]
+	//((`name` = ? or `school` = ?) and `delete_at` is not null) [wubin havard]
+	//((`name` = ? or `school` in (?)) and `delete_at` is not null) [wubin havard]
+	//((`name` = ? or `school` in (?,?)) and `delete_at` is not null) [wubin havard beijing unv]
+	//((`name` = ? or `age` in (?,?)) and `delete_at` is not null) [wubin 5 10]
+	//(`name` != ? or `create_at` < ?) [wubin now()]
+	//order by `create_at` desc,`score` asc limit ?,? [30 5]
+	//7
+	//order by `score` asc limit ?,? [20 10]
+	//(((`name` = ? or `school` = ?) and `age` = ?) or `score` >= ?) [wubin havard 18 90]
+	//(`project_id` = ? and `delete_at` is null) order by `create_at` desc limit ?,? [1 0 1]
+	//(`project_id` = ? and `delete_at` is null) for update [1]
+	//(cc.`project_id` = ? and cc.`delete_at` is null) for update [1]
+	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) for update [abc 2021 10 2]
 }
 ```
 
 
-
-##### Q
-
-```go
-type Q interface {
-	Sql() string
-	And(q Q) Q
-	Or(q Q) Q
-}
-```
-
-
-
-##### criteria
-
-```go
-type criteria struct {
-	col  string
-	val  Val
-	asym arithsymbol.ArithSymbol
-}
-```
-
-- col: column name
-- val: value
-- asym：
-  - Eq: `=`
-  - Ne: `!=`
-  - Gt: `>`
-  - Lt: `<`
-  - Gte: `>=`
-  - Lte: `<=`
-  - Is: `is`
-  - Not: `is not`
-  - In: `in`
-
-
-
-##### Val
-
-```go
-type Val struct {
-	Data interface{}
-	Type valtypeenum.ValType
-}
-```
-
-- Data: value
-- Type
-  - Func: database built-in function or expression made by built-in functions
-  - Null: null
-  - Literal: Literal value
-
-
-
-##### where
-
-```
-type where struct {
-   lsym     logicsymbol.LogicSymbol
-   children []Q
-}
-```
-
-- lsym
-  - And: `and`
-  - Or: `or`
-  
-- children: sub queries
-
-  
 
 ### TODO
 
 + [x] Support transaction in dao layer
-+ [ ] Support index update
-+ [ ] Support foreign key
++ [x] Support index update
++ [x] Support foreign key
 
 
 

@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.7.9
+	github.com/unionj-cloud/go-doudou v0.7.10
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -148,12 +148,12 @@ GDD_MODE=micro
 # GDD_MEM_PORT if empty or not set, an available port will be chosen randomly. recommend specifying a port
 GDD_MEM_PORT=
 GDD_MEM_SEED=localhost:56199
-# GDD_MEM_DEAD_TIMEOUT dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT second
-GDD_MEM_DEAD_TIMEOUT=30
-# GDD_MEM_SYNC_INTERVAL local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL second
-GDD_MEM_SYNC_INTERVAL=5
-# GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT second
-GDD_MEM_RECLAIM_TIMEOUT=3
+# GDD_MEM_DEAD_TIMEOUT dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT seconds
+GDD_MEM_DEAD_TIMEOUT=30s
+# GDD_MEM_SYNC_INTERVAL local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL seconds
+GDD_MEM_SYNC_INTERVAL=5s
+# GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT seconds
+GDD_MEM_RECLAIM_TIMEOUT=3s
 # GDD_MEM_NAME unique name of this node in cluster. if not provided, hostname will be used instead
 GDD_MEM_NAME=
 # GDD_MEM_HOST specify AdvertiseAddr attribute of memberlist config struct.

@@ -80,14 +80,40 @@ const (
 	GddMemPort envVariable = "GDD_MEM_PORT"
 	// GddMemDeadTimeout dead node will be removed from node map if not received refute messages from it in GddMemDeadTimeout second
 	// expose GossipToTheDeadTime property of memberlist.Config
+	// default value is 30 in second
 	GddMemDeadTimeout envVariable = "GDD_MEM_DEAD_TIMEOUT"
 	// GddMemSyncInterval local node will synchronize states from other random node every GddMemSyncInterval second
 	// expose PushPullInterval property of memberlist.Config
+	// default value is 5 in second
 	GddMemSyncInterval envVariable = "GDD_MEM_SYNC_INTERVAL"
 	// GddMemReclaimTimeout dead node will be replaced with new node with the same name but different full address in GddMemReclaimTimeout second
 	// expose DeadNodeReclaimTime property of memberlist.Config
+	// default value is 3 in second
 	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
-	GddMemProbeInterval  envVariable = "GDD_MEM_PROBE_INTERVAL"
+	// GddMemProbeInterval probe interval
+	// expose ProbeInterval property of memberlist.Config
+	// default value is 1 in second
+	GddMemProbeInterval envVariable = "GDD_MEM_PROBE_INTERVAL"
+	// GddMemProbeTimeout probe timeout
+	// expose ProbeTimeout property of memberlist.Config
+	// default value is 3 in second
+	GddMemProbeTimeout envVariable = "GDD_MEM_PROBE_TIMEOUT"
+	// GddMemSuspicionMult is the multiplier for determining the time an inaccessible node is considered suspect before declaring it dead.
+	// expose SuspicionMult property of memberlist.Config
+	// default value is 6
+	GddMemSuspicionMult envVariable = "GDD_MEM_SUSPICION_MULT"
+	// GddMemGossipNodes how many remote nodes you want to gossip messages
+	// expose GossipNodes property of memberlist.Config
+	// default value is 4
+	GddMemGossipNodes envVariable = "GDD_MEM_GOSSIP_NODES"
+	// GddMemGossipInterval gossip interval
+	// expose GossipInterval property of memberlist.Config
+	// default value is 500 in millisecond
+	GddMemGossipInterval envVariable = "GDD_MEM_GOSSIP_INTERVAL"
+	// GddMemTCPTimeout tcp timeout
+	// expose TCPTimeout property of memberlist.Config
+	// default value is 30 in second
+	GddMemTCPTimeout envVariable = "GDD_MEM_TCP_TIMEOUT"
 )
 
 // Load loads value from environment variable

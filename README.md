@@ -96,7 +96,7 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.9
+go get -v github.com/unionj-cloud/go-doudou@v0.7.10
 ```
 
 
@@ -105,7 +105,6 @@ go get -v github.com/unionj-cloud/go-doudou@v0.7.9
 
 ```shell
 ➜  ~ go-doudou -h                            
-WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
 go-doudou works like a scaffolding tool but more than that. 
 it lets api providers design their apis and help them code less. 
 it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
@@ -138,7 +137,6 @@ Use "go-doudou [command] --help" for more information about a command.
 
 ```shell
 ➜  ~ go-doudou svc init helloworld
-WARN[0000] Error loading .env file: open /Users/.env: no such file or directory 
 1.16
 helloworld
 ```
@@ -427,31 +425,37 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 
 Go-doudou use .env file to load environment variables to configure behaviors.
 
-| Environment Variable    | Description                                                  | Default   | Required |
-| ----------------------- | ------------------------------------------------------------ | --------- | -------- |
-| GDD_BANNER              | Whether output banner to stdout or not, possible values are on and off. | off       |          |
-| GDD_BANNER_TEXT         |                                                              | Go-doudou |          |
-| GDD_LOG_LEVEL           | Possible values are panic, fatal, error, warn, warning, info, debug, trace | info      |          |
-| GDD_LOG_PATH            | if GDD_LOG_PATH is not set, there is no output to disk.      |           |          |
-| GDD_GRACE_TIMEOUT       | Graceful shutdown timeout for http server                    | 15s       |          |
-| GDD_WRITE_TIMEOUT       | Configure http.Server                                        | 15s       |          |
-| GDD_READ_TIMEOUT        | Configure http.Server                                        | 15s       |          |
-| GDD_IDLE_TIMEOUT        | Configure http.Server                                        | 60s       |          |
-| GDD_ROUTE_ROOT_PATH     | prefix GDD_ROUTE_ROOT_PATH to each of http api routes        | ""        |          |
-| GDD_SERVICE_NAME        | Service name that the node providing in the cluster.         |           | Yes      |
-| GDD_HOST                | Configure http.Server. Specifying host for the http server to listen on. | ""        |          |
-| GDD_PORT                | Configure http.Server. Specifying port for the http server to listen on. | ""        |          |
-| GDD_MODE                | Accept "mono" for monolith mode or "micro" for microservice mode |           |          |
-| GDD_MANAGE_ENABLE       | Enable built-in api endpoints such as /go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus and /go-doudou/registry. Possible values are true and false. | false     |          |
-| GDD_MANAGE_USER         | Http basic username for built-in api endpoints               | ""        |          |
-| GDD_MANAGE_PASS         | Http basic password for built-in api endpoints               | ""        |          |
-| GDD_MEM_SEED            | Seed address for join memberlist cluster. If empty or not set, this node will create a new cluster for other nodes to join. | ""        |          |
-| GDD_MEM_NAME            | Only for dev and test use. Unique name of this node in cluster. if empty or not set, hostname will be used instead. | ""        |          |
+| Environment Variable    | Description                                                                                                                                                                                                                                                                       | Default   | Required |
+| ----------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------| -------- |
+| GDD_BANNER              | Whether output banner to stdout or not, possible values are on and off.                                                                                                                                                                                                           | off       |          |
+| GDD_BANNER_TEXT         |                                                                                                                                                                                                                                                                                   | Go-doudou |          |
+| GDD_LOG_LEVEL           | Possible values are panic, fatal, error, warn, warning, info, debug, trace                                                                                                                                                                                                        | info      |          |
+| GDD_LOG_PATH            | if GDD_LOG_PATH is not set, there is no output to disk.                                                                                                                                                                                                                           |           |          |
+| GDD_GRACE_TIMEOUT       | Graceful shutdown timeout for http server                                                                                                                                                                                                                                         | 15s       |          |
+| GDD_WRITE_TIMEOUT       | Configure http.Server                                                                                                                                                                                                                                                             | 15s       |          |
+| GDD_READ_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                             | 15s       |          |
+| GDD_IDLE_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                             | 60s       |          |
+| GDD_ROUTE_ROOT_PATH     | prefix GDD_ROUTE_ROOT_PATH to each of http api routes                                                                                                                                                                                                                             | ""        |          |
+| GDD_SERVICE_NAME        | Service name that the node providing in the cluster.                                                                                                                                                                                                                              |           | Yes      |
+| GDD_HOST                | Configure http.Server. Specifying host for the http server to listen on.                                                                                                                                                                                                          | ""        |          |
+| GDD_PORT                | Configure http.Server. Specifying port for the http server to listen on.                                                                                                                                                                                                          | ""        |          |
+| GDD_MODE                | Accept "mono" for monolith mode or "micro" for microservice mode                                                                                                                                                                                                                  |           |          |
+| GDD_MANAGE_ENABLE       | Enable built-in api endpoints such as /go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus and /go-doudou/registry. Possible values are true and false.                                                                                                                 | false     |          |
+| GDD_MANAGE_USER         | Http basic username for built-in api endpoints                                                                                                                                                                                                                                    | ""        |          |
+| GDD_MANAGE_PASS         | Http basic password for built-in api endpoints                                                                                                                                                                                                                                    | ""        |          |
+| GDD_MEM_SEED            | Seed address for join memberlist cluster. If empty or not set, this node will create a new cluster for other nodes to join.                                                                                                                                                       | ""        |          |
+| GDD_MEM_NAME            | Only for dev and test use. Unique name of this node in cluster. if empty or not set, hostname will be used instead.                                                                                                                                                               | ""        |          |
 | GDD_MEM_HOST            | Specify AdvertiseAddr attribute of memberlist config struct. if GDD_MEM_HOST starts with dot such as .seed-svc-headless.default.svc.cluster.local, it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local for supporting k8s stateful service. | ""        |          |
-| GDD_MEM_PORT            | If empty or not set, an available port will be chosen randomly. Recommend specifying a port. | ""        |          |
-| GDD_MEM_DEAD_TIMEOUT    | Dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT second. | 30        |          |
-| GDD_MEM_SYNC_INTERVAL   | Local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL second. | 5         |          |
-| GDD_MEM_RECLAIM_TIMEOUT | Dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT second | 3         |          |
+| GDD_MEM_PORT            | If empty or not set, an available port will be chosen randomly. Recommend specifying a port.                                                                                                                                                                                      | ""        |          |
+| GDD_MEM_DEAD_TIMEOUT    | Dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT duration                                                                                                                                                                  | 30s       |          |
+| GDD_MEM_SYNC_INTERVAL   | Local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL duration                                                                                                                                                                                    | 5s        |          |
+| GDD_MEM_RECLAIM_TIMEOUT | Dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT duration                                                                                                                                                         | 3s        |          |
+| GDD_MEM_PROBE_INTERVAL | Do failure detecting every GDD_MEM_PROBE_INTERVAL duration                                                                                                                                                                                                                         | 1s        |          |
+| GDD_MEM_PROBE_TIMEOUT | Probe fail if not receive ack message in GDD_MEM_PROBE_TIMEOUT duration                                                                                                                                                                                                            | 3s        |          |
+| GDD_MEM_TCP_TIMEOUT | TCP request will timeout in GDD_MEM_TCP_TIMEOUT duration                                                                                                                                                                                                                           | 30s       |          |
+| GDD_MEM_GOSSIP_NODES | Specify how many remote nodes you want to send gossip messages                                                                                                                                                                                                                    | 4         |          |
+| GDD_MEM_GOSSIP_INTERVAL | Gossip messages in queue every GDD_MEM_GOSSIP_INTERVAL duration                                                                                                                                                                                                               | 500ms       |          |
+| GDD_MEM_SUSPICION_MULT | The multiplier for determining the time an inaccessible node is considered suspect before declaring it dead                                                                                                                                                                       | 6         |          |
 
 
 

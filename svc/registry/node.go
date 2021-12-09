@@ -179,6 +179,11 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(deadTimeoutStr) {
 		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {
 			mconf.GossipToTheDeadTime = time.Duration(deadTimeout) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(deadTimeoutStr); err == nil {
+				mconf.GossipToTheDeadTime = duration
+			}
 		}
 	}
 	mconf.PushPullInterval = 5 * time.Second
@@ -186,6 +191,11 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(syncIntervalStr) {
 		if syncInterval, err := strconv.Atoi(syncIntervalStr); err == nil {
 			mconf.PushPullInterval = time.Duration(syncInterval) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(syncIntervalStr); err == nil {
+				mconf.PushPullInterval = duration
+			}
 		}
 	}
 	mconf.DeadNodeReclaimTime = 3 * time.Second
@@ -193,6 +203,11 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(reclaimTimeoutStr) {
 		if reclaimTimeout, err := strconv.Atoi(reclaimTimeoutStr); err == nil {
 			mconf.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(reclaimTimeoutStr); err == nil {
+				mconf.DeadNodeReclaimTime = duration
+			}
 		}
 	}
 	mconf.ProbeInterval = 1 * time.Second
@@ -200,6 +215,56 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(probeIntervalStr) {
 		if probeInterval, err := strconv.Atoi(probeIntervalStr); err == nil {
 			mconf.ProbeInterval = time.Duration(probeInterval) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(probeIntervalStr); err == nil {
+				mconf.ProbeInterval = duration
+			}
+		}
+	}
+	probeTimeoutStr := config.GddMemProbeTimeout.Load()
+	if stringutils.IsNotEmpty(probeTimeoutStr) {
+		if probeTimeout, err := strconv.Atoi(probeTimeoutStr); err == nil {
+			mconf.ProbeTimeout = time.Duration(probeTimeout) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(probeTimeoutStr); err == nil {
+				mconf.ProbeTimeout = duration
+			}
+		}
+	}
+	suspicionMultStr := config.GddMemSuspicionMult.Load()
+	if stringutils.IsNotEmpty(suspicionMultStr) {
+		if suspicionMult, err := strconv.Atoi(suspicionMultStr); err == nil {
+			mconf.SuspicionMult = suspicionMult
+		}
+	}
+	gossipNodesStr := config.GddMemGossipNodes.Load()
+	if stringutils.IsNotEmpty(gossipNodesStr) {
+		if gossipNodes, err := strconv.Atoi(gossipNodesStr); err == nil {
+			mconf.GossipNodes = gossipNodes
+		}
+	}
+	gossipIntervalStr := config.GddMemGossipInterval.Load()
+	if stringutils.IsNotEmpty(gossipIntervalStr) {
+		if gossipInterval, err := strconv.Atoi(gossipIntervalStr); err == nil {
+			mconf.GossipInterval = time.Duration(gossipInterval) * time.Millisecond
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(gossipIntervalStr); err == nil {
+				mconf.GossipInterval = duration
+			}
+		}
+	}
+	tcpTimeoutStr := config.GddMemTCPTimeout.Load()
+	if stringutils.IsNotEmpty(tcpTimeoutStr) {
+		if tcpTimeout, err := strconv.Atoi(tcpTimeoutStr); err == nil {
+			mconf.TCPTimeout = time.Duration(tcpTimeout) * time.Second
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(tcpTimeoutStr); err == nil {
+				mconf.TCPTimeout = duration
+			}
 		}
 	}
 	nodename := config.GddMemName.Load()
