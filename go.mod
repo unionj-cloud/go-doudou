@@ -57,7 +57,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/unionj-cloud/cast v1.3.2
-	github.com/unionj-cloud/memberlist v0.2.10-0.20211211165045-de5029a385ad
+	github.com/unionj-cloud/memberlist v0.2.10-0.20211212185528-d8f534e04ceb
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
