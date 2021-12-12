@@ -4,13 +4,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/memberlist"
-	"sync"
 	"testing"
 )
 
 func Test_delegate_NodeMeta(t *testing.T) {
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		limit int
@@ -22,15 +20,8 @@ func Test_delegate_NodeMeta(t *testing.T) {
 		want   []byte
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry:   nil,
-					remote:     false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				limit: 1024,
 			},
@@ -39,9 +30,7 @@ func Test_delegate_NodeMeta(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &delegate{
-				local: tt.fields.local,
-			}
+			d := &delegate{}
 			assert.NotPanics(t, func() {
 				d.NodeMeta(tt.args.limit)
 			})
@@ -51,7 +40,6 @@ func Test_delegate_NodeMeta(t *testing.T) {
 
 func Test_delegate_NotifyMsg(t *testing.T) {
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		msg []byte
@@ -62,22 +50,8 @@ func Test_delegate_NotifyMsg(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						memberConf: nil,
-						broadcasts: nil,
-						memberlist: nil,
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-						members:    nil,
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				msg: []byte("this is a test msg"),
 			},
@@ -85,9 +59,7 @@ func Test_delegate_NotifyMsg(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &delegate{
-				local: tt.fields.local,
-			}
+			d := &delegate{}
 			d.NotifyMsg(tt.args.msg)
 		})
 	}
@@ -149,7 +121,6 @@ func Test_delegate_GetBroadcasts(t *testing.T) {
 	//require.Equal(t, 3, len(partial), "missing messages: %v", prettyPrintMessages(partial))
 
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		overhead int
@@ -162,22 +133,8 @@ func Test_delegate_GetBroadcasts(t *testing.T) {
 		want   [][]byte
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						memberConf: nil,
-						broadcasts: q,
-						memberlist: nil,
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-						members:    nil,
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				overhead: 2,
 				limit:    80,
@@ -186,9 +143,7 @@ func Test_delegate_GetBroadcasts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &delegate{
-				local: tt.fields.local,
-			}
+			d := &delegate{}
 			got := d.GetBroadcasts(tt.args.overhead, tt.args.limit)
 			require.Equal(t, 4, len(got), "missing messages: %v", prettyPrintMessages(got))
 		})

@@ -3,7 +3,6 @@ package registry
 import (
 	"encoding/json"
 	"github.com/unionj-cloud/memberlist"
-	"sync"
 	"testing"
 )
 
@@ -15,11 +14,9 @@ func Test_eventDelegate_NotifyJoin(t *testing.T) {
 			Port:          6060,
 			RegisterAt:    nil,
 		},
-		Data: nil,
 	}
 	meta, _ := json.Marshal(mm)
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		node *memberlist.Node
@@ -30,18 +27,8 @@ func Test_eventDelegate_NotifyJoin(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: meta,
@@ -49,18 +36,8 @@ func Test_eventDelegate_NotifyJoin(t *testing.T) {
 			},
 		},
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: []byte("{name:"),
@@ -70,9 +47,7 @@ func Test_eventDelegate_NotifyJoin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := eventDelegate{
-				local: tt.fields.local,
-			}
+			e := eventDelegate{}
 			e.NotifyJoin(tt.args.node)
 		})
 	}
@@ -86,11 +61,9 @@ func Test_eventDelegate_NotifyLeave(t *testing.T) {
 			Port:          6060,
 			RegisterAt:    nil,
 		},
-		Data: nil,
 	}
 	meta, _ := json.Marshal(mm)
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		node *memberlist.Node
@@ -101,18 +74,8 @@ func Test_eventDelegate_NotifyLeave(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: meta,
@@ -120,18 +83,8 @@ func Test_eventDelegate_NotifyLeave(t *testing.T) {
 			},
 		},
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: []byte("{name:"),
@@ -141,9 +94,7 @@ func Test_eventDelegate_NotifyLeave(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := eventDelegate{
-				local: tt.fields.local,
-			}
+			e := eventDelegate{}
 			e.NotifyLeave(tt.args.node)
 		})
 	}
@@ -157,11 +108,9 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 			Port:          6060,
 			RegisterAt:    nil,
 		},
-		Data: nil,
 	}
 	meta, _ := json.Marshal(mm)
 	type fields struct {
-		local *Node
 	}
 	type args struct {
 		node *memberlist.Node
@@ -172,18 +121,8 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: meta,
@@ -191,18 +130,8 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "",
-			fields: fields{
-				local: &Node{
-					mmeta:      mergedMeta{},
-					memberNode: nil,
-					registry: &registry{
-						lock:       sync.Mutex{},
-						memberLock: sync.RWMutex{},
-					},
-					remote: false,
-				},
-			},
+			name:   "",
+			fields: fields{},
 			args: args{
 				node: &memberlist.Node{
 					Meta: []byte("{name:"),
@@ -212,9 +141,7 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := eventDelegate{
-				local: tt.fields.local,
-			}
+			e := eventDelegate{}
 			e.NotifyUpdate(tt.args.node)
 		})
 	}

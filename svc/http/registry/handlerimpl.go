@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"github.com/unionj-cloud/memberlist"
 	"net/http"
 	"text/template"
 )
@@ -23,17 +24,18 @@ func (receiver *RegistryHandlerImpl) GetRegistry(_writer http.ResponseWriter, _r
 		tpl   *template.Template
 		err   error
 		buf   bytes.Buffer
-		nodes []*registry.Node
+		nodes []*memberlist.Node
 		rows  []row
 		ret   []byte
 	)
-	if registry.LocalNode != nil {
-		nodes, _ = registry.LocalNode.Discover("")
+	if nodes, err = registry.AllNodes(); err != nil {
+		http.Error(_writer, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	for i, node := range nodes {
 		rows = append(rows, row{
 			Index:    i + 1,
-			NodeInfo: node.Info(),
+			NodeInfo: registry.Info(node),
 		})
 	}
 	ret, _ = json.Marshal(rows)
