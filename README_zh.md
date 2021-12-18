@@ -95,11 +95,11 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
 如果遇到410 Gone报错，请尝试用下面的命令：
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
 
 
@@ -408,18 +408,84 @@ svc := service.NewOrdersvc(conf, conn, usersvcClient)
 
 ### 客户端负载均衡
 
-暂时只有round robin一种负载均衡算法。欢迎贡献代码。
+#### 简单轮询负载均衡算法
 
 ```go
-func (m *MemberlistServiceProvider) SelectServer() (string, error) {
-	nodes, err := m.registry.Discover(m.name)
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	err := registry.NewNode()
 	if err != nil {
-		return "", errors.Wrap(err, "SelectServer() fail")
+		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
-	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(nodes)))
-	m.current = uint64(next)
-	selected := nodes[next]
-	return selected.BaseUrl(), nil
+
+	usersvcProvider := ddhttp.NewMemberlistServiceProvider("github.com/usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClient)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
+
+#### 平滑加权轮询负载均衡算法
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	err := registry.NewNode()
+	if err != nil {
+		logrus.Panicln(fmt.Sprintf("%+v", err))
+	}
+
+	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("github.com/usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClient)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
 }
 ```
 
@@ -429,8 +495,8 @@ func (m *MemberlistServiceProvider) SelectServer() (string, error) {
 
 go-doudou用.env文件管理框架用到的环境变量
 
-| 环境变量    | 描述                                                                                                                                                                                      | 默认值   | 是否必须 |
-| ----------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| --------- | -------- |
+| 环境变量    | 描述                                                                                                                                                                                      | 默认值       | 是否必须 |
+| ----------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------| -------- |
 | GDD_BANNER              | 是否在控制台打印banner                                                                                                                                                                          | off       |          |
 | GDD_BANNER_TEXT         | banner文本                                                                                                                                                                                | Go-doudou |          |
 | GDD_LOG_LEVEL           | 日志等级：可能的值有panic, fatal, error, warn, warning, info, debug, trace                                                                                                                        | info      |          |
@@ -452,14 +518,15 @@ go-doudou用.env文件管理框架用到的环境变量
 | GDD_MEM_HOST            | 设置memberlist的AdvertiseAddr属性。如果GDD_MEM_HOST的值以点开头，如：.seed-svc-headless.default.svc.cluster.local，则会在前面补上服务器的hostname，如：seed-2.seed-svc-headless.default.svc.cluster.local，用于支持k8s的有状态服务 | ""        |          |
 | GDD_MEM_PORT            | 如果没有设置或者值为空字符串，则会设置为一个随机取得的可用端口。推荐自己设置一个端口                                                                                                                                              | ""        |          |
 | GDD_MEM_DEAD_TIMEOUT    | 如果在GDD_MEM_DEAD_TIMEOUT设置的超时时间范围内，没有收到已经判定为dead的节点的复活消息，则会从缓存里把这个节点信息彻底删掉                                                                                                               | 30        |          |
-| GDD_MEM_SYNC_INTERVAL   | 每隔GDD_MEM_SYNC_INTERVAL，本地节点会随机选择一个远程节点做数据同步                                                                                                                                       | 5         |          |
-| GDD_MEM_RECLAIM_TIMEOUT | 如果超过GDD_MEM_RECLAIM_TIMEOUT，被判定为dead的节点会被具有相同名称但具有不同地址的节点替换掉                                                                                                                       | 3         |          |
+| GDD_MEM_SYNC_INTERVAL   | 每隔GDD_MEM_SYNC_INTERVAL，本地节点会随机选择一个远程节点做数据同步                                                                                                                                            | 5         |          |
+| GDD_MEM_RECLAIM_TIMEOUT | 如果超过GDD_MEM_RECLAIM_TIMEOUT，被判定为dead的节点会被具有相同名称但具有不同地址的节点替换掉                                                                                                                            | 3         |          |
 | GDD_MEM_PROBE_INTERVAL | 每隔GDD_MEM_PROBE_INTERVAL做一次心跳检测                                                                                                                                                         | 1s        |          |
 | GDD_MEM_PROBE_TIMEOUT | 一次心跳检测的超时时间                                                                                                                                                                             | 3s        |          |
 | GDD_MEM_TCP_TIMEOUT | 一次TCP请求的超时时间                                                                                                                                                                            | 30s       |          |
 | GDD_MEM_GOSSIP_NODES | 设置一次批量发送gossip消息的目标节点的数量                                                                                                                                                                | 4         |          |
-| GDD_MEM_GOSSIP_INTERVAL | 每隔GDD_MEM_GOSSIP_INTERVAL批量发送一次gossip消息                                                                                                                                                 | 500ms       |          |
+| GDD_MEM_GOSSIP_INTERVAL | 每隔GDD_MEM_GOSSIP_INTERVAL批量发送一次gossip消息                                                                                                                                                 | 500ms     |          |
 | GDD_MEM_SUSPICION_MULT | 计算一个节点从心跳检测失败到宣告该节点已经挂掉的时长的系数                                                                                                                                                           | 6         |          |
+| GDD_MEM_WEIGHT | 平滑加权轮询负载均衡算法的权重                                                                                                                                                                         | 0         |          |
 
 
 

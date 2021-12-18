@@ -56,6 +56,36 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 	return
 }
 
+// GetUserUsername Get user by user name
+func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err error) {
+	var (
+		_server string
+		_err    error
+	)
+	if _server, _err = receiver.provider.SelectServer(); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+
+	_resp, _err := _req.Get(_server + "/user/{username}")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
 // PostUserCreateWithList Creates list of users with given input array
 // Creates list of users with given input array
 func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
@@ -74,36 +104,6 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 	_req.SetBody(bodyJSON)
 
 	_resp, _err := _req.Post(_server + "/user/createWithList")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// GetUserUsername Get user by user name
-func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-
-	_resp, _err := _req.Get(_server + "/user/{username}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

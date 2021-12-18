@@ -72,7 +72,7 @@ Flags:
 - Install go-doudou
 
   ```shell
-  go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+  go get -v github.com/unionj-cloud/go-doudou@v0.8.0
   ```
 
 - Clone demo repository

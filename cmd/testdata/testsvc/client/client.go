@@ -10,14 +10,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
 type TestsvcClient struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *TestsvcClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *TestsvcClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 

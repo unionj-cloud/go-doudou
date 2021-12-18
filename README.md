@@ -1,4 +1,5 @@
 ## go-doudou
+
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 [![GoDoc](https://godoc.org/github.com/unionj-cloud/go-doudou?status.png)](https://godoc.org/github.com/unionj-cloud/go-doudou)
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
@@ -9,59 +10,60 @@
 [![Goproxy.cn](https://goproxy.cn/stats/github.com/unionj-cloud/go-doudou/badges/download-count.svg)](https://goproxy.cn)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://join.slack.com/t/go-doudou/shared_invite/zt-xzohc7ds-u7~aio6B8PELp5UtAdY~uw)
-  
+
 [EN](./README.md) [中文](./README_zh.md)  
-go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports restful service only.
+go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice
+framework. It supports monolith service application as well. Currently, it supports restful service only.
 
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 ### TOC
 
-  - [Philosophy](#philosophy)
-  - [Features](#features)
-  - [Overview](#overview)
-  - [Recommend Architecture](#recommend-architecture)
-  - [Golang Version Support](#golang-version-support)
-  - [Install](#install)
-  - [Usage](#usage)
-  - [Hello World](#hello-world)
+- [Philosophy](#philosophy)
+- [Features](#features)
+- [Overview](#overview)
+- [Recommend Architecture](#recommend-architecture)
+- [Golang Version Support](#golang-version-support)
+- [Install](#install)
+- [Usage](#usage)
+- [Hello World](#hello-world)
     - [Initialize project](#initialize-project)
     - [Define methods](#define-methods)
     - [Generate code](#generate-code)
     - [Run](#run)
     - [Deployment](#deployment)
-      - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
-      - [Deploy](#deploy)
-      - [Shutdown](#shutdown)
-  - [Must Know](#must-know)
-  - [Service register & discovery](#service-register--discovery)
-  - [Client load balance](#client-load-balance)
-  - [Configuration](#configuration)
-  - [Example](#example)
-  - [Notable tools](#notable-tools)
+        - [Build docker image and push to your repository](#build-docker-image-and-push-to-your-repository)
+        - [Deploy](#deploy)
+        - [Shutdown](#shutdown)
+- [Must Know](#must-know)
+- [Service register & discovery](#service-register--discovery)
+- [Client load balance](#client-load-balance)
+- [Configuration](#configuration)
+- [Example](#example)
+- [Notable tools](#notable-tools)
     - [name](#name)
     - [ddl](#ddl)
-  - [TODO](#todo)
-  - [Community](#community)
+- [TODO](#todo)
+- [Community](#community)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-
-
-### Philosophy 
+### Philosophy
 
 - Design First: We encourage designing your apis at the first place.
-- Contract: We use OpenAPI 3.0 spec as a contract between server and client to reduce the communication cost between different dev teams and speed up development.
-- Decentralization: We use gossip protocol to do service register and discovery to build a robust, scalable and decentralized service cluster. Thanks the awesome library memberlist by hashicorp.
-
-
+- Contract: We use OpenAPI 3.0 spec as a contract between server and client to reduce the communication cost between
+  different dev teams and speed up development.
+- Decentralization: We use gossip protocol to do service register and discovery to build a robust, scalable and
+  decentralized service cluster. Thanks the awesome library memberlist by hashicorp.
 
 ### Features
 
-- Low-code: design service interface to generate main function, routes, http handlers, mock service implementation, http client, OpenAPI 3.0 json spec and more.
+- Low-code: design service interface to generate main function, routes, http handlers, mock service implementation, http
+  client, OpenAPI 3.0 json spec and more.
 - Support DNS address for service register and discovery
 - Support monolith and microservices architecture
 - Built-in client load balancing: currently only round-robin
@@ -73,17 +75,13 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 - Built-in docker and k8s deployment support: dockerfile, deployment kind yaml file and statefulset kind yaml file
 - Easy to learn, simple to use
 
-
-
 ### Overview
+
 ![Overview](go-doudou.drawio.png)
 
-
-
 ### Recommend Architecture
+
 ![Recommend Architecture](go-doudou-reconmend.drawio.png)
-
-
 
 ### Golang Version Support
 
@@ -91,19 +89,17 @@ go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 s
 - go 1.16+
 - < go 1.13: not test, maybe support
 
-
-
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
+
 If you meet 410 Gone error, try below command:
+
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.7.10
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
-
-
 
 ### Usage
 
@@ -133,8 +129,6 @@ Flags:
 Use "go-doudou [command] --help" for more information about a command.
 ```
 
-
-
 ### Hello World
 
 #### Initialize project
@@ -144,7 +138,9 @@ Use "go-doudou [command] --help" for more information about a command.
 1.16
 helloworld
 ```
+
 You can ignore the warning now.
+
 ```shell
 ➜  helloworld git:(master) ✗ ls -la -h
 total 40
@@ -159,6 +155,7 @@ drwxr-xr-x    6 wubin1989  staff   192B  8 29 23:27 .idea
 -rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
+
 - Dockerfile：build docker image
 
 - svc.go: design your rest apis by defining methods of Helloworld interface
@@ -166,8 +163,6 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 - vo folder：define structs as data structure in http request body and response body, and also as OpenAPI 3.0 schemas
 
 - .env: config file, go-doudou use it to load enviroment variables with GDD_ prefix
-
-  
 
 #### Define methods
 
@@ -187,15 +182,15 @@ type Helloworld interface {
 }
 ```
 
-
-
 #### Generate code
 
 ```shell
 go-doudou svc http --handler -c go -o --doc
 go mod tidy
 ```
+
 Let's see what are generated.
+
 ```shell
 ➜  helloworld git:(master) ✗ ls -la -h
 total 328
@@ -220,6 +215,7 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 db
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 transport
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
+
 - helloworld_openapi3.json：OpenAPI 3.0 spec json documentation
 - helloworld_openapi3.go: assign OpenAPI 3.0 spec json string to a variable for serving online
 - client：golang http client based on [resty](https://github.com/go-resty/resty)
@@ -229,8 +225,6 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 - svcimpl.go：write your business logic here
 - transport：http routes and handlers
 - .env：put configs here
-
-
 
 #### Run
 
@@ -336,7 +330,7 @@ drwxr-xr-x  3 wubin1989  staff    96B  8 29 23:22 vo
 ```
 
 - helloworld_deployment.yaml: k8s deploy file for stateless service, recommend for monolith architecture services
-- helloworld_statefulset.yaml: k8s deploy file for stateful service, recommend for microservices  architecture services
+- helloworld_statefulset.yaml: k8s deploy file for stateful service, recommend for microservices architecture services
 
 ##### Deploy
 
@@ -350,48 +344,54 @@ go-doudou svc deploy
 go-doudou svc shutdown
 ```
 
-
-
 ### Must Know
 
 There are some constraints or notable things when you define your methods as exposed apis for client in svc.go file.
 
-1. Only support GET, POST, PUT, DELETE http methods. If method name starts with one of Get/Post/Put/Delete, http method will be one of GET/POST/PUT/DELETE. If method name doesn't start with any of them, default http method is POST.
+1. Only support GET, POST, PUT, DELETE http methods. If method name starts with one of Get/Post/Put/Delete, http method
+   will be one of GET/POST/PUT/DELETE. If method name doesn't start with any of them, default http method is POST.
 2. First input parameter MUST be context.Context.
-3. Only support golang [built-in types](https://golang.org/pkg/builtin/), map with string key, custom structs in vo package, corresponding slice and pointer types for input and output parameters. When go-doudou generate code and OpenAPI 3.0 spec, it will scan structs in vo package. If there is a struct from other package, the struct fields cannot be known by go-doudou.
-4. As special cases, it supports multipart.FileHeader for uploading file as input parameter, supports os.File for downloading file as output parameter.
+3. Only support golang [built-in types](https://golang.org/pkg/builtin/), map with string key, custom structs in vo
+   package, corresponding slice and pointer types for input and output parameters. When go-doudou generate code and
+   OpenAPI 3.0 spec, it will scan structs in vo package. If there is a struct from other package, the struct fields
+   cannot be known by go-doudou.
+4. As special cases, it supports multipart.FileHeader for uploading file as input parameter, supports os.File for
+   downloading file as output parameter.
 5. NOT support alias types as field of a struct.
 6. NOT support func, channel, interface and anonymous struct type as input and output parameter.
-7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added methods in svc.go, new code will be appended to handlerimpl.go.
-8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify handler.go file.
-9. When execute  `go-doudou svc http`, only handler.go file will be overwritten and others will be checked if exists, if already exists, do nothing.
-
-
+7. When execute  `go-doudou svc http --handler` , existing code in handlerimpl.go won't be overwritten. If you added
+   methods in svc.go, new code will be appended to handlerimpl.go.
+8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify
+   handler.go file.
+9. When execute  `go-doudou svc http`, only handler.go file will be overwritten and others will be checked if exists, if
+   already exists, do nothing.
 
 ### Service register & discovery
 
 Go-doudou supports monolith and microservices architecture.
+
 - `GDD_MODE=micro`：microservices architecture
-- `GDD_MODE=mono`：monolith architecture 
+- `GDD_MODE=mono`：monolith architecture
 
 There is service register code in main.go file.
 
 ```go
 if ddconfig.GddMode.Load() == "micro" {
-    node, err := registry.NewNode()
-    if err != nil {
-        logrus.Panicln(fmt.Sprintf("%+v", err))
-    }
-    logrus.Infof("Memberlist created. Local node is %s\n", node)
+node, err := registry.NewNode()
+if err != nil {
+logrus.Panicln(fmt.Sprintf("%+v", err))
+}
+logrus.Infof("Memberlist created. Local node is %s\n", node)
 }
 ```
+
 If dependent on other services, here is an example code below.
 
 ```go
 // service register
 node, err := registry.NewNode()
 if err != nil {
-    logrus.Panicln(fmt.Sprintf("%+v", err))
+logrus.Panicln(fmt.Sprintf("%+v", err))
 }
 logrus.Infof("%s joined cluster\n", node.String())
 
@@ -404,70 +404,129 @@ usersvcClient := client.NewUsersvc(client.WithProvider(usersvcProvider))
 svc := service.NewOrdersvc(conf, conn, usersvcClient)
 ```
 
+### Client Load Balancing
 
-
-### Client load balance
-
-Currently only one round robin strategy, welcome pr:)
+#### Simple Round-robin Load Balancing
 
 ```go
-func (m *MemberlistServiceProvider) SelectServer() (string, error) {
-	nodes, err := m.registry.Discover(m.name)
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	err := registry.NewNode()
 	if err != nil {
-		return "", errors.Wrap(err, "SelectServer() fail")
+		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
-	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(nodes)))
-	m.current = uint64(next)
-	selected := nodes[next]
-	return selected.BaseUrl(), nil
+
+	usersvcProvider := ddhttp.NewMemberlistServiceProvider("github.com/usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClient)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
 }
 ```
 
+#### Smooth Weighted Round-robin Balancing
+```go
+package main
 
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	err := registry.NewNode()
+	if err != nil {
+		logrus.Panicln(fmt.Sprintf("%+v", err))
+	}
+
+	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("github.com/usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClient)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
 
 ### Configuration
 
 Go-doudou use .env file to load environment variables to configure behaviors.
 
-| Environment Variable    | Description                                                                                                                                                                                                                                                                       | Default   | Required |
-| ----------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------| -------- |
-| GDD_BANNER              | Whether output banner to stdout or not, possible values are on and off.                                                                                                                                                                                                           | off       |          |
-| GDD_BANNER_TEXT         |                                                                                                                                                                                                                                                                                   | Go-doudou |          |
-| GDD_LOG_LEVEL           | Possible values are panic, fatal, error, warn, warning, info, debug, trace                                                                                                                                                                                                        | info      |          |
-| GDD_LOG_PATH            | if GDD_LOG_PATH is not set, there is no output to disk.                                                                                                                                                                                                                           |           |          |
-| GDD_GRACE_TIMEOUT       | Graceful shutdown timeout for http server                                                                                                                                                                                                                                         | 15s       |          |
-| GDD_WRITE_TIMEOUT       | Configure http.Server                                                                                                                                                                                                                                                             | 15s       |          |
-| GDD_READ_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                             | 15s       |          |
-| GDD_IDLE_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                             | 60s       |          |
-| GDD_ROUTE_ROOT_PATH     | prefix GDD_ROUTE_ROOT_PATH to each of http api routes                                                                                                                                                                                                                             | ""        |          |
-| GDD_SERVICE_NAME        | Service name that the node providing in the cluster.                                                                                                                                                                                                                              |           | Yes      |
-| GDD_HOST                | Configure http.Server. Specifying host for the http server to listen on.                                                                                                                                                                                                          | ""        |          |
-| GDD_PORT                | Configure http.Server. Specifying port for the http server to listen on.                                                                                                                                                                                                          | ""        |          |
-| GDD_MODE                | Accept "mono" for monolith mode or "micro" for microservice mode                                                                                                                                                                                                                  |           |          |
-| GDD_MANAGE_ENABLE       | Enable built-in api endpoints such as /go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus and /go-doudou/registry. Possible values are true and false.                                                                                                                 | false     |          |
-| GDD_MANAGE_USER         | Http basic username for built-in api endpoints                                                                                                                                                                                                                                    | ""        |          |
-| GDD_MANAGE_PASS         | Http basic password for built-in api endpoints                                                                                                                                                                                                                                    | ""        |          |
-| GDD_MEM_SEED            | Seed address for join memberlist cluster. If empty or not set, this node will create a new cluster for other nodes to join.                                                                                                                                                       | ""        |          |
-| GDD_MEM_NAME            | Only for dev and test use. Unique name of this node in cluster. if empty or not set, hostname will be used instead.                                                                                                                                                               | ""        |          |
+| Environment Variable    | Description                                                                                                                                                                                                                                                                        | Default   | Required |
+| ----------------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------| -------- |
+| GDD_BANNER              | Whether output banner to stdout or not, possible values are on and off.                                                                                                                                                                                                            | off       |          |
+| GDD_BANNER_TEXT         |                                                                                                                                                                                                                                                                                    | Go-doudou |          |
+| GDD_LOG_LEVEL           | Possible values are panic, fatal, error, warn, warning, info, debug, trace                                                                                                                                                                                                         | info      |          |
+| GDD_LOG_PATH            | if GDD_LOG_PATH is not set, there is no output to disk.                                                                                                                                                                                                                            |           |          |
+| GDD_GRACE_TIMEOUT       | Graceful shutdown timeout for http server                                                                                                                                                                                                                                          | 15s       |          |
+| GDD_WRITE_TIMEOUT       | Configure http.Server                                                                                                                                                                                                                                                              | 15s       |          |
+| GDD_READ_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                              | 15s       |          |
+| GDD_IDLE_TIMEOUT        | Configure http.Server                                                                                                                                                                                                                                                              | 60s       |          |
+| GDD_ROUTE_ROOT_PATH     | prefix GDD_ROUTE_ROOT_PATH to each of http api routes                                                                                                                                                                                                                              | ""        |          |
+| GDD_SERVICE_NAME        | Service name that the node providing in the cluster.                                                                                                                                                                                                                               |           | Yes      |
+| GDD_HOST                | Configure http.Server. Specifying host for the http server to listen on.                                                                                                                                                                                                           | ""        |          |
+| GDD_PORT                | Configure http.Server. Specifying port for the http server to listen on.                                                                                                                                                                                                           | ""        |          |
+| GDD_MODE                | Accept "mono" for monolith mode or "micro" for microservice mode                                                                                                                                                                                                                   |           |          |
+| GDD_MANAGE_ENABLE       | Enable built-in api endpoints such as /go-doudou/doc, /go-doudou/openapi.json, /go-doudou/prometheus and /go-doudou/registry. Possible values are true and false.                                                                                                                  | false     |          |
+| GDD_MANAGE_USER         | Http basic username for built-in api endpoints                                                                                                                                                                                                                                     | ""        |          |
+| GDD_MANAGE_PASS         | Http basic password for built-in api endpoints                                                                                                                                                                                                                                     | ""        |          |
+| GDD_MEM_SEED            | Seed address for join memberlist cluster. If empty or not set, this node will create a new cluster for other nodes to join.                                                                                                                                                        | ""        |          |
+| GDD_MEM_NAME            | Only for dev and test use. Unique name of this node in cluster. if empty or not set, hostname will be used instead.                                                                                                                                                                | ""        |          |
 | GDD_MEM_HOST            | Specify AdvertiseAddr attribute of memberlist config struct. if GDD_MEM_HOST starts with dot such as .seed-svc-headless.default.svc.cluster.local, it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local for supporting k8s stateful service. | ""        |          |
-| GDD_MEM_PORT            | If empty or not set, an available port will be chosen randomly. Recommend specifying a port.                                                                                                                                                                                      | ""        |          |
-| GDD_MEM_DEAD_TIMEOUT    | Dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT duration                                                                                                                                                                  | 30s       |          |
-| GDD_MEM_SYNC_INTERVAL   | Local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL duration                                                                                                                                                                                    | 5s        |          |
+| GDD_MEM_PORT            | If empty or not set, an available port will be chosen randomly. Recommend specifying a port.                                                                                                                                                                                       | ""        |          |
+| GDD_MEM_DEAD_TIMEOUT    | Dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT duration                                                                                                                                                                   | 30s       |          |
+| GDD_MEM_SYNC_INTERVAL   | Local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL duration                                                                                                                                                                                     | 5s        |          |
 | GDD_MEM_RECLAIM_TIMEOUT | Dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT duration                                                                                                                                                         | 3s        |          |
 | GDD_MEM_PROBE_INTERVAL | Do failure detecting every GDD_MEM_PROBE_INTERVAL duration                                                                                                                                                                                                                         | 1s        |          |
 | GDD_MEM_PROBE_TIMEOUT | Probe fail if not receive ack message in GDD_MEM_PROBE_TIMEOUT duration                                                                                                                                                                                                            | 3s        |          |
 | GDD_MEM_TCP_TIMEOUT | TCP request will timeout in GDD_MEM_TCP_TIMEOUT duration                                                                                                                                                                                                                           | 30s       |          |
-| GDD_MEM_GOSSIP_NODES | Specify how many remote nodes you want to send gossip messages                                                                                                                                                                                                                    | 4         |          |
-| GDD_MEM_GOSSIP_INTERVAL | Gossip messages in queue every GDD_MEM_GOSSIP_INTERVAL duration                                                                                                                                                                                                               | 500ms       |          |
-| GDD_MEM_SUSPICION_MULT | The multiplier for determining the time an inaccessible node is considered suspect before declaring it dead                                                                                                                                                                       | 6         |          |
-
-
+| GDD_MEM_GOSSIP_NODES | Specify how many remote nodes you want to send gossip messages                                                                                                                                                                                                                     | 4         |          |
+| GDD_MEM_GOSSIP_INTERVAL | Gossip messages in queue every GDD_MEM_GOSSIP_INTERVAL duration                                                                                                                                                                                                                    | 500ms     |          |
+| GDD_MEM_SUSPICION_MULT | The multiplier for determining the time an inaccessible node is considered suspect before declaring it dead                                                                                                                                                                        | 6         |          |
+| GDD_MEM_WEIGHT | Node weight for smooth weighted round-robin balancing                                                                                                                                                                                                                                                             | 0         |          |
 
 ### Example
 
-Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) 
-
-
+Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
 
 ### Notable tools
 
@@ -475,26 +534,24 @@ Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
 
 Command line tool for generating json tag of struct field. Please check [document ](./name/README.md).
 
-
-
 #### ddl
 
-DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). Please check [document](./ddl/doc/README.md).
-
-
+DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). Please
+check [document](./ddl/doc/README.md).
 
 ### TODO
+
 Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
-
-
 
 ### Community
 
-Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a star!
+Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a
+star!
 
 Slack invitation link: https://join.slack.com/t/go-doudou/shared_invite/zt-xzohc7ds-u7~aio6B8PELp5UtAdY~uw
 
 Welcome to contact me from
+
 - facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
 - twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
 - email: 328454505@qq.com
@@ -502,4 +559,5 @@ Welcome to contact me from
   ![qrcode.png](qrcode.png)
 
 ## License
+
 MIT

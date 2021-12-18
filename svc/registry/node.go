@@ -80,6 +80,7 @@ type nodeMeta struct {
 	GddVer        string     `json:"gddVer"`
 	BuildUser     string     `json:"buildUser"`
 	BuildTime     string     `json:"buildTime"`
+	Weight        int        `json:"weight"`
 }
 
 func newMeta(node *memberlist.Node) (mergedMeta, error) {
@@ -264,6 +265,7 @@ func NewNode(data ...interface{}) error {
 			GddVer:        config.GddVer,
 			BuildUser:     config.BuildUser,
 			BuildTime:     config.BuildTime,
+			Weight:        cast.ToInt(config.GddMemWeight.Load()),
 		},
 		Data: data,
 	}
@@ -350,6 +352,17 @@ func BaseUrl(node *memberlist.Node) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("http://%s:%d%s", node.Addr, mm.Meta.Port, mm.Meta.RouteRootPath), nil
+}
+
+func MetaWeight(node *memberlist.Node) (int, error) {
+	var (
+		mm  mergedMeta
+		err error
+	)
+	if mm, err = newMeta(node); err != nil {
+		return 0, err
+	}
+	return mm.Meta.Weight, nil
 }
 
 func SvcName(node *memberlist.Node) string {

@@ -24,9 +24,12 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetPetPetId Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
+// PostPetPetIdUploadImage uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+	queryParams struct {
+		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	file *v3.FileModel) (ret ApiResponse, err error) {
 	var (
 		_server string
 		_err    error
@@ -38,8 +41,11 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error)
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetFileReader("file", file.Filename, file.Reader)
 
-	_resp, _err := _req.Get(_server + "/pet/{petId}")
+	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -193,12 +199,9 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	return
 }
 
-// PostPetPetIdUploadImage uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
-	queryParams struct {
-		AdditionalMetadata string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	file *v3.FileModel) (ret ApiResponse, err error) {
+// GetPetPetId Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context) (ret Pet, err error) {
 	var (
 		_server string
 		_err    error
@@ -210,11 +213,8 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-	_req.SetFileReader("file", file.Filename, file.Reader)
 
-	_resp, _err := _req.Post(_server + "/pet/{petId}/uploadImage")
+	_resp, _err := _req.Get(_server + "/pet/{petId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

@@ -19,14 +19,15 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
 type UsersvcClient struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *UsersvcClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *UsersvcClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 

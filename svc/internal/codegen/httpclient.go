@@ -23,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/fileutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"io"
@@ -35,11 +36,11 @@ import (
 )
 
 type {{.Meta.Name}}Client struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *{{.Meta.Name}}Client) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *{{.Meta.Name}}Client) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 

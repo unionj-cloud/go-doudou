@@ -6,5 +6,6 @@ import "github.com/unionj-cloud/memberlist"
 type IServiceProvider interface {
 	SelectServer() (string, error)
 	AddNode(node *memberlist.Node)
+	UpdateWeight(node *memberlist.Node)
 	RemoveNode(node *memberlist.Node)
 }
