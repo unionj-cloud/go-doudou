@@ -9,9 +9,6 @@ type eventDelegate struct {
 }
 
 func (e *eventDelegate) NotifyWeight(node *memberlist.Node) {
-	for _, sp := range e.ServiceProviders {
-		sp.AddNode(node)
-	}
 }
 
 // NotifyJoin callback function when node joined
@@ -30,7 +27,4 @@ func (e *eventDelegate) NotifyLeave(node *memberlist.Node) {
 
 // NotifyUpdate callback function when node updated
 func (e *eventDelegate) NotifyUpdate(node *memberlist.Node) {
-	for _, sp := range e.ServiceProviders {
-		sp.AddNode(node)
-	}
 }

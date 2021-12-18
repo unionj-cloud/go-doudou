@@ -287,7 +287,7 @@ func NewNode(data ...interface{}) error {
 	}
 	local := mlist.LocalNode()
 	baseUrl, _ := BaseUrl(local)
-	logrus.Infof("mlist created. Local node is Node %s, providing %s service at %s, memberlist port %s",
+	logrus.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
 		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
 	return nil
 }
@@ -365,5 +365,8 @@ func SvcName(node *memberlist.Node) string {
 }
 
 func RegisterServiceProvider(sp IServiceProvider) {
+	for _, node := range mlist.Members() {
+		sp.AddNode(node)
+	}
 	events.ServiceProviders = append(events.ServiceProviders, sp)
 }

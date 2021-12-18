@@ -113,15 +113,6 @@ func (m *MemberlistServiceProvider) AddNode(node *memberlist.Node) {
 		m.nodes = append(m.nodes, node)
 		m.nodeMap[node.Name] = struct{}{}
 		logrus.Infof("Node %s joined, supplying %s service", node.Name, svcName)
-	} else {
-		for i, n := range m.nodes {
-			if n.Name == node.Name {
-				old := m.nodes[i]
-				m.nodes[i] = node
-				logrus.Infof("Node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, node)
-				break
-			}
-		}
 	}
 }
 
