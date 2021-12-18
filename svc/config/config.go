@@ -116,6 +116,8 @@ const (
 	GddMemTCPTimeout envVariable = "GDD_MEM_TCP_TIMEOUT"
 	// GddMemWeight node weight
 	GddMemWeight envVariable = "GDD_MEM_WEIGHT"
+	// GddMemWeightInterval node weight will be calculated every GddMemWeightInterval
+	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
 )
 
 // Load loads value from environment variable

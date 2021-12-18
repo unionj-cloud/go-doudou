@@ -373,37 +373,6 @@ Go-doudou supports monolith and microservices architecture.
 - `GDD_MODE=micro`：microservices architecture
 - `GDD_MODE=mono`：monolith architecture
 
-There is service register code in main.go file.
-
-```go
-if ddconfig.GddMode.Load() == "micro" {
-node, err := registry.NewNode()
-if err != nil {
-logrus.Panicln(fmt.Sprintf("%+v", err))
-}
-logrus.Infof("Memberlist created. Local node is %s\n", node)
-}
-```
-
-If dependent on other services, here is an example code below.
-
-```go
-// service register
-node, err := registry.NewNode()
-if err != nil {
-logrus.Panicln(fmt.Sprintf("%+v", err))
-}
-logrus.Infof("%s joined cluster\n", node.String())
-
-// call NewMemberlistServiceProvider to new a provider with name of the dependent service
-usersvcProvider := ddhttp.NewMemberlistServiceProvider("usersvc", node)
-// inject the provider into a client of the service
-usersvcClient := client.NewUsersvc(client.WithProvider(usersvcProvider))
-
-// inject the client into our service implementation instance
-svc := service.NewOrdersvc(conf, conn, usersvcClient)
-```
-
 ### Client Load Balancing
 
 #### Simple Round-robin Load Balancing
@@ -433,6 +402,7 @@ func main() {
 	if err != nil {
 		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
+	defer registry.Shutdown()
 
 	usersvcProvider := ddhttp.NewMemberlistServiceProvider("github.com/usersvc")
 	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
@@ -448,6 +418,10 @@ func main() {
 ```
 
 #### Smooth Weighted Round-robin Balancing
+
+If environment variable GDD_MEM_WEIGHT is not set, local node weight will be calculated by health score and cpu idle
+percent every GDD_MEM_WEIGHT_INTERVAL and gossip to remote nodes.
+
 ```go
 package main
 
@@ -473,6 +447,7 @@ func main() {
 	if err != nil {
 		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
+	defer registry.Shutdown()
 
 	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("github.com/usersvc")
 	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
@@ -522,7 +497,8 @@ Go-doudou use .env file to load environment variables to configure behaviors.
 | GDD_MEM_GOSSIP_NODES | Specify how many remote nodes you want to send gossip messages                                                                                                                                                                                                                     | 4         |          |
 | GDD_MEM_GOSSIP_INTERVAL | Gossip messages in queue every GDD_MEM_GOSSIP_INTERVAL duration                                                                                                                                                                                                                    | 500ms     |          |
 | GDD_MEM_SUSPICION_MULT | The multiplier for determining the time an inaccessible node is considered suspect before declaring it dead                                                                                                                                                                        | 6         |          |
-| GDD_MEM_WEIGHT | Node weight for smooth weighted round-robin balancing                                                                                                                                                                                                                                                             | 0         |          |
+| GDD_MEM_WEIGHT | Node weight for smooth weighted round-robin balancing                                                                                                                                                                                                                              | 0         |          |
+| GDD_MEM_WEIGHT_INTERVAL | Node weight will be calculated every GDD_MEM_WEIGHT_INTERVAL                                                                                                                                                                                                                          | 5s        |          |
 
 ### Example
 

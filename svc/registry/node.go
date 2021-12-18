@@ -207,6 +207,17 @@ func newConf() *memberlist.Config {
 			}
 		}
 	}
+	weightIntervalStr := config.GddMemWeightInterval.Load()
+	if stringutils.IsNotEmpty(weightIntervalStr) {
+		if weightInterval, err := strconv.Atoi(weightIntervalStr); err == nil {
+			cfg.WeightInterval = time.Duration(weightInterval) * time.Millisecond
+		} else {
+			var duration time.Duration
+			if duration, err = time.ParseDuration(weightIntervalStr); err == nil {
+				cfg.WeightInterval = duration
+			}
+		}
+	}
 	tcpTimeoutStr := config.GddMemTCPTimeout.Load()
 	if stringutils.IsNotEmpty(tcpTimeoutStr) {
 		if tcpTimeout, err := strconv.Atoi(tcpTimeoutStr); err == nil {
@@ -269,19 +280,24 @@ func NewNode(data ...interface{}) error {
 		},
 		Data: data,
 	}
+	queue := &memberlist.TransmitLimitedQueue{
+		NumNodes: func() int {
+			if mlist == nil {
+				return 0
+			}
+			return len(mlist.Members())
+		},
+		RetransmitMult: mconf.RetransmitMult,
+	}
+	BroadcastQueue = queue
 	mconf.Delegate = &delegate{
 		mmeta: mmeta,
+		queue: queue,
 	}
 	mconf.Events = events
 	var err error
 	if mlist, err = memberlist.Create(mconf); err != nil {
 		return errors.Wrap(err, "NewNode() error: Failed to create memberlist")
-	}
-	BroadcastQueue = &memberlist.TransmitLimitedQueue{
-		NumNodes: func() int {
-			return len(mlist.Members())
-		},
-		RetransmitMult: mconf.RetransmitMult,
 	}
 	if err = join(); err != nil {
 		mlist.Shutdown()
@@ -292,6 +308,14 @@ func NewNode(data ...interface{}) error {
 	logrus.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
 		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
 	return nil
+}
+
+// Shutdown stops all connections and communications with other nodes in the cluster
+func Shutdown() {
+	if mlist != nil {
+		mlist.Shutdown()
+		logrus.Info("memberlist shutdown")
+	}
 }
 
 // NodeInfo wraps node information

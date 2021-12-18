@@ -45,12 +45,11 @@ func main() {
 	}()
 
 	if ddconfig.GddMode.Load() == "micro" {
-		node, err := registry.NewNode()
+		err := registry.NewNode()
 		if err != nil {
 			logrus.Panicln(fmt.Sprintf("%+v", err))
 		}
-		defer node.Shutdown()
-		logrus.Infof("Memberlist created. Local node is %s\n", node)
+		defer registry.Shutdown()
 	}
 
     svc := {{.ServiceAlias}}.New{{.SvcName}}(conf, conn)

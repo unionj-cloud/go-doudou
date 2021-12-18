@@ -3,12 +3,14 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/memberlist"
 	"sync"
 )
 
 type delegate struct {
 	mmeta mergedMeta
 	lock  sync.Mutex
+	queue *memberlist.TransmitLimitedQueue
 }
 
 // NodeMeta return user custom node meta data
@@ -34,7 +36,7 @@ func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	msgs := BroadcastQueue.GetBroadcasts(overhead, limit)
+	msgs := d.queue.GetBroadcasts(overhead, limit)
 	return msgs
 }
 

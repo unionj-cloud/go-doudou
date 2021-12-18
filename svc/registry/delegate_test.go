@@ -143,7 +143,9 @@ func Test_delegate_GetBroadcasts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &delegate{}
+			d := &delegate{
+				queue: q,
+			}
 			got := d.GetBroadcasts(tt.args.overhead, tt.args.limit)
 			require.Equal(t, 4, len(got), "missing messages: %v", prettyPrintMessages(got))
 		})

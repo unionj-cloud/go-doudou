@@ -1,4 +1,5 @@
 ## go-doudou
+
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 [![GoDoc](https://godoc.org/github.com/unionj-cloud/go-doudou?status.png)](https://godoc.org/github.com/unionj-cloud/go-doudou)
 [![Build Status](https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main)](https://travis-ci.com/unionj-cloud/go-doudou)
@@ -9,54 +10,51 @@
 [![Goproxy.cn](https://goproxy.cn/stats/github.com/unionj-cloud/go-doudou/badges/download-count.svg)](https://goproxy.cn)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://join.slack.com/t/go-doudou/shared_invite/zt-vrhjndpd-0n2t0tKXssvpjoiF~8gJlQ)
-  
+
 [EN](./README.md) [中文](./README_zh.md)  
 go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心化微服务框架。它同时支持单体应用。只支持restful服务。
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 ### TOC
 
-  - [设计理念](#%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
-  - [特性](#%E7%89%B9%E6%80%A7)
-  - [总览](#%E6%80%BB%E8%A7%88)
-  - [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
-  - [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
-  - [安装](#%E5%AE%89%E8%A3%85)
-  - [用法](#%E7%94%A8%E6%B3%95)
-  - [Hello World](#hello-world)
+- [设计理念](#%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
+- [特性](#%E7%89%B9%E6%80%A7)
+- [总览](#%E6%80%BB%E8%A7%88)
+- [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
+- [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
+- [安装](#%E5%AE%89%E8%A3%85)
+- [用法](#%E7%94%A8%E6%B3%95)
+- [Hello World](#hello-world)
     - [初始化项目](#%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE)
     - [定义方法即设计restful接口](#%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95%E5%8D%B3%E8%AE%BE%E8%AE%A1restful%E6%8E%A5%E5%8F%A3)
     - [生成代码](#%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81)
     - [运行](#%E8%BF%90%E8%A1%8C)
     - [Deployment](#deployment)
-      - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
-      - [部署](#%E9%83%A8%E7%BD%B2)
-      - [关闭](#%E5%85%B3%E9%97%AD)
-  - [必知](#%E5%BF%85%E7%9F%A5)
-  - [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
-  - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
-  - [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
-  - [例子](#%E4%BE%8B%E5%AD%90)
-  - [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)
+        - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
+        - [部署](#%E9%83%A8%E7%BD%B2)
+        - [关闭](#%E5%85%B3%E9%97%AD)
+- [必知](#%E5%BF%85%E7%9F%A5)
+- [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
+- [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+- [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
+- [例子](#%E4%BE%8B%E5%AD%90)
+- [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)
     - [name](#name)
     - [ddl](#ddl)
-  - [TODO](#todo)
-  - [社区](#%E7%A4%BE%E5%8C%BA)
+- [TODO](#todo)
+- [社区](#%E7%A4%BE%E5%8C%BA)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 
 ### 设计理念
 
 - 设计优先: 我们建议先整体设计API，再着手开发
 - 契约精神: 我们采用OpenAPI 3.0接口描述来规范前后端数据交换，降低前后端团队的沟通成本，提高团队生产力
 - 去中心化: 我们采用gossip协议来做服务注册与发现来建设一个健壮的、可弹性伸缩的去中心化微服务集群。感谢hashicorp公司的开源库memberlist。
-
-
 
 ### 特性
 
@@ -72,17 +70,13 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 - 内建docker和kubernetes部署文件生成: dockerfile文件、deployment kind yaml文件和statefulset kind yaml文件
 - 极易学习，上手简单
 
-
-
 ### 总览
+
 ![Overview](go-doudou.drawio.png)
 
-
-
 ### 推荐架构
+
 ![Recommend Architecture](go-doudou-reconmend.drawio.png)
-
-
 
 ### Go版本兼容性
 
@@ -90,18 +84,17 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 - go 1.16+
 - < go 1.13: 没有测试
 
-
-
 ### 安装
 
 ```shell
 go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
+
 如果遇到410 Gone报错，请尝试用下面的命令：
+
 ```shell
 export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.0
 ```
-
 
 ### 用法
 
@@ -132,8 +125,6 @@ Flags:
 Use "go-doudou [command] --help" for more information about a command.
 ```
 
-
-
 ### Hello World
 
 #### 初始化项目
@@ -144,7 +135,9 @@ WARN[0000] Error loading .env file: open /Users/.env: no such file or directory
 1.16
 helloworld
 ```
+
 You can ignore the warning now.
+
 ```shell
 ➜  helloworld git:(master) ✗ ls -la -h
 total 40
@@ -159,6 +152,7 @@ drwxr-xr-x    6 wubin1989  staff   192B  8 29 23:27 .idea
 -rw-r--r--    1 wubin1989  staff   253B  8 29 23:22 svc.go
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
+
 - Dockerfile：docker镜像打包文件
 
 - svc.go: 在该文件里定义Helloworld接口的方法，就是定义需要暴露给前端的restful接口
@@ -166,8 +160,6 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 - vo文件夹: 定义http请求体和返回体的结构体
 
 - .env: 配置文件, go-doudou会加载里面配置的以`GDD_`开头的环境变量
-
-
 
 #### 定义方法即设计restful接口
 
@@ -187,15 +179,15 @@ type Helloworld interface {
 }
 ```
 
-
-
 #### 生成代码
 
 ```shell
 go-doudou svc http --handler -c go -o --doc
 go mod tidy
 ```
+
 Let's see what are generated.
+
 ```shell
 ➜  helloworld git:(master) ✗ ls -la -h
 total 328
@@ -220,6 +212,7 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 db
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:44 transport
 drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 ```
+
 - helloworld_openapi3.json：OpenAPI 3.0 接口描述文件
 - helloworld_openapi3.go: 里面定义了OpenAPI 3.0描述的json字符串，用于提供在线服务
 - client文件夹：封装了[resty](https://github.com/go-resty/resty)这个库的http请求客户端代码
@@ -229,8 +222,6 @@ drwxr-xr-x    3 wubin1989  staff    96B  8 29 23:22 vo
 - svcimpl.go：在里面写你的业务逻辑，即接口的具体实现
 - transport：http路由和handler
 - .env：配置文件
-
-
 
 #### 运行
 
@@ -350,15 +341,15 @@ go-doudou svc deploy
 go-doudou svc shutdown
 ```
 
-
-
 ### 必知
 
 当你在svc.go文件里定义方法（即restful接口）时，有几个需要注意和了解的地方：
 
-1. 只支持GET, POST, PUT, DELETE四种http请求方法。如果方法名以Get/Post/Put/Delete开头, http请求方法就会是相对应的GET/POST/PUT/DELETE。 如果方法名没有以其中任何一个开头, http请求方法默认为POST。
+1. 只支持GET, POST, PUT, DELETE四种http请求方法。如果方法名以Get/Post/Put/Delete开头, http请求方法就会是相对应的GET/POST/PUT/DELETE。
+   如果方法名没有以其中任何一个开头, http请求方法默认为POST。
 2. 任何一个方法的第一个入参的类型必须是context.Context。
-3. 只支持Go语言[内建基本类型](https://golang.org/pkg/builtin/), 以string类型为key的字典, vo包中的结构体, 相对应的切片和指针类型作为入参和出参。因为当go-doudou生成代码和OpenAPI3.0接口描述文件的时候，它只会扫描vo包下的结构体，如果入参或者出参里有来自vo包以外的其他结构体的话，go-doudou获取不到结构体字段信息。
+3. 只支持Go语言[内建基本类型](https://golang.org/pkg/builtin/), 以string类型为key的字典, vo包中的结构体,
+   相对应的切片和指针类型作为入参和出参。因为当go-doudou生成代码和OpenAPI3.0接口描述文件的时候，它只会扫描vo包下的结构体，如果入参或者出参里有来自vo包以外的其他结构体的话，go-doudou获取不到结构体字段信息。
 4. 作为特例，go-doudou支持multipart.FileHeader类型来作为入参，用于上传文件，以及支持os.File类型作为出参，用于下载文件。
 5. 不支持类型别名作为结构体字段类型。
 6. 不支持函数类型，通道类型，接口类型和匿名结构体类型作为入参和出参。
@@ -366,45 +357,12 @@ go-doudou svc shutdown
 8. 当执行命令`go-doudou svc http --handler`，handler.go文件会重新生成，所以请不要在里面手动修改或者添加任何代码。
 9. 当执行命令`go-doudou svc http`, 除了handler.go文件，go-doudou会先判断同名文件是否存在，如果不存在才会生成，存在就会跳过。
 
-
-
 ### 服务注册与发现
 
 Go-doudou同时支持开发单体应用和微服务应用。
+
 - `GDD_MODE=micro`：表示开启微服务应用模式
 - `GDD_MODE=mono`：表示开启单体应用模式
-
-在main方法里有服务注册相关代码。
-
-```go
-if ddconfig.GddMode.Load() == "micro" {
-    node, err := registry.NewNode()
-    if err != nil {
-        logrus.Panicln(fmt.Sprintf("%+v", err))
-    }
-    logrus.Infof("Memberlist created. Local node is %s\n", node)
-}
-```
-如果依赖了其他服务，可以参考如下代码：
-
-```go
-// service register
-node, err := registry.NewNode()
-if err != nil {
-    logrus.Panicln(fmt.Sprintf("%+v", err))
-}
-logrus.Infof("%s joined cluster\n", node.String())
-
-// 调用NewMemberlistServiceProvider时传入你依赖的服务的服务名，返回该服务的provider
-usersvcProvider := ddhttp.NewMemberlistServiceProvider("usersvc", node)
-// 注入该provider到该服务的客户端
-usersvcClient := client.NewUsersvc(client.WithProvider(usersvcProvider))
-
-// 注入该客户端到你的服务实例
-svc := service.NewOrdersvc(conf, conn, usersvcClient)
-```
-
-
 
 ### 客户端负载均衡
 
@@ -450,6 +408,9 @@ func main() {
 ```
 
 #### 平滑加权轮询负载均衡算法
+
+如果环境变量GDD_MEM_WEIGHT没有设置，则每隔GDD_MEM_WEIGHT_INTERVAL，通过节点健康值和CPU空闲时间占比计算一次本地节点的权重。
+
 ```go
 package main
 
@@ -489,8 +450,6 @@ func main() {
 }
 ```
 
-
-
 ### 配置项
 
 go-doudou用.env文件管理框架用到的环境变量
@@ -527,14 +486,11 @@ go-doudou用.env文件管理框架用到的环境变量
 | GDD_MEM_GOSSIP_INTERVAL | 每隔GDD_MEM_GOSSIP_INTERVAL批量发送一次gossip消息                                                                                                                                                 | 500ms     |          |
 | GDD_MEM_SUSPICION_MULT | 计算一个节点从心跳检测失败到宣告该节点已经挂掉的时长的系数                                                                                                                                                           | 6         |          |
 | GDD_MEM_WEIGHT | 平滑加权轮询负载均衡算法的权重                                                                                                                                                                         | 0         |          |
-
-
+| GDD_MEM_WEIGHT_INTERVAL | 每隔GDD_MEM_WEIGHT_INTERVAL，计算一次节点权重                                                                                                                                                      | 5s        |          |
 
 ### 例子
 
 请参考 [go-doudou-guide](https://gitee.com/unionj-cloud/go-doudou-guide)
-
-
 
 ### 值得一提的工具
 
@@ -542,24 +498,21 @@ go-doudou用.env文件管理框架用到的环境变量
 
 可以一把生成或者替换结构体字段的json标签的命令行工具。 请参考[文档](./name/README_zh.md)。
 
-
-
 #### ddl
 
-封装了[jmoiron/sqlx](https://github.com/jmoiron/sqlx) 的从结构体生成或者更新mysql数据库表结构，或者反过来，从数据库表结构生成结构体的命令行工具。请参考[文档](./ddl/doc/README_zh.md)。
-
-
+封装了[jmoiron/sqlx](https://github.com/jmoiron/sqlx)
+的从结构体生成或者更新mysql数据库表结构，或者反过来，从数据库表结构生成结构体的命令行工具。请参考[文档](./ddl/doc/README_zh.md)。
 
 ### TODO
+
 请参考 [go-doudou看板](https://github.com/unionj-cloud/go-doudou/projects/1)
-
-
 
 ### 社区
 
 欢迎通过fork或者提交pr和issue来参与go-doudou项目。 如果你喜欢go-doudou，请记得点个星！
 
 欢迎联系我：
+
 - facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
 - twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
 - 邮箱地址: 328454505@qq.com
@@ -567,4 +520,5 @@ go-doudou用.env文件管理框架用到的环境变量
   ![qrcode.png](qrcode.png)
 
 ## License
+
 MIT
