@@ -8,6 +8,16 @@ type eventDelegate struct {
 	ServiceProviders []IServiceProvider
 }
 
+func (e *eventDelegate) NotifySuspectSateChange(node *memberlist.Node) {
+	for _, sp := range e.ServiceProviders {
+		if node.State == memberlist.StateSuspect {
+			sp.RemoveNode(node)
+		} else if node.State == memberlist.StateAlive {
+			sp.AddNode(node)
+		}
+	}
+}
+
 func (e *eventDelegate) NotifyWeight(node *memberlist.Node) {
 	for _, sp := range e.ServiceProviders {
 		sp.UpdateWeight(node)

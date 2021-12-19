@@ -313,6 +313,7 @@ func NewNode(data ...interface{}) error {
 // Shutdown stops all connections and communications with other nodes in the cluster
 func Shutdown() {
 	if mlist != nil {
+		mlist.Leave(3 * time.Second)
 		mlist.Shutdown()
 		logrus.Info("memberlist shutdown")
 	}
