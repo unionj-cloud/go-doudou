@@ -93,13 +93,13 @@ framework. It supports monolith service application as well. Currently, it suppo
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.0
+go get -v github.com/unionj-cloud/go-doudou@v0.8.1
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.0
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.1
 ```
 
 ### Usage
