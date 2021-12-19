@@ -206,6 +206,12 @@ func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 		opt(svcClient)
 	}
 
+	svcClient.client.OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
+		server, _ := svcClient.provider.SelectServer()
+		client.SetHostURL(server)
+		return nil
+	})
+
 	return svcClient
 }
 `

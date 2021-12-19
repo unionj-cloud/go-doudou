@@ -88,13 +88,13 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.1
+go get -v github.com/unionj-cloud/go-doudou@v0.8.2
 ```
 
 如果遇到410 Gone报错，请尝试用下面的命令：
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.1
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.2
 ```
 
 ### 用法
@@ -490,6 +490,7 @@ go-doudou用.env文件管理框架用到的环境变量
 | GDD_MEM_SUSPICION_MULT | 计算一个节点从心跳检测失败到宣告该节点已经挂掉的时长的系数                                                                                                                                                           | 6         |          |
 | GDD_MEM_WEIGHT | 平滑加权轮询负载均衡算法的权重                                                                                                                                                                         | 0         |          |
 | GDD_MEM_WEIGHT_INTERVAL | 每隔GDD_MEM_WEIGHT_INTERVAL，计算一次节点权重                                                                                                                                                      | 5s        |          |
+| GDD_RETRY_COUNT | resty客户端重试次数                                                                                                                                                                            | 0         |          |
 
 ### 例子
 

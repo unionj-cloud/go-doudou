@@ -118,6 +118,7 @@ const (
 	GddMemWeight envVariable = "GDD_MEM_WEIGHT"
 	// GddMemWeightInterval node weight will be calculated every GddMemWeightInterval
 	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
+	GddRetryCount        envVariable = "GDD_RETRY_COUNT"
 )
 
 // Load loads value from environment variable

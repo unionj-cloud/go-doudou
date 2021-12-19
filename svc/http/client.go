@@ -5,7 +5,9 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/cast"
 	"github.com/unionj-cloud/go-doudou/stringutils"
+	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"github.com/unionj-cloud/memberlist"
 	"net"
@@ -74,7 +76,6 @@ func NewServiceProvider(env string) *ServiceProvider {
 func NewClient() *resty.Client {
 	client := resty.New()
 	client.SetTimeout(1 * time.Minute)
-
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
@@ -91,6 +92,7 @@ func NewClient() *resty.Client {
 		MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
 		MaxConnsPerHost:       100,
 	})
+	client.SetRetryCount(cast.ToInt(config.GddRetryCount.Load()))
 	return client
 }
 

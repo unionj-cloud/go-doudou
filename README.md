@@ -93,13 +93,13 @@ framework. It supports monolith service application as well. Currently, it suppo
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.1
+go get -v github.com/unionj-cloud/go-doudou@v0.8.2
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.1
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.2
 ```
 
 ### Usage
@@ -499,7 +499,8 @@ Go-doudou use .env file to load environment variables to configure behaviors.
 | GDD_MEM_GOSSIP_INTERVAL | Gossip messages in queue every GDD_MEM_GOSSIP_INTERVAL duration                                                                                                                                                                                                                    | 500ms     |          |
 | GDD_MEM_SUSPICION_MULT | The multiplier for determining the time an inaccessible node is considered suspect before declaring it dead                                                                                                                                                                        | 6         |          |
 | GDD_MEM_WEIGHT | Node weight for smooth weighted round-robin balancing                                                                                                                                                                                                                              | 0         |          |
-| GDD_MEM_WEIGHT_INTERVAL | Node weight will be calculated every GDD_MEM_WEIGHT_INTERVAL                                                                                                                                                                                                                          | 5s        |          |
+| GDD_MEM_WEIGHT_INTERVAL | Node weight will be calculated every GDD_MEM_WEIGHT_INTERVAL                                                                                                                                                                                                                       | 5s        |          |
+| GDD_RETRY_COUNT | Set resty client retry count                                                                                                                                                                                                                                                       | 0         |          |
 
 ### Example
 
