@@ -411,7 +411,7 @@ func main() {
 
 #### 平滑加权轮询负载均衡算法
 
-如果环境变量GDD_MEM_WEIGHT没有设置，则每隔GDD_MEM_WEIGHT_INTERVAL，通过节点健康值和CPU空闲时间占比计算一次本地节点的权重。
+如果没有设置环境变量GDD_MEM_WEIGHT，则每隔GDD_MEM_WEIGHT_INTERVAL，通过节点健康值和CPU空闲时间占比计算一次本地节点的权重。
 
 ```go
 package main
