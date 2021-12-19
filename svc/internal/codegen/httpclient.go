@@ -56,18 +56,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
-		var (
-			_server string
-			_err error
-		)
-		if _server, _err = receiver.provider.SelectServer(); _err != nil {
-			{{- range $r := $m.Results }}
-				{{- if eq $r.Type "error" }}
-					{{ $r.Name }} = errors.Wrap(_err, "")
-				{{- end }}
-			{{- end }}
-			return
-		}
+		var _err error
 		_urlValues := url.Values{}
 		_req := receiver.client.R()
 		{{- range $p := $m.Params }}
@@ -132,14 +121,14 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 
 		{{- if eq ($m.Name | httpMethod) "GET" }}
 		_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
-			Get(_server + _path)
+			Get(_path)
 		{{- else }}
 		if _req.Body != nil {
 			_req.SetQueryParamsFromValues(_urlValues)
 		} else {
 			_req.SetFormDataFromValues(_urlValues)
 		}
-		_resp, _err := _req.{{$m.Name | restyMethod}}(_server + _path)
+		_resp, _err := _req.{{$m.Name | restyMethod}}(_path)
 		{{- end }}
 		if _err != nil {
 			{{- range $r := $m.Results }}
@@ -249,8 +238,7 @@ func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 	}
 
 	svcClient.client.OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
-		server, _ := svcClient.provider.SelectServer()
-		client.SetHostURL(server)
+		client.SetHostURL(svcClient.provider.SelectServer())
 		return nil
 	})
 

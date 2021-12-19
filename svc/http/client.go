@@ -1,12 +1,9 @@
 package ddhttp
 
 import (
-	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/cast"
-	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"github.com/unionj-cloud/memberlist"
@@ -44,7 +41,7 @@ func WithClient(client *resty.Client) DdClientOption {
 
 // ServiceProvider defines an implementation for IServiceProvider
 type ServiceProvider struct {
-	Env string
+	server string
 }
 
 func (s *ServiceProvider) AddNode(node *memberlist.Node) {
@@ -57,18 +54,14 @@ func (s *ServiceProvider) UpdateWeight(node *memberlist.Node) {
 }
 
 // SelectServer return service address from environment variable
-func (s *ServiceProvider) SelectServer() (string, error) {
-	address := os.Getenv(s.Env)
-	if stringutils.IsEmpty(address) {
-		return "", errors.Errorf("no service address found from environment variable %s", s.Env)
-	}
-	return address, nil
+func (s *ServiceProvider) SelectServer() string {
+	return s.server
 }
 
 // NewServiceProvider creates new ServiceProvider instance
 func NewServiceProvider(env string) *ServiceProvider {
 	return &ServiceProvider{
-		Env: env,
+		server: os.Getenv(env),
 	}
 }
 
@@ -185,16 +178,16 @@ type MemberlistServiceProvider struct {
 }
 
 // SelectServer selects a node which is supplying service specified by name property from cluster
-func (m *MemberlistServiceProvider) SelectServer() (string, error) {
+func (m *MemberlistServiceProvider) SelectServer() string {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	if len(m.nodes) == 0 {
-		return "", errors.Wrap(errors.New(fmt.Sprintf("no service %s supplier found", m.name)), "SelectServer() fail")
+		return ""
 	}
 	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(m.nodes)))
 	m.current = uint64(next)
 	selected := m.nodes[next]
-	return selected.baseUrl, nil
+	return selected.baseUrl
 }
 
 // NewMemberlistServiceProvider create an NewMemberlistServiceProvider instance
@@ -216,11 +209,11 @@ type SmoothWeightedRoundRobinProvider struct {
 }
 
 // SelectServer selects a node which is supplying service specified by name property from cluster
-func (m *SmoothWeightedRoundRobinProvider) SelectServer() (string, error) {
+func (m *SmoothWeightedRoundRobinProvider) SelectServer() string {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	if len(m.nodes) == 0 {
-		return "", errors.Wrap(errors.New(fmt.Sprintf("no service %s supplier found", m.name)), "SelectServer() fail")
+		return ""
 	}
 	var selected *server
 	total := 0
@@ -236,10 +229,10 @@ func (m *SmoothWeightedRoundRobinProvider) SelectServer() (string, error) {
 		}
 	}
 	if selected == nil {
-		return "", errors.Wrap(errors.New(fmt.Sprintf("no service %s supplier found", m.name)), "SelectServer() fail")
+		return ""
 	}
 	selected.currentWeight -= total
-	return selected.baseUrl, nil
+	return selected.baseUrl
 }
 
 // NewSmoothWeightedRoundRobinProvider create an SmoothWeightedRoundRobinProvider instance

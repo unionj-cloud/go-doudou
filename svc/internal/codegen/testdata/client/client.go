@@ -35,14 +35,7 @@ func (receiver *UsersvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		msg = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
@@ -53,7 +46,7 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + _path)
+	_resp, _err := _req.Post(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "")
 		return
@@ -78,14 +71,7 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	return _result.Code, _result.Data, nil
 }
 func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo string) (code int, data string, msg error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		msg = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
@@ -93,7 +79,7 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	_urlValues.Set("photo", fmt.Sprintf("%v", photo))
 	_path := "/usersvc/user"
 	_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
-		Get(_server + _path)
+		Get(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "")
 		return
@@ -118,14 +104,7 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	return _result.Code, _result.Data, nil
 }
 func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, password int, actived bool, score []int) (code int, data string, msg error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		msg = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
@@ -141,7 +120,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + _path)
+	_resp, _err := _req.Post(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "")
 		return
@@ -166,14 +145,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	return _result.Code, _result.Data, nil
 }
 func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileModel, ps string, pf2 *v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		re = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(pc)
@@ -202,7 +174,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + _path)
+	_resp, _err := _req.Post(_path)
 	if _err != nil {
 		re = errors.Wrap(_err, "")
 		return
@@ -227,14 +199,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 	return _result.Ri, _result.Rs, nil
 }
 func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string) (rf *os.File, re error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		re = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
@@ -246,7 +211,7 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + _path)
+	_resp, _err := _req.Post(_path)
 	if _err != nil {
 		re = errors.Wrap(_err, "")
 		return
@@ -294,6 +259,11 @@ func NewUsersvc(opts ...ddhttp.DdClientOption) *UsersvcClient {
 	for _, opt := range opts {
 		opt(svcClient)
 	}
+
+	svcClient.client.OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
+		client.SetHostURL(svcClient.provider.SelectServer())
+		return nil
+	})
 
 	return svcClient
 }
