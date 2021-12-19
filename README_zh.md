@@ -17,35 +17,36 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 ### TOC
 
-- [设计理念](#%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
-- [特性](#%E7%89%B9%E6%80%A7)
-- [总览](#%E6%80%BB%E8%A7%88)
-- [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
-- [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
-- [安装](#%E5%AE%89%E8%A3%85)
-- [用法](#%E7%94%A8%E6%B3%95)
-- [Hello World](#hello-world)
+  - [设计理念](#%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
+  - [特性](#%E7%89%B9%E6%80%A7)
+  - [总览](#%E6%80%BB%E8%A7%88)
+  - [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
+  - [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
+  - [安装](#%E5%AE%89%E8%A3%85)
+  - [用法](#%E7%94%A8%E6%B3%95)
+  - [Hello World](#hello-world)
     - [初始化项目](#%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE)
     - [定义方法即设计restful接口](#%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95%E5%8D%B3%E8%AE%BE%E8%AE%A1restful%E6%8E%A5%E5%8F%A3)
     - [生成代码](#%E7%94%9F%E6%88%90%E4%BB%A3%E7%A0%81)
     - [运行](#%E8%BF%90%E8%A1%8C)
     - [Deployment](#deployment)
-        - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
-        - [部署](#%E9%83%A8%E7%BD%B2)
-        - [关闭](#%E5%85%B3%E9%97%AD)
-- [必知](#%E5%BF%85%E7%9F%A5)
-- [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
-- [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
-- [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
-- [例子](#%E4%BE%8B%E5%AD%90)
-- [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)
+      - [docker镜像打包并推到你的远程仓库](#docker%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85%E5%B9%B6%E6%8E%A8%E5%88%B0%E4%BD%A0%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93)
+      - [部署](#%E9%83%A8%E7%BD%B2)
+      - [关闭](#%E5%85%B3%E9%97%AD)
+  - [必知](#%E5%BF%85%E7%9F%A5)
+  - [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
+  - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+    - [简单轮询负载均衡算法](#%E7%AE%80%E5%8D%95%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
+    - [平滑加权轮询负载均衡算法](#%E5%B9%B3%E6%BB%91%E5%8A%A0%E6%9D%83%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
+  - [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
+  - [例子](#%E4%BE%8B%E5%AD%90)
+  - [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)
     - [name](#name)
     - [ddl](#ddl)
-- [TODO](#todo)
-- [社区](#%E7%A4%BE%E5%8C%BA)
+  - [TODO](#todo)
+  - [社区](#%E7%A4%BE%E5%8C%BA)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -393,6 +394,7 @@ func main() {
 	if err != nil {
 		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
+	defer registry.Shutdown()
 
 	usersvcProvider := ddhttp.NewMemberlistServiceProvider("github.com/usersvc")
 	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
@@ -436,6 +438,7 @@ func main() {
 	if err != nil {
 		logrus.Panicln(fmt.Sprintf("%+v", err))
 	}
+	defer registry.Shutdown()
 
 	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("github.com/usersvc")
 	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
