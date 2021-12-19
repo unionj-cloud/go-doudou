@@ -116,14 +116,7 @@ func (receiver *TestsvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
@@ -134,7 +127,7 @@ func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_server + _path)
+	_resp, _err := _req.Post(_path)
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -171,6 +164,11 @@ func NewTestsvc(opts ...ddhttp.DdClientOption) *TestsvcClient {
 	for _, opt := range opts {
 		opt(svcClient)
 	}
+
+	svcClient.client.OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
+		client.SetHostURL(svcClient.provider.SelectServer())
+		return nil
+	})
 
 	return svcClient
 }
