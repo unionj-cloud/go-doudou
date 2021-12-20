@@ -341,5 +341,9 @@ var (
 
 type FileModel struct {
 	Filename string
-	Reader   io.Reader
+	Reader   io.ReadCloser
+}
+
+func (f *FileModel) Close() error {
+	return f.Reader.Close()
 }
