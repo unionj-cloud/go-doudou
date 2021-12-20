@@ -88,13 +88,13 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.3
+go get -v github.com/unionj-cloud/go-doudou@v0.8.4
 ```
 
 如果遇到410 Gone报错，请尝试用下面的命令：
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.3
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.4
 ```
 
 ### 用法
