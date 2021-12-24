@@ -3,6 +3,7 @@ module github.com/unionj-cloud/go-doudou
 go 1.15
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Microsoft/hcsshim v0.8.17 // indirect
@@ -47,6 +48,8 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/olivere/elastic v6.2.35+incompatible
 	github.com/onsi/gomega v1.13.0 // indirect
+	github.com/opentracing-contrib/go-stdlib v1.0.0
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/radovskyb/watcher v1.0.7
@@ -56,6 +59,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
+	github.com/uber/jaeger-client-go v2.30.0+incompatible
+	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/unionj-cloud/cast v1.3.2
 	github.com/unionj-cloud/memberlist v0.2.11
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect

@@ -30,6 +30,8 @@ var (
 	GddVer string
 )
 
+const FrameworkName = "Go-doudou"
+
 type envVariable string
 
 const (
@@ -117,8 +119,10 @@ const (
 	// GddMemWeight node weight
 	GddMemWeight envVariable = "GDD_MEM_WEIGHT"
 	// GddMemWeightInterval node weight will be calculated every GddMemWeightInterval
-	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
-	GddRetryCount        envVariable = "GDD_RETRY_COUNT"
+	GddMemWeightInterval  envVariable = "GDD_MEM_WEIGHT_INTERVAL"
+	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
+	GddEnableTracing      envVariable = "GDD_ENABLE_TRACING"
+	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
 )
 
 // Load loads value from environment variable
