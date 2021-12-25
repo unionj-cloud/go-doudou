@@ -408,3 +408,10 @@ func RegisterServiceProvider(sp IServiceProvider) {
 	}
 	events.ServiceProviders = append(events.ServiceProviders, sp)
 }
+
+func LocalNode() *memberlist.Node {
+	if mlist == nil {
+		return nil
+	}
+	return mlist.LocalNode()
+}

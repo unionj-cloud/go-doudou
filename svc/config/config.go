@@ -41,7 +41,7 @@ const (
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
 	// GddLogLevel please reference logrus.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
-	// GddLogPath sets log path
+	// GddLogPath sets log directory
 	GddLogPath envVariable = "GDD_LOG_PATH"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
@@ -121,7 +121,6 @@ const (
 	// GddMemWeightInterval node weight will be calculated every GddMemWeightInterval
 	GddMemWeightInterval  envVariable = "GDD_MEM_WEIGHT_INTERVAL"
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
-	GddEnableTracing      envVariable = "GDD_ENABLE_TRACING"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
 )
 

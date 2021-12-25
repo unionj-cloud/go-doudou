@@ -2,30 +2,22 @@ package ddhttp
 
 import (
 	"context"
-	"fmt"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	"github.com/uber/jaeger-lib/metrics"
-	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/svc/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/svc/http/registry"
-	"github.com/unionj-cloud/go-doudou/svc/tracing"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"path"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -33,53 +25,8 @@ import (
 // DefaultHttpSrv wraps gorilla mux router
 type DefaultHttpSrv struct {
 	*mux.Router
-	rootRouter    *mux.Router
-	routes        []model.Route
-	server        *http.Server
-	logFile       *os.File
-	enableTracing bool
-	tracer        opentracing.Tracer
-	tracingCloser io.Closer
-}
-
-func (srv *DefaultHttpSrv) run() {
-	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
-	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
-			config.GddWriteTimeout.Load(), err.Error())
-		write = 15 * time.Second
-	}
-
-	read, err := time.ParseDuration(config.GddReadTimeout.Load())
-	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
-			config.GddReadTimeout.Load(), err.Error())
-		read = 15 * time.Second
-	}
-
-	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
-	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
-			config.GddIdleTimeout.Load(), err.Error())
-		idle = 60 * time.Second
-	}
-
-	srv.server = &http.Server{
-		Addr: strings.Join([]string{config.GddHost.Load(), config.GddPort.Load()}, ":"),
-		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: write,
-		ReadTimeout:  read,
-		IdleTimeout:  idle,
-		Handler:      srv.rootRouter, // Pass our instance of gorilla/mux in.
-	}
-
-	// Run our server in a goroutine so that it doesn't block.
-	go func() {
-		logrus.Infof("Http server is listening on %s\n", srv.server.Addr)
-		if err := srv.server.ListenAndServe(); err != nil {
-			logrus.Println(err)
-		}
-	}()
+	rootRouter *mux.Router
+	routes     []model.Route
 }
 
 const gddPathPrefix = "/go-doudou/"
@@ -111,56 +58,7 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		rootRouter: rootRouter,
 		routes:     routes,
 	}
-	srv.configureLogger()
-	enableTracing, _ := strconv.ParseBool(config.GddEnableTracing.Load())
-	if enableTracing {
-		metricsRoot := config.FrameworkName
-		if stringutils.IsNotEmpty(config.GddTracingMetricsRoot.Load()) {
-			metricsRoot = config.GddTracingMetricsRoot.Load()
-		}
-		srv.tracer, srv.tracingCloser = tracing.Init(config.GddServiceName.Load(), jprom.New().Namespace(metrics.NSOptions{Name: metricsRoot, Tags: nil}))
-		opentracing.SetGlobalTracer(srv.tracer)
-	}
 	return srv
-}
-
-func (srv *DefaultHttpSrv) configureLogger() {
-	var logptr *string
-	logpath, isSet := os.LookupEnv(config.GddLogPath.String())
-	if isSet {
-		logptr = &logpath
-	}
-	var loglevel config.LogLevel
-	(&loglevel).Decode(config.GddLogLevel.Load())
-
-	formatter := new(logrus.TextFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	formatter.FullTimestamp = true
-
-	logger := logrus.StandardLogger()
-	logger.SetFormatter(formatter)
-	logger.SetLevel(logrus.Level(loglevel))
-
-	if logptr != nil {
-		var err error
-		logpath := *logptr
-		logpath, err = pathutils.FixPath(logpath, "")
-		if err != nil {
-			logger.Errorln(fmt.Sprintf("%+v\n", err))
-		}
-		if stringutils.IsNotEmpty(logpath) {
-			err = os.MkdirAll(logpath, os.ModePerm)
-			if err != nil {
-				logger.Errorln(err)
-			}
-		}
-		srv.logFile, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm)
-		if err != nil {
-			logger.Errorf("error opening file: %v\n", err)
-		}
-		mw := io.MultiWriter(os.Stdout, srv.logFile)
-		logger.SetOutput(mw)
-	}
 }
 
 // AddRoute adds routes to router
@@ -171,21 +69,17 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	srv.routes = routes[:]
 	routes = nil
 	for _, item := range route {
-		var handler http.Handler
-		handler = item.HandlerFunc
-		if srv.enableTracing {
-			handler = nethttp.Middleware(
-				opentracing.GlobalTracer(),
-				handler,
-				nethttp.OperationNameFunc(func(r *http.Request) string {
-					return "HTTP " + r.Method + " " + item.Pattern
-				}))
-		}
+		pattern := item.Pattern
 		srv.
 			Methods(item.Method).
 			Path(item.Pattern).
 			Name(item.Name).
-			Handler(handler)
+			Handler(nethttp.Middleware(
+				opentracing.GlobalTracer(),
+				item.HandlerFunc,
+				nethttp.OperationNameFunc(func(r *http.Request) string {
+					return "HTTP " + r.Method + " " + pattern
+				})))
 	}
 }
 
@@ -223,6 +117,48 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 	srv.Use(middlewares...)
 }
 
+func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
+	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
+	if err != nil {
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
+			config.GddWriteTimeout.Load(), err.Error())
+		write = 15 * time.Second
+	}
+
+	read, err := time.ParseDuration(config.GddReadTimeout.Load())
+	if err != nil {
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
+			config.GddReadTimeout.Load(), err.Error())
+		read = 15 * time.Second
+	}
+
+	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
+	if err != nil {
+		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
+			config.GddIdleTimeout.Load(), err.Error())
+		idle = 60 * time.Second
+	}
+
+	httpServer := &http.Server{
+		Addr: strings.Join([]string{config.GddHost.Load(), config.GddPort.Load()}, ":"),
+		// Good practice to set timeouts to avoid Slowloris attacks.
+		WriteTimeout: write,
+		ReadTimeout:  read,
+		IdleTimeout:  idle,
+		Handler:      srv.rootRouter, // Pass our instance of gorilla/mux in.
+	}
+
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		logrus.Infof("Http server is listening on %s\n", httpServer.Addr)
+		if err := httpServer.ListenAndServe(); err != nil {
+			logrus.Println(err)
+		}
+	}()
+
+	return httpServer
+}
+
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
@@ -237,32 +173,10 @@ func (srv *DefaultHttpSrv) Run() {
 	}
 
 	srv.printRoutes()
-	srv.run()
+	httpServer := srv.newHttpServer()
+	defer func() {
+		logrus.Infoln("http server is shutting down...")
 
-	logrus.Infof("Started in %s\n", time.Since(start))
-
-	c := make(chan os.Signal, 1)
-	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
-	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
-	signal.Notify(c, os.Interrupt)
-
-	// Block until we receive our signal.
-	<-c
-}
-
-// Shutdown runs http server
-func (srv *DefaultHttpSrv) Shutdown() {
-	logrus.Infoln("shutting down...")
-
-	if srv.logFile != nil {
-		srv.logFile.Close()
-	}
-
-	if srv.enableTracing && srv.tracingCloser != nil {
-		srv.tracingCloser.Close()
-	}
-
-	if srv.server != nil {
 		// Create a deadline to wait for.
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
@@ -275,6 +189,16 @@ func (srv *DefaultHttpSrv) Shutdown() {
 		defer cancel()
 		// Doesn't block if no connections, but will otherwise wait
 		// until the timeout deadline.
-		srv.server.Shutdown(ctx)
-	}
+		httpServer.Shutdown(ctx)
+	}()
+
+	logrus.Infof("Started in %s\n", time.Since(start))
+
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
+
+	// Block until we receive our signal.
+	<-c
 }

@@ -2,6 +2,7 @@ package ddhttp
 
 import (
 	"github.com/go-resty/resty/v2"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/cast"
 	"github.com/unionj-cloud/go-doudou/svc/config"
@@ -74,16 +75,18 @@ func NewClient() *resty.Client {
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 	}
-	client.SetTransport(&http.Transport{
-		Proxy:                 http.ProxyFromEnvironment,
-		DialContext:           dialer.DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
-		MaxConnsPerHost:       100,
+	client.SetTransport(&nethttp.Transport{
+		RoundTripper: &http.Transport{
+			Proxy:                 http.ProxyFromEnvironment,
+			DialContext:           dialer.DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
+			MaxConnsPerHost:       100,
+		},
 	})
 	client.SetRetryCount(cast.ToInt(config.GddRetryCount.Load()))
 	return client
