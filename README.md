@@ -532,8 +532,10 @@ func main() {
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
-```
-
+```  
+#### Screenshot
+![jaeger1](./jaeger1.png)
+![jaeger2](./jaeger2.png)
 
 ### Configuration
 
