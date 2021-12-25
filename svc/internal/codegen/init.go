@@ -87,7 +87,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/unionj-cloud/go-doudou v0.8.4
+	github.com/unionj-cloud/go-doudou v0.8.5
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
@@ -160,7 +160,10 @@ GDD_MEM_NAME=
 # if GDD_MEM_HOST starts with dot such as .seed-svc-headless.default.svc.cluster.local,
 # it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
 # for supporting k8s stateful service
-GDD_MEM_HOST=`
+GDD_MEM_HOST=
+
+JAEGER_AGENT_HOST=localhost
+JAEGER_AGENT_PORT=6831`
 
 const dockerfileTmpl = `FROM golang:1.16.6-alpine AS builder
 

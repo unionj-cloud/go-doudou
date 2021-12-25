@@ -93,13 +93,13 @@ framework. It supports monolith service application as well. Currently, it suppo
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.4
+go get -v github.com/unionj-cloud/go-doudou@v0.8.5
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.4
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.5
 ```
 
 ### Usage
@@ -462,6 +462,78 @@ func main() {
 	srv.Run()
 }
 ```
+
+
+### Jaeger
+To add jaeger feature, you just need three steps:
+1. Start jaeger
+```shell
+docker run -d --name jaeger \
+  -p 6831:6831/udp \
+  -p 16686:16686 \
+  jaegertracing/all-in-one:1.29
+```
+2. Add two environment variables to your .env file
+```shell
+JAEGER_AGENT_HOST=localhost
+JAEGER_AGENT_PORT=6831
+```
+3. Add three lines to your main function before new client and http server code
+```go
+tracer, closer := tracing.Init()
+defer closer.Close()
+opentracing.SetGlobalTracer(tracer)
+```
+Then your main function should like this
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	logger.Init()
+
+	err := registry.NewNode()
+	if err != nil {
+		logrus.Panicln(fmt.Sprintf("%+v", err))
+	}
+	defer registry.Shutdown()
+
+	tracer, closer := tracing.Init()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
+	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClient)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
+
 
 ### Configuration
 
