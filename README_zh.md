@@ -40,6 +40,8 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
   - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
     - [简单轮询负载均衡算法](#%E7%AE%80%E5%8D%95%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
     - [平滑加权轮询负载均衡算法](#%E5%B9%B3%E6%BB%91%E5%8A%A0%E6%9D%83%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
+  - [Jaeger](#jaeger)
+    - [Screenshot](#screenshot)
   - [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
   - [例子](#%E4%BE%8B%E5%AD%90)
   - [值得一提的工具](#%E5%80%BC%E5%BE%97%E4%B8%80%E6%8F%90%E7%9A%84%E5%B7%A5%E5%85%B7)

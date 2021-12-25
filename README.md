@@ -42,6 +42,8 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Client Load Balancing](#client-load-balancing)
     - [Simple Round-robin Load Balancing](#simple-round-robin-load-balancing)
     - [Smooth Weighted Round-robin Balancing](#smooth-weighted-round-robin-balancing)
+  - [Jaeger](#jaeger)
+    - [Screenshot](#screenshot)
   - [Configuration](#configuration)
   - [Example](#example)
   - [Notable tools](#notable-tools)
