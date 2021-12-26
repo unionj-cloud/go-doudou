@@ -21,6 +21,10 @@ framework. It supports monolith service application as well. Currently, it suppo
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ### TOC
 
+  - [Why?](#why)
+    - [Background](#background)
+    - [Reason](#reason)
+    - [Result](#result)
   - [Philosophy](#philosophy)
   - [Features](#features)
   - [Overview](#overview)
@@ -54,6 +58,30 @@ framework. It supports monolith service application as well. Currently, it suppo
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+### Why?
+#### Background
+- I'm lazy, and I believe there are many developers like me. 
+- I'm not only an individual developer, but also a team leader with duty to make the whole team more productive
+- I am from a small company, we can't afford to recruit many senior developers, so my team members have different dev levels
+- I am from a small company, we don't have operation engineers
+
+
+
+#### Reason
+- I need a tool to generate as much code as possible for us: if we don't know anything about tcp/ip/http/RESTFul/grpc/protobuf such low level things, and service register/service discover/failure detection/load balancing such microservice things, ONLY we know is CRUD, we still can develop robust programs/services out before the deadline. But I can't find such tool or framework.
+- I am a developer not an operation engineer, I don't like setting up many infrastructures myself. I mean I don't want to set up etcd or zookeeper cluster and maintain them myself. I find memberlist, a gossip library developed by hashicorp who also developed consul, so I decide to make a microservice framework using it to let every service discover each other by themselves.
+- I am a frontend developer in my early career, I know what a frontend developer want. So I choose OpenAPI 3.0 as bridge between frontend and backend. And I want to provide my frontend team members not only online documentation, but also mock server which can generating fake responses.
+
+
+
+#### Result
+Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes out, it's mainly inspired by 
+- https://github.com/kujtimiihoxha/kit: a code generator cli for go-kit 
+- https://github.com/hashicorp/memberlist: golang package for gossip based membership and failure detection
+- https://spec.openapis.org/oas/v3.0.3: OpenAPI 3.0
+
+
 
 ### Philosophy
 
@@ -534,7 +562,7 @@ func main() {
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
-```  
+```
 #### Screenshot
 ![jaeger1](./jaeger1.png)
 ![jaeger2](./jaeger2.png)
