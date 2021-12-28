@@ -148,6 +148,13 @@ func (c Criteria) In(val interface{}) Criteria {
 	return c
 }
 
+// Like set like operator and column value, val should be a slice type value
+func (c Criteria) Like(val interface{}) Criteria {
+	c.val = val
+	c.asym = arithsymbol.Like
+	return c
+}
+
 // And concat another sql expression builder with And
 func (c Criteria) And(cri Base) Where {
 	w := Where{
@@ -311,7 +318,10 @@ type PageRet struct {
 
 // NewPageRet new a PageRet
 func NewPageRet(page Page) PageRet {
-	pageNo := page.Offset/page.Size + 1
+	pageNo := 1
+	if page.Size > 0 {
+		pageNo = page.Offset/page.Size + 1
+	}
 	return PageRet{
 		PageNo:   pageNo,
 		PageSize: page.Size,
