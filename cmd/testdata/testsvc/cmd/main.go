@@ -15,7 +15,7 @@ func main() {
 
 	handler := httpsrv.NewTestsvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Rest)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }

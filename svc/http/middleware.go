@@ -52,10 +52,11 @@ func Logger(inner http.Handler) http.Handler {
 
 		rawReq := string(x)
 		if len(r.Header["Content-Type"]) > 0 && strings.Contains(r.Header["Content-Type"][0], "multipart/form-data") {
-			if err := r.ParseMultipartForm(32 << 20); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
+			// TODO buggy
+			//if err := r.ParseMultipartForm(32 << 20); err != nil {
+			//	http.Error(w, err.Error(), http.StatusBadRequest)
+			//	return
+			//}
 			rawReq = r.Form.Encode()
 		}
 
