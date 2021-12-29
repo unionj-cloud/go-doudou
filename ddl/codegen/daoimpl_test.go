@@ -395,7 +395,7 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 	pageRet.Items = users
 	pageRet.Total = total
 
-	if math.Ceil(float64(total)/float64(pageRet.PageSize)) > float64(pageRet.PageNo) {
+	if pageRet.PageSize > 0 && math.Ceil(float64(total)/float64(pageRet.PageSize)) > float64(pageRet.PageNo) {
 		pageRet.HasNext = true
 	}
 
