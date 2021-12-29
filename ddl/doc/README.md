@@ -458,6 +458,9 @@ func ExampleCriteria() {
 		And(C().Col("cc.stat_type").Eq(2)).Append(String("for update"))
 	fmt.Println(where.Sql())
 
+    where = C().Col("cc.name").Like("%ba%")
+    fmt.Println(where.Sql())
+
 	// Output:
 	//((`name` = ? or `school` = ?) and `age` = ?) [wubin havard 18]
 	//((`name` = ? or `school` = ?) and `delete_at` is not null) [wubin havard]
@@ -473,6 +476,7 @@ func ExampleCriteria() {
 	//(`project_id` = ? and `delete_at` is null) for update [1]
 	//(cc.`project_id` = ? and cc.`delete_at` is null) for update [1]
 	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) for update [abc 2021 10 2]
+    //cc.`name` like ? [%ba%]
 }
 ```
 
