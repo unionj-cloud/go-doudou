@@ -90,13 +90,13 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.6
+go get -v github.com/unionj-cloud/go-doudou@v0.8.7
 ```
 
 如果遇到410 Gone报错，请尝试用下面的命令：
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.6
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.7
 ```
 
 ### 用法
@@ -405,7 +405,7 @@ func main() {
 
 	handler := httpsrv.NewOrdersvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Rest)
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
@@ -449,7 +449,7 @@ func main() {
 
 	handler := httpsrv.NewOrdersvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Rest)
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
@@ -520,7 +520,7 @@ func main() {
 
 	handler := httpsrv.NewOrdersvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Rest)
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }

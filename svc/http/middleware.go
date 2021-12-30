@@ -1,17 +1,22 @@
 package ddhttp
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/felixge/httpsnoop"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"os"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -36,12 +41,10 @@ func Metrics(inner http.Handler) http.Handler {
 // Logger logs http request body and response body for debugging
 func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.URL.RequestURI(), "/go-doudou/") {
+		if strings.Contains(r.URL.RequestURI(), "/go-doudou/") || os.Getenv("GDD_LOG_LEVEL") != "debug" {
 			inner.ServeHTTP(w, r)
 			return
 		}
-		start := time.Now()
-		rid, _ := requestid.FromContext(r.Context())
 		x, err := httputil.DumpRequest(r, true)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,14 +55,16 @@ func Logger(inner http.Handler) http.Handler {
 
 		rawReq := string(x)
 		if len(r.Header["Content-Type"]) > 0 && strings.Contains(r.Header["Content-Type"][0], "multipart/form-data") {
-			// TODO buggy
-			//if err := r.ParseMultipartForm(32 << 20); err != nil {
-			//	http.Error(w, err.Error(), http.StatusBadRequest)
-			//	return
-			//}
+			r.Body = ioutil.NopCloser(bytes.NewReader(x))
+			if err := r.ParseMultipartForm(32 << 20); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 			rawReq = r.Form.Encode()
 		}
-
+		start := time.Now()
+		rid, _ := requestid.FromContext(r.Context())
+		span := opentracing.SpanFromContext(r.Context())
 		hlog := HttpLog{
 			ClientIp:          r.RemoteAddr,
 			HttpMethod:        r.Method,
@@ -76,6 +81,7 @@ func Logger(inner http.Handler) http.Handler {
 			RespContentLength: rec.Body.Len(),
 			ElapsedTime:       time.Since(start).String(),
 			Elapsed:           time.Since(start).Milliseconds(),
+			Span:              fmt.Sprint(span),
 		}
 		log, _ := json.MarshalIndent(hlog, "", "    ")
 		logrus.Debugln(string(log))
@@ -129,4 +135,14 @@ func Recover(inner http.Handler) http.Handler {
 		}()
 		inner.ServeHTTP(w, r)
 	})
+}
+
+// Tracing add jaeger tracing middleware
+func Tracing(inner http.Handler) http.Handler {
+	return nethttp.Middleware(
+		opentracing.GlobalTracer(),
+		inner,
+		nethttp.OperationNameFunc(func(r *http.Request) string {
+			return "HTTP " + r.Method + " " + r.RequestURI
+		}))
 }

@@ -30,5 +30,6 @@ type HttpLog struct {
 	RespContentLength int         `json:"respContentLength,omitempty"`
 	ElapsedTime       string      `json:"elapsedTime,omitempty"`
 	// in ms
-	Elapsed int64 `json:"elapsed,omitempty"`
+	Elapsed int64  `json:"elapsed,omitempty"`
+	Span    string `json:"span,omitempty"`
 }

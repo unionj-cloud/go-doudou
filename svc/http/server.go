@@ -5,8 +5,6 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
@@ -69,17 +67,11 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	srv.routes = routes[:]
 	routes = nil
 	for _, item := range route {
-		pattern := item.Pattern
 		srv.
 			Methods(item.Method).
 			Path(item.Pattern).
 			Name(item.Name).
-			Handler(nethttp.Middleware(
-				opentracing.GlobalTracer(),
-				item.HandlerFunc,
-				nethttp.OperationNameFunc(func(r *http.Request) string {
-					return "HTTP " + r.Method + " " + pattern
-				})))
+			Handler(item.HandlerFunc)
 	}
 }
 
