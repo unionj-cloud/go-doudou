@@ -143,6 +143,6 @@ func Tracing(inner http.Handler) http.Handler {
 		opentracing.GlobalTracer(),
 		inner,
 		nethttp.OperationNameFunc(func(r *http.Request) string {
-			return "HTTP " + r.Method + " " + r.RequestURI
+			return "HTTP " + r.Method + " " + r.URL.Path
 		}))
 }
