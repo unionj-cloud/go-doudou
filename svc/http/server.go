@@ -68,7 +68,7 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	routes = nil
 	for _, item := range route {
 		srv.
-			Methods(item.Method).
+			Methods(item.Method, http.MethodOptions).
 			Path(item.Pattern).
 			Name(item.Name).
 			Handler(item.HandlerFunc)
