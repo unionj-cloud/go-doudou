@@ -42,6 +42,7 @@ framework. It supports monolith service application as well. Currently, it suppo
       - [Deploy](#deploy)
       - [Shutdown](#shutdown)
   - [Must Know](#must-know)
+  - [Cors](#cors)
   - [Service register & discovery](#service-register--discovery)
   - [Client Load Balancing](#client-load-balancing)
     - [Simple Round-robin Load Balancing](#simple-round-robin-load-balancing)
@@ -396,6 +397,29 @@ There are some constraints or notable things when you define your methods as exp
    handler.go file.
 9. When execute  `go-doudou svc http`, only handler.go file will be overwritten and others will be checked if exists, if
    already exists, do nothing.
+
+### Cors
+Recommend to use [github.com/rs/cors](github.com/rs/cors) library. Here is example code.
+```
+corsOpts := cors.New(cors.Options{
+    AllowedMethods: []string{
+        http.MethodGet,
+        http.MethodPost,
+        http.MethodPut,
+        http.MethodPatch,
+        http.MethodDelete,
+        http.MethodOptions,
+        http.MethodHead,
+    },
+
+    AllowedHeaders: []string{
+        "*",
+    },
+})
+
+srv := ddhttp.NewDefaultHttpSrv()
+srv.AddMiddleware(corsOpts.Handler, ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+```
 
 ### Service register & discovery
 

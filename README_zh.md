@@ -36,6 +36,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
       - [部署](#%E9%83%A8%E7%BD%B2)
       - [关闭](#%E5%85%B3%E9%97%AD)
   - [必知](#%E5%BF%85%E7%9F%A5)
+  - [Cors跨域](#cors%E8%B7%A8%E5%9F%9F)
   - [服务注册与发现](#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0)
   - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
     - [简单轮询负载均衡算法](#%E7%AE%80%E5%8D%95%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
@@ -359,6 +360,29 @@ go-doudou svc shutdown
 7. 当执行命令`go-doudou svc http --handler`，handlerimpl.go里的已有代码不会被覆盖也不会被修改。如果你在svc.go文件里新增了方法，新代码会加到handlerimpl.go文件最后。
 8. 当执行命令`go-doudou svc http --handler`，handler.go文件会重新生成，所以请不要在里面手动修改或者添加任何代码。
 9. 当执行命令`go-doudou svc http`, 除了handler.go文件，go-doudou会先判断同名文件是否存在，如果不存在才会生成，存在就会跳过。
+
+### Cors跨域
+推荐使用 [github.com/rs/cors](github.com/rs/cors) 库。以下是示例代码。
+```
+corsOpts := cors.New(cors.Options{
+    AllowedMethods: []string{
+        http.MethodGet,
+        http.MethodPost,
+        http.MethodPut,
+        http.MethodPatch,
+        http.MethodDelete,
+        http.MethodOptions,
+        http.MethodHead,
+    },
+
+    AllowedHeaders: []string{
+        "*",
+    },
+})
+
+srv := ddhttp.NewDefaultHttpSrv()
+srv.AddMiddleware(corsOpts.Handler, ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
+```
 
 ### 服务注册与发现
 
