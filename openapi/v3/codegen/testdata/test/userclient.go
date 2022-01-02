@@ -3,19 +3,24 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	_querystring "github.com/google/go-querystring/query"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
 type UserClient struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *UserClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *UserClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 
@@ -23,54 +28,18 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context,
-	queryParams struct {
-		Username string `json:"username,omitempty" url:"username"`
-		Password string `json:"password,omitempty" url:"password"`
-	}) (ret string, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err := _req.Get(_server + "/user/login")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	ret = _resp.String()
-	return
-}
-
 // GetUserUsername Get user by user name
-func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+func (receiver *UserClient) GetUserUsername(ctx context.Context,
+	// The name that needs to be fetched. Use user1 for testing.
+	// required
+	username string) (ret User, err error) {
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	_req.SetPathParam("username", fmt.Sprintf("%v", username))
 
-	_resp, _err := _req.Get(_server + "/user/{username}")
+	_resp, _err := _req.Get("/user/{username}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -90,20 +59,13 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context) (ret User, err 
 // Creates list of users with given input array
 func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 	bodyJSON []User) (ret User, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Post(_server + "/user/createWithList")
+	_resp, _err := _req.Post("/user/createWithList")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -119,6 +81,32 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 	return
 }
 
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context,
+	queryParams struct {
+		Username string `json:"username,omitempty" url:"username"`
+		Password string `json:"password,omitempty" url:"password"`
+	}) (ret string, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err := _req.Get("/user/login")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	ret = _resp.String()
+	return
+}
+
 func NewUser(opts ...ddhttp.DdClientOption) *UserClient {
 	defaultProvider := ddhttp.NewServiceProvider("USER")
 	defaultClient := ddhttp.NewClient()
@@ -131,6 +119,23 @@ func NewUser(opts ...ddhttp.DdClientOption) *UserClient {
 	for _, opt := range opts {
 		opt(svcClient)
 	}
+
+	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
+		request.URL = svcClient.provider.SelectServer() + request.URL
+		return nil
+	})
+
+	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
+		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+		*request = *traceReq
+		return nil
+	})
+
+	svcClient.client.OnAfterResponse(func(_ *resty.Client, response *resty.Response) error {
+		nethttp.TracerFromRequest(response.Request.RawRequest).Finish()
+		return nil
+	})
 
 	return svcClient
 }

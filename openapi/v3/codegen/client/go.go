@@ -43,6 +43,9 @@ import (
 	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/unionj-cloud/go-doudou/fileutils"
 	"github.com/unionj-cloud/go-doudou/stringutils"
@@ -57,11 +60,11 @@ import (
 )
 
 type {{.Meta.Name}}Client struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *{{.Meta.Name}}Client) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *{{.Meta.Name}}Client) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 
@@ -199,8 +202,20 @@ func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 		opt(svcClient)
 	}
 
-	svcClient.client.OnBeforeRequest(func(client *resty.Client, request *resty.Request) error {
-		client.SetHostURL(svcClient.provider.SelectServer())
+	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
+		request.URL = svcClient.provider.SelectServer() + request.URL
+		return nil
+	})
+
+	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
+		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+		*request = *traceReq
+		return nil
+	})
+
+	svcClient.client.OnAfterResponse(func(_ *resty.Client, response *resty.Response) error {
+		nethttp.TracerFromRequest(response.Request.RawRequest).Finish()
 		return nil
 	})
 
@@ -319,7 +334,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 	var bodyJSON, bodyParams, qparams *astutils.FieldMeta
 	comments := commentLines(operation)
 	qSchema, pathvars, headervars := globalParams(gparams)
-	operationParams(operation.Parameters, &qSchema, pathvars, headervars)
+	operationParams(operation.Parameters, &qSchema, &pathvars, &headervars)
 
 	if len(qSchema.Properties) > 0 {
 		qparams = schema2Field(&qSchema, "queryParams")
@@ -374,7 +389,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 	}, nil
 }
 
-func operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, headervars []astutils.FieldMeta) {
+func operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, headervars *[]astutils.FieldMeta) {
 	for _, item := range parameters {
 		switch item.In {
 		case v3.InQuery:
@@ -383,9 +398,9 @@ func operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, he
 				qSchema.Required = append(qSchema.Required, item.Name)
 			}
 		case v3.InPath:
-			pathvars = append(pathvars, parameter2Field(item))
+			*pathvars = append(*pathvars, parameter2Field(item))
 		case v3.InHeader:
-			headervars = append(headervars, parameter2Field(item))
+			*headervars = append(*headervars, parameter2Field(item))
 		default:
 			panic(fmt.Errorf("not support %s parameter yet", item.In))
 		}
@@ -552,8 +567,7 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 		comments = append(comments, "required")
 	}
 	return astutils.FieldMeta{
-		Name: param.Name,
-		//Var:      param.Name,  TODO header param name may has incorrect symbols that should be removed
+		Name:     param.Name,
 		Type:     toGoType(param.Schema),
 		Comments: comments,
 	}

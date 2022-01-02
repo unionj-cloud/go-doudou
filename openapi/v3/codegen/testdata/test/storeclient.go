@@ -3,18 +3,23 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
 type StoreClient struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *StoreClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *StoreClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 
@@ -22,22 +27,17 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetStoreOrderOrderId Find purchase order by ID
-// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
-func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context) (ret Order, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+// PostStoreOrder Place an order for a pet
+// Place a new order in the store
+func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
+	bodyJSON Order) (ret Order, err error) {
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Get(_server + "/store/order/{orderId}")
+	_resp, _err := _req.Post("/store/order")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -53,24 +53,19 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context) (ret Orde
 	return
 }
 
-// PostStoreOrder Place an order for a pet
-// Place a new order in the store
-func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
-	bodyJSON Order) (ret Order, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+// GetStoreOrderOrderId Find purchase order by ID
+// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
+func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
+	// ID of order that needs to be fetched
+	// required
+	orderId int64) (ret Order, err error) {
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
+	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
-	_resp, _err := _req.Post(_server + "/store/order")
+	_resp, _err := _req.Get("/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -90,19 +85,12 @@ func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
 // Returns a map of status codes to quantities
 func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
 }, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 
-	_resp, _err := _req.Get(_server + "/store/inventory")
+	_resp, _err := _req.Get("/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -130,6 +118,23 @@ func NewStore(opts ...ddhttp.DdClientOption) *StoreClient {
 	for _, opt := range opts {
 		opt(svcClient)
 	}
+
+	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
+		request.URL = svcClient.provider.SelectServer() + request.URL
+		return nil
+	})
+
+	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
+		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+		*request = *traceReq
+		return nil
+	})
+
+	svcClient.client.OnAfterResponse(func(_ *resty.Client, response *resty.Response) error {
+		nethttp.TracerFromRequest(response.Request.RawRequest).Finish()
+		return nil
+	})
 
 	return svcClient
 }

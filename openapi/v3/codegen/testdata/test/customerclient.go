@@ -3,19 +3,24 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	_querystring "github.com/google/go-querystring/query"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
 type CustomerClient struct {
-	provider ddhttp.IServiceProvider
+	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *CustomerClient) SetProvider(provider ddhttp.IServiceProvider) {
+func (receiver *CustomerClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 
@@ -27,21 +32,14 @@ func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
 		// required
 		Token string `json:"token,omitempty" url:"token"`
 	}) (ret bool, err error) {
-	var (
-		_server string
-		_err    error
-	)
-	if _server, _err = receiver.provider.SelectServer(); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err := _req.Get(_server + "/customer/validateToken")
+	_resp, _err := _req.Get("/customer/validateToken")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -69,6 +67,23 @@ func NewCustomer(opts ...ddhttp.DdClientOption) *CustomerClient {
 	for _, opt := range opts {
 		opt(svcClient)
 	}
+
+	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
+		request.URL = svcClient.provider.SelectServer() + request.URL
+		return nil
+	})
+
+	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
+		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+		*request = *traceReq
+		return nil
+	})
+
+	svcClient.client.OnAfterResponse(func(_ *resty.Client, response *resty.Response) error {
+		nethttp.TracerFromRequest(response.Request.RawRequest).Finish()
+		return nil
+	})
 
 	return svcClient
 }
