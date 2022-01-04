@@ -122,6 +122,7 @@ const (
 	GddMemWeightInterval  envVariable = "GDD_MEM_WEIGHT_INTERVAL"
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
+	GddMemIndirectChecks  envVariable = "GDD_MEM_INDIRECT_CHECKS"
 )
 
 // Load loads value from environment variable

@@ -111,9 +111,9 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
-	// if both udp and tcp ping failed, the node should be suspected,
-	// no need to send indirect ping message for RESTFul microservice use case
-	cfg.IndirectChecks = 0
+	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
+		cfg.IndirectChecks = indirectChecks
+	}
 	minLevel := strings.ToUpper(config.GddLogLevel.Load())
 	if minLevel == "ERROR" {
 		minLevel = "ERR"
@@ -295,6 +295,7 @@ func NewNode(data ...interface{}) error {
 		queue: queue,
 	}
 	mconf.Events = events
+	mconf.Ping = pingDelegate{}
 	var err error
 	if mlist, err = memberlist.Create(mconf); err != nil {
 		return errors.Wrap(err, "NewNode() error: Failed to create memberlist")
