@@ -137,7 +137,7 @@ func newConf() *memberlist.Config {
 			}
 		}
 	}
-	cfg.PushPullInterval = 5 * time.Second
+	cfg.PushPullInterval = 10 * time.Second
 	syncIntervalStr := config.GddMemSyncInterval.Load()
 	if stringutils.IsNotEmpty(syncIntervalStr) {
 		if syncInterval, err := strconv.Atoi(syncIntervalStr); err == nil {
@@ -161,7 +161,6 @@ func newConf() *memberlist.Config {
 			}
 		}
 	}
-	cfg.ProbeInterval = 1 * time.Second
 	probeIntervalStr := config.GddMemProbeInterval.Load()
 	if stringutils.IsNotEmpty(probeIntervalStr) {
 		if probeInterval, err := strconv.Atoi(probeIntervalStr); err == nil {

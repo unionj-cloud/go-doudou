@@ -86,7 +86,7 @@ const (
 	GddMemDeadTimeout envVariable = "GDD_MEM_DEAD_TIMEOUT"
 	// GddMemSyncInterval local node will synchronize states from other random node every GddMemSyncInterval second
 	// expose PushPullInterval property of memberlist.Config
-	// default value is 5 in second
+	// default value is 10 in second
 	GddMemSyncInterval envVariable = "GDD_MEM_SYNC_INTERVAL"
 	// GddMemReclaimTimeout dead node will be replaced with new node with the same name but different full address in GddMemReclaimTimeout second
 	// expose DeadNodeReclaimTime property of memberlist.Config
@@ -94,7 +94,7 @@ const (
 	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
 	// GddMemProbeInterval probe interval
 	// expose ProbeInterval property of memberlist.Config
-	// default value is 1 in second
+	// default value is 5 in second
 	GddMemProbeInterval envVariable = "GDD_MEM_PROBE_INTERVAL"
 	// GddMemProbeTimeout probe timeout
 	// expose ProbeTimeout property of memberlist.Config
