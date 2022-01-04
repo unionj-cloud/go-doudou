@@ -37,7 +37,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/unionj-cloud/cast v1.3.2
-	github.com/unionj-cloud/memberlist v0.2.12
+	github.com/unionj-cloud/memberlist v0.2.13
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.5
 )

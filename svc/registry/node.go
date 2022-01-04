@@ -295,7 +295,6 @@ func NewNode(data ...interface{}) error {
 		queue: queue,
 	}
 	mconf.Events = events
-	mconf.Ping = pingDelegate{}
 	var err error
 	if mlist, err = memberlist.Create(mconf); err != nil {
 		return errors.Wrap(err, "NewNode() error: Failed to create memberlist")
