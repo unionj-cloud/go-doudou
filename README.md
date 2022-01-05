@@ -528,6 +528,9 @@ to get a `MemoryStore` instance. Then you can pass it to your custom http middle
 
 If you don't like the built-in rate limiter implementation, you can implement `Limiter` interface by yourself.
 
+You can pass an option function `ratelimit.WithTimer` to `ratelimit.NewTokenLimiter` function to set a timer to each of 
+`TokenLimiter` instance returned for deleting the key in `keys` of the `MemoryStore` instance if it has been idle for `timeout` duration.
+
 #### Example
 
 ```go
