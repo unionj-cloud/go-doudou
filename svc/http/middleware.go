@@ -131,14 +131,14 @@ func Recover(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
+				statusCode := http.StatusInternalServerError
 				if err, ok := e.(error); ok {
 					if errors.Is(err, context.Canceled) {
-						http.Error(w, err.Error(), http.StatusBadRequest)
-						return
+						statusCode = http.StatusBadRequest
 					}
 				}
 				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
-				http.Error(w, fmt.Sprintf("%v", e), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("%v", e), statusCode)
 			}
 		}()
 		inner.ServeHTTP(w, r)
