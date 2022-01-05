@@ -2,6 +2,7 @@ package ddhttp
 
 import (
 	"bytes"
+	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"github.com/felixge/httpsnoop"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
@@ -128,9 +130,15 @@ func BasicAuth(inner http.Handler) http.Handler {
 func Recover(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			if err := recover(); err != nil {
-				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", err, string(debug.Stack()))
-				http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+			if e := recover(); e != nil {
+				if err, ok := e.(error); ok {
+					if errors.Is(err, context.Canceled) {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+						return
+					}
+				}
+				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
+				http.Error(w, fmt.Sprintf("%v", e), http.StatusInternalServerError)
 			}
 		}()
 		inner.ServeHTTP(w, r)
