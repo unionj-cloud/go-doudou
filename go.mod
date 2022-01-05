@@ -42,6 +42,8 @@ require (
 	golang.org/x/tools v0.1.5
 )
 
+require golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210608223527-2377c96fe795 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
