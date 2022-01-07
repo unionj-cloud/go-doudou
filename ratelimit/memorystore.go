@@ -37,7 +37,13 @@ func (store *MemoryStore) addKey(key string) Limiter {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
-	limiter := store.limiterFn(store, key)
+	// check again if key exists because it's read lock in GetLimiter
+	limiter, exists := store.keys[key]
+	if exists {
+		return limiter
+	}
+
+	limiter = store.limiterFn(store, key)
 	store.keys[key] = limiter
 
 	return limiter
@@ -46,15 +52,15 @@ func (store *MemoryStore) addKey(key string) Limiter {
 // GetLimiter returns the rate limiter for the provided key if it exists,
 // otherwise calls addKey to add key to the map
 func (store *MemoryStore) GetLimiter(key string) Limiter {
-	store.mu.Lock()
+	store.mu.RLock()
 	limiter, exists := store.keys[key]
 
 	if !exists {
-		store.mu.Unlock()
+		store.mu.RUnlock()
 		return store.addKey(key)
 	}
 
-	store.mu.Unlock()
+	store.mu.RUnlock()
 	return limiter
 }
 
