@@ -1,26 +1,34 @@
 package registry
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/svc/config"
-	"os"
 	"reflect"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
+func setup() {
 	_ = config.GddMemSeed.Write("")
 	_ = config.GddServiceName.Write("seed")
 	_ = config.GddMemName.Write("seed")
 	_ = config.GddMemPort.Write("56199")
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-
-	defer mlist.Shutdown()
-	code := m.Run()
-	os.Exit(code)
+	_ = config.GddMemWeight.Write("8")
+	_ = config.GddMemDeadTimeout.Write("8s")
+	_ = config.GddMemSyncInterval.Write("8s")
+	_ = config.GddMemReclaimTimeout.Write("8s")
+	_ = config.GddMemProbeInterval.Write("8s")
+	_ = config.GddMemProbeTimeout.Write("8s")
+	_ = config.GddMemSuspicionMult.Write("8")
+	_ = config.GddMemGossipNodes.Write("8")
+	_ = config.GddMemGossipInterval.Write("8s")
+	_ = config.GddMemWeightInterval.Write("8s")
+	_ = config.GddMemTCPTimeout.Write("8s")
+	_ = config.GddMemName.Write("test00")
+	_ = config.GddMemHost.Write(".seed-svc-headless.default.svc.cluster.local")
+	_ = config.GddMemPort.Write("56199")
+	_ = config.GddMemIndirectChecks.Write("8")
+	_ = config.GddLogLevel.Write("debug")
 }
 
 func Test_seeds(t *testing.T) {
@@ -56,12 +64,73 @@ func Test_seeds(t *testing.T) {
 	}
 }
 
-func Test_registry_Register1(t *testing.T) {
-	require.NoError(t, join())
-}
-
 func Test_registry_Register2(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
 	_ = config.GddMemSeed.Write("not exist seed")
 	_ = config.GddServiceName.Write("testsvc")
 	require.Error(t, NewNode())
+}
+
+func Test_join(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	_ = config.GddMemSeed.Write("not exist seed")
+	_ = config.GddServiceName.Write("testsvc")
+	require.Error(t, join())
+}
+
+func TestAllNodes(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	nodes, _ := AllNodes()
+	if got := len(nodes); got != 1 {
+		t.Errorf("got is not equal to 1, got is %d", got)
+	}
+}
+
+func TestShutdown(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	assert.NotPanics(t, func() {
+		Shutdown()
+	})
+}
+
+func TestInfo(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	info := Info(LocalNode())
+	assert.NotZero(t, info)
+}
+
+func TestMetaWeight(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	weight, _ := MetaWeight(LocalNode())
+	assert.NotZero(t, weight)
 }
