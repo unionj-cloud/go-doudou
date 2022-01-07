@@ -199,3 +199,8 @@ func Test_delegate_LocalState(t *testing.T) {
 	d := delegate{}
 	d.LocalState(false)
 }
+
+func Test_delegate_MergeRemoteState(t *testing.T) {
+	d := delegate{}
+	d.MergeRemoteState(nil, false)
+}
