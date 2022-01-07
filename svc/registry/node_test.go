@@ -134,3 +134,23 @@ func TestMetaWeight(t *testing.T) {
 	weight, _ := MetaWeight(LocalNode())
 	assert.NotZero(t, weight)
 }
+
+func TestSvcName(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	assert.Equalf(t, "seed", SvcName(LocalNode()), "SvcName(%v)", LocalNode())
+}
+
+func TestRegisterServiceProvider(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
+	RegisterServiceProvider(newMockServiceProvider("TEST"))
+}
