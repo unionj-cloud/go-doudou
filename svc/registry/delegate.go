@@ -42,15 +42,9 @@ func (d *delegate) GetBroadcasts(overhead, limit int) [][]byte {
 
 // LocalState also sends user data, but by tcp connection when pushPull-ing state with other node
 func (d *delegate) LocalState(join bool) []byte {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	// TODO
 	return nil
 }
 
 // MergeRemoteState gets user data from remote node by tcp connection when pushPull-ing state with other node
 func (d *delegate) MergeRemoteState(s []byte, join bool) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	// TODO
 }

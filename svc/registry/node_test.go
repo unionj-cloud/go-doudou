@@ -31,6 +31,29 @@ func setup() {
 	_ = config.GddLogLevel.Write("debug")
 }
 
+func setup1() {
+	_ = config.GddMemSeed.Write("")
+	_ = config.GddServiceName.Write("seed")
+	_ = config.GddMemName.Write("seed")
+	_ = config.GddMemPort.Write("56199")
+	_ = config.GddMemWeight.Write("8")
+	_ = config.GddMemDeadTimeout.Write("8")
+	_ = config.GddMemSyncInterval.Write("8")
+	_ = config.GddMemReclaimTimeout.Write("8")
+	_ = config.GddMemProbeInterval.Write("8")
+	_ = config.GddMemProbeTimeout.Write("8")
+	_ = config.GddMemSuspicionMult.Write("8")
+	_ = config.GddMemGossipNodes.Write("8")
+	_ = config.GddMemGossipInterval.Write("8")
+	_ = config.GddMemWeightInterval.Write("8")
+	_ = config.GddMemTCPTimeout.Write("8")
+	_ = config.GddMemName.Write("test00")
+	_ = config.GddMemHost.Write(".seed-svc-headless.default.svc.cluster.local")
+	_ = config.GddMemPort.Write("56199")
+	_ = config.GddMemIndirectChecks.Write("8")
+	_ = config.GddLogLevel.Write("debug")
+}
+
 func Test_seeds(t *testing.T) {
 	type args struct {
 		seedstr string
@@ -153,4 +176,13 @@ func TestRegisterServiceProvider(t *testing.T) {
 	}
 	defer mlist.Shutdown()
 	RegisterServiceProvider(newMockServiceProvider("TEST"))
+}
+
+func TestNewNode(t *testing.T) {
+	setup1()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer mlist.Shutdown()
 }

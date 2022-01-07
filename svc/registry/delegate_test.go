@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/memberlist"
+	"sync"
 	"testing"
 )
 
@@ -32,6 +33,48 @@ func Test_delegate_NodeMeta(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &delegate{}
 			assert.NotPanics(t, func() {
+				d.NodeMeta(tt.args.limit)
+			})
+		})
+	}
+}
+func Test_delegate_NodeMeta_panic(t *testing.T) {
+	type fields struct {
+	}
+	type args struct {
+		limit int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   []byte
+	}{
+		{
+			name:   "",
+			fields: fields{},
+			args: args{
+				limit: 1,
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &delegate{
+				mmeta: mergedMeta{
+					Meta: nodeMeta{
+						Service:       "test",
+						RouteRootPath: "/api",
+						Port:          6060,
+						Weight:        8,
+					},
+					Data: "big data",
+				},
+				lock:  sync.Mutex{},
+				queue: nil,
+			}
+			assert.Panics(t, func() {
 				d.NodeMeta(tt.args.limit)
 			})
 		})
@@ -150,4 +193,9 @@ func Test_delegate_GetBroadcasts(t *testing.T) {
 			require.Equal(t, 4, len(got), "missing messages: %v", prettyPrintMessages(got))
 		})
 	}
+}
+
+func Test_delegate_LocalState(t *testing.T) {
+	d := delegate{}
+	d.LocalState(false)
 }
