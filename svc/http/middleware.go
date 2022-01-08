@@ -12,6 +12,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/slok/goresilience"
+	"github.com/slok/goresilience/bulkhead"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"io/ioutil"
@@ -153,4 +155,27 @@ func Tracing(inner http.Handler) http.Handler {
 		nethttp.OperationNameFunc(func(r *http.Request) string {
 			return "HTTP " + r.Method + " " + r.URL.Path
 		}))
+}
+
+// BulkHead add bulk head pattern middleware based on https://github.com/slok/goresilience
+// workers is the number of workers in the execution pool.
+// maxWaitTime is the max time a runner will wait to execute before being dropped it's execution and return a timeout error.
+func BulkHead(workers int, maxWaitTime time.Duration) func(inner http.Handler) http.Handler {
+	runner := goresilience.RunnerChain(
+		bulkhead.NewMiddleware(bulkhead.Config{
+			Workers:     workers,
+			MaxWaitTime: maxWaitTime,
+		}),
+	)
+	return func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := runner.Run(r.Context(), func(_ context.Context) error {
+				inner.ServeHTTP(w, r)
+				return nil
+			})
+			if err != nil {
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}
+		})
+	}
 }
