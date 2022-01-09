@@ -41,12 +41,12 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
   - [客户端负载均衡](#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
     - [简单轮询负载均衡算法](#%E7%AE%80%E5%8D%95%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
     - [平滑加权轮询负载均衡算法](#%E5%B9%B3%E6%BB%91%E5%8A%A0%E6%9D%83%E8%BD%AE%E8%AF%A2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
-  - [Rate Limit](#rate-limit)
-    - [Usage](#usage)
-    - [Example](#example)
-  - [BulkHead](#bulkhead)
-    - [Usage](#usage-1)
-    - [Example](#example-1)
+  - [限流器](#%E9%99%90%E6%B5%81%E5%99%A8)
+    - [用法](#%E7%94%A8%E6%B3%95-1)
+    - [示例](#%E7%A4%BA%E4%BE%8B)
+  - [隔仓](#%E9%9A%94%E4%BB%93)
+    - [用法](#%E7%94%A8%E6%B3%95-2)
+    - [示例](#%E7%A4%BA%E4%BE%8B-1)
   - [Jaeger](#jaeger)
     - [Screenshot](#screenshot)
   - [配置项](#%E9%85%8D%E7%BD%AE%E9%A1%B9)
@@ -485,8 +485,8 @@ func main() {
 }
 ```
 
-### Rate Limit
-#### Usage
+### 限流器
+#### 用法
 go-doudou在`github.com/unionj-cloud/go-doudou/ratelimit`包中内置了基于[golang.org/x/time/rate](https://pkg.go.dev/golang.org/x/time/rate) 的令牌桶限流器。  
 `MemoryStore`结构体用于存储key和`Limiter`接口实例对。使用时只需将`Limiter`实例的getter函数作为参数，传入`ratelimit.WithLimiterFn`，然后再一起
 传入`ratelimit.NewMemoryStore`方法中，创建出一个`MemoryStore`实例。然后你就可以将这个实例传入自定义的中间件中根据你的业务需求实现限流的逻辑。  
@@ -494,7 +494,7 @@ go-doudou在`github.com/unionj-cloud/go-doudou/ratelimit`包中内置了基于[g
 另外，你还可以在调用`ratelimit.NewTokenLimiter`函数时，传入`ratelimit.WithTimer`函数，来给每一个创建出的`TokenLimiter`实例设置一个定时清理器。
 设置这个定时器的目的是当这个`key`自从上一次发来请求之后，在参数`timeout`指定的时间范围内一直没有再次发来请求，则将这个`key`从`MemoryStore`中删除，以释放资源。
 
-#### Example
+#### 示例
 
 ```go
 package main
@@ -550,8 +550,8 @@ func main() {
 }
 ```
 
-### BulkHead
-#### Usage
+### 隔仓
+#### 用法
 go-doudou在`github.com/unionj-cloud/go-doudou/svc/http`包中内置了基于[github.com/slok/goresilience](github.com/slok/goresilience) 实现的隔仓模式中间件。
 
 ```go
@@ -560,7 +560,7 @@ http.BulkHead(3, 10*time.Millisecond)
 
 例子中，第一个参数`3`表示goroutine池中worker的数量，第二个参数`10*time.Millisecond`表示一个请求进来以后到被执行的最长等待时间，超时直接返回`429`状态码。
 
-#### Example
+#### 示例
 
 ```go
 package main

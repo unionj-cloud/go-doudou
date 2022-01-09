@@ -50,7 +50,7 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Rate Limit](#rate-limit)
     - [Usage](#usage-1)
     - [Example](#example)
-  - [BulkHead](#bulkhead)
+  - [Bulkhead](#bulkhead)
     - [Usage](#usage-2)
     - [Example](#example-1)
   - [Jaeger](#jaeger)
@@ -597,7 +597,7 @@ func main() {
 }
 ```
 
-### BulkHead
+### Bulkhead
 #### Usage
 There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based bulkhead pattern support by BulkHead middleware in `github.com/unionj-cloud/go-doudou/svc/http` package.
 
