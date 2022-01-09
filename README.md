@@ -50,10 +50,13 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Rate Limit](#rate-limit)
     - [Usage](#usage-1)
     - [Example](#example)
+  - [BulkHead](#bulkhead)
+    - [Usage](#usage-2)
+    - [Example](#example-1)
   - [Jaeger](#jaeger)
     - [Screenshot](#screenshot)
   - [Configuration](#configuration)
-  - [Example](#example-1)
+  - [Example](#example-2)
   - [Notable tools](#notable-tools)
     - [name](#name)
     - [ddl](#ddl)
@@ -127,13 +130,13 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.8.9
+go get -v github.com/unionj-cloud/go-doudou@v0.9.0
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.8.9
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.0
 ```
 
 ### Usage
@@ -427,9 +430,14 @@ srv.AddMiddleware(corsOpts.Handler, ddhttp.Tracing, ddhttp.Metrics, requestid.Re
 ### Service register & discovery
 
 Go-doudou supports monolith and microservices architecture.
-
-- `GDD_MODE=micro`：microservices architecture
-- `GDD_MODE=mono`：monolith architecture
+Add below code to enable microservices architecture:
+```go
+err := registry.NewNode()
+if err != nil {
+    logrus.Panicln(fmt.Sprintf("%+v", err))
+}
+defer registry.Shutdown()
+```
 
 ### Client Load Balancing
 
@@ -520,7 +528,6 @@ func main() {
 }
 ```
 
-
 ### Rate Limit
 #### Usage
 There is a built-in [golang.org/x/time/rate](https://pkg.go.dev/golang.org/x/time/rate) based token-bucket rate limiter implementation
@@ -590,6 +597,67 @@ func main() {
 }
 ```
 
+### BulkHead
+#### Usage
+There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based bulkhead pattern support by BulkHead middleware in `github.com/unionj-cloud/go-doudou/svc/http` package.
+
+```go
+http.BulkHead(3, 10*time.Millisecond)
+```
+
+In above code, the first parameter `3` means the number of workers in the execution pool, the second parameter `10*time.Millisecond` 
+means the max time an incoming request will wait to execute before being dropped its execution and return `429` response.
+
+#### Example
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	"time"
+	service "usersvc"
+	"usersvc/config"
+	"usersvc/transport/httpsrv"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	logger.Init()
+
+	if ddconfig.GddMode.Load() == "micro" {
+		err := registry.NewNode()
+		if err != nil {
+			logrus.Panicln(fmt.Sprintf("%+v", err))
+		}
+		defer registry.Shutdown()
+	}
+
+	tracer, closer := tracing.Init()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
+	svc := service.NewUsersvc(conf)
+
+	handler := httpsrv.NewUsersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, ddhttp.BulkHead(1, 10*time.Millisecond), requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
 
 ### Jaeger
 To add jaeger feature, you just need three steps:
@@ -663,6 +731,8 @@ func main() {
 #### Screenshot
 ![jaeger1](./jaeger1.png)
 ![jaeger2](./jaeger2.png)
+
+
 
 ### Configuration
 

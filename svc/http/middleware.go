@@ -159,7 +159,7 @@ func Tracing(inner http.Handler) http.Handler {
 
 // BulkHead add bulk head pattern middleware based on https://github.com/slok/goresilience
 // workers is the number of workers in the execution pool.
-// maxWaitTime is the max time a runner will wait to execute before being dropped it's execution and return a timeout error.
+// maxWaitTime is the max time an incoming request will wait to execute before being dropped its execution and return 429 response.
 func BulkHead(workers int, maxWaitTime time.Duration) func(inner http.Handler) http.Handler {
 	runner := goresilience.RunnerChain(
 		bulkhead.NewMiddleware(bulkhead.Config{
