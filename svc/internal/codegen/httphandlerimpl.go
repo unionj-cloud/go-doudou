@@ -383,7 +383,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("New content will be append to file handlerimpl.go")
+		logrus.Warningln("New content will be append to handlerimpl.go file")
 		if f, err = os.OpenFile(handlerimplfile, os.O_APPEND, os.ModePerm); err != nil {
 			panic(err)
 		}

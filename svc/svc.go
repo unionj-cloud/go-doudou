@@ -45,6 +45,7 @@ type Svc struct {
 	cmd        *exec.Cmd
 	restartSig chan int
 
+	// for being compatible with legacy code purpose only
 	RoutePatternStrategy int
 
 	runner executils.Runner
@@ -94,6 +95,7 @@ func (receiver Svc) Http() {
 		switch receiver.Client {
 		case "go":
 			codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy)
+			codegen.GenGoClientProxy(dir, ic)
 		}
 	}
 	codegen.GenSvcImpl(dir, ic)

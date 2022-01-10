@@ -14,7 +14,7 @@ import (
 	"text/template"
 )
 
-var tmpl = `package client
+var clientTmpl = `package client
 
 import (
 	"context"
@@ -326,7 +326,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
-	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
+	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
