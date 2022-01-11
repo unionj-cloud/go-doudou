@@ -42,7 +42,10 @@ require (
 	golang.org/x/tools v0.1.5
 )
 
-require golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+require (
+	github.com/slok/goresilience v0.2.0
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+)
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210608223527-2377c96fe795 // indirect
@@ -104,7 +107,6 @@ require (
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
-	github.com/slok/goresilience v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect

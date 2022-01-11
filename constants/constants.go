@@ -48,3 +48,6 @@ const FORMAT13 = "06-01-02"
 
 // FORMAT14 is a pattern for formatting time
 const FORMAT14 = "01-02-06"
+
+// FORMAT15 is a pattern for formatting time
+const FORMAT15 = "Mon Jan 2 15:04:05 MST 2006"

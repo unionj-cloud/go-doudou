@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/cast"
+	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/memberlist"
@@ -24,8 +25,8 @@ var BroadcastQueue *memberlist.TransmitLimitedQueue
 var events = &eventDelegate{}
 
 type mergedMeta struct {
-	Meta nodeMeta    `json:"_meta,omitempty"`
-	Data interface{} `json:"data,omitempty"`
+	Meta nodeMeta               `json:"_meta,omitempty"`
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
 func seeds(seedstr string) []string {
@@ -252,8 +253,11 @@ func newConf() *memberlist.Config {
 	return cfg
 }
 
-// NewNode creates new go-doudou node
-func NewNode(data ...interface{}) error {
+// NewNode creates a new go-doudou node.
+// service related custom data (<= 512 bytes after being marshalled as json format) can be passed into it by data parameter.
+// it is made as a variadic function only for backward compatibility purposes,
+// only first parameter will be used.
+func NewNode(data ...map[string]interface{}) error {
 	mconf := newConf()
 	service := config.GddServiceName.Load()
 	if stringutils.IsEmpty(service) {
@@ -265,6 +269,12 @@ func NewNode(data ...interface{}) error {
 	}
 	config.GddPort.Write(fmt.Sprint(port))
 	now := time.Now()
+	var buildTime string
+	if stringutils.IsNotEmpty(config.BuildTime) {
+		if t, err := time.Parse(constants.FORMAT15, config.BuildTime); err == nil {
+			buildTime = t.Local().Format(constants.FORMAT)
+		}
+	}
 	mmeta := mergedMeta{
 		Meta: nodeMeta{
 			Service:       service,
@@ -274,10 +284,13 @@ func NewNode(data ...interface{}) error {
 			GoVer:         runtime.Version(),
 			GddVer:        config.GddVer,
 			BuildUser:     config.BuildUser,
-			BuildTime:     config.BuildTime,
+			BuildTime:     buildTime,
 			Weight:        cast.ToInt(config.GddMemWeight.Load()),
 		},
-		Data: data,
+		Data: make(map[string]interface{}),
+	}
+	if len(data) > 0 {
+		mmeta.Data = data[0]
 	}
 	queue := &memberlist.TransmitLimitedQueue{
 		NumNodes: func() int {
@@ -320,16 +333,19 @@ func Shutdown() {
 
 // NodeInfo wraps node information
 type NodeInfo struct {
-	SvcName   string `json:"svcName"`
-	Hostname  string `json:"hostname"`
-	BaseUrl   string `json:"baseUrl"`
-	Status    string `json:"status"`
-	Uptime    string `json:"uptime"`
-	GoVer     string `json:"goVer"`
-	GddVer    string `json:"gddVer"`
-	BuildUser string `json:"buildUser"`
-	BuildTime string `json:"buildTime"`
-	Data      string `json:"data"`
+	SvcName   string                 `json:"svcName"`
+	Hostname  string                 `json:"hostname"`
+	BaseUrl   string                 `json:"baseUrl"`
+	Status    string                 `json:"status"`
+	Uptime    string                 `json:"uptime"`
+	GoVer     string                 `json:"goVer"`
+	GddVer    string                 `json:"gddVer"`
+	BuildUser string                 `json:"buildUser"`
+	BuildTime string                 `json:"buildTime"`
+	Data      map[string]interface{} `json:"data"`
+	Host      string                 `json:"host"`
+	SvcPort   int                    `json:"svcPort"`
+	MemPort   int                    `json:"memPort"`
 }
 
 // Info return node info
@@ -338,13 +354,7 @@ func Info(node *memberlist.Node) NodeInfo {
 	if node.State == memberlist.StateSuspect {
 		status = "suspect"
 	}
-	var data string
 	meta, _ := newMeta(node)
-	if meta.Data != nil {
-		if b, err := json.Marshal(meta.Data); err == nil {
-			data = string(b)
-		}
-	}
 	var uptime string
 	if meta.Meta.RegisterAt != nil {
 		uptime = time.Since(*meta.Meta.RegisterAt).String()
@@ -363,7 +373,10 @@ func Info(node *memberlist.Node) NodeInfo {
 		GddVer:    meta.Meta.GddVer,
 		BuildUser: meta.Meta.BuildUser,
 		BuildTime: meta.Meta.BuildTime,
-		Data:      data,
+		Data:      meta.Data,
+		Host:      node.Addr,
+		SvcPort:   meta.Meta.Port,
+		MemPort:   int(node.Port),
 	}
 }
 
