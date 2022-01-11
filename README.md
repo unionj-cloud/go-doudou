@@ -748,6 +748,7 @@ func main() {
 ```
 
 ### Jaeger
+#### Usage
 To add jaeger feature, you just need three steps:
 1. Start jaeger
 ```shell
@@ -821,7 +822,12 @@ func main() {
 ![jaeger2](./jaeger2.png)
 
 ### Prometheus
+#### Usage
+We implemented a service called `seed` for Prometheus service discovery based on [this blog](https://prometheus.io/blog/2018/07/05/implementing-custom-sd/).
+Its source code is in [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) repo.
 
+#### Screenshot
+![prometheus](./prometheus.png)
 
 ### Configuration
 
