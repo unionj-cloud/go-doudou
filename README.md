@@ -53,10 +53,19 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Bulkhead](#bulkhead)
     - [Usage](#usage-2)
     - [Example](#example-1)
+  - [Bulkhead](#bulkhead-1)
+    - [Usage](#usage-3)
+  - [Circuit Breaker / Timeout / Retry](#circuit-breaker--timeout--retry)
+    - [Usage](#usage-4)
+    - [Example](#example-2)
   - [Jaeger](#jaeger)
+    - [Usage](#usage-5)
     - [Screenshot](#screenshot)
+  - [Grafana / Prometheus](#grafana--prometheus)
+    - [Usage](#usage-6)
+    - [Screenshot](#screenshot-1)
   - [Configuration](#configuration)
-  - [Example](#example-2)
+  - [Example](#example-3)
   - [Notable tools](#notable-tools)
     - [name](#name)
     - [ddl](#ddl)
@@ -821,13 +830,13 @@ func main() {
 ![jaeger1](./jaeger1.png)
 ![jaeger2](./jaeger2.png)
 
-### Prometheus
+### Grafana / Prometheus
 #### Usage
 We implemented a service called `seed` for Prometheus service discovery based on [this blog](https://prometheus.io/blog/2018/07/05/implementing-custom-sd/).
 Its source code is in [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) repo.
 
 #### Screenshot
-![prometheus](./prometheus.png)
+![grafana](./grafana.png)
 
 ### Configuration
 
