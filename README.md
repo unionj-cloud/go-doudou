@@ -130,13 +130,13 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.0
+go get -v github.com/unionj-cloud/go-doudou@v0.9.1
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.0
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.1
 ```
 
 ### Usage
@@ -659,6 +659,94 @@ func main() {
 }
 ```
 
+### Bulkhead
+#### Usage
+There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based bulkhead pattern support by BulkHead middleware in `github.com/unionj-cloud/go-doudou/svc/http` package.
+
+```go
+http.BulkHead(3, 10*time.Millisecond)
+```
+
+In above code, the first parameter `3` means the number of workers in the execution pool, the second parameter `10*time.Millisecond`
+means the max time an incoming request will wait to execute before being dropped its execution and return `429` response.
+
+### Circuit Breaker / Timeout / Retry 
+#### Usage
+There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based Circuit Breaker / Timeout / Retry support in generated client code.
+You don't need to do anything other than executing command: 
+```shell
+go-doudou svc http --handler -c go --doc
+```  
+The flag  `-c go` means generate go client code.
+Then you will get two files in client folder: 
+```shell
+➜  usersvc git:(master) ✗ cd client    
+➜  client git:(master) ✗ ll
+total 32
+-rw-r--r--  1 wubin1989  staff   7.9K  1 10 17:16 client.go
+-rw-r--r--  1 wubin1989  staff   5.4K  1 10 17:16 clientproxy.go
+```
+For `client.go` file, all code will be overwritten each time you execute generation command.  
+For `clientproxy.go` file, the existing code will not be changed, only new code will be appended. 
+
+There is a default `goresilience.Runner` instance which has already been built-in circuit breaker, timeout and retry features for you, 
+but if you need to customize it, you can pass `WithRunner(your_own_runner goresilience.Runner)` as `ProxyOption` parameter into 
+`NewXXXClientProxy` function.
+
+#### Example
+```go 
+package main
+
+import (
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+
+	"github.com/unionj-cloud/go-doudou/svc/logger"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	service "ordersvc"
+	"ordersvc/config"
+	"ordersvc/transport/httpsrv"
+	"usersvc/client"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	logger.Init()
+
+	err := registry.NewNode()
+	if err != nil {
+		logrus.Panicln(fmt.Sprintf("%+v", err))
+	}
+	defer registry.Shutdown()
+
+	tracer, closer := tracing.Init()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
+	usersvcProvider := ddhttp.NewSmoothWeightedRoundRobinProvider("usersvc")
+	usersvcClient := client.NewUsersvc(ddhttp.WithProvider(usersvcProvider))
+	// if you don't need this resilience feature, you don't have to new the instance usersvcClientProxy.
+	// you can just use usersvcClient.
+	usersvcClientProxy := client.NewUsersvcClientProxy(usersvcClient)
+
+	svc := service.NewOrdersvc(conf, nil, usersvcClientProxy)
+
+	handler := httpsrv.NewOrdersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
+
 ### Jaeger
 To add jaeger feature, you just need three steps:
 1. Start jaeger
@@ -732,6 +820,7 @@ func main() {
 ![jaeger1](./jaeger1.png)
 ![jaeger2](./jaeger2.png)
 
+### Prometheus
 
 
 ### Configuration
