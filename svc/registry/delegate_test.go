@@ -69,7 +69,9 @@ func Test_delegate_NodeMeta_panic(t *testing.T) {
 						Port:          6060,
 						Weight:        8,
 					},
-					Data: "big data",
+					Data: map[string]interface{}{
+						"tags": "service01",
+					},
 				},
 				lock:  sync.Mutex{},
 				queue: nil,
