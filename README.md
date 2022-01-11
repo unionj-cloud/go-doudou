@@ -668,17 +668,6 @@ func main() {
 }
 ```
 
-### Bulkhead
-#### Usage
-There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based bulkhead pattern support by BulkHead middleware in `github.com/unionj-cloud/go-doudou/svc/http` package.
-
-```go
-http.BulkHead(3, 10*time.Millisecond)
-```
-
-In above code, the first parameter `3` means the number of workers in the execution pool, the second parameter `10*time.Millisecond`
-means the max time an incoming request will wait to execute before being dropped its execution and return `429` response.
-
 ### Circuit Breaker / Timeout / Retry 
 #### Usage
 There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based Circuit Breaker / Timeout / Retry support in generated client code.
