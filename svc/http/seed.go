@@ -2,8 +2,8 @@ package ddhttp
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
@@ -14,7 +14,7 @@ func Seed() {
 	config.GddMemPort.Write("56199")
 	err := registry.NewNode()
 	if err != nil {
-		logrus.Panicln(fmt.Sprintf("%+v", err))
+		logger.Panicln(fmt.Sprintf("%+v", err))
 	}
 	srv := NewDefaultHttpSrv()
 	srv.Run()

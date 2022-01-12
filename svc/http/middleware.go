@@ -17,10 +17,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -32,14 +31,13 @@ func Metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
 		logger.WithFields(logrus.Fields{
-			"__meta_service": config.GddServiceName.Load(),
-			"remoteAddr":     r.RemoteAddr,
-			"httpMethod":     r.Method,
-			"requestUri":     r.URL.RequestURI(),
-			"requestUrl":     r.URL.String(),
-			"statusCode":     m.Code,
-			"written":        m.Written,
-			"duration":       m.Duration.String(),
+			"remoteAddr": r.RemoteAddr,
+			"httpMethod": r.Method,
+			"requestUri": r.URL.RequestURI(),
+			"requestUrl": r.URL.String(),
+			"statusCode": m.Code,
+			"written":    m.Written,
+			"duration":   m.Duration.String(),
 		}).Info(fmt.Sprintf("%s\t%s\t%s\t%d\t%d\t%s\n",
 			r.RemoteAddr,
 			r.Method,
@@ -57,22 +55,52 @@ func Logger(inner http.Handler) http.Handler {
 			inner.ServeHTTP(w, r)
 			return
 		}
-		x, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		rec := httptest.NewRecorder()
-		inner.ServeHTTP(rec, r)
-
-		rawReq := string(x)
-		if len(r.Header["Content-Type"]) > 0 && strings.Contains(r.Header["Content-Type"][0], "multipart/form-data") {
-			r.Body = ioutil.NopCloser(bytes.NewReader(x))
-			if err := r.ParseMultipartForm(32 << 20); err != nil {
+		var reqBodyCopy io.ReadCloser
+		if r.Body != nil {
+			var buf bytes.Buffer
+			if _, err := buf.ReadFrom(r.Body); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			rawReq = r.Form.Encode()
+			if err := r.Body.Close(); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			r.Body, reqBodyCopy = io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes()))
+		}
+
+		rec := httptest.NewRecorder()
+		inner.ServeHTTP(rec, r)
+
+		var reqBody string
+		var reqContentType string
+		if len(r.Header["Content-Type"]) > 0 {
+			reqContentType = r.Header["Content-Type"][0]
+		}
+		if stringutils.IsNotEmpty(reqContentType) {
+			if strings.Contains(reqContentType, "multipart/form-data") && reqBodyCopy != nil {
+				r.Body = reqBodyCopy
+				if err := r.ParseMultipartForm(32 << 20); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				reqBody = r.Form.Encode()
+			} else if strings.Contains(reqContentType, "application/json") {
+				data := make(map[string]interface{})
+				if err := json.NewDecoder(reqBodyCopy).Decode(&data); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				b, _ := json.MarshalIndent(data, "", "    ")
+				reqBody = string(b)
+			} else {
+				var buf bytes.Buffer
+				if _, err := buf.ReadFrom(reqBodyCopy); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				reqBody = buf.String()
+			}
 		}
 		start := time.Now()
 		rid, _ := requestid.FromContext(r.Context())
@@ -86,8 +114,20 @@ func Logger(inner http.Handler) http.Handler {
 		//  X-Request-Id: d1e4dc83-18be-493e-be5b-2e0faaca90ec
 		//
 		//  {"filter":{"dept":99,"name":"Jack"},"page":{"orders":null,"pageNo":2,"size":10}}
+		contentType := rec.Result().Header.Get("Content-Type")
+		var respBody string
+		if strings.Contains(contentType, "text/html") || strings.Contains(contentType, "text/plain") {
+			respBody = rec.Body.String()
+		} else if strings.Contains(contentType, "application/json") {
+			data := make(map[string]interface{})
+			if err := json.NewDecoder(rec.Body).Decode(&data); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			b, _ := json.MarshalIndent(data, "", "    ")
+			respBody = string(b)
+		}
 		fields := logrus.Fields{
-			"__meta_service":    config.GddServiceName.Load(),
 			"remoteAddr":        r.RemoteAddr,
 			"httpMethod":        r.Method,
 			"requestUri":        r.URL.RequestURI(),
@@ -97,8 +137,8 @@ func Logger(inner http.Handler) http.Handler {
 			"reqContentLength":  r.ContentLength,
 			"reqHeader":         r.Header,
 			"requestId":         rid,
-			"rawReq":            rawReq,
-			"respBody":          rec.Body.String(),
+			"reqBody":           reqBody,
+			"respBody":          respBody,
 			"statusCode":        rec.Result().StatusCode,
 			"respHeader":        rec.Result().Header,
 			"respContentLength": rec.Body.Len(),
@@ -158,7 +198,7 @@ func Recover(inner http.Handler) http.Handler {
 						statusCode = http.StatusBadRequest
 					}
 				}
-				logrus.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
+				logger.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
 				http.Error(w, fmt.Sprintf("%v", e), statusCode)
 			}
 		}()

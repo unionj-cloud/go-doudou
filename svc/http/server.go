@@ -5,13 +5,13 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/svc/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/svc/http/registry"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"net/http"
 	"os"
 	"os/signal"
@@ -76,7 +76,7 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 }
 
 func (srv *DefaultHttpSrv) printRoutes() {
-	logrus.Infoln("================ Registered Routes ================")
+	logger.Infoln("================ Registered Routes ================")
 	data := [][]string{}
 	for _, r := range srv.routes {
 		if strings.HasPrefix(r.Pattern, gddPathPrefix) {
@@ -95,9 +95,9 @@ func (srv *DefaultHttpSrv) printRoutes() {
 	table.Render() // Send output
 	rows := strings.Split(strings.TrimSpace(tableString.String()), "\n")
 	for _, row := range rows {
-		logrus.Infoln(row)
+		logger.Infoln(row)
 	}
-	logrus.Infoln("===================================================")
+	logger.Infoln("===================================================")
 }
 
 // AddMiddleware adds middlewares to router
@@ -112,21 +112,21 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
 			config.GddWriteTimeout.Load(), err.Error())
 		write = 15 * time.Second
 	}
 
 	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
 			config.GddReadTimeout.Load(), err.Error())
 		read = 15 * time.Second
 	}
 
 	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
 			config.GddIdleTimeout.Load(), err.Error())
 		idle = 60 * time.Second
 	}
@@ -142,9 +142,9 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		logrus.Infof("Http server is listening on %s\n", httpServer.Addr)
+		logger.Infof("Http server is listening on %s\n", httpServer.Addr)
 		if err := httpServer.ListenAndServe(); err != nil {
-			logrus.Println(err)
+			logger.Println(err)
 		}
 	}()
 
@@ -167,12 +167,12 @@ func (srv *DefaultHttpSrv) Run() {
 	srv.printRoutes()
 	httpServer := srv.newHttpServer()
 	defer func() {
-		logrus.Infoln("http server is shutting down...")
+		logger.Infoln("http server is shutting down...")
 
 		// Create a deadline to wait for.
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
-			logrus.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_GRACETIMEOUT",
+			logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_GRACETIMEOUT",
 				config.GddGraceTimeout.Load(), err.Error())
 			grace = 15 * time.Second
 		}
@@ -184,7 +184,7 @@ func (srv *DefaultHttpSrv) Run() {
 		httpServer.Shutdown(ctx)
 	}()
 
-	logrus.Infof("Started in %s\n", time.Since(start))
+	logger.Infof("Started in %s\n", time.Since(start))
 
 	c := make(chan os.Signal, 1)
 	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)

@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/constants"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/memberlist"
 	"net"
 	"os"
@@ -48,14 +49,14 @@ func join() error {
 	}
 	s := seeds(config.GddMemSeed.Load())
 	if len(s) == 0 {
-		logrus.Warnln("No seed found")
+		logger.Warnln("No seed found")
 		return nil
 	}
 	_, err := mlist.Join(s)
 	if err != nil {
 		return errors.Wrap(err, "Failed to join cluster")
 	}
-	logrus.Infof("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
+	logger.Infof("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
 	return nil
 }
 
@@ -66,7 +67,7 @@ func AllNodes() ([]*memberlist.Node, error) {
 	}
 	var nodes []*memberlist.Node
 	for _, node := range mlist.Members() {
-		logrus.Debugf("Member: %s %s\n", node.Name, node.Addr)
+		logger.Debugf("Member: %s %s\n", node.Name, node.Addr)
 		nodes = append(nodes, node)
 	}
 	return nodes, nil
@@ -317,7 +318,7 @@ func NewNode(data ...map[string]interface{}) error {
 	}
 	local := mlist.LocalNode()
 	baseUrl, _ := BaseUrl(local)
-	logrus.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
+	logger.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
 		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
 	return nil
 }
@@ -327,7 +328,7 @@ func Shutdown() {
 	if mlist != nil {
 		mlist.Leave(3 * time.Second)
 		mlist.Shutdown()
-		logrus.Info("memberlist shutdown")
+		logger.Info("memberlist shutdown")
 	}
 }
 
@@ -408,7 +409,7 @@ func SvcName(node *memberlist.Node) string {
 		err error
 	)
 	if mm, err = newMeta(node); err != nil {
-		logrus.Errorln(fmt.Sprintf("%+v", err))
+		logger.Errorln(fmt.Sprintf("%+v", err))
 		return ""
 	}
 	return mm.Meta.Service

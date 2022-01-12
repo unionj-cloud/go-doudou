@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/memberlist"
 	"sync"
 )
@@ -19,7 +20,7 @@ func (d *delegate) NodeMeta(limit int) []byte {
 	defer d.lock.Unlock()
 	raw, _ := json.Marshal(d.mmeta)
 	if len(raw) > limit {
-		panic(fmt.Errorf("[go-doudou] Node meta data '%v' exceeds length limit of %d bytes", d.mmeta, limit))
+		logger.Panic(fmt.Errorf("[go-doudou] Node meta data '%v' exceeds length limit of %d bytes", d.mmeta, limit))
 	}
 	return raw
 }

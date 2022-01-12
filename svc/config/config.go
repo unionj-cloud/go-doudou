@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func InitEnv() {
@@ -33,6 +34,10 @@ var (
 const FrameworkName = "Go-doudou"
 
 type envVariable string
+
+func (receiver envVariable) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.Quote(receiver.Load())), nil
+}
 
 const (
 	// GddBanner indicates banner enabled or not

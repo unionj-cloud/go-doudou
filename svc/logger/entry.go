@@ -15,6 +15,10 @@ var (
 	entry = New()
 )
 
+func Entry() *logrus.Entry {
+	return entry
+}
+
 func New() *logrus.Entry {
 	hostname, _ := os.Hostname()
 	var buildTime string
@@ -24,6 +28,7 @@ func New() *logrus.Entry {
 		}
 	}
 	return logrus.StandardLogger().WithFields(logrus.Fields{
+		"__meta_service":          config.GddServiceName,
 		"__meta_hostname":         hostname,
 		"__meta_go_version":       runtime.Version(),
 		"__meta_godoudou_version": config.GddVer,

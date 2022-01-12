@@ -11,6 +11,7 @@ import (
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"io"
 )
@@ -32,9 +33,9 @@ func Init() (opentracing.Tracer, io.Closer) {
 	cfg.Reporter.LogSpans = true
 	_, err := cfg.FromEnv()
 	if err != nil {
-		logrus.Panic(errors.Wrap(err, "cannot parse Jaeger env vars"))
+		logger.Panic(errors.Wrap(err, "cannot parse Jaeger env vars"))
 	}
-	jaegerLogger := jaegerLoggerAdapter{logger: logrus.StandardLogger()}
+	jaegerLogger := jaegerLoggerAdapter{logger: logger.Entry()}
 	metricsRoot := ddconfig.FrameworkName
 	if stringutils.IsNotEmpty(ddconfig.GddTracingMetricsRoot.Load()) {
 		metricsRoot = ddconfig.GddTracingMetricsRoot.Load()
@@ -50,13 +51,13 @@ func Init() (opentracing.Tracer, io.Closer) {
 		config.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
-		logrus.Panic(errors.Wrap(err, "cannot initialize Jaeger Tracer"))
+		logger.Panic(errors.Wrap(err, "cannot initialize Jaeger Tracer"))
 	}
 	return tracer, closer
 }
 
 type jaegerLoggerAdapter struct {
-	logger *logrus.Logger
+	logger *logrus.Entry
 }
 
 func (l jaegerLoggerAdapter) Error(msg string) {

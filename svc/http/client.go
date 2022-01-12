@@ -3,9 +3,9 @@ package ddhttp
 import (
 	"github.com/go-resty/resty/v2"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/cast"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"github.com/unionj-cloud/memberlist"
 	"net"
@@ -127,12 +127,12 @@ func (m *base) AddNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes, s)
 		m.nodeMap[node.Name] = s
-		logrus.Infof("[go-doudou] node %s joined, supplying %s service", node.Name, svcName)
+		logger.Infof("[go-doudou] node %s joined, supplying %s service", node.Name, svcName)
 	} else {
 		old := *s
 		s.baseUrl = baseUrl
 		s.weight = weight
-		logrus.Infof("[go-doudou] node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, *s)
+		logger.Infof("[go-doudou] node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, *s)
 	}
 }
 
@@ -150,7 +150,7 @@ func (m *base) UpdateWeight(node *memberlist.Node) {
 	if s, exists := m.nodeMap[node.Name]; exists {
 		old := *s
 		s.weight = node.Weight
-		logrus.Infof("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
+		logger.Infof("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
 	}
 }
 
@@ -170,7 +170,7 @@ func (m *base) RemoveNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes[:idx], m.nodes[idx+1:]...)
 		delete(m.nodeMap, node.Name)
-		logrus.Infof("[go-doudou] node %s left, supplying %s service", node.Name, svcName)
+		logger.Infof("[go-doudou] node %s left, supplying %s service", node.Name, svcName)
 	}
 }
 
