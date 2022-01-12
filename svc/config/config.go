@@ -41,8 +41,6 @@ const (
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
 	// GddLogLevel please reference logrus.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
-	// GddLogPath sets log directory
-	GddLogPath envVariable = "GDD_LOG_PATH"
 	// GddLogFormat text or json, default is text
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"
 	// GddGraceTimeout sets graceful shutdown timeout

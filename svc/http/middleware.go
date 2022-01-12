@@ -16,6 +16,7 @@ import (
 	"github.com/slok/goresilience/bulkhead"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -30,15 +31,22 @@ import (
 func Metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
-		logrus.Printf(
-			"%s\t%s\t%s\t%d\t%d\t%s\n",
+		logger.WithFields(logrus.Fields{
+			"__meta_service": config.GddServiceName.Load(),
+			"remoteAddr":     r.RemoteAddr,
+			"httpMethod":     r.Method,
+			"requestUri":     r.URL.RequestURI(),
+			"requestUrl":     r.URL.String(),
+			"statusCode":     m.Code,
+			"written":        m.Written,
+			"duration":       m.Duration.String(),
+		}).Info(fmt.Sprintf("%s\t%s\t%s\t%d\t%d\t%s\n",
 			r.RemoteAddr,
 			r.Method,
 			r.URL,
 			m.Code,
 			m.Written,
-			m.Duration,
-		)
+			m.Duration.String()))
 	})
 }
 
@@ -69,26 +77,37 @@ func Logger(inner http.Handler) http.Handler {
 		start := time.Now()
 		rid, _ := requestid.FromContext(r.Context())
 		span := opentracing.SpanFromContext(r.Context())
-		hlog := HttpLog{
-			ClientIp:          r.RemoteAddr,
-			HttpMethod:        r.Method,
-			Uri:               r.URL.RequestURI(),
-			Proto:             r.Proto,
-			Host:              r.Host,
-			ReqContentLength:  r.ContentLength,
-			ReqHeader:         r.Header,
-			RequestId:         rid,
-			RawReq:            rawReq,
-			RespBody:          rec.Body.String(),
-			StatusCode:        rec.Result().StatusCode,
-			RespHeader:        rec.Result().Header,
-			RespContentLength: rec.Body.Len(),
-			ElapsedTime:       time.Since(start).String(),
-			Elapsed:           time.Since(start).Milliseconds(),
-			Span:              fmt.Sprint(span),
+		// Example:
+		//  POST /usersvc/pageusers HTTP/1.1
+		//  Host: localhost:6060
+		//  Content-Length: 80
+		//  Content-Type: application/json
+		//  User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+		//  X-Request-Id: d1e4dc83-18be-493e-be5b-2e0faaca90ec
+		//
+		//  {"filter":{"dept":99,"name":"Jack"},"page":{"orders":null,"pageNo":2,"size":10}}
+		fields := logrus.Fields{
+			"__meta_service":    config.GddServiceName.Load(),
+			"remoteAddr":        r.RemoteAddr,
+			"httpMethod":        r.Method,
+			"requestUri":        r.URL.RequestURI(),
+			"requestUrl":        r.URL.String(),
+			"proto":             r.Proto,
+			"host":              r.Host,
+			"reqContentLength":  r.ContentLength,
+			"reqHeader":         r.Header,
+			"requestId":         rid,
+			"rawReq":            rawReq,
+			"respBody":          rec.Body.String(),
+			"statusCode":        rec.Result().StatusCode,
+			"respHeader":        rec.Result().Header,
+			"respContentLength": rec.Body.Len(),
+			"elapsedTime":       time.Since(start).String(),
+			"elapsed":           time.Since(start).Milliseconds(),
+			"span":              fmt.Sprint(span),
 		}
-		log, _ := json.MarshalIndent(hlog, "", "    ")
-		logrus.Debugln(string(log))
+		log, _ := json.MarshalIndent(fields, "", "    ")
+		logger.WithFields(fields).Debugln(string(log))
 
 		header := rec.Result().Header
 		for k, v := range header {

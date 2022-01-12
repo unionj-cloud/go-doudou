@@ -1,22 +1,27 @@
 package logger
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"io"
-	"os"
-	"path/filepath"
 )
 
-func Init() {
-	var loglevel config.LogLevel
-	(&loglevel).Decode(config.GddLogLevel.Load())
+type LoggerOption func(*logrus.Logger)
 
+func WithWritter(writer io.Writer) LoggerOption {
+	return func(log *logrus.Logger) {
+		log.SetOutput(writer)
+	}
+}
+
+func WithFormatter(formatter logrus.Formatter) LoggerOption {
+	return func(log *logrus.Logger) {
+		log.SetFormatter(formatter)
+	}
+}
+
+func defaultFormatter() logrus.Formatter {
 	var formatter logrus.Formatter
-
 	switch config.GddLogFormat.Load() {
 	case "json":
 		jf := new(logrus.JSONFormatter)
@@ -28,34 +33,18 @@ func Init() {
 		tf.FullTimestamp = true
 		formatter = tf
 	}
-
-	logger := logrus.StandardLogger()
-	logger.SetFormatter(formatter)
-	logger.SetLevel(logrus.Level(loglevel))
+	return formatter
 }
 
-func PersistLogToDisk() *os.File {
-	var (
-		logpath string
-		err     error
-		logFile *os.File
-	)
-	if logpath, err = pathutils.FixPath(config.GddLogPath.Load(), ""); err != nil {
-		logrus.Panic(fmt.Sprintf("%+v\n", err))
+func Init(opts ...LoggerOption) {
+	var loglevel config.LogLevel
+	(&loglevel).Decode(config.GddLogLevel.Load())
+
+	logger := logrus.StandardLogger()
+	logger.SetFormatter(defaultFormatter())
+	logger.SetLevel(logrus.Level(loglevel))
+
+	for _, opt := range opts {
+		opt(logger)
 	}
-	if stringutils.IsNotEmpty(logpath) {
-		if err = os.MkdirAll(logpath, os.ModePerm); err != nil {
-			logrus.Panic(fmt.Sprintf("%+v\n", err))
-		}
-	}
-	name := "app"
-	service := config.GddServiceName.Load()
-	if stringutils.IsNotEmpty(service) {
-		name = service
-	}
-	if logFile, err = os.OpenFile(filepath.Join(logpath, fmt.Sprintf("%s.log", name)), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm); err != nil {
-		logrus.Panic(fmt.Sprintf("%+v\n", err))
-	}
-	logrus.SetOutput(io.MultiWriter(os.Stdout, logFile))
-	return logFile
 }
