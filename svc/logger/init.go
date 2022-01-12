@@ -15,9 +15,19 @@ func Init() {
 	var loglevel config.LogLevel
 	(&loglevel).Decode(config.GddLogLevel.Load())
 
-	formatter := new(logrus.TextFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	formatter.FullTimestamp = true
+	var formatter logrus.Formatter
+
+	switch config.GddLogFormat.Load() {
+	case "json":
+		jf := new(logrus.JSONFormatter)
+		jf.TimestampFormat = "2006-01-02 15:04:05"
+		formatter = jf
+	default:
+		tf := new(logrus.TextFormatter)
+		tf.TimestampFormat = "2006-01-02 15:04:05"
+		tf.FullTimestamp = true
+		formatter = tf
+	}
 
 	logger := logrus.StandardLogger()
 	logger.SetFormatter(formatter)
@@ -38,7 +48,12 @@ func PersistLogToDisk() *os.File {
 			logrus.Panic(fmt.Sprintf("%+v\n", err))
 		}
 	}
-	if logFile, err = os.OpenFile(filepath.Join(logpath, "app.log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm); err != nil {
+	name := "app"
+	service := config.GddServiceName.Load()
+	if stringutils.IsNotEmpty(service) {
+		name = service
+	}
+	if logFile, err = os.OpenFile(filepath.Join(logpath, fmt.Sprintf("%s.log", name)), os.O_APPEND|os.O_CREATE|os.O_RDWR, os.ModePerm); err != nil {
 		logrus.Panic(fmt.Sprintf("%+v\n", err))
 	}
 	logrus.SetOutput(io.MultiWriter(os.Stdout, logFile))

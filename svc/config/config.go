@@ -43,6 +43,8 @@ const (
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
 	// GddLogPath sets log directory
 	GddLogPath envVariable = "GDD_LOG_PATH"
+	// GddLogFormat text or json, default is text
+	GddLogFormat envVariable = "GDD_LOG_FORMAT"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
 	// GddWriteTimeout sets http connection write timeout
