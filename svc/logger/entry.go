@@ -19,6 +19,10 @@ func Entry() *logrus.Entry {
 	return entry
 }
 
+func CheckDev() bool {
+	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
+}
+
 func New() *logrus.Entry {
 	hostname, _ := os.Hostname()
 	var buildTime string
@@ -26,6 +30,9 @@ func New() *logrus.Entry {
 		if t, err := time.Parse(constants.FORMAT15, config.BuildTime); err == nil {
 			buildTime = t.Local().Format(constants.FORMAT)
 		}
+	}
+	if CheckDev() {
+		return logrus.NewEntry(logrus.StandardLogger())
 	}
 	return logrus.StandardLogger().WithFields(logrus.Fields{
 		"__meta_service":          config.GddServiceName,
@@ -63,6 +70,9 @@ func WithField(key string, value interface{}) *logrus.Entry {
 // Note that it doesn't log until you call Debug, Print, Info, Warn, Fatal
 // or Panic on the Entry it returns.
 func WithFields(fields logrus.Fields) *logrus.Entry {
+	if CheckDev() {
+		return entry
+	}
 	return entry.WithFields(fields)
 }
 

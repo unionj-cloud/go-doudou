@@ -137,7 +137,7 @@ func (receiver envVariable) Load() string {
 
 // String return string representation for receiver
 func (receiver envVariable) String() string {
-	return string(receiver)
+	return receiver.Load()
 }
 
 // Write sets the environment variable to value

@@ -20,6 +20,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -48,6 +49,121 @@ func Metrics(inner http.Handler) http.Handler {
 	})
 }
 
+// borrowed from httputil unexported function drainBody
+func copyReqBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
+	if b == nil || b == http.NoBody {
+		// No copying needed. Preserve the magic sentinel meaning of NoBody.
+		return http.NoBody, http.NoBody, nil
+	}
+	var buf bytes.Buffer
+	if _, err = buf.ReadFrom(b); err != nil {
+		return nil, b, err
+	}
+	if err = b.Close(); err != nil {
+		return nil, b, err
+	}
+	return io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+}
+
+func copyRespBody(b *bytes.Buffer) (b1, b2 *bytes.Buffer, err error) {
+	if b == nil {
+		return
+	}
+	var buf bytes.Buffer
+	if _, err = buf.ReadFrom(b); err != nil {
+		return nil, b, err
+	}
+	return &buf, bytes.NewBuffer(buf.Bytes()), nil
+}
+
+func jsonMarshalIndent(data interface{}, prefix, indent string, disableHTMLEscape bool) (string, error) {
+	b := &bytes.Buffer{}
+	encoder := json.NewEncoder(b)
+	encoder.SetEscapeHTML(!disableHTMLEscape)
+	encoder.SetIndent(prefix, indent)
+	if err := encoder.Encode(data); err != nil {
+		return "", errors.Errorf("failed to marshal data to JSON, %s", err)
+	}
+	return b.String(), nil
+}
+
+func getReqBody(cp io.ReadCloser, r *http.Request) string {
+	var contentType string
+	if len(r.Header["Content-Type"]) > 0 {
+		contentType = r.Header["Content-Type"][0]
+	}
+	var reqBody string
+	if cp != nil {
+		if strings.Contains(contentType, "multipart/form-data") {
+			r.Body = cp
+			if err := r.ParseMultipartForm(32 << 20); err == nil {
+				reqBody = r.Form.Encode()
+				if unescape, err := url.QueryUnescape(reqBody); err == nil {
+					reqBody = unescape
+				}
+			} else {
+				logger.Debug("call r.ParseMultipartForm(32 << 20) error: ", err)
+			}
+		} else if strings.Contains(contentType, "application/json") {
+			data := make(map[string]interface{})
+			if err := json.NewDecoder(cp).Decode(&data); err == nil {
+				b, _ := json.MarshalIndent(data, "", "    ")
+				reqBody = string(b)
+			} else {
+				logger.Debug("call json.NewDecoder(reqBodyCopy).Decode(&data) error: ", err)
+			}
+		} else {
+			var buf bytes.Buffer
+			if _, err := buf.ReadFrom(cp); err == nil {
+				data := []rune(buf.String())
+				end := len(data)
+				if end > 1000 {
+					end = 1000
+				}
+				reqBody = string(data[:end])
+				if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+					if unescape, err := url.QueryUnescape(reqBody); err == nil {
+						reqBody = unescape
+					}
+				}
+			} else {
+				logger.Debug("call buf.ReadFrom(reqBodyCopy) error: ", err)
+			}
+		}
+	}
+	return reqBody
+}
+
+func getRespBody(rec *httptest.ResponseRecorder) string {
+	var (
+		respBody string
+		err      error
+	)
+	if strings.Contains(rec.Result().Header.Get("Content-Type"), "application/json") {
+		var respBodyCopy *bytes.Buffer
+		if respBodyCopy, rec.Body, err = copyRespBody(rec.Body); err == nil {
+			data := make(map[string]interface{})
+			if err := json.NewDecoder(rec.Body).Decode(&data); err == nil {
+				b, _ := json.MarshalIndent(data, "", "    ")
+				respBody = string(b)
+			} else {
+				logger.Debug("call json.NewDecoder(rec.Body).Decode(&data) error: ", err)
+			}
+		} else {
+			logger.Debug("call respBodyCopy.ReadFrom(rec.Body) error: ", err)
+		}
+		rec.Body = respBodyCopy
+	} else {
+		data := []rune(rec.Body.String())
+		end := len(data)
+		if end > 1000 {
+			end = 1000
+		}
+		respBody = string(data[:end])
+	}
+	return respBody
+}
+
 // Logger logs http request body and response body for debugging
 func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,77 +171,25 @@ func Logger(inner http.Handler) http.Handler {
 			inner.ServeHTTP(w, r)
 			return
 		}
-		var reqBodyCopy io.ReadCloser
-		if r.Body != nil {
-			var buf bytes.Buffer
-			if _, err := buf.ReadFrom(r.Body); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			if err := r.Body.Close(); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			r.Body, reqBodyCopy = io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes()))
+		var (
+			reqBodyCopy io.ReadCloser
+			err         error
+		)
+		if reqBodyCopy, r.Body, err = copyReqBody(r.Body); err != nil {
+			logger.Debug("call copyReqBody(r.Body) error: ", err)
 		}
 
 		rec := httptest.NewRecorder()
 		inner.ServeHTTP(rec, r)
 
-		var reqBody string
-		var reqContentType string
-		if len(r.Header["Content-Type"]) > 0 {
-			reqContentType = r.Header["Content-Type"][0]
-		}
-		if stringutils.IsNotEmpty(reqContentType) {
-			if strings.Contains(reqContentType, "multipart/form-data") && reqBodyCopy != nil {
-				r.Body = reqBodyCopy
-				if err := r.ParseMultipartForm(32 << 20); err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-				reqBody = r.Form.Encode()
-			} else if strings.Contains(reqContentType, "application/json") {
-				data := make(map[string]interface{})
-				if err := json.NewDecoder(reqBodyCopy).Decode(&data); err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-				b, _ := json.MarshalIndent(data, "", "    ")
-				reqBody = string(b)
-			} else {
-				var buf bytes.Buffer
-				if _, err := buf.ReadFrom(reqBodyCopy); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				reqBody = buf.String()
-			}
-		}
+		reqBody := getReqBody(reqBodyCopy, r)
 		start := time.Now()
 		rid, _ := requestid.FromContext(r.Context())
 		span := opentracing.SpanFromContext(r.Context())
-		// Example:
-		//  POST /usersvc/pageusers HTTP/1.1
-		//  Host: localhost:6060
-		//  Content-Length: 80
-		//  Content-Type: application/json
-		//  User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
-		//  X-Request-Id: d1e4dc83-18be-493e-be5b-2e0faaca90ec
-		//
-		//  {"filter":{"dept":99,"name":"Jack"},"page":{"orders":null,"pageNo":2,"size":10}}
-		contentType := rec.Result().Header.Get("Content-Type")
-		var respBody string
-		if strings.Contains(contentType, "text/html") || strings.Contains(contentType, "text/plain") {
-			respBody = rec.Body.String()
-		} else if strings.Contains(contentType, "application/json") {
-			data := make(map[string]interface{})
-			if err := json.NewDecoder(rec.Body).Decode(&data); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			b, _ := json.MarshalIndent(data, "", "    ")
-			respBody = string(b)
+		respBody := getRespBody(rec)
+		reqQuery := r.URL.RawQuery
+		if unescape, err := url.QueryUnescape(reqQuery); err == nil {
+			reqQuery = unescape
 		}
 		fields := logrus.Fields{
 			"remoteAddr":        r.RemoteAddr,
@@ -137,6 +201,7 @@ func Logger(inner http.Handler) http.Handler {
 			"reqContentLength":  r.ContentLength,
 			"reqHeader":         r.Header,
 			"requestId":         rid,
+			"reqQuery":          reqQuery,
 			"reqBody":           reqBody,
 			"respBody":          respBody,
 			"statusCode":        rec.Result().StatusCode,
@@ -146,8 +211,11 @@ func Logger(inner http.Handler) http.Handler {
 			"elapsed":           time.Since(start).Milliseconds(),
 			"span":              fmt.Sprint(span),
 		}
-		log, _ := json.MarshalIndent(fields, "", "    ")
-		logger.WithFields(fields).Debugln(string(log))
+		var log string
+		if log, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
+			log = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: ", err)
+		}
+		logger.WithFields(fields).Debugln(log)
 
 		header := rec.Result().Header
 		for k, v := range header {

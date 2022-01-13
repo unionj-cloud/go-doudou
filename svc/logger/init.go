@@ -20,12 +20,19 @@ func WithFormatter(formatter logrus.Formatter) LoggerOption {
 	}
 }
 
+func WithReportCaller(reportCaller bool) LoggerOption {
+	return func(log *logrus.Logger) {
+		log.SetReportCaller(reportCaller)
+	}
+}
+
 func defaultFormatter() logrus.Formatter {
 	var formatter logrus.Formatter
 	switch config.GddLogFormat.Load() {
 	case "json":
 		jf := new(logrus.JSONFormatter)
 		jf.TimestampFormat = "2006-01-02 15:04:05"
+		jf.DisableHTMLEscape = true
 		formatter = jf
 	default:
 		tf := new(logrus.TextFormatter)
