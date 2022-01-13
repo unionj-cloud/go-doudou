@@ -18,6 +18,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -62,7 +63,7 @@ func copyReqBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if err = b.Close(); err != nil {
 		return nil, b, err
 	}
-	return io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+	return ioutil.NopCloser(&buf), ioutil.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
 func copyRespBody(b *bytes.Buffer) (b1, b2 *bytes.Buffer, err error) {
