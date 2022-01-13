@@ -214,7 +214,7 @@ func Logger(inner http.Handler) http.Handler {
 		}
 		var log string
 		if log, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
-			log = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: ", err)
+			log = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: %s", err)
 		}
 		logger.WithFields(fields).Debugln(log)
 

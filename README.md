@@ -758,7 +758,8 @@ It also provided a `Init` function to help you configure `logrus.Logger` instanc
 You can also configure log level by environment variable `GDD_LOG_LEVEL` and configure formatter type to `json` or `text` by environment variable `GDD_LOG_FORMAT`.
 
 There are two built-in log related middlewares for you, `ddhttp.Metrics` and `ddhttp.Logger`. In short, `ddhttp.Metrics` is for printing brief log with limited 
-information, while `ddhttp.Logger` is for printing detail log with request and response body, headers, opentracing span and some other information.
+information, while `ddhttp.Logger` is for printing detail log with request and response body, headers, opentracing span and some other information, and it only takes 
+effect when environment variable `GDD_LOG_LEVEL` is set to `debug`.
 
 #### Example
 ```go 

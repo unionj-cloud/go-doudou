@@ -212,6 +212,7 @@ func Test_envVariable_Write(t *testing.T) {
 }
 
 func Test_envVariable_String(t *testing.T) {
+	GddBanner.Write("on")
 	tests := []struct {
 		name     string
 		receiver envVariable
@@ -220,7 +221,7 @@ func Test_envVariable_String(t *testing.T) {
 		{
 			name:     "",
 			receiver: GddBanner,
-			want:     "GDD_BANNER",
+			want:     "on",
 		},
 	}
 	for _, tt := range tests {
