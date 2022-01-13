@@ -56,14 +56,18 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Circuit Breaker / Timeout / Retry](#circuit-breaker--timeout--retry)
     - [Usage](#usage-3)
     - [Example](#example-2)
-  - [Jaeger](#jaeger)
+  - [Log](#log)
     - [Usage](#usage-4)
+    - [Example](#example-3)
+    - [ELK stack](#elk-stack)
+  - [Jaeger](#jaeger)
+    - [Usage](#usage-5)
     - [Screenshot](#screenshot)
   - [Grafana / Prometheus](#grafana--prometheus)
-    - [Usage](#usage-5)
+    - [Usage](#usage-6)
     - [Screenshot](#screenshot-1)
   - [Configuration](#configuration)
-  - [Example](#example-3)
+  - [Example](#example-4)
   - [Notable tools](#notable-tools)
     - [name](#name)
     - [ddl](#ddl)
@@ -137,13 +141,13 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.1
+go get -v github.com/unionj-cloud/go-doudou@v0.9.2
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.1
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.2
 ```
 
 ### Usage
@@ -742,6 +746,36 @@ func main() {
 	srv.Run()
 }
 ```
+
+### Log
+#### Usage
+There is a global `logrus.Entry` provided by `github.com/unionj-cloud/go-doudou/svc/logger` package. If `GDD_ENV` is set and is not set to `dev`,
+it will be attached with some meta fields about service name, hostname, etc.
+
+`logger` package implemented several exported package-level methods from `logrus`, so you can replace `logrus.Info()` with `logger.Info()` for example.
+It also provided a `Init` function to help you configure `logrus.Logger` instance.
+
+You can also configure log level by environment variable `GDD_LOG_LEVEL` and configure formatter type to `json` or `text` by environment variable `GDD_LOG_FORMAT`.
+
+There are two built-in log related middlewares for you, `ddhttp.Metrics` and `ddhttp.Logger`. In short, `ddhttp.Metrics` is for printing brief log with limited 
+information, while `ddhttp.Logger` is for printing detail log with request and response body, headers, opentracing span and some other information.
+
+#### Example
+```go 
+// you can use lumberjack to add log rotate feature to your service
+logger.Init(logger.WithWritter(io.MultiWriter(os.Stdout, &lumberjack.Logger{
+    Filename:   filepath.Join(os.Getenv("LOG_PATH"), fmt.Sprintf("%s.log", ddconfig.GddServiceName.Load())),
+    MaxSize:    5,  // Max megabytes before log is rotated
+    MaxBackups: 10, // Max number of old log files to keep
+    MaxAge:     7,  // Max number of days to retain log files
+    Compress:   true,
+})))
+```
+
+#### ELK stack
+`logger` package provided well support for ELK stack. To see example, please go to [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide).
+
+![elk](./elk.png)
 
 ### Jaeger
 #### Usage
