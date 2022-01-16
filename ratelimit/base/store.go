@@ -1,4 +1,4 @@
-package ratelimit
+package base
 
 import (
 	"github.com/sirupsen/logrus"
