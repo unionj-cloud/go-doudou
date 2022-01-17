@@ -10,9 +10,9 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-const redisPrefix = "rate:"
+const redisPrefix = "go-doudou:rate:"
 
-type rediser interface {
+type Rediser interface {
 	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd
 	EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *redis.Cmd
 	ScriptExists(ctx context.Context, hashes ...string) *redis.BoolSliceCmd
@@ -23,7 +23,7 @@ type rediser interface {
 type LimitFn func(ctx context.Context) ratelimit.Limit
 
 type GcraLimiter struct {
-	rdb     rediser
+	rdb     Rediser
 	key     string
 	limit   ratelimit.Limit
 	limitFn LimitFn
@@ -88,7 +88,7 @@ func (gl *GcraLimiter) ReserveECtx(ctx context.Context) (time.Duration, bool, er
 }
 
 // NewGcraLimiter returns a new Limiter.
-func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b int) ratelimit.Limiter {
+func NewGcraLimiter(rdb Rediser, key string, r float64, period time.Duration, b int) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb: rdb,
 		key: key,
@@ -101,7 +101,7 @@ func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b 
 }
 
 // NewGcraLimiterLimit returns a new Limiter.
-func NewGcraLimiterLimit(rdb rediser, key string, l ratelimit.Limit) ratelimit.Limiter {
+func NewGcraLimiterLimit(rdb Rediser, key string, l ratelimit.Limit) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb:   rdb,
 		key:   key,
@@ -110,7 +110,7 @@ func NewGcraLimiterLimit(rdb rediser, key string, l ratelimit.Limit) ratelimit.L
 }
 
 // NewGcraLimiterLimitFn returns a new Limiter.
-func NewGcraLimiterLimitFn(rdb rediser, key string, fn LimitFn) ratelimit.Limiter {
+func NewGcraLimiterLimitFn(rdb Rediser, key string, fn LimitFn) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb:     rdb,
 		key:     key,
