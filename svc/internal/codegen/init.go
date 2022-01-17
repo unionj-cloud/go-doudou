@@ -96,7 +96,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/unionj-cloud/cast v1.3.2
-	github.com/unionj-cloud/go-doudou v0.9.2
+	github.com/unionj-cloud/go-doudou v0.9.3
 )`
 
 const gitignoreTmpl = `# Binaries for programs and plugins
