@@ -8,6 +8,7 @@ package rate
 import (
 	"context"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/ratelimit/base"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"math"
 	"sync"
@@ -104,6 +105,20 @@ func NewLimiter(r Limit, b int, opts ...LimiterOption) *Limiter {
 	lim := &Limiter{
 		limit: r,
 		burst: b,
+	}
+
+	for _, opt := range opts {
+		opt(lim)
+	}
+	return lim
+}
+
+// NewLimiterLimit returns a new Limiter that allows events up to rate r and permits
+// bursts of at most b tokens.
+func NewLimiterLimit(l base.Limit, opts ...LimiterOption) *Limiter {
+	lim := &Limiter{
+		limit: Limit(l.Rate / l.Period.Seconds()),
+		burst: l.Burst,
 	}
 
 	for _, opt := range opts {

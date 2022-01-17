@@ -6,7 +6,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ratelimit/base"
 	"github.com/unionj-cloud/go-doudou/ratelimit/memrate/rate"
 	"reflect"
-	"sync"
 	"testing"
 )
 
@@ -14,7 +13,6 @@ func TestMemoryStore_addKey(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
 		limiterFn LimiterFn
-		mu        *sync.RWMutex
 	}
 	type args struct {
 		key string
@@ -33,7 +31,6 @@ func TestMemoryStore_addKey(t *testing.T) {
 				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
 					return rate.NewLimiter(1, 3)
 				},
-				mu: &sync.RWMutex{},
 			},
 			args: args{
 				key: "192.168.1.6:8080",
@@ -47,7 +44,6 @@ func TestMemoryStore_addKey(t *testing.T) {
 			store := &MemoryStore{
 				keys:      keys,
 				limiterFn: tt.fields.limiterFn,
-				mu:        tt.fields.mu,
 			}
 			if got := store.addKeyCtx(context.Background(), tt.args.key); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addKey() = %v, want %v", got, tt.want)
@@ -60,7 +56,6 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
 		limiterFn LimiterFn
-		mu        *sync.RWMutex
 	}
 	type args struct {
 		key string
@@ -79,7 +74,6 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
 					return rate.NewLimiter(1, 3)
 				},
-				mu: &sync.RWMutex{},
 			},
 			args: args{
 				key: "192.168.1.6:8080",
@@ -93,7 +87,6 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 			store := &MemoryStore{
 				keys:      keys,
 				limiterFn: tt.fields.limiterFn,
-				mu:        tt.fields.mu,
 			}
 			if got := store.GetLimiter(tt.args.key); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetLimiter() = %v, want %v", got, tt.want)
@@ -106,7 +99,6 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
 		limiterFn LimiterFn
-		mu        *sync.RWMutex
 	}
 	type args struct {
 		key string
@@ -123,7 +115,6 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
 					return rate.NewLimiter(1, 3)
 				},
-				mu: &sync.RWMutex{},
 			},
 			args: args{
 				key: "192.168.1.6:8080",
@@ -136,7 +127,6 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 			store := &MemoryStore{
 				keys:      keys,
 				limiterFn: tt.fields.limiterFn,
-				mu:        tt.fields.mu,
 			}
 			store.addKeyCtx(context.Background(), tt.args.key)
 			if exists := store.keys.Contains(tt.args.key); !exists {

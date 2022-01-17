@@ -18,7 +18,7 @@ type MemoryStore struct {
 	maxKeys   int
 	onEvicted simplelru.EvictCallback
 	limiterFn LimiterFn
-	mu        *sync.RWMutex
+	mu        sync.RWMutex
 }
 
 type MemoryStoreOption func(*MemoryStore)
@@ -41,7 +41,6 @@ func NewMemoryStore(fn LimiterFn, opts ...MemoryStoreOption) *MemoryStore {
 	store := &MemoryStore{
 		maxKeys:   defaultMaxKeys,
 		limiterFn: fn,
-		mu:        &sync.RWMutex{},
 	}
 
 	for _, opt := range opts {
