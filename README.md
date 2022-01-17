@@ -696,12 +696,6 @@ func main() {
 	handler := httpsrv.NewUsersvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
 
-	//store := memrate.NewMemoryStore(func(_ context.Context, store *memrate.MemoryStore, key string) ratelimit.Limiter {
-	//	return memrate.NewLimiter(10, 30, memrate.WithTimer(10*time.Second, func() {
-	//		store.DeleteKey(key)
-	//	}))
-	//})
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
@@ -711,9 +705,7 @@ func main() {
 	})
 
 	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics,
-		//ddhttp.BulkHead(1, 10*time.Millisecond),
 		requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders,
-		//httpsrv.RateLimit(store),
 		httpsrv.RedisRateLimit(rdb, fn),
 		ddhttp.Logger,
 		ddhttp.Rest, ddhttp.Recover)
