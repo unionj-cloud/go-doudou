@@ -482,20 +482,3 @@ func (lim *Limiter) AllowCtx(ctx context.Context) bool {
 		return lim.Allow()
 	}
 }
-
-func (lim *Limiter) ReserveCtx(ctx context.Context) (time.Duration, bool) {
-	select {
-	case <-ctx.Done():
-		if ctx.Err() != nil {
-			logger.Error(ctx.Err())
-		}
-		return 0, false
-	default:
-		return lim.Reserve()
-	}
-}
-
-func (lim *Limiter) Reserve() (time.Duration, bool) {
-	delay, ok, _ := lim.ReserveE()
-	return delay, ok
-}

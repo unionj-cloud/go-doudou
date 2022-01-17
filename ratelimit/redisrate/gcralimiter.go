@@ -21,40 +21,19 @@ type Rediser interface {
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 }
 
+type LimitFn func(ctx context.Context) base.Limit
+
 type GcraLimiter struct {
-	rdb   Rediser
-	key   string
-	limit base.Limit
-	timer *time.Timer
-	mu    sync.RWMutex
+	rdb     Rediser
+	key     string
+	limit   base.Limit
+	limitFn LimitFn
+	timer   *time.Timer
+	mu      sync.RWMutex
 }
 
-func (rll *GcraLimiter) AllowCtx(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		if ctx.Err() != nil {
-			logger.Error(ctx.Err())
-		}
-		return false
-	default:
-		return rll.Allow()
-	}
-}
-
-func (rll *GcraLimiter) ReserveCtx(ctx context.Context) (time.Duration, bool) {
-	select {
-	case <-ctx.Done():
-		if ctx.Err() != nil {
-			logger.Error(ctx.Err())
-		}
-		return 0, false
-	default:
-		return rll.Reserve()
-	}
-}
-
-func (rll *GcraLimiter) Allow() bool {
-	allow, err := rll.AllowE()
+func (gl *GcraLimiter) AllowCtx(ctx context.Context) bool {
+	allow, err := gl.AllowECtx(ctx)
 	if err != nil {
 		logger.Error(err)
 		return false
@@ -62,42 +41,58 @@ func (rll *GcraLimiter) Allow() bool {
 	return allow
 }
 
-func (rll *GcraLimiter) Reserve() (time.Duration, bool) {
-	allow, err := rll.AllowN(context.Background(), rll.key, rll.limit, 1)
+func (gl *GcraLimiter) Allow() bool {
+	allow, err := gl.AllowE()
 	if err != nil {
 		logger.Error(err)
+		return false
 	}
-	return allow.RetryAfter, allow.Allowed > 0
+	return allow
 }
 
-// TODO
-func (rll *GcraLimiter) Wait(ctx context.Context) error {
-	select {}
+// Wait you'd better pass a timeout or cancelable context
+func (gl *GcraLimiter) Wait(ctx context.Context) error {
+	for {
+		retryAfter, allow, err := gl.ReserveECtx(ctx)
+		if err != nil {
+			return err
+		}
+		if allow {
+			return nil
+		}
+		time.Sleep(retryAfter)
+	}
 }
 
-func (rll *GcraLimiter) AllowE() (bool, error) {
-	allow, err := rll.AllowN(context.Background(), rll.key, rll.limit, 1)
+func (gl *GcraLimiter) AllowE() (bool, error) {
+	allow, err := gl.AllowN(context.Background(), gl.key, 1)
 	return allow.Allowed > 0, err
 }
 
-func (rll *GcraLimiter) ReserveE() (time.Duration, bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (gl *GcraLimiter) ReserveE() (time.Duration, bool, error) {
+	allow, err := gl.AllowN(context.Background(), gl.key, 1)
+	if err != nil {
+		return 0, false, err
+	}
+	return allow.RetryAfter, allow.Allowed > 0, nil
 }
 
-func (rll *GcraLimiter) AllowECtx(ctx context.Context) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (gl *GcraLimiter) AllowECtx(ctx context.Context) (bool, error) {
+	allow, err := gl.AllowN(ctx, gl.key, 1)
+	return allow.Allowed > 0, err
 }
 
-func (rll *GcraLimiter) ReserveECtx(ctx context.Context) (time.Duration, bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (gl *GcraLimiter) ReserveECtx(ctx context.Context) (time.Duration, bool, error) {
+	allow, err := gl.AllowN(ctx, gl.key, 1)
+	if err != nil {
+		return 0, false, err
+	}
+	return allow.RetryAfter, allow.Allowed > 0, nil
 }
 
-func (rll *GcraLimiter) resetTimer(resetAfter time.Duration) {
-	if rll.timer != nil && rll.timer.Stop() {
-		rll.timer.Reset(resetAfter)
+func (gl *GcraLimiter) resetTimer(resetAfter time.Duration) {
+	if gl.timer != nil && gl.timer.Stop() {
+		gl.timer.Reset(resetAfter)
 	}
 }
 
@@ -123,20 +118,32 @@ func NewGcraLimiterLimit(rdb Rediser, key string, l base.Limit) base.Limiter {
 	}
 }
 
+// NewGcraLimiterLimitFn returns a new Limiter.
+func NewGcraLimiterLimitFn(rdb Rediser, key string, fn LimitFn) base.Limiter {
+	return &GcraLimiter{
+		rdb:     rdb,
+		key:     key,
+		limitFn: fn,
+	}
+}
+
 // AllowN reports whether n events may happen at time now.
-func (rll *GcraLimiter) AllowN(
+func (gl *GcraLimiter) AllowN(
 	ctx context.Context,
 	key string,
-	limit base.Limit,
 	n int,
 ) (res *Result, err error) {
 	defer func() {
 		if res != nil {
-			rll.resetTimer(res.ResetAfter)
+			gl.resetTimer(res.ResetAfter)
 		}
 	}()
+	limit := gl.limit
+	if gl.limitFn != nil {
+		limit = gl.limitFn(ctx)
+	}
 	values := []interface{}{limit.Burst, limit.Rate, limit.Period.Seconds(), n}
-	v, err := allowN.Run(ctx, rll.rdb, []string{redisPrefix + key}, values...).Result()
+	v, err := allowN.Run(ctx, gl.rdb, []string{redisPrefix + key}, values...).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +168,11 @@ func (rll *GcraLimiter) AllowN(
 		ResetAfter: dur(resetAfter),
 	}
 	return res, nil
+}
+
+// Reset gets a key and reset all limitations and previous usages
+func (gl *GcraLimiter) Reset(ctx context.Context, key string) error {
+	return gl.rdb.Del(ctx, redisPrefix+key).Err()
 }
 
 func dur(f float64) time.Duration {

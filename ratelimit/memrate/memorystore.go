@@ -1,20 +1,23 @@
 package memrate
 
 import (
+	"context"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ratelimit/base"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"sync"
 )
 
 const defaultMaxKeys = 256
 
+type LimiterFn func(ctx context.Context, store *MemoryStore, key string) base.Limiter
+
 type MemoryStore struct {
 	keys      *lru.Cache
 	maxKeys   int
 	onEvicted simplelru.EvictCallback
-	limiterFn func(store *MemoryStore, key string) base.Limiter
+	limiterFn LimiterFn
 	mu        *sync.RWMutex
 }
 
@@ -34,7 +37,7 @@ func WithOnEvicted(onEvicted func(key interface{}, value interface{})) MemorySto
 	}
 }
 
-func NewMemoryStore(fn func(store *MemoryStore, key string) base.Limiter, opts ...MemoryStoreOption) *MemoryStore {
+func NewMemoryStore(fn LimiterFn, opts ...MemoryStoreOption) *MemoryStore {
 	store := &MemoryStore{
 		maxKeys:   defaultMaxKeys,
 		limiterFn: fn,
@@ -54,7 +57,13 @@ func NewMemoryStore(fn func(store *MemoryStore, key string) base.Limiter, opts .
 	return store
 }
 
-func (store *MemoryStore) addKey(key string) base.Limiter {
+// GetLimiter returns the rate limiter for the provided key if it exists,
+// otherwise calls addKey to add key to the map
+func (store *MemoryStore) GetLimiter(key string) base.Limiter {
+	return store.GetLimiterCtx(context.Background(), key)
+}
+
+func (store *MemoryStore) addKeyCtx(ctx context.Context, key string) base.Limiter {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -63,21 +72,21 @@ func (store *MemoryStore) addKey(key string) base.Limiter {
 		return limiter.(base.Limiter)
 	}
 
-	limiter = store.limiterFn(store, key)
+	limiter = store.limiterFn(ctx, store, key)
 	store.keys.Add(key, limiter)
 
 	return limiter.(base.Limiter)
 }
 
-// GetLimiter returns the rate limiter for the provided key if it exists,
+// GetLimiterCtx returns the rate limiter for the provided key if it exists,
 // otherwise calls addKey to add key to the map
-func (store *MemoryStore) GetLimiter(key string) base.Limiter {
+func (store *MemoryStore) GetLimiterCtx(ctx context.Context, key string) base.Limiter {
 	store.mu.RLock()
 
 	limiter, exists := store.keys.Get(key)
 	if !exists {
 		store.mu.RUnlock()
-		return store.addKey(key)
+		return store.addKeyCtx(ctx, key)
 	}
 
 	store.mu.RUnlock()
@@ -89,5 +98,5 @@ func (store *MemoryStore) DeleteKey(key string) {
 	defer store.mu.Unlock()
 
 	store.keys.Remove(key)
-	logrus.Debugf("[go-doudou] key %s is deleted from store", key)
+	logger.Debugf("[go-doudou] key %s is deleted from store", key)
 }
