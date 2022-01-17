@@ -50,16 +50,17 @@ framework. It supports monolith service application as well. Currently, it suppo
     - [Smooth Weighted Round-robin Balancing](#smooth-weighted-round-robin-balancing)
   - [Rate Limit](#rate-limit)
     - [Usage](#usage-1)
-    - [Example](#example)
+    - [Memory based rate limiter Example](#memory-based-rate-limiter-example)
+    - [Redis based rate limiter Example](#redis-based-rate-limiter-example)
   - [Bulkhead](#bulkhead)
     - [Usage](#usage-2)
-    - [Example](#example-1)
+    - [Example](#example)
   - [Circuit Breaker / Timeout / Retry](#circuit-breaker--timeout--retry)
     - [Usage](#usage-3)
-    - [Example](#example-2)
+    - [Example](#example-1)
   - [Log](#log)
     - [Usage](#usage-4)
-    - [Example](#example-3)
+    - [Example](#example-2)
     - [ELK stack](#elk-stack)
   - [Jaeger](#jaeger)
     - [Usage](#usage-5)
@@ -68,7 +69,7 @@ framework. It supports monolith service application as well. Currently, it suppo
     - [Usage](#usage-6)
     - [Screenshot](#screenshot-1)
   - [Configuration](#configuration)
-  - [Example](#example-4)
+  - [Example](#example-3)
   - [Notable tools](#notable-tools)
     - [name](#name)
     - [ddl](#ddl)
@@ -142,13 +143,13 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.3
+go get -v github.com/unionj-cloud/go-doudou@v0.9.4
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.3
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.4
 ```
 
 ### Usage
@@ -543,34 +544,40 @@ func main() {
 ### Rate Limit
 #### Usage
 There is a built-in [golang.org/x/time/rate](https://pkg.go.dev/golang.org/x/time/rate) based token-bucket rate limiter implementation
-in github.com/unionj-cloud/go-doudou/ratelimit package with a `MemoryStore` struct for storing key and `Limiter` instance pairs.
-
-Pass `Limiter` instance getter function to `ratelimit.WithLimiterFn` as parameter and then pass them to `ratelimit.NewMemoryStore` 
-to get a `MemoryStore` instance. Then you can pass it to your custom http middleware to implement your business logic to limit requests.
+in `github.com/unionj-cloud/go-doudou/ratelimit/memrate` package with a `MemoryStore` struct for storing key and `Limiter` instance pairs.
 
 If you don't like the built-in rate limiter implementation, you can implement `Limiter` interface by yourself.
 
-You can pass an option function `ratelimit.WithTimer` to `ratelimit.NewTokenLimiter` function to set a timer to each of 
-`TokenLimiter` instance returned for deleting the key in `keys` of the `MemoryStore` instance if it has been idle for `timeout` duration.
+You can pass an option function `memrate.WithTimer` to `memrate.NewLimiter` function to set a timer to each of 
+`memrate.Limiter` instance returned for deleting the key in `keys` of the `MemoryStore` instance if it has been idle for `timeout` duration.
 
-#### Example
+There is also a built-in [go-redis/redis_rate](https://github.com/go-redis/redis_rate) based redis GCRA rate limiter implementation.
+
+#### Memory based rate limiter Example
+Memory based rate limiter is stored in memory, only for single process.  
 
 ```go
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/ascarter/requestid"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ratelimit"
+	"github.com/unionj-cloud/go-doudou/ratelimit/redisrate"
 	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 	"github.com/unionj-cloud/go-doudou/svc/tracing"
-	"time"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
+	"os"
+	"path/filepath"
 	service "usersvc"
 	"usersvc/config"
 	"usersvc/transport/httpsrv"
@@ -597,15 +604,138 @@ func main() {
 	handler := httpsrv.NewUsersvcHandler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
 
-	store := ratelimit.NewMemoryStore(ratelimit.WithLimiterFn(func(store *ratelimit.MemoryStore, key string) ratelimit.Limiter {
-		return ratelimit.NewTokenLimiter(1, 3, ratelimit.WithTimer(10*time.Second, func() {
+	store := memrate.NewMemoryStore(func(_ context.Context, store *memrate.MemoryStore, key string) ratelimit.Limiter {
+		return memrate.NewLimiter(10, 30, memrate.WithTimer(10*time.Second, func() {
 			store.DeleteKey(key)
 		}))
-	}))
+	})
 
 	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, httpsrv.RateLimit(store), ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
+}
+```
+Note: you need write your own http middleware to fit your needs. Here is an example below.
+```go
+// RateLimit limits rate based on memrate.MemoryStore
+func RateLimit(store *memrate.MemoryStore) func(inner http.Handler) http.Handler {
+	return func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			key := r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")]
+			limiter := store.GetLimiter(key)
+			if !limiter.Allow() {
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+}
+```
+
+#### Redis based rate limiter Example
+Redis based rate limiter is stored in redis, so it can be used for multiple processes to limit one key across cluster.  
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/handlers"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/ratelimit"
+	"github.com/unionj-cloud/go-doudou/ratelimit/redisrate"
+	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	"github.com/unionj-cloud/go-doudou/svc/logger"
+	"github.com/unionj-cloud/go-doudou/svc/registry"
+	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
+	"os"
+	"path/filepath"
+	service "usersvc"
+	"usersvc/config"
+	"usersvc/transport/httpsrv"
+)
+
+func main() {
+	ddconfig.InitEnv()
+	conf := config.LoadFromEnv()
+
+	if logger.CheckDev() {
+		logger.Init(logger.WithWritter(os.Stdout))
+	} else {
+		logger.Init(logger.WithWritter(io.MultiWriter(os.Stdout, &lumberjack.Logger{
+			Filename:   filepath.Join(os.Getenv("LOG_PATH"), fmt.Sprintf("%s.log", ddconfig.GddServiceName.Load())),
+			MaxSize:    5,  // Max megabytes before log is rotated
+			MaxBackups: 10, // Max number of old log files to keep
+			MaxAge:     7,  // Max number of days to retain log files
+			Compress:   true,
+		})))
+	}
+
+	if ddconfig.GddMode.Load() == "micro" {
+		err := registry.NewNode()
+		if err != nil {
+			logrus.Panicln(fmt.Sprintf("%+v", err))
+		}
+		defer registry.Shutdown()
+	}
+
+	tracer, closer := tracing.Init()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
+	svc := service.NewUsersvc(conf)
+
+	handler := httpsrv.NewUsersvcHandler(svc)
+	srv := ddhttp.NewDefaultHttpSrv()
+
+	//store := memrate.NewMemoryStore(func(_ context.Context, store *memrate.MemoryStore, key string) ratelimit.Limiter {
+	//	return memrate.NewLimiter(10, 30, memrate.WithTimer(10*time.Second, func() {
+	//		store.DeleteKey(key)
+	//	}))
+	//})
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	fn := redisrate.LimitFn(func(ctx context.Context) ratelimit.Limit {
+		return ratelimit.PerSecondBurst(10, 30)
+	})
+
+	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics,
+		//ddhttp.BulkHead(1, 10*time.Millisecond),
+		requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders,
+		//httpsrv.RateLimit(store),
+		httpsrv.RedisRateLimit(rdb, fn),
+		ddhttp.Logger,
+		ddhttp.Rest, ddhttp.Recover)
+	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.Run()
+}
+```
+Note: you need write your own http middleware to fit your needs. Here is an example below.
+```go
+// RedisRateLimit limits rate based on redisrate.GcraLimiter
+func RedisRateLimit(rdb redisrate.Rediser, fn redisrate.LimitFn) func(inner http.Handler) http.Handler {
+	return func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			key := r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")]
+			limiter := redisrate.NewGcraLimiterLimitFn(rdb, key, fn)
+			if !limiter.Allow() {
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
 }
 ```
 
