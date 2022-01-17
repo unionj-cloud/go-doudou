@@ -3,33 +3,32 @@ package memrate
 import (
 	"context"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/unionj-cloud/go-doudou/ratelimit/base"
-	"github.com/unionj-cloud/go-doudou/ratelimit/memrate/rate"
+	"github.com/unionj-cloud/go-doudou/ratelimit"
 	"reflect"
 	"testing"
 )
 
 func TestMemoryStore_addKey(t *testing.T) {
 	type fields struct {
-		keys      map[string]base.Limiter
+		keys      map[string]ratelimit.Limiter
 		limiterFn LimiterFn
 	}
 	type args struct {
 		key string
 	}
-	limiter := rate.NewLimiter(1, 3)
+	limiter := NewLimiter(1, 3)
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   base.Limiter
+		want   ratelimit.Limiter
 	}{
 		{
 			name: "",
 			fields: fields{
-				keys: make(map[string]base.Limiter),
-				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
-					return rate.NewLimiter(1, 3)
+				keys: make(map[string]ratelimit.Limiter),
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) ratelimit.Limiter {
+					return NewLimiter(1, 3)
 				},
 			},
 			args: args{
@@ -54,25 +53,25 @@ func TestMemoryStore_addKey(t *testing.T) {
 
 func TestMemoryStore_GetLimiter(t *testing.T) {
 	type fields struct {
-		keys      map[string]base.Limiter
+		keys      map[string]ratelimit.Limiter
 		limiterFn LimiterFn
 	}
 	type args struct {
 		key string
 	}
-	limiter := rate.NewLimiter(1, 3)
+	limiter := NewLimiter(1, 3)
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   base.Limiter
+		want   ratelimit.Limiter
 	}{
 		{
 			name: "",
 			fields: fields{
-				keys: make(map[string]base.Limiter),
-				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
-					return rate.NewLimiter(1, 3)
+				keys: make(map[string]ratelimit.Limiter),
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) ratelimit.Limiter {
+					return NewLimiter(1, 3)
 				},
 			},
 			args: args{
@@ -97,7 +96,7 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 
 func TestMemoryStore_DeleteKey(t *testing.T) {
 	type fields struct {
-		keys      map[string]base.Limiter
+		keys      map[string]ratelimit.Limiter
 		limiterFn LimiterFn
 	}
 	type args struct {
@@ -111,9 +110,9 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 		{
 			name: "",
 			fields: fields{
-				keys: make(map[string]base.Limiter),
-				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
-					return rate.NewLimiter(1, 3)
+				keys: make(map[string]ratelimit.Limiter),
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) ratelimit.Limiter {
+					return NewLimiter(1, 3)
 				},
 			},
 			args: args{
@@ -151,8 +150,8 @@ func TestNewMemoryStore(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				fn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
-					return rate.NewLimiter(1, 3)
+				fn: func(ctx context.Context, store *MemoryStore, key string) ratelimit.Limiter {
+					return NewLimiter(1, 3)
 				},
 			},
 		},

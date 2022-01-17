@@ -5,11 +5,10 @@
 //go:build go1.7
 // +build go1.7
 
-package rate
+package memrate
 
 import (
 	"context"
-	"github.com/unionj-cloud/go-doudou/ratelimit/memrate"
 	"math"
 	"runtime"
 	"sync"
@@ -498,7 +497,7 @@ func TestNewLimiter(t *testing.T) {
 		b    int
 		opts []LimiterOption
 	}
-	store := memrate.NewMemoryStore(nil)
+	store := NewMemoryStore(nil)
 	tests := []struct {
 		name string
 		args args

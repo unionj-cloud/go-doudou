@@ -2,7 +2,7 @@ package redisrate
 
 import (
 	"context"
-	"github.com/unionj-cloud/go-doudou/ratelimit/base"
+	"github.com/unionj-cloud/go-doudou/ratelimit"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"strconv"
 	"time"
@@ -20,12 +20,12 @@ type rediser interface {
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 }
 
-type LimitFn func(ctx context.Context) base.Limit
+type LimitFn func(ctx context.Context) ratelimit.Limit
 
 type GcraLimiter struct {
 	rdb     rediser
 	key     string
-	limit   base.Limit
+	limit   ratelimit.Limit
 	limitFn LimitFn
 }
 
@@ -88,11 +88,11 @@ func (gl *GcraLimiter) ReserveECtx(ctx context.Context) (time.Duration, bool, er
 }
 
 // NewGcraLimiter returns a new Limiter.
-func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b int) base.Limiter {
+func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b int) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb: rdb,
 		key: key,
-		limit: base.Limit{
+		limit: ratelimit.Limit{
 			Rate:   r,
 			Burst:  b,
 			Period: period,
@@ -101,7 +101,7 @@ func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b 
 }
 
 // NewGcraLimiterLimit returns a new Limiter.
-func NewGcraLimiterLimit(rdb rediser, key string, l base.Limit) base.Limiter {
+func NewGcraLimiterLimit(rdb rediser, key string, l ratelimit.Limit) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb:   rdb,
 		key:   key,
@@ -110,7 +110,7 @@ func NewGcraLimiterLimit(rdb rediser, key string, l base.Limit) base.Limiter {
 }
 
 // NewGcraLimiterLimitFn returns a new Limiter.
-func NewGcraLimiterLimitFn(rdb rediser, key string, fn LimitFn) base.Limiter {
+func NewGcraLimiterLimitFn(rdb rediser, key string, fn LimitFn) ratelimit.Limiter {
 	return &GcraLimiter{
 		rdb:     rdb,
 		key:     key,
@@ -166,7 +166,7 @@ func dur(f float64) time.Duration {
 
 type Result struct {
 	// Limit is the limit that was used to obtain this result.
-	Limit base.Limit
+	Limit ratelimit.Limit
 
 	// Allowed is the number of events that may happen at time now.
 	Allowed int

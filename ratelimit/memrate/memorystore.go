@@ -4,14 +4,14 @@ import (
 	"context"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/unionj-cloud/go-doudou/ratelimit/base"
+	"github.com/unionj-cloud/go-doudou/ratelimit"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"sync"
 )
 
 const defaultMaxKeys = 256
 
-type LimiterFn func(ctx context.Context, store *MemoryStore, key string) base.Limiter
+type LimiterFn func(ctx context.Context, store *MemoryStore, key string) ratelimit.Limiter
 
 type MemoryStore struct {
 	keys      *lru.Cache
@@ -58,28 +58,28 @@ func NewMemoryStore(fn LimiterFn, opts ...MemoryStoreOption) *MemoryStore {
 
 // GetLimiter returns the rate limiter for the provided key if it exists,
 // otherwise calls addKey to add key to the map
-func (store *MemoryStore) GetLimiter(key string) base.Limiter {
+func (store *MemoryStore) GetLimiter(key string) ratelimit.Limiter {
 	return store.GetLimiterCtx(context.Background(), key)
 }
 
-func (store *MemoryStore) addKeyCtx(ctx context.Context, key string) base.Limiter {
+func (store *MemoryStore) addKeyCtx(ctx context.Context, key string) ratelimit.Limiter {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
 	limiter, exists := store.keys.Get(key)
 	if exists {
-		return limiter.(base.Limiter)
+		return limiter.(ratelimit.Limiter)
 	}
 
 	limiter = store.limiterFn(ctx, store, key)
 	store.keys.Add(key, limiter)
 
-	return limiter.(base.Limiter)
+	return limiter.(ratelimit.Limiter)
 }
 
 // GetLimiterCtx returns the rate limiter for the provided key if it exists,
 // otherwise calls addKey to add key to the map
-func (store *MemoryStore) GetLimiterCtx(ctx context.Context, key string) base.Limiter {
+func (store *MemoryStore) GetLimiterCtx(ctx context.Context, key string) ratelimit.Limiter {
 	store.mu.RLock()
 
 	limiter, exists := store.keys.Get(key)
@@ -89,7 +89,7 @@ func (store *MemoryStore) GetLimiterCtx(ctx context.Context, key string) base.Li
 	}
 
 	store.mu.RUnlock()
-	return limiter.(base.Limiter)
+	return limiter.(ratelimit.Limiter)
 }
 
 func (store *MemoryStore) DeleteKey(key string) {

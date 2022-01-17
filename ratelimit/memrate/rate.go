@@ -3,12 +3,12 @@
 // license that can be found in the LICENSE file.
 
 // Package rate provides a rate limiter.
-package rate
+package memrate
 
 import (
 	"context"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/ratelimit/base"
+	"github.com/unionj-cloud/go-doudou/ratelimit"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"math"
 	"sync"
@@ -93,12 +93,6 @@ func WithTimer(timeout time.Duration, fn func()) LimiterOption {
 	}
 }
 
-func WithOnKeyIdleTimeout(fn func()) LimiterOption {
-	return func(lim *Limiter) {
-		lim.timer = time.AfterFunc(lim.ttl(), fn)
-	}
-}
-
 // NewLimiter returns a new Limiter that allows events up to rate r and permits
 // bursts of at most b tokens.
 func NewLimiter(r Limit, b int, opts ...LimiterOption) *Limiter {
@@ -115,7 +109,7 @@ func NewLimiter(r Limit, b int, opts ...LimiterOption) *Limiter {
 
 // NewLimiterLimit returns a new Limiter that allows events up to rate r and permits
 // bursts of at most b tokens.
-func NewLimiterLimit(l base.Limit, opts ...LimiterOption) *Limiter {
+func NewLimiterLimit(l ratelimit.Limit, opts ...LimiterOption) *Limiter {
 	lim := &Limiter{
 		limit: Limit(l.Rate / l.Period.Seconds()),
 		burst: l.Burst,
@@ -340,18 +334,9 @@ func (lim *Limiter) SetBurstAt(now time.Time, newBurst int) {
 	lim.burst = newBurst
 }
 
-func (lim *Limiter) ttl() time.Duration {
-	seconds := float64(lim.Burst()) / float64(lim.Limit())
-	return time.Nanosecond * time.Duration(1e9*seconds)
-}
-
 func (lim *Limiter) resetTimer() {
 	if lim.timer != nil && lim.timer.Stop() {
-		timeout := lim.ttl()
-		if lim.timeout > 0 {
-			timeout = lim.timeout
-		}
-		lim.timer.Reset(timeout)
+		lim.timer.Reset(lim.timeout)
 	}
 }
 
