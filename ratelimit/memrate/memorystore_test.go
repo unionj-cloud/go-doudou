@@ -1,6 +1,7 @@
 package memrate
 
 import (
+	"context"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/unionj-cloud/go-doudou/ratelimit/base"
 	"github.com/unionj-cloud/go-doudou/ratelimit/memrate/rate"
@@ -12,7 +13,7 @@ import (
 func TestMemoryStore_addKey(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
-		limiterFn func(store *MemoryStore, key string) base.Limiter
+		limiterFn LimiterFn
 		mu        *sync.RWMutex
 	}
 	type args struct {
@@ -29,8 +30,8 @@ func TestMemoryStore_addKey(t *testing.T) {
 			name: "",
 			fields: fields{
 				keys: make(map[string]base.Limiter),
-				limiterFn: func(store *MemoryStore, key string) base.Limiter {
-					return limiter
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
+					return rate.NewLimiter(1, 3)
 				},
 				mu: &sync.RWMutex{},
 			},
@@ -48,7 +49,7 @@ func TestMemoryStore_addKey(t *testing.T) {
 				limiterFn: tt.fields.limiterFn,
 				mu:        tt.fields.mu,
 			}
-			if got := store.addKey(tt.args.key); !reflect.DeepEqual(got, tt.want) {
+			if got := store.addKeyCtx(context.Background(), tt.args.key); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addKey() = %v, want %v", got, tt.want)
 			}
 		})
@@ -58,7 +59,7 @@ func TestMemoryStore_addKey(t *testing.T) {
 func TestMemoryStore_GetLimiter(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
-		limiterFn func(store *MemoryStore, key string) base.Limiter
+		limiterFn LimiterFn
 		mu        *sync.RWMutex
 	}
 	type args struct {
@@ -75,8 +76,8 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 			name: "",
 			fields: fields{
 				keys: make(map[string]base.Limiter),
-				limiterFn: func(store *MemoryStore, key string) base.Limiter {
-					return limiter
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
+					return rate.NewLimiter(1, 3)
 				},
 				mu: &sync.RWMutex{},
 			},
@@ -104,7 +105,7 @@ func TestMemoryStore_GetLimiter(t *testing.T) {
 func TestMemoryStore_DeleteKey(t *testing.T) {
 	type fields struct {
 		keys      map[string]base.Limiter
-		limiterFn func(store *MemoryStore, key string) base.Limiter
+		limiterFn LimiterFn
 		mu        *sync.RWMutex
 	}
 	type args struct {
@@ -119,7 +120,7 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 			name: "",
 			fields: fields{
 				keys: make(map[string]base.Limiter),
-				limiterFn: func(store *MemoryStore, key string) base.Limiter {
+				limiterFn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
 					return rate.NewLimiter(1, 3)
 				},
 				mu: &sync.RWMutex{},
@@ -137,7 +138,7 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 				limiterFn: tt.fields.limiterFn,
 				mu:        tt.fields.mu,
 			}
-			store.addKey(tt.args.key)
+			store.addKeyCtx(context.Background(), tt.args.key)
 			if exists := store.keys.Contains(tt.args.key); !exists {
 				t.Error("key should exists")
 			}
@@ -151,7 +152,7 @@ func TestMemoryStore_DeleteKey(t *testing.T) {
 
 func TestNewMemoryStore(t *testing.T) {
 	type args struct {
-		fn func(store *MemoryStore, key string) base.Limiter
+		fn LimiterFn
 	}
 	tests := []struct {
 		name string
@@ -160,7 +161,7 @@ func TestNewMemoryStore(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				fn: func(store *MemoryStore, key string) base.Limiter {
+				fn: func(ctx context.Context, store *MemoryStore, key string) base.Limiter {
 					return rate.NewLimiter(1, 3)
 				},
 			},

@@ -543,20 +543,20 @@ func TestTokenLimiter_Allow(t *testing.T) {
 
 func TestTokenLimiter_Reserve(t *testing.T) {
 	tl := NewLimiter(1, 3)
-	if d, ok := tl.Reserve(); ok != true && d != 0 {
+	if d, ok, _ := tl.ReserveE(); ok != true && d != 0 {
 		t.Errorf("Reserve() should return true and d should equal to 0")
 	}
-	if d, ok := tl.Reserve(); ok != true && d != 0 {
+	if d, ok, _ := tl.ReserveE(); ok != true && d != 0 {
 		t.Errorf("Reserve() should return true and d should equal to 0")
 	}
-	if d, ok := tl.Reserve(); ok != true && d != 0 {
+	if d, ok, _ := tl.ReserveE(); ok != true && d != 0 {
 		t.Errorf("Reserve() should return true and d should equal to 0")
 	}
-	if d, ok := tl.Reserve(); ok != true && d <= 0 {
+	if d, ok, _ := tl.ReserveE(); ok != true && d <= 0 {
 		t.Errorf("Reserve() should return true and d should greater than 0")
 	}
 	tl = NewLimiter(1, 0)
-	if _, ok := tl.Reserve(); ok != false {
+	if _, ok, _ := tl.ReserveE(); ok != false {
 		t.Errorf("Reserve() should return false")
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/ratelimit/base"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -13,7 +12,7 @@ import (
 
 const redisPrefix = "rate:"
 
-type Rediser interface {
+type rediser interface {
 	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd
 	EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) *redis.Cmd
 	ScriptExists(ctx context.Context, hashes ...string) *redis.BoolSliceCmd
@@ -24,12 +23,10 @@ type Rediser interface {
 type LimitFn func(ctx context.Context) base.Limit
 
 type GcraLimiter struct {
-	rdb     Rediser
+	rdb     rediser
 	key     string
 	limit   base.Limit
 	limitFn LimitFn
-	timer   *time.Timer
-	mu      sync.RWMutex
 }
 
 func (gl *GcraLimiter) AllowCtx(ctx context.Context) bool {
@@ -65,12 +62,12 @@ func (gl *GcraLimiter) Wait(ctx context.Context) error {
 }
 
 func (gl *GcraLimiter) AllowE() (bool, error) {
-	allow, err := gl.AllowN(context.Background(), gl.key, 1)
+	allow, err := gl.AllowN(context.Background(), 1)
 	return allow.Allowed > 0, err
 }
 
 func (gl *GcraLimiter) ReserveE() (time.Duration, bool, error) {
-	allow, err := gl.AllowN(context.Background(), gl.key, 1)
+	allow, err := gl.AllowN(context.Background(), 1)
 	if err != nil {
 		return 0, false, err
 	}
@@ -78,26 +75,20 @@ func (gl *GcraLimiter) ReserveE() (time.Duration, bool, error) {
 }
 
 func (gl *GcraLimiter) AllowECtx(ctx context.Context) (bool, error) {
-	allow, err := gl.AllowN(ctx, gl.key, 1)
+	allow, err := gl.AllowN(ctx, 1)
 	return allow.Allowed > 0, err
 }
 
 func (gl *GcraLimiter) ReserveECtx(ctx context.Context) (time.Duration, bool, error) {
-	allow, err := gl.AllowN(ctx, gl.key, 1)
+	allow, err := gl.AllowN(ctx, 1)
 	if err != nil {
 		return 0, false, err
 	}
 	return allow.RetryAfter, allow.Allowed > 0, nil
 }
 
-func (gl *GcraLimiter) resetTimer(resetAfter time.Duration) {
-	if gl.timer != nil && gl.timer.Stop() {
-		gl.timer.Reset(resetAfter)
-	}
-}
-
 // NewGcraLimiter returns a new Limiter.
-func NewGcraLimiter(rdb Rediser, key string, r float64, period time.Duration, b int) base.Limiter {
+func NewGcraLimiter(rdb rediser, key string, r float64, period time.Duration, b int) base.Limiter {
 	return &GcraLimiter{
 		rdb: rdb,
 		key: key,
@@ -110,7 +101,7 @@ func NewGcraLimiter(rdb Rediser, key string, r float64, period time.Duration, b 
 }
 
 // NewGcraLimiterLimit returns a new Limiter.
-func NewGcraLimiterLimit(rdb Rediser, key string, l base.Limit) base.Limiter {
+func NewGcraLimiterLimit(rdb rediser, key string, l base.Limit) base.Limiter {
 	return &GcraLimiter{
 		rdb:   rdb,
 		key:   key,
@@ -119,7 +110,7 @@ func NewGcraLimiterLimit(rdb Rediser, key string, l base.Limit) base.Limiter {
 }
 
 // NewGcraLimiterLimitFn returns a new Limiter.
-func NewGcraLimiterLimitFn(rdb Rediser, key string, fn LimitFn) base.Limiter {
+func NewGcraLimiterLimitFn(rdb rediser, key string, fn LimitFn) base.Limiter {
 	return &GcraLimiter{
 		rdb:     rdb,
 		key:     key,
@@ -128,22 +119,13 @@ func NewGcraLimiterLimitFn(rdb Rediser, key string, fn LimitFn) base.Limiter {
 }
 
 // AllowN reports whether n events may happen at time now.
-func (gl *GcraLimiter) AllowN(
-	ctx context.Context,
-	key string,
-	n int,
-) (res *Result, err error) {
-	defer func() {
-		if res != nil {
-			gl.resetTimer(res.ResetAfter)
-		}
-	}()
+func (gl *GcraLimiter) AllowN(ctx context.Context, n int) (res *Result, err error) {
 	limit := gl.limit
 	if gl.limitFn != nil {
 		limit = gl.limitFn(ctx)
 	}
 	values := []interface{}{limit.Burst, limit.Rate, limit.Period.Seconds(), n}
-	v, err := allowN.Run(ctx, gl.rdb, []string{redisPrefix + key}, values...).Result()
+	v, err := allowN.Run(ctx, gl.rdb, []string{redisPrefix + gl.key}, values...).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +153,8 @@ func (gl *GcraLimiter) AllowN(
 }
 
 // Reset gets a key and reset all limitations and previous usages
-func (gl *GcraLimiter) Reset(ctx context.Context, key string) error {
-	return gl.rdb.Del(ctx, redisPrefix+key).Err()
+func (gl *GcraLimiter) Reset(ctx context.Context) error {
+	return gl.rdb.Del(ctx, redisPrefix+gl.key).Err()
 }
 
 func dur(f float64) time.Duration {
