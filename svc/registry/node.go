@@ -210,7 +210,7 @@ func newConf() *memberlist.Config {
 	}
 	// if env GDD_MEM_WEIGHT is set to > 0, then disable weight calculation, client will always use the same weight
 	if cast.ToInt(config.GddMemWeight.Load()) > 0 {
-		cfg.WeightInterval = time.Duration(0)
+		cfg.WeightInterval = 0
 	} else {
 		weightIntervalStr := config.GddMemWeightInterval.Load()
 		if stringutils.IsNotEmpty(weightIntervalStr) {
