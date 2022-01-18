@@ -208,14 +208,19 @@ func newConf() *memberlist.Config {
 			}
 		}
 	}
-	weightIntervalStr := config.GddMemWeightInterval.Load()
-	if stringutils.IsNotEmpty(weightIntervalStr) {
-		if weightInterval, err := strconv.Atoi(weightIntervalStr); err == nil {
-			cfg.WeightInterval = time.Duration(weightInterval) * time.Millisecond
-		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(weightIntervalStr); err == nil {
-				cfg.WeightInterval = duration
+	// if env GDD_MEM_WEIGHT is set to > 0, then disable weight calculation, client will always use the same weight
+	if cast.ToInt(config.GddMemWeight.Load()) > 0 {
+		cfg.WeightInterval = time.Duration(0)
+	} else {
+		weightIntervalStr := config.GddMemWeightInterval.Load()
+		if stringutils.IsNotEmpty(weightIntervalStr) {
+			if weightInterval, err := strconv.Atoi(weightIntervalStr); err == nil {
+				cfg.WeightInterval = time.Duration(weightInterval) * time.Millisecond
+			} else {
+				var duration time.Duration
+				if duration, err = time.ParseDuration(weightIntervalStr); err == nil {
+					cfg.WeightInterval = duration
+				}
 			}
 		}
 	}
