@@ -331,8 +331,17 @@ func NewNode(data ...map[string]interface{}) error {
 // Shutdown stops all connections and communications with other nodes in the cluster
 func Shutdown() {
 	if mlist != nil {
-		mlist.Shutdown()
+		_ = mlist.Shutdown()
+		mlist = nil
 		logger.Info("memberlist shutdown")
+	}
+}
+
+// Leave leaves the cluster on purpose
+func Leave(timeout time.Duration) {
+	if mlist != nil {
+		_ = mlist.Leave(timeout)
+		logger.Info("local node left the cluster")
 	}
 }
 
@@ -420,6 +429,9 @@ func SvcName(node *memberlist.Node) string {
 }
 
 func RegisterServiceProvider(sp IServiceProvider) {
+	if mlist == nil {
+		return
+	}
 	for _, node := range mlist.Members() {
 		sp.AddNode(node)
 	}
