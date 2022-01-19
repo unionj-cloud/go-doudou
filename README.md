@@ -143,13 +143,13 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.5
+go get -v github.com/unionj-cloud/go-doudou@v0.9.6
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.5
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.6
 ```
 
 ### Usage
