@@ -87,7 +87,7 @@ const (
 	GddMemPort envVariable = "GDD_MEM_PORT"
 	// GddMemDeadTimeout dead node will be removed from node map if not received refute messages from it in GddMemDeadTimeout second
 	// expose GossipToTheDeadTime property of memberlist.Config
-	// default value is 30 in second
+	// default value is 60 in second
 	GddMemDeadTimeout envVariable = "GDD_MEM_DEAD_TIMEOUT"
 	// GddMemSyncInterval local node will synchronize states from other random node every GddMemSyncInterval second
 	// expose PushPullInterval property of memberlist.Config

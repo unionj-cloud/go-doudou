@@ -127,7 +127,6 @@ func newConf() *memberlist.Config {
 		MinLevel: logutils.LogLevel(minLevel),
 		Writer:   logrus.StandardLogger().Writer(),
 	}
-	cfg.GossipToTheDeadTime = 30 * time.Second
 	deadTimeoutStr := config.GddMemDeadTimeout.Load()
 	if stringutils.IsNotEmpty(deadTimeoutStr) {
 		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {
