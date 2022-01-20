@@ -302,7 +302,7 @@ func NewNode(data ...map[string]interface{}) error {
 			if mlist == nil {
 				return 0
 			}
-			return len(mlist.Members())
+			return mlist.NumMembers()
 		},
 		RetransmitMult: mconf.RetransmitMult,
 	}
