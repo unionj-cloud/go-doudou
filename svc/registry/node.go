@@ -67,7 +67,6 @@ func AllNodes() ([]*memberlist.Node, error) {
 	}
 	var nodes []*memberlist.Node
 	for _, node := range mlist.Members() {
-		logger.Debugf("Member: %s %s\n", node.Name, node.Addr)
 		nodes = append(nodes, node)
 	}
 	return nodes, nil
