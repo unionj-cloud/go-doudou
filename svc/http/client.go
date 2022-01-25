@@ -127,7 +127,7 @@ func (m *base) AddNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes, s)
 		m.nodeMap[node.Name] = s
-		logger.Infof("[go-doudou] node %s joined, supplying %s service", node.Name, svcName)
+		logger.Infof("[go-doudou] add node %s to load balancer, supplying %s service", node.Name, svcName)
 	} else {
 		old := *s
 		s.baseUrl = baseUrl
@@ -170,7 +170,7 @@ func (m *base) RemoveNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes[:idx], m.nodes[idx+1:]...)
 		delete(m.nodeMap, node.Name)
-		logger.Infof("[go-doudou] node %s left, supplying %s service", node.Name, svcName)
+		logger.Infof("[go-doudou] remove node %s from load balancer, supplying %s service", node.Name, svcName)
 	}
 }
 
