@@ -26,6 +26,7 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
   - [推荐架构](#%E6%8E%A8%E8%8D%90%E6%9E%B6%E6%9E%84)
   - [Go版本兼容性](#go%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7)
   - [安装](#%E5%AE%89%E8%A3%85)
+  - [升级](#%E5%8D%87%E7%BA%A7)
   - [用法](#%E7%94%A8%E6%B3%95)
   - [Hello World](#hello-world)
     - [初始化项目](#%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE)
@@ -105,6 +106,49 @@ go get -v github.com/unionj-cloud/go-doudou@v0.9.7
 
 ```shell
 export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.7
+```
+
+### 升级
+```shell
+➜  ~ go-doudou version                       
+Installed version is v0.9.6
+Latest release version is v0.9.7
+✔ Yes
+go install -v github.com/unionj-cloud/go-doudou@v0.9.7
+go: downloading github.com/unionj-cloud/go-doudou v0.9.7
+github.com/unionj-cloud/go-doudou/ddl/columnenum
+github.com/unionj-cloud/go-doudou/ddl/sortenum
+github.com/unionj-cloud/go-doudou/ddl/nullenum
+github.com/unionj-cloud/go-doudou/ddl/keyenum
+github.com/unionj-cloud/go-doudou/ddl/extraenum
+github.com/unionj-cloud/go-doudou/ddl/config
+github.com/unionj-cloud/go-doudou/constants
+github.com/unionj-cloud/go-doudou/stringutils
+github.com/unionj-cloud/go-doudou/sliceutils
+github.com/unionj-cloud/go-doudou/templateutils
+github.com/unionj-cloud/go-doudou/ddl/wrapper
+github.com/unionj-cloud/go-doudou/pathutils
+github.com/unionj-cloud/go-doudou/svc/config
+github.com/unionj-cloud/go-doudou/copier
+github.com/unionj-cloud/go-doudou/executils
+github.com/unionj-cloud/go-doudou/astutils
+github.com/unionj-cloud/go-doudou/logutils
+github.com/unionj-cloud/go-doudou/test
+github.com/unionj-cloud/go-doudou/name
+github.com/unionj-cloud/go-doudou/ddl/ddlast
+github.com/unionj-cloud/go-doudou/openapi/v3
+github.com/unionj-cloud/go-doudou/ddl/table
+github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client
+github.com/unionj-cloud/go-doudou/svc/internal/codegen
+github.com/unionj-cloud/go-doudou/ddl/codegen
+github.com/unionj-cloud/go-doudou/ddl
+github.com/unionj-cloud/go-doudou/svc
+github.com/unionj-cloud/go-doudou/cmd
+github.com/unionj-cloud/go-doudou
+DONE
+➜  ~ go-doudou version
+Installed version is v0.9.7
+➜  ~ 
 ```
 
 ### 用法

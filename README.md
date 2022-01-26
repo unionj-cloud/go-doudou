@@ -32,6 +32,7 @@ framework. It supports monolith service application as well. Currently, it suppo
   - [Recommend Architecture](#recommend-architecture)
   - [Golang Version Support](#golang-version-support)
   - [Install](#install)
+  - [Upgrade](#upgrade)
   - [Usage](#usage)
   - [Hello World](#hello-world)
     - [Initialize project](#initialize-project)
@@ -102,15 +103,15 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 - https://spec.openapis.org/oas/v3.0.3: OpenAPI 3.0
 
 
-
+&nbsp;
 ### Philosophy
 
 - Design First: We encourage designing your apis at the first place.
 - Contract: We use OpenAPI 3.0 spec as a contract between server and client to reduce the communication cost between
   different dev teams and speed up development.
 - Decentralization: We use gossip protocol to do service register and discovery to build a robust, scalable and
-  decentralized service cluster. Thanks the awesome library memberlist by hashicorp.
-
+  decentralized service cluster. Thanks the awesome library memberlist by hashicorp.  
+&nbsp;
 ### Features
 
 - Low-code: design service interface to generate main function, routes, http handlers, mock service implementation, http
@@ -124,22 +125,22 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 - Built-in service registry UI
 - Built-in prometheus middlewares: http_requests_total, response_status and http_response_time_seconds
 - Built-in docker and k8s deployment support: dockerfile, deployment kind yaml file and statefulset kind yaml file
-- Easy to learn, simple to use
-
+- Easy to learn, simple to use  
+&nbsp;
 ### Overview
 
-![Overview](go-doudou.drawio.png)
-
+![Overview](go-doudou.drawio.png)  
+&nbsp;
 ### Recommend Architecture
 
-![Recommend Architecture](go-doudou-reconmend.drawio.png)
-
+![Recommend Architecture](go-doudou-reconmend.drawio.png)  
+&nbsp;
 ### Golang Version Support
 
 - go 1.13, 1.14, 1.15 with GO111MODULE=on
 - go 1.16+
-- < go 1.13: not test, maybe support
-
+- < go 1.13: not test, maybe support   
+&nbsp;
 ### Install
 
 ```shell
@@ -150,8 +151,51 @@ If you meet 410 Gone error, try below command:
 
 ```shell
 export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.7
-```
-
+```  
+&nbsp;
+### Upgrade
+```shell
+➜  ~ go-doudou version                       
+Installed version is v0.9.6
+Latest release version is v0.9.7
+✔ Yes
+go install -v github.com/unionj-cloud/go-doudou@v0.9.7
+go: downloading github.com/unionj-cloud/go-doudou v0.9.7
+github.com/unionj-cloud/go-doudou/ddl/columnenum
+github.com/unionj-cloud/go-doudou/ddl/sortenum
+github.com/unionj-cloud/go-doudou/ddl/nullenum
+github.com/unionj-cloud/go-doudou/ddl/keyenum
+github.com/unionj-cloud/go-doudou/ddl/extraenum
+github.com/unionj-cloud/go-doudou/ddl/config
+github.com/unionj-cloud/go-doudou/constants
+github.com/unionj-cloud/go-doudou/stringutils
+github.com/unionj-cloud/go-doudou/sliceutils
+github.com/unionj-cloud/go-doudou/templateutils
+github.com/unionj-cloud/go-doudou/ddl/wrapper
+github.com/unionj-cloud/go-doudou/pathutils
+github.com/unionj-cloud/go-doudou/svc/config
+github.com/unionj-cloud/go-doudou/copier
+github.com/unionj-cloud/go-doudou/executils
+github.com/unionj-cloud/go-doudou/astutils
+github.com/unionj-cloud/go-doudou/logutils
+github.com/unionj-cloud/go-doudou/test
+github.com/unionj-cloud/go-doudou/name
+github.com/unionj-cloud/go-doudou/ddl/ddlast
+github.com/unionj-cloud/go-doudou/openapi/v3
+github.com/unionj-cloud/go-doudou/ddl/table
+github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client
+github.com/unionj-cloud/go-doudou/svc/internal/codegen
+github.com/unionj-cloud/go-doudou/ddl/codegen
+github.com/unionj-cloud/go-doudou/ddl
+github.com/unionj-cloud/go-doudou/svc
+github.com/unionj-cloud/go-doudou/cmd
+github.com/unionj-cloud/go-doudou
+DONE
+➜  ~ go-doudou version
+Installed version is v0.9.7
+➜  ~ 
+```  
+&nbsp;
 ### Usage
 
 ```shell
@@ -177,9 +221,9 @@ Flags:
   -h, --help      help for go-doudou
   -v, --version   version for go-doudou
 
-Use "go-doudou [command] --help" for more information about a command.
+Use "go-doudou [command] --help" for more information about a command.  
 ```
-
+&nbsp;
 ### Hello World
 
 #### Initialize project
@@ -393,8 +437,8 @@ go-doudou svc deploy
 
 ```shell
 go-doudou svc shutdown
-```
-
+```  
+&nbsp;
 ### Must Know
 
 There are some constraints or notable things when you define your methods as exposed apis for client in svc.go file.
@@ -415,8 +459,8 @@ There are some constraints or notable things when you define your methods as exp
 8. When execute  `go-doudou svc http --handler` , existing code in handler.go will be overwritten, so don't modify
    handler.go file.
 9. When execute  `go-doudou svc http`, only handler.go file will be overwritten and others will be checked if exists, if
-   already exists, do nothing.
-
+   already exists, do nothing.  
+&nbsp;
 ### Cors
 Recommend to use [github.com/rs/cors](github.com/rs/cors) library. Here is example code.
 ```
@@ -438,8 +482,8 @@ corsOpts := cors.New(cors.Options{
 
 srv := ddhttp.NewDefaultHttpSrv()
 srv.AddMiddleware(corsOpts.Handler, ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest)
-```
-
+```  
+&nbsp;
 ### Service register & discovery
 
 Go-doudou supports monolith and microservices architecture.
@@ -450,8 +494,8 @@ if err != nil {
     logrus.Panicln(fmt.Sprintf("%+v", err))
 }
 defer registry.Shutdown()
-```
-
+```  
+&nbsp;
 ### Client Load Balancing
 
 #### Simple Round-robin Load Balancing
@@ -539,8 +583,8 @@ func main() {
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
-```
-
+```  
+&nbsp;
 ### Rate Limit
 #### Usage
 There is a built-in [golang.org/x/time/rate](https://pkg.go.dev/golang.org/x/time/rate) based token-bucket rate limiter implementation
@@ -729,8 +773,8 @@ func RedisRateLimit(rdb redisrate.Rediser, fn redisrate.LimitFn) func(inner http
 		})
 	}
 }
-```
-
+```  
+&nbsp;
 ### Bulkhead
 #### Usage
 There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based bulkhead pattern support by BulkHead middleware in `github.com/unionj-cloud/go-doudou/svc/http` package.
@@ -791,8 +835,8 @@ func main() {
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
-```
-
+```  
+&nbsp;
 ### Circuit Breaker / Timeout / Retry 
 #### Usage
 There is built-in [github.com/slok/goresilience](github.com/slok/goresilience) based Circuit Breaker / Timeout / Retry support in generated client code.
@@ -868,8 +912,8 @@ func main() {
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
-```
-
+```  
+&nbsp;
 ### Log
 #### Usage
 There is a global `logrus.Entry` provided by `github.com/unionj-cloud/go-doudou/svc/logger` package. If `GDD_ENV` is set and is not set to `dev`,
@@ -899,8 +943,8 @@ logger.Init(logger.WithWritter(io.MultiWriter(os.Stdout, &lumberjack.Logger{
 #### ELK stack
 `logger` package provided well support for ELK stack. To see example, please go to [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide).
 
-![elk](./elk.png)
-
+![elk](./elk.png)  
+&nbsp;
 ### Jaeger
 #### Usage
 To add jaeger feature, you just need three steps:
@@ -973,16 +1017,16 @@ func main() {
 ```
 #### Screenshot
 ![jaeger1](./jaeger1.png)
-![jaeger2](./jaeger2.png)
-
+![jaeger2](./jaeger2.png)  
+&nbsp;
 ### Grafana / Prometheus
 #### Usage
 We implemented a service called `seed` for Prometheus service discovery based on [this blog](https://prometheus.io/blog/2018/07/05/implementing-custom-sd/).
 Its source code is in [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide) repo.
 
 #### Screenshot
-![grafana](./grafana.png)
-
+![grafana](./grafana.png)  
+&nbsp;
 ### Configuration
 
 Go-doudou use .env file to load environment variables to configure behaviors.
@@ -1021,11 +1065,11 @@ Go-doudou use .env file to load environment variables to configure behaviors.
 | GDD_MEM_WEIGHT | Node weight for smooth weighted round-robin balancing                                                                                                                                                                                                                              | 0         |          |
 | GDD_MEM_WEIGHT_INTERVAL | Node weight will be calculated every GDD_MEM_WEIGHT_INTERVAL                                                                                                                                                                                                                       | 5s        |          |
 | GDD_RETRY_COUNT | Set resty client retry count                                                                                                                                                                                                                                                       | 0         |          |
-
+&nbsp;
 ### Example
 
-Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)
-
+Please check [go-doudou-guide](https://github.com/unionj-cloud/go-doudou-guide)  
+&nbsp;
 ### Notable tools
 
 #### name
@@ -1035,12 +1079,12 @@ Command line tool for generating json tag of struct field. Please check [documen
 #### ddl
 
 DDL and dao layer generation command line tool based on [jmoiron/sqlx](https://github.com/jmoiron/sqlx). Please
-check [document](./ddl/doc/README.md).
-
+check [document](./ddl/doc/README.md).  
+&nbsp;
 ### TODO
 
-Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)
-
+Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)  
+&nbsp;
 ### Community
 
 Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a
@@ -1054,8 +1098,8 @@ Welcome to contact me from
 - twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
 - email: 328454505@qq.com
 - wechat:  
-  ![qrcode.png](qrcode.png)
-
+  ![qrcode.png](qrcode.png)  
+&nbsp;
 ## License
 
 MIT
