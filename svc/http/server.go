@@ -7,6 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
+	configui "github.com/unionj-cloud/go-doudou/svc/http/config"
 	"github.com/unionj-cloud/go-doudou/svc/http/model"
 	"github.com/unionj-cloud/go-doudou/svc/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/svc/http/prometheus"
@@ -42,6 +43,7 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		mergedRoutes = append(mergedRoutes, onlinedoc.Routes()...)
 		mergedRoutes = append(mergedRoutes, prometheus.Routes()...)
 		mergedRoutes = append(mergedRoutes, registry.Routes()...)
+		mergedRoutes = append(mergedRoutes, configui.Routes()...)
 		for _, item := range mergedRoutes {
 			gddRouter.
 				Methods(item.Method).
