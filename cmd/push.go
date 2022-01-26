@@ -5,6 +5,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc"
 )
 
+var prefix string
+
 // pushCmd pushes image to remote docker image repository
 var pushCmd = &cobra.Command{
 	Use:   "push",
@@ -12,10 +14,13 @@ var pushCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		s := svc.NewSvc("")
+		s.ImagePrefix = prefix
 		s.Push(imageRepo)
 	},
 }
 
 func init() {
 	svcCmd.AddCommand(pushCmd)
+
+	pushCmd.Flags().StringVar(&prefix, "pre", "", `image name prefix string used for building and pushing docker image`)
 }

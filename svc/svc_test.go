@@ -312,6 +312,7 @@ func Test_GenClient(t *testing.T) {
 
 func TestSvc_Push(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
+	s.ImagePrefix = "go-doudou-"
 	s.Push("wubin1989")
 }
 

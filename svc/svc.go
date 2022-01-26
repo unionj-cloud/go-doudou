@@ -30,16 +30,23 @@ const (
 
 // Svc wraps all config properties for commands
 type Svc struct {
-	dir          string
-	Handler      bool
-	Client       string
-	Omitempty    bool
-	Doc          bool
+	// dir is project root path
+	dir string
+	// Handler indicates whether generate default http handler implementation code or not
+	Handler bool
+	// Client is client language name
+	Client string
+	// Omitempty indicates whether omit empty when marshal structs to json
+	Omitempty bool
+	// Doc indicates whether generate OpenAPI 3.0 json doc file
+	Doc bool
+	// Jsonattrcase is attribute case converter name when marshal structs to json
 	Jsonattrcase string
-
+	// DocPath is OpenAPI 3.0 json doc file path used for generating client code
 	DocPath string
-
-	Env       string
+	// Env is service base url environment variable name used for generating client code
+	Env string
+	// ClientPkg is client package name
 	ClientPkg string
 
 	cmd        *exec.Cmd
@@ -51,7 +58,11 @@ type Svc struct {
 	runner executils.Runner
 	w      *watcher.Watcher
 
+	// ModName is go module name
 	ModName string
+
+	// ImagePrefix is image name prefix string used for building and pushing docker image
+	ImagePrefix string
 }
 
 func validateDataType(dir string) {
@@ -230,14 +241,15 @@ func (receiver Svc) Push(repo string) {
 	}
 
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
+	imageName := fmt.Sprintf("%s%s", receiver.ImagePrefix, svcname)
 	loginUser, _ := user.Current()
 	if loginUser != nil {
-		err = receiver.runner.Run("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", svcname, ".")
+		err = receiver.runner.Run("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", imageName, ".")
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		err = receiver.runner.Run("docker", "build", "-t", svcname, ".")
+		err = receiver.runner.Run("docker", "build", "-t", imageName, ".")
 		if err != nil {
 			panic(err)
 		}
@@ -247,8 +259,8 @@ func (receiver Svc) Push(repo string) {
 		logrus.Warnln("no private docker image repository address provided")
 		return
 	}
-	image := fmt.Sprintf("%s/%s:%s", repo, svcname, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
-	err = receiver.runner.Run("docker", "tag", svcname, image)
+	image := fmt.Sprintf("%s/%s:%s", repo, imageName, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
+	err = receiver.runner.Run("docker", "tag", imageName, image)
 	if err != nil {
 		panic(err)
 	}
