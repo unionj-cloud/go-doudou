@@ -5,9 +5,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const version = "v0.9.6"
+
 // rootCmd is the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: "v0.9.6",
+	Version: version,
 	Use:     "go-doudou",
 	Short:   "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
 	Long: `go-doudou works like a scaffolding tool but more than that. 

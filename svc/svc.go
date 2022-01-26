@@ -442,3 +442,11 @@ func (receiver Svc) Run(watch bool) {
 		}
 	}
 }
+
+// Upgrade upgrades go-doudou to latest release version
+func (receiver Svc) Upgrade(version string) {
+	fmt.Printf("go install -v github.com/unionj-cloud/go-doudou@%s\n", version)
+	if err := receiver.runner.Run("go", "install", "-v", fmt.Sprintf("github.com/unionj-cloud/go-doudou@%s", version)); err != nil {
+		panic(err)
+	}
+}
