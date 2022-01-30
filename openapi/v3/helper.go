@@ -39,7 +39,7 @@ var SchemaNames []string
 // type uint8
 // type uintptr
 func SchemaOf(field astutils.FieldMeta) *Schema {
-	ft := strings.TrimPrefix(field.Type, "*")
+	ft := strings.TrimLeft(field.Type, "*")
 	switch ft {
 	case "int", "int8", "int16", "int32", "uint", "uint8", "uint16", "uint32", "byte", "rune", "complex64", "complex128":
 		return Int
@@ -47,7 +47,7 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return Int64
 	case "bool":
 		return Bool
-	case "string", "error":
+	case "string", "error", "[]rune", "[]byte":
 		return String
 	case "float32":
 		return Float32

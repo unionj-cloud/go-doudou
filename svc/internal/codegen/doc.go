@@ -68,8 +68,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	ret.Description = strings.Join(method.Comments, "\n")
 
 	// If http method is "POST" and each parameters' type is one of v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64,
-	// then we use application/x-www-form-urlencoded as Content-type and we make one ref schema from them as request body.
-	// Note: unionj-generator project hasn't support application/x-www-form-urlencoded yet
+	// then we use application/x-www-form-urlencoded as Content-type, and we make one ref schema from them as request body.
 	var simpleCnt int
 	for _, item := range method.Params {
 		if v3.IsBuiltin(item) || item.Type == "context.Context" {

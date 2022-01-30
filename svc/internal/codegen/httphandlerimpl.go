@@ -340,12 +340,12 @@ var castFuncMap = map[string]string{
 }
 
 func isSupport(t string) bool {
-	_, exists := castFuncMap[t]
+	_, exists := castFuncMap[strings.TrimLeft(t, "*")]
 	return exists
 }
 
 func castFunc(t string) string {
-	return castFuncMap[t]
+	return castFuncMap[strings.TrimLeft(t, "*")]
 }
 
 // GenHttpHandlerImplWithImpl generates http handler implementation
