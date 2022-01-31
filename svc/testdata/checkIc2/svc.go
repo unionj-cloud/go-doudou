@@ -10,5 +10,5 @@ import (
 // v1版本
 type Usersvc interface {
 	// comment4
-	UploadAvatar(context.Context, *multipart.FileHeader, *v3.FileModel, string, []*multipart.FileHeader, []*multipart.FileHeader) (int, string, error)
+	UploadAvatar(context.Context, *multipart.FileHeader, v3.FileModel, string, []*multipart.FileHeader, []*multipart.FileHeader) (int, string, error)
 }

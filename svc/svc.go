@@ -117,8 +117,8 @@ func (receiver Svc) Http() {
 
 // validateRestApi is checking whether parameter types in each of service interface methods valid or not
 // Only support at most one golang non-built-in type as parameter in a service interface method
-// because go-doudou cannot put more than one parameter into request body except *v3.FileModel and *multipart.FileHeader.
-// If there are *v3.FileModel or *multipart.FileHeader parameters, go-doudou will assume you want a multipart/form-data api
+// because go-doudou cannot put more than one parameter into request body except v3.FileModel.
+// If there are v3.FileModel parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
 // Not support anonymous struct as parameter
 func validateRestApi(ic astutils.InterfaceCollector) {
@@ -130,7 +130,7 @@ func validateRestApi(ic astutils.InterfaceCollector) {
 	for _, method := range svcInter.Methods {
 		nonBasicTypes := getNonBasicTypes(method.Params)
 		if len(nonBasicTypes) > 1 {
-			panic("Too many golang non-built-in type parameters, can't decide which one should be put into request body!")
+			panic(fmt.Sprintf("Too many golang non-builtin type parameters in method %s, can't decide which one should be put into request body!", method))
 		}
 		for _, param := range method.Results {
 			if re.MatchString(param.Type) {
@@ -155,7 +155,7 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 			ptype := param.Type
 			if strings.HasPrefix(ptype, "[") || strings.HasPrefix(ptype, "*[") {
 				elem := ptype[strings.Index(ptype, "]")+1:]
-				if elem == "*v3.FileModel" || elem == "*multipart.FileHeader" {
+				if elem == "*v3.FileModel" || elem == "v3.FileModel" || elem == "*multipart.FileHeader" {
 					elem = "file"
 					if _, exists := cpmap[elem]; !exists {
 						cpmap[elem]++
@@ -164,7 +164,7 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 					continue
 				}
 			}
-			if ptype == "*v3.FileModel" || ptype == "*multipart.FileHeader" {
+			if ptype == "*v3.FileModel" || ptype == "v3.FileModel" || ptype == "*multipart.FileHeader" {
 				ptype = "file"
 				if _, exists := cpmap[ptype]; !exists {
 					cpmap[ptype]++

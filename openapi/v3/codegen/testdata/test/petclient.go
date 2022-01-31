@@ -95,7 +95,7 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
 	// ID of pet to update
 	// required
 	petId int64,
-	file *v3.FileModel) (ret ApiResponse, err error) {
+	file v3.FileModel) (ret ApiResponse, err error) {
 	var _err error
 
 	_req := receiver.client.R()

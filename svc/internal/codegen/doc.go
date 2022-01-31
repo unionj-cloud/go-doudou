@@ -104,12 +104,14 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				}
 				pschema := v3.CopySchema(item)
 				pschema.Description = strings.Join(item.Comments, "\n")
+				required := !isOptional(item.Type)
 				if v3.IsBuiltin(item) {
 					params = append(params, v3.Parameter{
 						Name:        strcase.ToLowerCamel(item.Name),
 						In:          v3.InQuery,
 						Schema:      &pschema,
 						Description: pschema.Description,
+						Required:    required,
 					})
 				} else {
 					var content v3.Content
@@ -119,7 +121,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 					reflect.ValueOf(&content).Elem().FieldByName("JSON").Set(reflect.ValueOf(mt))
 					ret.RequestBody = &v3.RequestBody{
 						Content:  &content,
-						Required: true,
+						Required: required,
 					}
 				}
 			}
@@ -192,10 +194,14 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 			continue
 		}
 		pschemaType := v3.SchemaOf(item)
-		pschema := v3.CopySchema(item)
-		pschema.Description = strings.Join(item.Comments, "\n")
 		if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3.IsBuiltin(item) {
-			reqSchema.Properties[strcase.ToLowerCamel(item.Name)] = &pschema
+			pschema := v3.CopySchema(item)
+			pschema.Description = strings.Join(item.Comments, "\n")
+			prop := strcase.ToLowerCamel(item.Name)
+			reqSchema.Properties[prop] = &pschema
+			if !isOptional(item.Type) {
+				reqSchema.Required = append(reqSchema.Required, prop)
+			}
 		}
 	}
 	v3.Schemas[title] = reqSchema
@@ -208,7 +214,7 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 	reflect.ValueOf(&content).Elem().FieldByName("FormData").Set(reflect.ValueOf(mt))
 	return &v3.RequestBody{
 		Content:  &content,
-		Required: true,
+		Required: len(reqSchema.Required) > 0,
 	}
 }
 
@@ -223,10 +229,13 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 		if item.Type == "context.Context" {
 			continue
 		}
-		key := item.Name
 		pschema := v3.CopySchema(item)
 		pschema.Description = strings.Join(item.Comments, "\n")
-		reqSchema.Properties[strcase.ToLowerCamel(key)] = &pschema
+		prop := strcase.ToLowerCamel(item.Name)
+		reqSchema.Properties[prop] = &pschema
+		if !isOptional(item.Type) {
+			reqSchema.Required = append(reqSchema.Required, prop)
+		}
 	}
 	v3.Schemas[title] = reqSchema
 	mt := &v3.MediaType{
@@ -238,7 +247,7 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 	reflect.ValueOf(&content).Elem().FieldByName("FormURL").Set(reflect.ValueOf(mt))
 	return &v3.RequestBody{
 		Content:  &content,
-		Required: true,
+		Required: len(reqSchema.Required) > 0,
 	}
 }
 

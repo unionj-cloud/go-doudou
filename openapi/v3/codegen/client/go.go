@@ -452,7 +452,7 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	} else if content.Stream != nil {
 		files = append(files, astutils.FieldMeta{
 			Name: "file",
-			Type: "*v3.FileModel",
+			Type: "v3.FileModel",
 		})
 	} else if content.TextPlain != nil {
 		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
@@ -474,13 +474,13 @@ func parseFormData(formData *v3.MediaType) (bodyParams *astutils.FieldMeta, file
 	for k, v := range schema.Properties {
 		var gotype string
 		if v.Type == v3.StringT && v.Format == v3.BinaryF {
-			gotype = "*v3.FileModel"
+			gotype = "v3.FileModel"
 		} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
-			gotype = "[]*v3.FileModel"
+			gotype = "[]v3.FileModel"
 		} else {
 			gotype = toGoType(v)
 		}
-		if strings.TrimPrefix(gotype, "[]") == "*v3.FileModel" {
+		if strings.TrimPrefix(gotype, "[]") == "v3.FileModel" {
 			files = append(files, astutils.FieldMeta{
 				Name: k,
 				Type: gotype,

@@ -27,13 +27,13 @@ type UsersvcPanic interface {
 	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)
 
 	// comment4
-	UploadAvatar(context.Context, []*v3.FileModel, string) (int, string, error)
+	UploadAvatar(context.Context, []v3.FileModel, string) (int, string, error)
 
 	// comment5
 	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)
 
 	// Wrong1
-	Wrong1(ctx context.Context, userId string, query vo.PageQuery, files []*v3.FileModel) (*os.File, error)
+	Wrong1(ctx context.Context, userId string, query vo.PageQuery, files []v3.FileModel) (*os.File, error)
 
 	// Wrong2
 	Wrong2(ctx context.Context, ch chan string) (*os.File, error)

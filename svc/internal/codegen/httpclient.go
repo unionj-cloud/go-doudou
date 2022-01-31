@@ -63,14 +63,14 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		_urlValues := url.Values{}
 		_req := receiver.client.R()
 		{{- range $p := $m.Params }}
-		{{- if contains $p.Type "*multipart.FileHeader" }}
+		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if contains $p.Type "["}}
 		for _, _fh := range {{$p.Name}} {
 			_f, _err := _fh.Open()
 			if _err != nil {
 				{{- range $r := $m.Results }}
 					{{- if eq $r.Type "error" }}
-						{{ $r.Name }} = errors.Wrap(_err, "")
+				{{ $r.Name }} = errors.Wrap(_err, "error")
 					{{- end }}
 				{{- end }}
 				return
@@ -81,7 +81,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		if _f, _err := {{$p.Name}}.Open(); _err != nil {
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
-					{{ $r.Name }} = errors.Wrap(_err, "")
+			{{ $r.Name }} = errors.Wrap(_err, "error")
 				{{- end }}
 			{{- end }}
 			return
@@ -89,24 +89,74 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
 		}
 		{{- end}}
-		{{- else if contains $p.Type "*v3.FileModel" }}
+		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") }}
 		{{- if contains $p.Type "["}}
+		{{- if isOptional $p.Type }}
+		if {{$p.Name}} != nil {
+			for _, _f := range *{{$p.Name}} {
+				_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
+			}
+		}
+		{{- else }}
+		if len({{$p.Name}}) == 0 {
+			{{- range $r := $m.Results }}
+				{{- if eq $r.Type "error" }}
+			{{ $r.Name }} = errors.New("at least one file should be uploaded for parameter {{$p.Name}}")
+				{{- end }}
+			{{- end }}
+			return
+		}
 		for _, _f := range {{$p.Name}} {
 			_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
 		}
-		{{- else}}
+		{{- end }}
+		{{- else }}
+		{{- if isOptional $p.Type }}
+		if {{$p.Name}} != nil { 
+			_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, {{$p.Name}}.Reader)
+		}
+		{{- else }}
 		_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, {{$p.Name}}.Reader)
-		{{- end}}
+		{{- end }}
+		{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
 		_req.SetContext({{$p.Name}})
 		{{- else if not (isBuiltin $p)}}
+		{{- if isOptional $p.Type }}
+		if {{$p.Name}} != nil { 
+			_req.SetBody({{$p.Name}})
+		}
+		{{- else }}
 		_req.SetBody({{$p.Name}})
+		{{- end }}
 		{{- else if contains $p.Type "["}}
+		{{- if isOptional $p.Type }}
+		if {{$p.Name}} != nil { 
+			for _, _item := range *{{$p.Name}} {
+				_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
+			}
+		}
+		{{- else }}
+		if len({{$p.Name}}) == 0 {
+			{{- range $r := $m.Results }}
+				{{- if eq $r.Type "error" }}
+			{{ $r.Name }} = errors.New("size of parameter {{$p.Name}} should be greater than zero")
+				{{- end }}
+			{{- end }}
+			return
+		}
 		for _, _item := range {{$p.Name}} {
 			_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
 		}
+		{{- end}}
+		{{- else }}
+		{{- if isOptional $p.Type }}
+		if {{$p.Name}} != nil { 
+			_urlValues.Set("{{$p.Name}}", fmt.Sprintf("%v", *{{$p.Name}}))
+		}
 		{{- else }}
 		_urlValues.Set("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+		{{- end }}
 		{{- end }}
 		{{- end }}
 
@@ -136,7 +186,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		if _err != nil {
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
-					{{ $r.Name }} = errors.Wrap(_err, "")
+			{{ $r.Name }} = errors.Wrap(_err, "error")
 				{{- end }}
 			{{- end }}
 			return
@@ -144,7 +194,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		if _resp.IsError() {
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
-					{{ $r.Name }} = errors.New(_resp.String())
+			{{ $r.Name }} = errors.New(_resp.String())
 				{{- end }}
 			{{- end }}
 			return
@@ -162,7 +212,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 				if _err = fileutils.CreateDirectory(filepath.Dir(_file)); _err != nil {
 					{{- range $r := $m.Results }}
 						{{- if eq $r.Type "error" }}
-							{{ $r.Name }} = errors.Wrap(_err, "")
+					{{ $r.Name }} = errors.Wrap(_err, "error")
 						{{- end }}
 					{{- end }}
 					return
@@ -171,7 +221,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 				if _err != nil {
 					{{- range $r := $m.Results }}
 						{{- if eq $r.Type "error" }}
-							{{ $r.Name }} = errors.Wrap(_err, "")
+					{{ $r.Name }} = errors.Wrap(_err, "error")
 						{{- end }}
 					{{- end }}
 					return
@@ -182,7 +232,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 				if _err != nil {
 					{{- range $r := $m.Results }}
 						{{- if eq $r.Type "error" }}
-							{{ $r.Name }} = errors.Wrap(_err, "")
+					{{ $r.Name }} = errors.Wrap(_err, "error")
 						{{- end }}
 					{{- end }}
 					return
@@ -205,7 +255,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 				{{- range $r := $m.Results }}
 					{{- if eq $r.Type "error" }}
-						{{ $r.Name }} = errors.Wrap(_err, "")
+				{{ $r.Name }} = errors.Wrap(_err, "error")
 					{{- end }}
 				{{- end }}
 				return
@@ -326,6 +376,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
+	funcMap["isOptional"] = isOptional
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)
 	}

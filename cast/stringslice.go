@@ -190,7 +190,11 @@ func ToErrorSliceE(s []string) ([]error, error) {
 	}
 	var ret []error
 	for _, item := range s {
-		ret = append(ret, ToError(item))
+		i, err := ToErrorE(item)
+		if err != nil {
+			return nil, fmt.Errorf("unable to cast string slice %#v to []error because of error %s", s, err)
+		}
+		ret = append(ret, i)
 	}
 	return ret, nil
 }
@@ -246,7 +250,11 @@ func ToRuneSliceSliceE(s []string) ([][]rune, error) {
 	}
 	var ret [][]rune
 	for _, item := range s {
-		ret = append(ret, ToRuneSlice(item))
+		i, err := ToRuneSliceE(item)
+		if err != nil {
+			return nil, fmt.Errorf("unable to cast string slice %#v to [][]rune because of error %s", s, err)
+		}
+		ret = append(ret, i)
 	}
 	return ret, nil
 }
@@ -257,7 +265,22 @@ func ToByteSliceSliceE(s []string) ([][]byte, error) {
 	}
 	var ret [][]byte
 	for _, item := range s {
-		ret = append(ret, ToByteSlice(item))
+		i, err := ToByteSliceE(item)
+		if err != nil {
+			return nil, fmt.Errorf("unable to cast string slice %#v to [][]byte because of error %s", s, err)
+		}
+		ret = append(ret, i)
+	}
+	return ret, nil
+}
+
+func ToInterfaceSliceE(s []string) ([]interface{}, error) {
+	if s == nil {
+		return nil, fmt.Errorf("unable to cast string slice %#v to []interface{}", s)
+	}
+	var ret []interface{}
+	for _, item := range s {
+		ret = append(ret, item)
 	}
 	return ret, nil
 }

@@ -100,7 +100,7 @@ func Test_isSupport(t *testing.T) {
 			args: args{
 				t: "[]int64",
 			},
-			want: false,
+			want: true,
 		},
 	}
 	for _, tt := range tests {

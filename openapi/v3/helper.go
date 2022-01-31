@@ -63,7 +63,6 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 func handleDefaultCase(ft string) *Schema {
 	if strings.HasPrefix(ft, "map[") {
 		elem := ft[strings.Index(ft, "]")+1:]
-		elem = strings.TrimPrefix(elem, "*")
 		return &Schema{
 			Type: ObjectT,
 			AdditionalProperties: SchemaOf(astutils.FieldMeta{
@@ -73,7 +72,6 @@ func handleDefaultCase(ft string) *Schema {
 	}
 	if strings.HasPrefix(ft, "[") {
 		elem := ft[strings.Index(ft, "]")+1:]
-		elem = strings.TrimPrefix(elem, "*")
 		return &Schema{
 			Type: ArrayT,
 			Items: SchemaOf(astutils.FieldMeta{
@@ -121,16 +119,21 @@ func CopySchema(field astutils.FieldMeta) Schema {
 // NewSchema new schema from astutils.StructMeta
 func NewSchema(structmeta astutils.StructMeta) Schema {
 	properties := make(map[string]*Schema)
+	var required []string
 	for _, field := range structmeta.Fields {
 		fschema := CopySchema(field)
 		fschema.Description = strings.Join(field.Comments, "\n")
 		properties[field.DocName] = &fschema
+		if !strings.HasPrefix(field.Type, "*") {
+			required = append(required, field.DocName)
+		}
 	}
 	return Schema{
 		Title:       structmeta.Name,
 		Type:        ObjectT,
 		Properties:  properties,
 		Description: strings.Join(structmeta.Comments, "\n"),
+		Required:    required,
 	}
 }
 

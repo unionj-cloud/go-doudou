@@ -88,7 +88,7 @@ func (receiver *UsersvcClientProxy) SignUp(ctx context.Context, username string,
 	}
 	return
 }
-func (receiver *UsersvcClientProxy) UploadAvatar(pc context.Context, pf []*v3.FileModel, ps string, pf2 *v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
+func (receiver *UsersvcClientProxy) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
 	if _err := receiver.runner.Run(pc, func(ctx context.Context) error {
 		ri, rs, re = receiver.client.UploadAvatar(
 			pc,

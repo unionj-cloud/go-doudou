@@ -102,8 +102,8 @@ func ToFloat64E(s string) (float64, error) {
 	return 0, fmt.Errorf("unable to cast string %#v to float64", s)
 }
 
-func ToError(s string) error {
-	return errors.New(s)
+func ToErrorE(s string) (error, error) {
+	return errors.New(s), nil
 }
 
 func ToBoolE(s string) (bool, error) {
@@ -130,10 +130,10 @@ func ToComplex128E(s string) (complex128, error) {
 	return 0, fmt.Errorf("unable to cast string %#v to complex128", s)
 }
 
-func ToRuneSlice(s string) []rune {
-	return []rune(s)
+func ToRuneSliceE(s string) ([]rune, error) {
+	return []rune(s), nil
 }
 
-func ToByteSlice(s string) []byte {
-	return []byte(s)
+func ToByteSliceE(s string) ([]byte, error) {
+	return []byte(s), nil
 }

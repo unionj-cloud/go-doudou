@@ -51,7 +51,7 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	}
 	_resp, _err := _req.Post(_path)
 	if _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -64,7 +64,7 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 		Msg  string     `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if stringutils.IsNotEmpty(_result.Msg) {
@@ -84,7 +84,7 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
 		Get(_path)
 	if _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -97,7 +97,7 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 		Msg  string `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if stringutils.IsNotEmpty(_result.Msg) {
@@ -114,6 +114,10 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	_urlValues.Set("username", fmt.Sprintf("%v", username))
 	_urlValues.Set("password", fmt.Sprintf("%v", password))
 	_urlValues.Set("actived", fmt.Sprintf("%v", actived))
+	if len(score) == 0 {
+		msg = errors.New("size of parameter score should be greater than zero")
+		return
+	}
 	for _, _item := range score {
 		_urlValues.Add("score", fmt.Sprintf("%v", _item))
 	}
@@ -125,7 +129,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	}
 	_resp, _err := _req.Post(_path)
 	if _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -138,7 +142,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 		Msg  string `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		msg = errors.Wrap(_err, "")
+		msg = errors.Wrap(_err, "error")
 		return
 	}
 	if stringutils.IsNotEmpty(_result.Msg) {
@@ -147,18 +151,22 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	}
 	return _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileModel, ps string, pf2 *v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
+func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(pc)
+	if len(pf) == 0 {
+		re = errors.New("at least one file should be uploaded for parameter pf")
+		return
+	}
 	for _, _f := range pf {
 		_req.SetFileReader("pf", _f.Filename, _f.Reader)
 	}
 	_urlValues.Set("ps", fmt.Sprintf("%v", ps))
 	_req.SetFileReader("pf2", pf2.Filename, pf2.Reader)
 	if _f, _err := pf3.Open(); _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	} else {
 		_req.SetFileReader("pf3", pf3.Filename, _f)
@@ -166,7 +174,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 	for _, _fh := range pf4 {
 		_f, _err := _fh.Open()
 		if _err != nil {
-			re = errors.Wrap(_err, "")
+			re = errors.Wrap(_err, "error")
 			return
 		}
 		_req.SetFileReader("pf4", _fh.Filename, _f)
@@ -179,7 +187,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 	}
 	_resp, _err := _req.Post(_path)
 	if _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -192,7 +200,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []*v3.FileMod
 		Re string `json:"re"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	if stringutils.IsNotEmpty(_result.Re) {
@@ -216,7 +224,7 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string
 	}
 	_resp, _err := _req.Post(_path)
 	if _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -231,19 +239,19 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string
 	}
 	_file = filepath.Clean(_file)
 	if _err = fileutils.CreateDirectory(filepath.Dir(_file)); _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	_outFile, _err := os.Create(_file)
 	if _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	defer _outFile.Close()
 	defer _resp.RawBody().Close()
 	_, _err = io.Copy(_outFile, _resp.RawBody())
 	if _err != nil {
-		re = errors.Wrap(_err, "")
+		re = errors.Wrap(_err, "error")
 		return
 	}
 	rf = _outFile

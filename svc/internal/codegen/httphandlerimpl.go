@@ -119,7 +119,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- $multipartFormParsed := false }}
 		{{- $formParsed := false }}
 		{{- range $p := $m.Params }}
-		{{- if contains $p.Type "*multipart.FileHeader" }}
+		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if not $multipartFormParsed }}
 		if err := _req.ParseMultipartForm(32 << 20); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
@@ -135,7 +135,7 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = {{$p.Name}}Files[0]
 		}
 		{{- end}}
-		{{- else if contains $p.Type "*v3.FileModel" }}
+		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") }}
 		{{- if not $multipartFormParsed }}
 		if err := _req.ParseMultipartForm(32 << 20); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
@@ -143,41 +143,82 @@ var appendHttpHandlerImplTmpl = `
 		}
 		{{- $multipartFormParsed = true }}
 		{{- end }}
-		{{$p.Name}}FileHeaders := _req.MultipartForm.File["{{$p.Name}}"]
-		{{- if contains $p.Type "["}}
-		for _, _fh :=range {{$p.Name}}FileHeaders {
-			_f, err := _fh.Open()
-			if err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
+		{{$p.Name}}FileHeaders, exists := _req.MultipartForm.File["{{$p.Name}}"]
+		if exists {
+			{{- if not (isOptional $p.Type) }}
+			if len({{$p.Name}}FileHeaders) == 0 {
+				http.Error(_writer, "no file uploaded for parameter {{$p.Name}}", http.StatusBadRequest)
 				return
 			}
-			{{$p.Name}} = append({{$p.Name}}, &v3.FileModel{
-				Filename: _fh.Filename,
-				Reader: _f,
-			})
-		}
-		{{- else}}
-		if len({{$p.Name}}FileHeaders) > 0 {
-			_fh := {{$p.Name}}FileHeaders[0]
-			_f, err := _fh.Open()
-			if err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
-				return
+			{{- end }}
+			{{- if contains $p.Type "["}}
+			{{- if isOptional $p.Type }}
+			{{$p.Name}} = new([]v3.FileModel)
+			{{- end }}
+			for _, _fh :=range {{$p.Name}}FileHeaders {
+				_f, err := _fh.Open()
+				if err != nil {
+					http.Error(_writer, err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- if isOptional $p.Type }}
+				*{{$p.Name}} = append(*{{$p.Name}}, v3.FileModel{
+					Filename: _fh.Filename,
+					Reader: _f,
+				})
+				{{- else }}
+				{{$p.Name}} = append({{$p.Name}}, v3.FileModel{
+					Filename: _fh.Filename,
+					Reader: _f,
+				})
+				{{- end }}
 			}
-			{{$p.Name}} = &v3.FileModel{
-				Filename: _fh.Filename,
-				Reader: _f,
+			{{- else}}
+			if len({{$p.Name}}FileHeaders) > 0 {
+				_fh := {{$p.Name}}FileHeaders[0]
+				_f, err := _fh.Open()
+				if err != nil {
+					http.Error(_writer, err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- if isOptional $p.Type }}
+				{{$p.Name}} = &v3.FileModel{
+					Filename: _fh.Filename,
+					Reader: _f,
+				}
+				{{- else }}
+				{{$p.Name}} = v3.FileModel{
+					Filename: _fh.Filename,
+					Reader: _f,
+				}
+				{{- end }}
 			}
-		}
-		{{- end}}
+			{{- end}}
+		}{{- if not (isOptional $p.Type) }} else {
+			http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
+			return
+		}{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
 		{{$p.Name}} = _req.Context()
 		{{- else if not (isBuiltin $p)}}
-		if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
-			return
+		{{- if isOptional $p.Type }}
+		if _req.Body != nil {
+			if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
-		defer _req.Body.Close()
+		{{- else }}
+		if _req.Body == nil {
+			http.Error(_writer, "missing request body", http.StatusBadRequest)
+			return
+		} else {
+			if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
+				http.Error(_writer, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+		{{- end }}
 		{{- else if contains $p.Type "["}}
 		{{- if not $formParsed }}
 		if err := _req.ParseForm(); err != nil {
@@ -192,10 +233,19 @@ var appendHttpHandlerImplTmpl = `
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
 			} else {
+				{{- if isOptional $p.Type }}
+				{{$p.Name}} = &casted
+				{{- else }}
 				{{$p.Name}} = casted
+				{{- end }}
 			}
 			{{- else }}
+			{{- if isOptional $p.Type }}
+			_{{$p.Name}} := _req.Form["{{$p.Name}}"]
+			{{$p.Name}} = &_{{$p.Name}}
+			{{- else }}
 			{{$p.Name}} = _req.Form["{{$p.Name}}"]
+			{{- end }}
 			{{- end }}
 		} else {
 			if _, exists := _req.Form["{{$p.Name}}[]"]; exists {
@@ -204,12 +254,24 @@ var appendHttpHandlerImplTmpl = `
 					http.Error(_writer, err.Error(), http.StatusBadRequest)
 					return
 				} else {
+					{{- if isOptional $p.Type }}
+					{{$p.Name}} = &casted
+					{{- else }}
 					{{$p.Name}} = casted
+					{{- end }}
 				}
+				{{- else }}
+				{{- if isOptional $p.Type }}
+				_{{$p.Name}} := _req.Form["{{$p.Name}}[]"]
+				{{$p.Name}} = &_{{$p.Name}}
 				{{- else }}
 				{{$p.Name}} = _req.Form["{{$p.Name}}[]"]
 				{{- end }}
-			}
+				{{- end }}
+			}{{- if not (isOptional $p.Type) }} else {
+				http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
+				return
+			}{{- end }}
 		}
 		{{- else }}
 		{{- if not $formParsed }}
@@ -225,12 +287,24 @@ var appendHttpHandlerImplTmpl = `
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
 			} else {
+				{{- if isOptional $p.Type }}
+				{{$p.Name}} = &casted
+				{{- else }}
 				{{$p.Name}} = casted
+				{{- end }}
 			}
+			{{- else }}
+			{{- if isOptional $p.Type }}
+			_{{$p.Name}} := _req.FormValue("{{$p.Name}}")
+			{{$p.Name}} = &_{{$p.Name}}
 			{{- else }}
 			{{$p.Name}} = _req.FormValue("{{$p.Name}}")
 			{{- end }}
-		}
+			{{- end }}
+		}{{- if not (isOptional $p.Type) }} else {
+			http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
+			return
+		}{{- end }}
 		{{- end }}
 		{{- end }}
 		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
@@ -300,7 +374,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/cast"
+	"github.com/unionj-cloud/go-doudou/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
@@ -319,6 +393,7 @@ func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{
 	}
 }
 `
+
 var castFuncMap = map[string]string{
 	"bool":          "ToBool",
 	"float64":       "ToFloat64",
@@ -333,15 +408,39 @@ var castFuncMap = map[string]string{
 	"uint16":        "ToUint16",
 	"uint32":        "ToUint32",
 	"uint64":        "ToUint64",
-	"[]interface{}": "ToSlice",
+	"complex64":     "ToComplex64",
+	"complex128":    "ToComplex128",
+	"error":         "ToError",
+	"[]byte":        "ToByteSlice",
+	"[]rune":        "ToRuneSlice",
+	"[]interface{}": "ToInterfaceSlice",
 	"[]bool":        "ToBoolSlice",
-	"[]string":      "ToStringSlice",
 	"[]int":         "ToIntSlice",
+	"[]float64":     "ToFloat64Slice",
+	"[]float32":     "ToFloat32Slice",
+	"[]int64":       "ToInt64Slice",
+	"[]int32":       "ToInt32Slice",
+	"[]int16":       "ToInt16Slice",
+	"[]int8":        "ToInt8Slice",
+	"[]uint":        "ToUintSlice",
+	"[]uint8":       "ToUint8Slice",
+	"[]uint16":      "ToUint16Slice",
+	"[]uint32":      "ToUint32Slice",
+	"[]uint64":      "ToUint64Slice",
+	"[]complex64":   "ToComplex64Slice",
+	"[]complex128":  "ToComplex128Slice",
+	"[]error":       "ToErrorSlice",
+	"[][]byte":      "ToByteSliceSlice",
+	"[][]rune":      "ToRuneSliceSlice",
 }
 
 func isSupport(t string) bool {
 	_, exists := castFuncMap[strings.TrimLeft(t, "*")]
 	return exists
+}
+
+func isOptional(t string) bool {
+	return strings.HasPrefix(t, "*")
 }
 
 func castFunc(t string) string {
@@ -415,6 +514,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["contains"] = strings.Contains
 	funcMap["isBuiltin"] = v3.IsBuiltin
 	funcMap["isSupport"] = isSupport
+	funcMap["isOptional"] = isOptional
 	funcMap["castFunc"] = castFunc
 	funcMap["convertCase"] = caseconvertor
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
