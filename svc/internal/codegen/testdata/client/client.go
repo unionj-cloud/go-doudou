@@ -61,14 +61,9 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	var _result struct {
 		Code int        `json:"code"`
 		Data vo.PageRet `json:"data"`
-		Msg  string     `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 		msg = errors.Wrap(_err, "error")
-		return
-	}
-	if stringutils.IsNotEmpty(_result.Msg) {
-		msg = errors.New(_result.Msg)
 		return
 	}
 	return _result.Code, _result.Data, nil
@@ -94,14 +89,9 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	var _result struct {
 		Code int    `json:"code"`
 		Data string `json:"data"`
-		Msg  string `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 		msg = errors.Wrap(_err, "error")
-		return
-	}
-	if stringutils.IsNotEmpty(_result.Msg) {
-		msg = errors.New(_result.Msg)
 		return
 	}
 	return _result.Code, _result.Data, nil
@@ -139,14 +129,9 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	var _result struct {
 		Code int    `json:"code"`
 		Data string `json:"data"`
-		Msg  string `json:"msg"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 		msg = errors.Wrap(_err, "error")
-		return
-	}
-	if stringutils.IsNotEmpty(_result.Msg) {
-		msg = errors.New(_result.Msg)
 		return
 	}
 	return _result.Code, _result.Data, nil
@@ -197,14 +182,9 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 	var _result struct {
 		Ri int    `json:"ri"`
 		Rs string `json:"rs"`
-		Re string `json:"re"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 		re = errors.Wrap(_err, "error")
-		return
-	}
-	if stringutils.IsNotEmpty(_result.Re) {
-		re = errors.New(_result.Re)
 		return
 	}
 	return _result.Ri, _result.Rs, nil

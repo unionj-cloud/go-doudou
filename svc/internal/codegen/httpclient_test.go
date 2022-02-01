@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"os"
 	"path/filepath"
@@ -32,7 +33,7 @@ func TestGenGoClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenGoClient(tt.args.dir, tt.args.ic, "", 1)
+			GenGoClient(tt.args.dir, tt.args.ic, "", 1, strcase.ToLowerCamel)
 		})
 	}
 }
@@ -59,7 +60,7 @@ func TestGenGoClient2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenGoClient(tt.args.dir, tt.args.ic, "", 1)
+			GenGoClient(tt.args.dir, tt.args.ic, "", 1, strcase.ToLowerCamel)
 		})
 	}
 }

@@ -29,8 +29,10 @@ type {{$k | toCamel}} struct {
 	{{ $pv.Description | toComment }}
 	{{- if stringContains $v.Required $pk }}
 	// required
-	{{- end }}
 	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
+	{{- else }}
+	{{ $pk | toCamel}} *{{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
+	{{- end }}
 {{- end }}
 }
 {{- end }}
@@ -338,6 +340,9 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 
 	if len(qSchema.Properties) > 0 {
 		qparams = schema2Field(&qSchema, "queryParams")
+		if qSchema.Type == v3.ObjectT && len(qSchema.Required) == 0 {
+			qparams.Type = "*" + qparams.Type
+		}
 	}
 
 	if httpMethod != "Get" && operation.RequestBody != nil {
@@ -445,19 +450,38 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	content := operation.RequestBody.Content
 	if content.JSON != nil {
 		bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
+		if !operation.RequestBody.Required {
+			bodyJSON.Type = "*" + bodyJSON.Type
+		}
 	} else if content.FormURL != nil {
 		bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
+		if !operation.RequestBody.Required {
+			bodyParams.Type = "*" + bodyParams.Type
+		}
 	} else if content.FormData != nil {
 		bodyParams, files = parseFormData(content.FormData)
+		if !operation.RequestBody.Required {
+			bodyParams.Type = "*" + bodyParams.Type
+		}
 	} else if content.Stream != nil {
-		files = append(files, astutils.FieldMeta{
+		f := astutils.FieldMeta{
 			Name: "file",
 			Type: "v3.FileModel",
-		})
+		}
+		if !operation.RequestBody.Required {
+			f.Type = "*" + f.Type
+		}
+		files = append(files, f)
 	} else if content.TextPlain != nil {
 		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
+		if !operation.RequestBody.Required {
+			bodyJSON.Type = "*" + bodyJSON.Type
+		}
 	} else if content.Default != nil {
 		bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
+		if !operation.RequestBody.Required {
+			bodyJSON.Type = "*" + bodyJSON.Type
+		}
 	}
 	return
 }
@@ -477,10 +501,11 @@ func parseFormData(formData *v3.MediaType) (bodyParams *astutils.FieldMeta, file
 			gotype = "v3.FileModel"
 		} else if v.Type == v3.ArrayT && v.Items.Type == v3.StringT && v.Items.Format == v3.BinaryF {
 			gotype = "[]v3.FileModel"
-		} else {
-			gotype = toGoType(v)
 		}
-		if strings.TrimPrefix(gotype, "[]") == "v3.FileModel" {
+		if stringutils.IsNotEmpty(gotype) && !sliceutils.StringContains(schema.Required, k) {
+			gotype = "*" + gotype
+		}
+		if stringutils.IsNotEmpty(gotype) {
 			files = append(files, astutils.FieldMeta{
 				Name: k,
 				Type: gotype,
@@ -563,12 +588,15 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 	if stringutils.IsNotEmpty(param.Description) {
 		comments = append(comments, strings.Split(param.Description, "\n")...)
 	}
+	t := toGoType(param.Schema)
 	if param.Required {
 		comments = append(comments, "required")
+	} else {
+		t = "*" + t
 	}
 	return astutils.FieldMeta{
 		Name:     param.Name,
-		Type:     toGoType(param.Schema),
+		Type:     t,
 		Comments: comments,
 	}
 }
@@ -669,7 +697,11 @@ func object2Struct(schema *v3.Schema) string {
 		if omitempty {
 			jsontag += ",omitempty"
 		}
-		b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag, k))
+		if sliceutils.StringContains(schema.Required, k) {
+			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), toGoType(v), jsontag, k))
+		} else {
+			b.WriteString(fmt.Sprintf("  %s %s `json:\"%s\" url:\"%s\"`\n", strcase.ToCamel(k), "*"+toGoType(v), jsontag, k))
+		}
 	}
 	b.WriteString("}")
 	return b.String()

@@ -90,14 +90,14 @@ func (receiver Svc) Http() {
 
 	codegen.GenMain(dir, ic)
 	codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
+	var caseconvertor func(string) string
+	switch receiver.Jsonattrcase {
+	case "snake":
+		caseconvertor = strcase.ToSnake
+	default:
+		caseconvertor = strcase.ToLowerCamel
+	}
 	if receiver.Handler {
-		var caseconvertor func(string) string
-		switch receiver.Jsonattrcase {
-		case "snake":
-			caseconvertor = strcase.ToSnake
-		default:
-			caseconvertor = strcase.ToLowerCamel
-		}
 		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty, caseconvertor)
 	} else {
 		codegen.GenHttpHandlerImpl(dir, ic)
@@ -105,7 +105,7 @@ func (receiver Svc) Http() {
 	if stringutils.IsNotEmpty(receiver.Client) {
 		switch receiver.Client {
 		case "go":
-			codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy)
+			codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
 			codegen.GenGoClientProxy(dir, ic)
 		}
 	}

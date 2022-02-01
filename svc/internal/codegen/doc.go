@@ -160,13 +160,20 @@ func response(method astutils.MethodMeta) *v3.Responses {
 			Properties: make(map[string]*v3.Schema),
 		}
 		for _, item := range method.Results {
+			if item.Type == "error" {
+				continue
+			}
 			key := item.Name
 			if stringutils.IsEmpty(key) {
 				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
 			}
 			rschema := v3.CopySchema(item)
 			rschema.Description = strings.Join(item.Comments, "\n")
-			respSchema.Properties[strcase.ToLowerCamel(key)] = &rschema
+			prop := strcase.ToLowerCamel(key)
+			respSchema.Properties[prop] = &rschema
+			if !isOptional(item.Type) {
+				respSchema.Required = append(respSchema.Required, prop)
+			}
 		}
 		v3.Schemas[title] = respSchema
 		respContent.JSON = &v3.MediaType{

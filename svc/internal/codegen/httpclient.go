@@ -245,10 +245,8 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- if not $done }}
 			var _result struct {
 				{{- range $r := $m.Results }}
-				{{- if eq $r.Type "error" }}
-				{{ $r.Name | toCamel }} string ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
-				{{- else }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | toLowerCamel }}"` + "`" + `
+				{{- if ne $r.Type "error" }}
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}"` + "`" + `
 				{{- end }}
 				{{- end }}
 			}
@@ -260,14 +258,6 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 				{{- end }}
 				return
 			}
-			{{- range $r := $m.Results }}
-				{{- if eq $r.Type "error" }}
-					if stringutils.IsNotEmpty(_result.{{ $r.Name | toCamel }}) {
-						{{ $r.Name }} = errors.New(_result.{{ $r.Name | toCamel }})
-						return
-					}
-				{{- end }}
-			{{- end }}
 			return {{range $i, $r := $m.Results }}{{- if $i}},{{end}}{{ if eq $r.Type "error" }}nil{{else}}_result.{{ $r.Name | toCamel }}{{end}}{{- end }}
 		{{- end }}    
 	}
@@ -316,7 +306,7 @@ func restyMethod(method string) string {
 }
 
 // GenGoClient generates golang http client code from result of parsing svc.go file in project root path
-func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePatternStrategy int) {
+func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePatternStrategy int, caseconvertor func(string) string) {
 	var (
 		err        error
 		clientfile string
@@ -377,6 +367,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["isOptional"] = isOptional
+	funcMap["convertCase"] = caseconvertor
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)
 	}
