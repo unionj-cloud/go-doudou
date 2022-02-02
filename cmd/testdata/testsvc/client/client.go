@@ -12,7 +12,6 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/stringutils"
 	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
@@ -29,7 +28,7 @@ func (receiver *TestsvcClient) SetProvider(provider registry.IServiceProvider) {
 func (receiver *TestsvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
+func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (_resp *resty.Response, code int, data vo.PageRet, err error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -41,9 +40,9 @@ func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_path)
+	_resp, _err = _req.Post(_path)
 	if _err != nil {
-		err = errors.Wrap(_err, "")
+		err = errors.Wrap(_err, "error")
 		return
 	}
 	if _resp.IsError() {
@@ -53,20 +52,15 @@ func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	var _result struct {
 		Code int        `json:"code"`
 		Data vo.PageRet `json:"data"`
-		Err  string     `json:"err"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
-		err = errors.Wrap(_err, "")
+		err = errors.Wrap(_err, "error")
 		return
 	}
-	if stringutils.IsNotEmpty(_result.Err) {
-		err = errors.New(_result.Err)
-		return
-	}
-	return _result.Code, _result.Data, nil
+	return _resp, _result.Code, _result.Data, nil
 }
 
-func NewTestsvc(opts ...ddhttp.DdClientOption) *TestsvcClient {
+func NewTestsvcClient(opts ...ddhttp.DdClientOption) *TestsvcClient {
 	defaultProvider := ddhttp.NewServiceProvider("TESTSVC")
 	defaultClient := ddhttp.NewClient()
 
