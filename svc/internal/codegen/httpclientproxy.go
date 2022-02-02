@@ -39,7 +39,7 @@ var appendTmpl = `
 		{{- if not $ctxSet }}
 		if _err := receiver.runner.Run(context.Background(), func(ctx context.Context) error {
 		{{- end }}
-			{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
+			_, {{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
 				{{- range $p := $m.Params }}
 				{{ $p.Name }},
 				{{- end }}
@@ -85,12 +85,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"os"
 	"time"
-	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"{{.VoPackage}}"
 )
 
 type {{.SvcName}}ClientProxy struct {
-	client {{.ServiceAlias}}.{{.SvcName}}
+	client *{{.SvcName}}Client
 	logger *logrus.Logger
 	runner goresilience.Runner
 }
@@ -111,7 +110,7 @@ func WithLogger(logger *logrus.Logger) ProxyOption {
 	}
 }
 
-func New{{.SvcName}}ClientProxy(client {{.ServiceAlias}}.{{.SvcName}}, opts ...ProxyOption) *{{.SvcName}}ClientProxy {
+func New{{.SvcName}}ClientProxy(client *{{.SvcName}}Client, opts ...ProxyOption) *{{.SvcName}}ClientProxy {
 	cp := &{{.SvcName}}ClientProxy{
 		client: client,
 		logger: logrus.StandardLogger(),

@@ -36,7 +36,7 @@ func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context,
 		CompanyId string `json:"companyId,omitempty" url:"companyId"`
 		// required
 		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
-	}) (ret string, err error) {
+	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -44,7 +44,7 @@ func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context,
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err := _req.Get("/unipay/startUnionPay")
+	_resp, _err = _req.Get("/unipay/startUnionPay")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

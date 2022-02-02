@@ -31,7 +31,7 @@ type {{$k | toCamel}} struct {
 	// required
 	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
 	{{- else }}
-	{{ $pk | toCamel}} *{{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
+	{{ $pk | toCamel}} {{$pv | toGoType | toOptional }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
 	{{- end }}
 {{- end }}
 }
@@ -88,7 +88,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	// {{$c}}
 	{{- end }}
     {{ $p.Name}} {{$p.Type}}
-    {{- end }}) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, err error) {
+    {{- end }}) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, _resp *resty.Response, err error) {
 		var _err error
 
 		_req := receiver.client.R()
@@ -100,12 +100,24 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 		{{- if $m.PathVars }}
 			{{- range $p := $m.PathVars }}
-				_req.SetPathParam("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+			{{- if isOptional $p.Type }}
+			if {{$p.Name}} != nil { 
+				_req.SetPathParam("{{$p.Name}}", fmt.Sprintf("%v", *{{$p.Name}}))
+			}
+			{{- else }}
+			_req.SetPathParam("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+			{{- end }}
 			{{- end }}
 		{{- end }}
 		{{- if $m.HeaderVars }}
 			{{- range $p := $m.HeaderVars }}
-				_req.SetHeader("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+			{{- if isOptional $p.Type }}
+			if {{$p.Name}} != nil { 
+				_req.SetHeader("{{$p.Name}}", fmt.Sprintf("%v", *{{$p.Name}}))
+			}
+			{{- else }}
+			_req.SetHeader("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+			{{- end }}
 			{{- end }}
 		{{- end }}
 		{{- if $m.BodyParams }}
@@ -118,12 +130,30 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- if $m.Files }}
 			{{- range $p := $m.Files }}
 				{{- if contains $p.Type "["}}
+				{{- if isOptional $p.Type }}
+				if {{$p.Name}} != nil {
+					for _, _f := range *{{$p.Name}} {
+						_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
+					}
+				}
+				{{- else }}
+				if len({{$p.Name}}) == 0 {
+					err = errors.New("at least one file should be uploaded for parameter {{$p.Name}}")
+					return
+				}
 				for _, _f := range {{$p.Name}} {
 					_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
 				}
+				{{- end }}
 				{{- else}}
+				{{- if isOptional $p.Type }}
+				if {{$p.Name}} != nil { 
+					_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, {{$p.Name}}.Reader)
+				}
+				{{- else }}
 				_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, {{$p.Name}}.Reader)
-				{{- end}}
+				{{- end }}
+				{{- end }}
 			{{- end }}
 		{{- end }}
 
@@ -133,7 +163,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- end }}
 		{{- end }}
 
-		_resp, _err := _req.{{$m.Name | restyMethod}}("{{$m.Path}}")
+		_resp, _err = _req.{{$m.Name | restyMethod}}("{{$m.Path}}")
 		if _err != nil {
 			err = errors.Wrap(_err, "")
 			return
@@ -257,6 +287,10 @@ func restyMethod(method string) string {
 	return strings.Title(strings.ToLower(httpMethod(method)))
 }
 
+func isOptional(t string) bool {
+	return strings.HasPrefix(t, "*")
+}
+
 func genGoHTTP(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 	_ = os.MkdirAll(dir, os.ModePerm)
 	output := filepath.Join(dir, svcname+"client.go")
@@ -280,6 +314,7 @@ func genGoHTTP(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 	funcMap["contains"] = strings.Contains
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
+	funcMap["isOptional"] = isOptional
 	tpl, _ := template.New("http.go.tmpl").Funcs(funcMap).Parse(httptmpl)
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
@@ -341,7 +376,7 @@ func operation2Method(endpoint, httpMethod string, operation *v3.Operation, gpar
 	if len(qSchema.Properties) > 0 {
 		qparams = schema2Field(&qSchema, "queryParams")
 		if qSchema.Type == v3.ObjectT && len(qSchema.Required) == 0 {
-			qparams.Type = "*" + qparams.Type
+			qparams.Type = toOptional(qparams.Type)
 		}
 	}
 
@@ -451,17 +486,17 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	if content.JSON != nil {
 		bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
 		if !operation.RequestBody.Required {
-			bodyJSON.Type = "*" + bodyJSON.Type
+			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	} else if content.FormURL != nil {
 		bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
 		if !operation.RequestBody.Required {
-			bodyParams.Type = "*" + bodyParams.Type
+			bodyParams.Type = toOptional(bodyParams.Type)
 		}
 	} else if content.FormData != nil {
 		bodyParams, files = parseFormData(content.FormData)
 		if !operation.RequestBody.Required {
-			bodyParams.Type = "*" + bodyParams.Type
+			bodyParams.Type = toOptional(bodyParams.Type)
 		}
 	} else if content.Stream != nil {
 		f := astutils.FieldMeta{
@@ -469,18 +504,18 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 			Type: "v3.FileModel",
 		}
 		if !operation.RequestBody.Required {
-			f.Type = "*" + f.Type
+			f.Type = toOptional(f.Type)
 		}
 		files = append(files, f)
 	} else if content.TextPlain != nil {
 		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
 		if !operation.RequestBody.Required {
-			bodyJSON.Type = "*" + bodyJSON.Type
+			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	} else if content.Default != nil {
 		bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
 		if !operation.RequestBody.Required {
-			bodyJSON.Type = "*" + bodyJSON.Type
+			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	}
 	return
@@ -503,7 +538,7 @@ func parseFormData(formData *v3.MediaType) (bodyParams *astutils.FieldMeta, file
 			gotype = "[]v3.FileModel"
 		}
 		if stringutils.IsNotEmpty(gotype) && !sliceutils.StringContains(schema.Required, k) {
-			gotype = "*" + gotype
+			gotype = toOptional(gotype)
 		}
 		if stringutils.IsNotEmpty(gotype) {
 			files = append(files, astutils.FieldMeta{
@@ -592,7 +627,7 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 	if param.Required {
 		comments = append(comments, "required")
 	} else {
-		t = "*" + t
+		t = toOptional(t)
 	}
 	return astutils.FieldMeta{
 		Name:     param.Name,
@@ -644,9 +679,9 @@ func number2Go(schema *v3.Schema) string {
 func string2Go(schema *v3.Schema) string {
 	switch schema.Format {
 	case v3.DateTimeF:
-		return "*time.Time"
+		return "time.Time"
 	case v3.BinaryF:
-		return "*os.File"
+		return "v3.FileModel"
 	default:
 		return "string"
 	}
@@ -739,6 +774,7 @@ func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
 	funcMap["toCamel"] = toCamel
 	funcMap["toGoType"] = toGoType
 	funcMap["toComment"] = toComment
+	funcMap["toOptional"] = toOptional
 	funcMap["stringContains"] = sliceutils.StringContains
 	tpl, _ := template.New("vo.go.tmpl").Funcs(funcMap).Parse(votmpl)
 	var sqlBuf bytes.Buffer
@@ -846,4 +882,11 @@ func loadAPI(file string) v3.API {
 		panic(err)
 	}
 	return api
+}
+
+func toOptional(t string) string {
+	if !strings.HasPrefix(t, "*") {
+		return "*" + t
+	}
+	return t
 }

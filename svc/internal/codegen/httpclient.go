@@ -55,7 +55,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
     {{- $p.Name}} {{$p.Type}}
-    {{- end }}) ({{- range $i, $r := $m.Results}}
+    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
@@ -122,13 +122,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- else if eq $p.Type "context.Context" }}
 		_req.SetContext({{$p.Name}})
 		{{- else if not (isBuiltin $p)}}
-		{{- if isOptional $p.Type }}
-		if {{$p.Name}} != nil { 
-			_req.SetBody({{$p.Name}})
-		}
-		{{- else }}
 		_req.SetBody({{$p.Name}})
-		{{- end }}
 		{{- else if contains $p.Type "["}}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil { 
@@ -173,7 +167,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 
 		{{- if eq ($m.Name | httpMethod) "GET" }}
-		_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
+		_resp, _err = _req.SetQueryParamsFromValues(_urlValues).
 			Get(_path)
 		{{- else }}
 		if _req.Body != nil {
@@ -181,7 +175,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		} else {
 			_req.SetFormDataFromValues(_urlValues)
 		}
-		_resp, _err := _req.{{$m.Name | restyMethod}}(_path)
+		_resp, _err = _req.{{$m.Name | restyMethod}}(_path)
 		{{- end }}
 		if _err != nil {
 			{{- range $r := $m.Results }}
@@ -258,12 +252,12 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 				{{- end }}
 				return
 			}
-			return {{range $i, $r := $m.Results }}{{- if $i}},{{end}}{{ if eq $r.Type "error" }}nil{{else}}_result.{{ $r.Name | toCamel }}{{end}}{{- end }}
+			return _resp, {{range $i, $r := $m.Results }}{{- if $i}},{{end}}{{ if eq $r.Type "error" }}nil{{else}}_result.{{ $r.Name | toCamel }}{{end}}{{- end }}
 		{{- end }}    
 	}
 {{- end }}
 
-func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
+func New{{.Meta.Name}}Client(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
 	{{- if .Env }}
 	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
 	{{- else }}

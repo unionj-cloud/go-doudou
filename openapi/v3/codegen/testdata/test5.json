@@ -1,247 +1,353 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.2",
   "info": {
-    "title": "xxxxxxx",
-    "description": "xxxxxxx",
-    "version": "1.0"
+    "title": "Usersvc",
+    "description": "Usersvc User Center Service",
+    "version": "v20220202"
   },
-  "servers": [
-    {
-      "url": "",
-      "description": "Inferred Url"
-    }
-  ],
-  "tags": [
-    {
-      "name": "xxxxxxx",
-      "description": "xxxxxxx"
-    }
-  ],
   "paths": {
-    "/ocr/character": {
-      "post": {
-        "operationId": "recognizeCharacterUsingPOST",
+    "/download/avatar": {
+      "get": {
+        "description": "GetDownloadAvatar demonstrate how to define download file api\nthere must be *os.File parameter among output parameters",
         "parameters": [
           {
-            "name": "minHeight",
+            "name": "userId",
             "in": "query",
-            "required": false,
-            "style": "form",
-            "allowReserved": false,
+            "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "minProbability",
-            "in": "query",
-            "required": false,
-            "style": "form",
-            "allowReserved": false,
-            "schema": {
-              "type": "number",
-              "format": "float"
+              "type": "string"
             }
           }
         ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "download file"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/page/users": {
+      "post": {
+        "description": "PageUsers demonstrate how to define POST and Content-Type as application/json api",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "string",
-                "format": "binary"
+                "$ref": "#/components/schemas/PageQuery",
+                "description": "comments above input and output struct type parameters in vo package will display on online document\nnot comments here"
               }
-            },
-            "application/octet-stream": {
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageUsersResp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/page/users/2": {
+      "post": {
+        "description": "PageUsers2 demonstrate how to define POST and Content-Type as application/json api",
+        "requestBody": {
+          "content": {
+            "application/json": {
               "schema": {
-                "type": "string",
-                "format": "binary"
+                "$ref": "#/components/schemas/PageQuery",
+                "description": "comments above input and output struct type parameters in vo package will display on online document\nnot comments here"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "OK",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Result«List«RecognizeCharacterResultVO»»"
+                  "$ref": "#/components/schemas/PageUsers2Resp"
                 }
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/ocr/character/text": {
+    "/sign/up": {
       "post": {
-        "operationId": "recognizeCharacterTextOnlyUsingPOST",
+        "description": "SignUp demonstrate how to define POST and Content-Type as application/x-www-form-urlencoded api",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignUpResp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/avatar": {
+      "post": {
+        "description": "UploadAvatar demonstrate how to define upload files api\nthere must be one []v3.FileModel or v3.FileModel parameter among input parameters\nremember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadAvatarReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAvatarResp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/avatar/2": {
+      "post": {
+        "description": "UploadAvatar2 demonstrate how to define upload files api\nremember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadAvatar2Req"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAvatar2Resp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "description": "GetUser demonstrate how to define GET api with query string parameters",
         "parameters": [
           {
-            "name": "minHeight",
+            "name": "userId",
             "in": "query",
-            "required": false,
-            "style": "form",
-            "allowReserved": false,
+            "description": "user id\ncomments above input and output basic type parameters will display on online document",
+            "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string",
+              "description": "user id\ncomments above input and output basic type parameters will display on online document"
             }
           },
           {
-            "name": "minProbability",
+            "name": "photo",
             "in": "query",
-            "required": false,
-            "style": "form",
-            "allowReserved": false,
+            "required": true,
             "schema": {
-              "type": "number",
-              "format": "float"
+              "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
-            },
-            "application/octet-stream": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "OK",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Result«string»"
+                  "$ref": "#/components/schemas/GetUserResp"
                 }
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/ocr/pdf": {
-      "post": {
-        "operationId": "recognizePdfUsingPOST",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
-            },
-            "application/octet-stream": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
+    "/user/2": {
+      "get": {
+        "description": "GetUser2 demonstrate how to define GET api with query string parameters",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "user id\ncomments above input and output basic type parameters will display on online document",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "user id\ncomments above input and output basic type parameters will display on online document"
+            }
+          },
+          {
+            "name": "photo",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "OK",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Result«RecognizePdfResultVO»"
+                  "$ref": "#/components/schemas/GetUser2Resp"
                 }
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/ocr/pdf/text": {
-      "post": {
-        "operationId": "recognizePdfTextOnlyUsingPOST",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
+    "/user/3": {
+      "get": {
+        "description": "GetUser3 demonstrate how to define GET api with query string parameters",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "user id\ncomments above input and output basic type parameters will display on online document",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "user id\ncomments above input and output basic type parameters will display on online document"
+            }
+          },
+          {
+            "name": "photo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attrs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
               }
-            },
-            "application/octet-stream": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
+            }
+          },
+          {
+            "name": "pattrs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
               }
             }
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "OK",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Result«string»"
+                  "$ref": "#/components/schemas/GetUser3Resp"
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/user/4": {
+      "get": {
+        "description": "GetUser4 demonstrate how to define GET api with query string parameters\nphoto *string, pattrs *[]int 是一类问题， TODO\nattrs2 []int 是一类问题",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "user id\ncomments above input and output basic type parameters will display on online document",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "user id\ncomments above input and output basic type parameters will display on online document"
+            }
           },
-          "201": {
-            "description": "Created"
+          {
+            "name": "photo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           },
-          "401": {
-            "description": "Unauthorized"
+          {
+            "name": "pattrs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
           },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
+          {
+            "name": "attrs2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUser4Resp"
+                }
+              }
+            }
           }
         }
       }
@@ -249,109 +355,8 @@
   },
   "components": {
     "schemas": {
-      "RecognizeCharacterResultVO": {
-        "title": "RecognizeCharacterResultVO",
-        "type": "object",
-        "properties": {
-          "probability": {
-            "type": "number",
-            "format": "float"
-          },
-          "text": {
-            "type": "string"
-          },
-          "textRectangles": {
-            "$ref": "#/components/schemas/TextRectanglesVO"
-          }
-        }
-      },
-      "RecognizePdfResultVO": {
-        "title": "RecognizePdfResultVO",
-        "type": "object",
-        "properties": {
-          "angle": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "height": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "orgHeight": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "orgWidth": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "pageIndex": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "width": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "wordsInfo": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecognizePdfWordsInfoVO"
-            }
-          }
-        }
-      },
-      "RecognizePdfWordsInfoPositionsVO": {
-        "title": "RecognizePdfWordsInfoPositionsVO",
-        "type": "object",
-        "properties": {
-          "x": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "y": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "RecognizePdfWordsInfoVO": {
-        "title": "RecognizePdfWordsInfoVO",
-        "type": "object",
-        "properties": {
-          "angle": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "height": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "positions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecognizePdfWordsInfoPositionsVO"
-            }
-          },
-          "width": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "word": {
-            "type": "string"
-          },
-          "x": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "y": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "Result«List«RecognizeCharacterResultVO»»": {
-        "title": "Result«List«RecognizeCharacterResultVO»»",
+      "GetUser2Resp": {
+        "title": "GetUser2Resp",
         "type": "object",
         "properties": {
           "code": {
@@ -359,18 +364,15 @@
             "format": "int32"
           },
           "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecognizeCharacterResultVO"
-            }
-          },
-          "msg": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "code"
+        ]
       },
-      "Result«RecognizePdfResultVO»": {
-        "title": "Result«RecognizePdfResultVO»",
+      "GetUser3Resp": {
+        "title": "GetUser3Resp",
         "type": "object",
         "properties": {
           "code": {
@@ -378,15 +380,15 @@
             "format": "int32"
           },
           "data": {
-            "$ref": "#/components/schemas/RecognizePdfResultVO"
-          },
-          "msg": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "code"
+        ]
       },
-      "Result«string»": {
-        "title": "Result«string»",
+      "GetUser4Resp": {
+        "title": "GetUser4Resp",
         "type": "object",
         "properties": {
           "code": {
@@ -399,35 +401,329 @@
           "msg": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "code"
+        ]
       },
-      "TextRectanglesVO": {
-        "title": "TextRectanglesVO",
+      "GetUserResp": {
+        "title": "GetUserResp",
         "type": "object",
-        "description": "test test test",
         "properties": {
-          "angle": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "data"
+        ]
+      },
+      "Order": {
+        "title": "Order",
+        "type": "object",
+        "properties": {
+          "col": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "string"
+          }
+        },
+        "description": "排序条件",
+        "required": [
+          "col",
+          "sort"
+        ]
+      },
+      "Page": {
+        "title": "Page",
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            },
+            "description": "排序规则"
+          },
+          "pageNo": {
             "type": "integer",
             "format": "int32",
-            "description": "test test angle"
+            "description": "页码"
           },
-          "height": {
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "每页行数"
+          }
+        },
+        "required": [
+          "orders",
+          "pageNo",
+          "size"
+        ]
+      },
+      "PageFilter": {
+        "title": "PageFilter",
+        "type": "object",
+        "properties": {
+          "dept": {
+            "type": "integer",
+            "format": "int32",
+            "description": "所属部门ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "真实姓名，前缀匹配"
+          }
+        },
+        "description": "筛选条件",
+        "required": [
+          "name",
+          "dept"
+        ]
+      },
+      "PageQuery": {
+        "title": "PageQuery",
+        "type": "object",
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/PageFilter"
+          },
+          "page": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "description": "分页筛选条件",
+        "required": [
+          "filter",
+          "page"
+        ]
+      },
+      "PageRet": {
+        "title": "PageRet",
+        "type": "object",
+        "properties": {
+          "hasNext": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "object"
+          },
+          "pageNo": {
             "type": "integer",
             "format": "int32"
           },
-          "left": {
+          "pageSize": {
             "type": "integer",
             "format": "int32"
           },
-          "top": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "width": {
+          "total": {
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "PageRet pagination query result",
+        "required": [
+          "items",
+          "pageNo",
+          "pageSize",
+          "total",
+          "hasNext"
+        ]
+      },
+      "PageUsers2Resp": {
+        "title": "PageUsers2Resp",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "it indicates there is an error if code is not 0"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRet",
+            "description": "page data"
+          }
+        },
+        "required": [
+          "code",
+          "data"
+        ]
+      },
+      "PageUsersResp": {
+        "title": "PageUsersResp",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "it indicates there is an error if code is not 0"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageRet",
+            "description": "page data"
+          }
+        },
+        "required": [
+          "code",
+          "data"
+        ]
+      },
+      "SignUpReq": {
+        "title": "SignUpReq",
+        "type": "object",
+        "properties": {
+          "actived": {
+            "type": "boolean"
+          },
+          "password": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "actived",
+          "score"
+        ]
+      },
+      "SignUpResp": {
+        "title": "SignUpResp",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "data"
+        ]
+      },
+      "UploadAvatar2Req": {
+        "title": "UploadAvatar2Req",
+        "type": "object",
+        "properties": {
+          "pf": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "pf2": {
+            "type": "string",
+            "format": "binary"
+          },
+          "pf3": {
+            "type": "string",
+            "format": "binary"
+          },
+          "ps": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pf",
+          "ps"
+        ]
+      },
+      "UploadAvatar2Resp": {
+        "title": "UploadAvatar2Resp",
+        "type": "object",
+        "properties": {
+          "ri": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rs": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ri",
+          "rs"
+        ]
+      },
+      "UploadAvatarReq": {
+        "title": "UploadAvatarReq",
+        "type": "object",
+        "properties": {
+          "pf": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "ps": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pf",
+          "ps"
+        ]
+      },
+      "UploadAvatarResp": {
+        "title": "UploadAvatarResp",
+        "type": "object",
+        "properties": {
+          "ri": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rs": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ri",
+          "rs"
+        ]
+      },
+      "UserVo": {
+        "title": "UserVo",
+        "type": "object",
+        "properties": {
+          "dept": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "dept"
+        ]
       }
     }
   }

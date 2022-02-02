@@ -37,7 +37,7 @@ func (receiver *UsersvcClient) SetProvider(provider registry.IServiceProvider) {
 func (receiver *UsersvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, msg error) {
+func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (_resp *resty.Response, code int, data vo.PageRet, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -49,7 +49,7 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_path)
+	_resp, _err = _req.Post(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "error")
 		return
@@ -66,9 +66,9 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 		msg = errors.Wrap(_err, "error")
 		return
 	}
-	return _result.Code, _result.Data, nil
+	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo string) (code int, data string, msg error) {
+func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo string) (_resp *resty.Response, code int, data string, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -76,7 +76,7 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	_urlValues.Set("userId", fmt.Sprintf("%v", userId))
 	_urlValues.Set("photo", fmt.Sprintf("%v", photo))
 	_path := "/usersvc/user"
-	_resp, _err := _req.SetQueryParamsFromValues(_urlValues).
+	_resp, _err = _req.SetQueryParamsFromValues(_urlValues).
 		Get(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "error")
@@ -94,9 +94,9 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 		msg = errors.Wrap(_err, "error")
 		return
 	}
-	return _result.Code, _result.Data, nil
+	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, password int, actived bool, score []int) (code int, data string, msg error) {
+func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, password int, actived bool, score []int) (_resp *resty.Response, code int, data string, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -117,7 +117,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_path)
+	_resp, _err = _req.Post(_path)
 	if _err != nil {
 		msg = errors.Wrap(_err, "error")
 		return
@@ -134,9 +134,9 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 		msg = errors.Wrap(_err, "error")
 		return
 	}
-	return _result.Code, _result.Data, nil
+	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (ri int, rs string, re error) {
+func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (_resp *resty.Response, ri int, rs string, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -170,7 +170,7 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_path)
+	_resp, _err = _req.Post(_path)
 	if _err != nil {
 		re = errors.Wrap(_err, "error")
 		return
@@ -187,9 +187,9 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 		re = errors.Wrap(_err, "error")
 		return
 	}
-	return _result.Ri, _result.Rs, nil
+	return _resp, _result.Ri, _result.Rs, nil
 }
-func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string) (rf *os.File, re error) {
+func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string) (_resp *resty.Response, rf *os.File, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -202,7 +202,7 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string
 	} else {
 		_req.SetFormDataFromValues(_urlValues)
 	}
-	_resp, _err := _req.Post(_path)
+	_resp, _err = _req.Post(_path)
 	if _err != nil {
 		re = errors.Wrap(_err, "error")
 		return
@@ -238,7 +238,7 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string
 	return
 }
 
-func NewUsersvc(opts ...ddhttp.DdClientOption) *UsersvcClient {
+func NewUsersvcClient(opts ...ddhttp.DdClientOption) *UsersvcClient {
 	defaultProvider := ddhttp.NewServiceProvider("USERSVC")
 	defaultClient := ddhttp.NewClient()
 

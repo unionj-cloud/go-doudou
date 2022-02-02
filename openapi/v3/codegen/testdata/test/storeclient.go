@@ -30,14 +30,14 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 // PostStoreOrder Place an order for a pet
 // Place a new order in the store
 func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
-	bodyJSON Order) (ret Order, err error) {
+	bodyJSON *Order) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetBody(bodyJSON)
 
-	_resp, _err := _req.Post("/store/order")
+	_resp, _err = _req.Post("/store/order")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -58,14 +58,14 @@ func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
 func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
 	// ID of order that needs to be fetched
 	// required
-	orderId int64) (ret Order, err error) {
+	orderId int64) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
-	_resp, _err := _req.Get("/store/order/{orderId}")
+	_resp, _err = _req.Get("/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -84,13 +84,13 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
 // GetStoreInventory Returns pet inventories by status
 // Returns a map of status codes to quantities
 func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
-}, err error) {
+}, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 
-	_resp, _err := _req.Get("/store/inventory")
+	_resp, _err = _req.Get("/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

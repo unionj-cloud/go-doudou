@@ -15,31 +15,30 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/registry"
 )
 
-type CustomerClient struct {
+type SignClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
 }
 
-func (receiver *CustomerClient) SetProvider(provider registry.IServiceProvider) {
+func (receiver *SignClient) SetProvider(provider registry.IServiceProvider) {
 	receiver.provider = provider
 }
 
-func (receiver *CustomerClient) SetClient(client *resty.Client) {
+func (receiver *SignClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
-	queryParams struct {
-		// required
-		Token string `json:"token,omitempty" url:"token"`
-	}) (ret bool, _resp *resty.Response, err error) {
+
+// PostSignUp SignUp demonstrate how to define POST and Content-Type as application/x-www-form-urlencoded api
+func (receiver *SignClient) PostSignUp(ctx context.Context,
+	bodyParams SignUpReq) (ret SignUpResp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
+	_bodyParams, _ := _querystring.Values(bodyParams)
+	_req.SetFormDataFromValues(_bodyParams)
 
-	_resp, _err = _req.Get("/customer/validateToken")
+	_resp, _err = _req.Post("/sign/up")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -55,11 +54,11 @@ func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
 	return
 }
 
-func NewCustomer(opts ...ddhttp.DdClientOption) *CustomerClient {
-	defaultProvider := ddhttp.NewServiceProvider("CUSTOMER")
+func NewSign(opts ...ddhttp.DdClientOption) *SignClient {
+	defaultProvider := ddhttp.NewServiceProvider("SIGN")
 	defaultClient := ddhttp.NewClient()
 
-	svcClient := &CustomerClient{
+	svcClient := &SignClient{
 		provider: defaultProvider,
 		client:   defaultClient,
 	}

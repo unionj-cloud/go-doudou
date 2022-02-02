@@ -917,6 +917,10 @@
     "schemas": {
       "Order": {
         "type": "object",
+        "required": [
+          "petId",
+          "shipDate"
+        ],
         "properties": {
           "id": {
             "type": "integer",
