@@ -43,6 +43,11 @@ func ExprStringP(expr ast.Expr) string {
 		structmeta := astutils.NewStructMeta(_expr, ExprStringP)
 		b, _ := json.Marshal(structmeta)
 		return "anonystruct«" + string(b) + "»"
+	case *ast.Ellipsis:
+		if _expr.Ellipsis.IsValid() {
+			return "..." + ExprStringP(_expr.Elt)
+		}
+		panic(fmt.Sprintf("invalid ellipsis expression: %+v\n", expr))
 	case *ast.FuncType:
 		panic("not support function as struct field type in vo package and as parameter in method signature in svc.go file")
 	case *ast.ChanType:

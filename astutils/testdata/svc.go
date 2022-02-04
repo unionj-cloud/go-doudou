@@ -33,7 +33,7 @@ type Usersvc interface {
 	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)
 
 	// comment5
-	DownloadAvatar(ctx context.Context, userId, userType, userNo string) (a, b string)
+	DownloadAvatar(ctx context.Context, userId string, userAttrs ...int) (a, b string)
 
 	BulkSaveOrUpdate(context.Context, int) error
 }

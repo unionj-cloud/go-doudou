@@ -3,6 +3,7 @@ package codegen
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
@@ -443,6 +444,10 @@ func isOptional(t string) bool {
 	return strings.HasPrefix(t, "*")
 }
 
+func isVarargs(t string) bool {
+	return strings.HasPrefix(t, "...")
+}
+
 func castFunc(t string) string {
 	return castFuncMap[strings.TrimLeft(t, "*")]
 }
@@ -517,6 +522,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["isOptional"] = isOptional
 	funcMap["castFunc"] = castFunc
 	funcMap["convertCase"] = caseconvertor
+	funcMap["isVarargs"] = isVarargs
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
@@ -542,6 +548,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	}
 
 	original = append(original, buf.Bytes()...)
+	fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }
 

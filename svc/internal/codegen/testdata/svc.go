@@ -30,5 +30,5 @@ type Usersvc interface {
 	UploadAvatar(context.Context, []v3.FileModel, string, v3.FileModel, *multipart.FileHeader, []*multipart.FileHeader) (int, string, error)
 
 	// comment5
-	DownloadAvatar(ctx context.Context, userId string) (*os.File, error)
+	DownloadAvatar(ctx context.Context, userId string, userAttrs ...string) (*os.File, error)
 }

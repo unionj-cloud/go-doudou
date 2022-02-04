@@ -213,6 +213,11 @@ func ExprString(expr ast.Expr) string {
 			result += "chan "
 		}
 		return result + ExprString(_expr.Value)
+	case *ast.Ellipsis:
+		if _expr.Ellipsis.IsValid() {
+			return "..." + ExprString(_expr.Elt)
+		}
+		panic(fmt.Sprintf("invalid ellipsis expression: %+v\n", expr))
 	default:
 		panic(fmt.Sprintf("not support expression: %+v\n", expr))
 	}

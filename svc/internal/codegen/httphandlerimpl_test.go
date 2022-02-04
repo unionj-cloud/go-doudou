@@ -11,7 +11,7 @@ import (
 
 func TestGenHttpHandlerImplWithImpl(t *testing.T) {
 	dir := "testdata"
-	defer os.RemoveAll(filepath.Join(dir, "transport"))
+	//defer os.RemoveAll(filepath.Join(dir, "transport"))
 	svcfile := filepath.Join(dir, "svc.go")
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
