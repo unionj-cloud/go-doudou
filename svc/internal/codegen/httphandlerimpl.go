@@ -111,7 +111,11 @@ var appendHttpHandlerImplTmpl = `
 	func (receiver *{{$.Meta.Name}}HandlerImpl) {{$m.Name}}(_writer http.ResponseWriter, _req *http.Request) {
     	var (
 			{{- range $p := $m.Params }}
+			{{- if isVarargs $p.Type }}
+			{{ $p.Name }} = new({{ $p.Type | toSlicePtr }})
+			{{- else }}
 			{{ $p.Name }} {{ $p.Type }}
+			{{- end }}
 			{{- end }}
 			{{- range $r := $m.Results }}
 			{{ $r.Name }} {{ $r.Type }}
@@ -136,7 +140,7 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = {{$p.Name}}Files[0]
 		}
 		{{- end}}
-		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") }}
+		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") (eq $p.Type "...v3.FileModel") }}
 		{{- if not $multipartFormParsed }}
 		if err := _req.ParseMultipartForm(32 << 20); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
@@ -152,9 +156,11 @@ var appendHttpHandlerImplTmpl = `
 				return
 			}
 			{{- end }}
-			{{- if contains $p.Type "["}}
+			{{- if isSlice $p.Type }}
 			{{- if isOptional $p.Type }}
-			{{$p.Name}} = new([]v3.FileModel)
+			if {{$p.Name}} == nil && len({{$p.Name}}FileHeaders) > 0 {
+				{{$p.Name}} = new([]v3.FileModel)
+			}
 			{{- end }}
 			for _, _fh :=range {{$p.Name}}FileHeaders {
 				_f, err := _fh.Open()
@@ -220,7 +226,7 @@ var appendHttpHandlerImplTmpl = `
 			}
 		}
 		{{- end }}
-		{{- else if contains $p.Type "["}}
+		{{- else if isSlice $p.Type }}
 		{{- if not $formParsed }}
 		if err := _req.ParseForm(); err != nil {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
@@ -310,7 +316,11 @@ var appendHttpHandlerImplTmpl = `
 		{{- end }}
 		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
 			{{- range $p := $m.Params }}
+			{{- if isVarargs $p.Type }}
+			*{{ $p.Name }}...,
+			{{- else }}
 			{{ $p.Name }},
+			{{- end }}
 			{{- end }}
 		)
 		{{- range $r := $m.Results }}
@@ -395,63 +405,6 @@ func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{
 }
 `
 
-var castFuncMap = map[string]string{
-	"bool":          "ToBool",
-	"float64":       "ToFloat64",
-	"float32":       "ToFloat32",
-	"int64":         "ToInt64",
-	"int32":         "ToInt32",
-	"int16":         "ToInt16",
-	"int8":          "ToInt8",
-	"int":           "ToInt",
-	"uint":          "ToUint",
-	"uint8":         "ToUint8",
-	"uint16":        "ToUint16",
-	"uint32":        "ToUint32",
-	"uint64":        "ToUint64",
-	"complex64":     "ToComplex64",
-	"complex128":    "ToComplex128",
-	"error":         "ToError",
-	"[]byte":        "ToByteSlice",
-	"[]rune":        "ToRuneSlice",
-	"[]interface{}": "ToInterfaceSlice",
-	"[]bool":        "ToBoolSlice",
-	"[]int":         "ToIntSlice",
-	"[]float64":     "ToFloat64Slice",
-	"[]float32":     "ToFloat32Slice",
-	"[]int64":       "ToInt64Slice",
-	"[]int32":       "ToInt32Slice",
-	"[]int16":       "ToInt16Slice",
-	"[]int8":        "ToInt8Slice",
-	"[]uint":        "ToUintSlice",
-	"[]uint8":       "ToUint8Slice",
-	"[]uint16":      "ToUint16Slice",
-	"[]uint32":      "ToUint32Slice",
-	"[]uint64":      "ToUint64Slice",
-	"[]complex64":   "ToComplex64Slice",
-	"[]complex128":  "ToComplex128Slice",
-	"[]error":       "ToErrorSlice",
-	"[][]byte":      "ToByteSliceSlice",
-	"[][]rune":      "ToRuneSliceSlice",
-}
-
-func isSupport(t string) bool {
-	_, exists := castFuncMap[strings.TrimLeft(t, "*")]
-	return exists
-}
-
-func isOptional(t string) bool {
-	return strings.HasPrefix(t, "*")
-}
-
-func isVarargs(t string) bool {
-	return strings.HasPrefix(t, "...")
-}
-
-func castFunc(t string) string {
-	return castFuncMap[strings.TrimLeft(t, "*")]
-}
-
 // GenHttpHandlerImplWithImpl generates http handler implementation
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
 // You may need to convert the type by yourself.
@@ -518,11 +471,13 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
 	funcMap["isBuiltin"] = v3.IsBuiltin
-	funcMap["isSupport"] = isSupport
-	funcMap["isOptional"] = isOptional
-	funcMap["castFunc"] = castFunc
+	funcMap["isSupport"] = v3.IsSupport
+	funcMap["isOptional"] = v3.IsOptional
+	funcMap["castFunc"] = v3.CastFunc
 	funcMap["convertCase"] = caseconvertor
-	funcMap["isVarargs"] = isVarargs
+	funcMap["isVarargs"] = v3.IsVarargs
+	funcMap["toSlicePtr"] = v3.ToSlicePtr
+	funcMap["isSlice"] = v3.IsSlice
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}

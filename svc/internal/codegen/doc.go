@@ -104,7 +104,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				}
 				pschema := v3.CopySchema(item)
 				pschema.Description = strings.Join(item.Comments, "\n")
-				required := !isOptional(item.Type)
+				required := !v3.IsOptional(item.Type)
 				if v3.IsBuiltin(item) {
 					params = append(params, v3.Parameter{
 						Name:        strcase.ToLowerCamel(item.Name),
@@ -171,7 +171,7 @@ func response(method astutils.MethodMeta) *v3.Responses {
 			rschema.Description = strings.Join(item.Comments, "\n")
 			prop := strcase.ToLowerCamel(key)
 			respSchema.Properties[prop] = &rschema
-			if !isOptional(item.Type) {
+			if !v3.IsOptional(item.Type) {
 				respSchema.Required = append(respSchema.Required, prop)
 			}
 		}
@@ -206,7 +206,7 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 			pschema.Description = strings.Join(item.Comments, "\n")
 			prop := strcase.ToLowerCamel(item.Name)
 			reqSchema.Properties[prop] = &pschema
-			if !isOptional(item.Type) {
+			if !v3.IsOptional(item.Type) {
 				reqSchema.Required = append(reqSchema.Required, prop)
 			}
 		}
@@ -240,7 +240,7 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 		pschema.Description = strings.Join(item.Comments, "\n")
 		prop := strcase.ToLowerCamel(item.Name)
 		reqSchema.Properties[prop] = &pschema
-		if !isOptional(item.Type) {
+		if !v3.IsOptional(item.Type) {
 			reqSchema.Required = append(reqSchema.Required, prop)
 		}
 	}

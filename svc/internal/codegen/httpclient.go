@@ -360,7 +360,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
-	funcMap["isOptional"] = isOptional
+	funcMap["isOptional"] = v3.IsOptional
 	funcMap["convertCase"] = caseconvertor
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)

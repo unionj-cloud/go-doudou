@@ -39,7 +39,11 @@ var SchemaNames []string
 // type uint8
 // type uintptr
 func SchemaOf(field astutils.FieldMeta) *Schema {
-	ft := strings.TrimLeft(field.Type, "*")
+	ft := field.Type
+	if IsVarargs(ft) {
+		ft = ToSlicePtr(ft)
+	}
+	ft = strings.TrimLeft(ft, "*")
 	switch ft {
 	case "int", "int8", "int16", "int32", "uint", "uint8", "uint16", "uint32", "byte", "rune", "complex64", "complex128":
 		return Int
@@ -104,6 +108,77 @@ func handleDefaultCase(ft string) *Schema {
 		}
 	}
 	return Any
+}
+
+var castFuncMap = map[string]string{
+	"bool":          "ToBool",
+	"float64":       "ToFloat64",
+	"float32":       "ToFloat32",
+	"int64":         "ToInt64",
+	"int32":         "ToInt32",
+	"int16":         "ToInt16",
+	"int8":          "ToInt8",
+	"int":           "ToInt",
+	"uint":          "ToUint",
+	"uint8":         "ToUint8",
+	"uint16":        "ToUint16",
+	"uint32":        "ToUint32",
+	"uint64":        "ToUint64",
+	"complex64":     "ToComplex64",
+	"complex128":    "ToComplex128",
+	"error":         "ToError",
+	"[]byte":        "ToByteSlice",
+	"[]rune":        "ToRuneSlice",
+	"[]interface{}": "ToInterfaceSlice",
+	"[]bool":        "ToBoolSlice",
+	"[]int":         "ToIntSlice",
+	"[]float64":     "ToFloat64Slice",
+	"[]float32":     "ToFloat32Slice",
+	"[]int64":       "ToInt64Slice",
+	"[]int32":       "ToInt32Slice",
+	"[]int16":       "ToInt16Slice",
+	"[]int8":        "ToInt8Slice",
+	"[]uint":        "ToUintSlice",
+	"[]uint8":       "ToUint8Slice",
+	"[]uint16":      "ToUint16Slice",
+	"[]uint32":      "ToUint32Slice",
+	"[]uint64":      "ToUint64Slice",
+	"[]complex64":   "ToComplex64Slice",
+	"[]complex128":  "ToComplex128Slice",
+	"[]error":       "ToErrorSlice",
+	"[][]byte":      "ToByteSliceSlice",
+	"[][]rune":      "ToRuneSliceSlice",
+}
+
+func IsSupport(t string) bool {
+	if IsVarargs(t) {
+		t = ToSlicePtr(t)
+	}
+	_, exists := castFuncMap[strings.TrimLeft(t, "*")]
+	return exists
+}
+
+func IsOptional(t string) bool {
+	return strings.HasPrefix(t, "*") || strings.HasPrefix(t, "...")
+}
+
+func IsSlice(t string) bool {
+	return strings.Contains(t, "[") || strings.HasPrefix(t, "...")
+}
+
+func IsVarargs(t string) bool {
+	return strings.HasPrefix(t, "...")
+}
+
+func ToSlicePtr(t string) string {
+	return "[]" + strings.TrimPrefix(t, "...")
+}
+
+func CastFunc(t string) string {
+	if IsVarargs(t) {
+		t = ToSlicePtr(t)
+	}
+	return castFuncMap[strings.TrimLeft(t, "*")]
 }
 
 // CopySchema as SchemaOf returns pointer, so deepcopy the schema the pointer points

@@ -306,7 +306,7 @@ func (receiver *UsersvcHandlerImpl) DownloadAvatar(_writer http.ResponseWriter, 
 	var (
 		ctx context.Context
 		userId string
-		userAttrs []string
+		userAttrs *[]string
 	rf *os.File
 	re error
 	)
