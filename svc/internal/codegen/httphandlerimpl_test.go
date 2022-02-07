@@ -79,65 +79,6 @@ func NewTestdatahandlerImpl12Handler(testdatahandlerImpl12 service.Testdatahandl
 	}
 }
 
-func Test_isSupport(t *testing.T) {
-	type args struct {
-		t string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "1",
-			args: args{
-				t: "float32",
-			},
-			want: true,
-		},
-		{
-			name: "2",
-			args: args{
-				t: "[]int64",
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isSupport(tt.args.t); got != tt.want {
-				t.Errorf("isSupport() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_castFunc(t *testing.T) {
-	type args struct {
-		t string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "1",
-			args: args{
-				t: "uint64",
-			},
-			want: "ToUint64",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := castFunc(tt.args.t); got != tt.want {
-				t.Errorf("castFunc() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
 	svcfile := testDir + "/svc.go"
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)

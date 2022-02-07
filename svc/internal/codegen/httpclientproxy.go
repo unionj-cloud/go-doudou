@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
 	"github.com/unionj-cloud/go-doudou/copier"
+	v3 "github.com/unionj-cloud/go-doudou/openapi/v3"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -41,7 +42,11 @@ var appendTmpl = `
 		{{- end }}
 			_, {{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
 				{{- range $p := $m.Params }}
+				{{- if isVarargs $p.Type }}
+				{{ $p.Name }}...,
+				{{- else }}
 				{{ $p.Name }},
+				{{- end }}
 				{{- end }}
 			)
 			{{- range $r := $m.Results }}
@@ -232,7 +237,9 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 	}
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-	if tpl, err = template.New("clientproxy.go.tmpl").Parse(clientProxyTmpl); err != nil {
+	funcMap := make(map[string]interface{})
+	funcMap["isVarargs"] = v3.IsVarargs
+	if tpl, err = template.New("clientproxy.go.tmpl").Funcs(funcMap).Parse(clientProxyTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&buf, struct {

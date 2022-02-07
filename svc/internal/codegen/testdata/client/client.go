@@ -189,12 +189,17 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 	}
 	return _resp, _result.Ri, _result.Rs, nil
 }
-func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string) (_resp *resty.Response, rf *os.File, re error) {
+func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_urlValues.Set("userId", fmt.Sprintf("%v", userId))
+	if userAttrs != nil {
+		for _, _item := range userAttrs {
+			_urlValues.Add("userAttrs", fmt.Sprintf("%v", _item))
+		}
+	}
 	_req.SetDoNotParseResponse(true)
 	_path := "/usersvc/downloadavatar"
 	if _req.Body != nil {

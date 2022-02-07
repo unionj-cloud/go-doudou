@@ -89,11 +89,15 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			_req.SetFileReader("{{$p.Name}}", {{$p.Name}}.Filename, _f)
 		}
 		{{- end}}
-		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") }}
-		{{- if contains $p.Type "["}}
+		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") (eq $p.Type "...v3.FileModel") }}
+		{{- if isSlice $p.Type }}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil {
+			{{- if isVarargs $p.Type }}
+			for _, _f := range {{$p.Name}} {
+			{{- else }}
 			for _, _f := range *{{$p.Name}} {
+			{{- end }}
 				_req.SetFileReader("{{$p.Name}}", _f.Filename, _f.Reader)
 			}
 		}
@@ -123,10 +127,14 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		_req.SetContext({{$p.Name}})
 		{{- else if not (isBuiltin $p)}}
 		_req.SetBody({{$p.Name}})
-		{{- else if contains $p.Type "["}}
+		{{- else if isSlice $p.Type }}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil { 
+			{{- if isVarargs $p.Type }}
+			for _, _item := range {{$p.Name}} {
+			{{- else }}
 			for _, _item := range *{{$p.Name}} {
+			{{- end }}
 				_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
 			}
 		}
@@ -362,6 +370,8 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["isOptional"] = v3.IsOptional
 	funcMap["convertCase"] = caseconvertor
+	funcMap["isSlice"] = v3.IsSlice
+	funcMap["isVarargs"] = v3.IsVarargs
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/memberlist"
+	"io/ioutil"
 	"net"
 	"os"
 	"runtime"
@@ -121,11 +122,16 @@ func newConf() *memberlist.Config {
 	} else if minLevel == "WARNING" {
 		minLevel = "WARN"
 	}
-	cfg.LogOutput = &logutils.LevelFilter{
+	lf := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERR", "INFO"},
 		MinLevel: logutils.LogLevel(minLevel),
-		Writer:   logrus.StandardLogger().Writer(),
 	}
+	if config.GddMemLogDisable.Load() == "true" {
+		lf.Writer = ioutil.Discard
+	} else {
+		lf.Writer = logrus.StandardLogger().Writer()
+	}
+	cfg.LogOutput = lf
 	deadTimeoutStr := config.GddMemDeadTimeout.Load()
 	if stringutils.IsNotEmpty(deadTimeoutStr) {
 		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {

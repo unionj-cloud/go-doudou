@@ -3,7 +3,6 @@ package codegen
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/astutils"
@@ -112,7 +111,7 @@ var appendHttpHandlerImplTmpl = `
     	var (
 			{{- range $p := $m.Params }}
 			{{- if isVarargs $p.Type }}
-			{{ $p.Name }} = new({{ $p.Type | toSlicePtr }})
+			{{ $p.Name }} = new({{ $p.Type | toSlice }})
 			{{- else }}
 			{{ $p.Name }} {{ $p.Type }}
 			{{- end }}
@@ -476,7 +475,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["castFunc"] = v3.CastFunc
 	funcMap["convertCase"] = caseconvertor
 	funcMap["isVarargs"] = v3.IsVarargs
-	funcMap["toSlicePtr"] = v3.ToSlicePtr
+	funcMap["toSlice"] = v3.ToSlice
 	funcMap["isSlice"] = v3.IsSlice
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
@@ -503,7 +502,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	}
 
 	original = append(original, buf.Bytes()...)
-	fmt.Println(string(original))
+	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }
 

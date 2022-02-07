@@ -41,7 +41,7 @@ var SchemaNames []string
 func SchemaOf(field astutils.FieldMeta) *Schema {
 	ft := field.Type
 	if IsVarargs(ft) {
-		ft = ToSlicePtr(ft)
+		ft = ToSlice(ft)
 	}
 	ft = strings.TrimLeft(ft, "*")
 	switch ft {
@@ -152,7 +152,7 @@ var castFuncMap = map[string]string{
 
 func IsSupport(t string) bool {
 	if IsVarargs(t) {
-		t = ToSlicePtr(t)
+		t = ToSlice(t)
 	}
 	_, exists := castFuncMap[strings.TrimLeft(t, "*")]
 	return exists
@@ -170,13 +170,13 @@ func IsVarargs(t string) bool {
 	return strings.HasPrefix(t, "...")
 }
 
-func ToSlicePtr(t string) string {
+func ToSlice(t string) string {
 	return "[]" + strings.TrimPrefix(t, "...")
 }
 
 func CastFunc(t string) string {
 	if IsVarargs(t) {
-		t = ToSlicePtr(t)
+		t = ToSlice(t)
 	}
 	return castFuncMap[strings.TrimLeft(t, "*")]
 }
