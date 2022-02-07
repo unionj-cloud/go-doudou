@@ -6,6 +6,14 @@ import (
 	"strconv"
 )
 
+func ToInt(s string) int {
+	v, err := strconv.ParseInt(s, 0, 0)
+	if err == nil {
+		return int(v)
+	}
+	return 0
+}
+
 func ToIntE(s string) (int, error) {
 	v, err := strconv.ParseInt(s, 0, 0)
 	if err == nil {

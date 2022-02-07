@@ -1,17 +1,8 @@
-package model
+package ddhttp
 
 import (
 	"fmt"
-	"net/http"
 )
-
-// Route wraps config for route
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
 
 // BizError is used for business error implemented error interface
 // StatusCode will be set to http response status code
@@ -40,7 +31,8 @@ func WithErrCode(errCode int) BizErrorOption {
 // NewBizError is factory function for creating an instance of BizError struct
 func NewBizError(err error, opts ...BizErrorOption) *BizError {
 	bz := &BizError{
-		ErrMsg: err.Error(),
+		StatusCode: 500,
+		ErrMsg:     err.Error(),
 	}
 	for _, fn := range opts {
 		fn(bz)

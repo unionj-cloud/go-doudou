@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"github.com/unionj-cloud/memberlist"
+	"github.com/unionj-cloud/go-doudou/memberlist"
 	"net/http"
 	"text/template"
 )

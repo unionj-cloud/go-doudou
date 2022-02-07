@@ -3,11 +3,11 @@ package ddhttp
 import (
 	"github.com/go-resty/resty/v2"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/unionj-cloud/cast"
+	"github.com/unionj-cloud/go-doudou/cast"
+	"github.com/unionj-cloud/go-doudou/memberlist"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
 	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"github.com/unionj-cloud/memberlist"
 	"net"
 	"net/http"
 	"os"

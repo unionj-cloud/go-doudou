@@ -327,6 +327,8 @@ var appendHttpHandlerImplTmpl = `
 				if {{ $r.Name }} != nil {
 					if errors.Is({{ $r.Name }}, context.Canceled) {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
+					} else if err, ok := {{ $r.Name }}.(*ddhttp.BizError); ok {
+						http.Error(_writer, err.Error(), err.StatusCode)
 					} else {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
 					}
@@ -384,6 +386,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
 	"github.com/unionj-cloud/go-doudou/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"

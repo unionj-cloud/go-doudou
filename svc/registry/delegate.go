@@ -3,8 +3,8 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/memberlist"
 	"github.com/unionj-cloud/go-doudou/svc/logger"
-	"github.com/unionj-cloud/memberlist"
 	"sync"
 )
 
