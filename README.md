@@ -1085,7 +1085,14 @@ check [document](./ddl/doc/README.md).
 
 Please reference [go-doudou kanban](https://github.com/unionj-cloud/go-doudou/projects/1)  
 &nbsp;
-### Community
+## Credits
+Here I give credit to [https://github.com/hashicorp/memberlist](https://github.com/hashicorp/memberlist) and all its contributors 
+as go-doudou is relying on it to implement service register/discovery/fault tolerance feature.  
+
+I also should give credit to [github.com/go-redis/redis_rate](github.com/go-redis/redis_rate) and all its contributors
+as go-doudou is relying on it to implement redis based rate limit feature.
+&nbsp;
+## Community
 
 Welcome to contribute to go-doudou by forking it and submitting pr or issues. If you like go-doudou, please give it a
 star!
