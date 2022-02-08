@@ -99,23 +99,23 @@ go-doudou（兜兜）是一个基于gossip协议和OpenAPI3.0规范的去中心�
 ### 安装
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.7
+go get -v github.com/unionj-cloud/go-doudou@v0.9.8
 ```
 
 如果遇到410 Gone报错，请尝试用下面的命令：
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.7
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.8
 ```
 
 ### 升级
 ```shell
 ➜  ~ go-doudou version                       
 Installed version is v0.9.6
-Latest release version is v0.9.7
+Latest release version is v0.9.8
 ✔ Yes
-go install -v github.com/unionj-cloud/go-doudou@v0.9.7
-go: downloading github.com/unionj-cloud/go-doudou v0.9.7
+go install -v github.com/unionj-cloud/go-doudou@v0.9.8
+go: downloading github.com/unionj-cloud/go-doudou v0.9.8
 github.com/unionj-cloud/go-doudou/ddl/columnenum
 github.com/unionj-cloud/go-doudou/ddl/sortenum
 github.com/unionj-cloud/go-doudou/ddl/nullenum
@@ -147,7 +147,7 @@ github.com/unionj-cloud/go-doudou/cmd
 github.com/unionj-cloud/go-doudou
 DONE
 ➜  ~ go-doudou version
-Installed version is v0.9.7
+Installed version is v0.9.8
 ➜  ~ 
 ```
 

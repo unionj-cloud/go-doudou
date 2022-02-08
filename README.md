@@ -145,23 +145,23 @@ Go-doudou a RESTFul microservice framework(we will add grpc support soon) comes 
 ### Install
 
 ```shell
-go get -v github.com/unionj-cloud/go-doudou@v0.9.7
+go get -v github.com/unionj-cloud/go-doudou@v0.9.8
 ```
 
 If you meet 410 Gone error, try below command:
 
 ```shell
-export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.7
+export GOSUMDB=off && go get -v github.com/unionj-cloud/go-doudou@v0.9.8
 ```  
 &nbsp;
 ### Upgrade
 ```shell
 ➜  ~ go-doudou version                       
 Installed version is v0.9.6
-Latest release version is v0.9.7
+Latest release version is v0.9.8
 ✔ Yes
-go install -v github.com/unionj-cloud/go-doudou@v0.9.7
-go: downloading github.com/unionj-cloud/go-doudou v0.9.7
+go install -v github.com/unionj-cloud/go-doudou@v0.9.8
+go: downloading github.com/unionj-cloud/go-doudou v0.9.8
 github.com/unionj-cloud/go-doudou/ddl/columnenum
 github.com/unionj-cloud/go-doudou/ddl/sortenum
 github.com/unionj-cloud/go-doudou/ddl/nullenum
@@ -193,7 +193,7 @@ github.com/unionj-cloud/go-doudou/cmd
 github.com/unionj-cloud/go-doudou
 DONE
 ➜  ~ go-doudou version
-Installed version is v0.9.7
+Installed version is v0.9.8
 ➜  ~ 
 ```  
 &nbsp;
