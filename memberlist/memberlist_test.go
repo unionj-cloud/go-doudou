@@ -1660,8 +1660,8 @@ func TestMemberlist_PingDelegate(t *testing.T) {
 	}
 
 	c1 := newConfig()
-	c1.BindPort = 56199
-	c1.AdvertisePort = 56199
+	c1.BindPort = 55199
+	c1.AdvertisePort = 55199
 	c1.Name = "m1"
 
 	m1, err := Create(c1)
@@ -1670,8 +1670,8 @@ func TestMemberlist_PingDelegate(t *testing.T) {
 
 	// Create a second node
 	c2 := newConfig()
-	c2.BindPort = 56200
-	c2.AdvertisePort = 56200
+	c2.BindPort = 55200
+	c2.AdvertisePort = 55200
 	c2.Name = "m2"
 	mock := c2.Ping.(*MockPing)
 
