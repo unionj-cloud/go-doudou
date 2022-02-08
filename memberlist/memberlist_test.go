@@ -549,8 +549,8 @@ func TestMemberList_Members(t *testing.T) {
 
 func TestMemberlist_Join(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56111
-	c1.AdvertisePort = 56111
+	c1.BindPort = 55111
+	c1.AdvertisePort = 55111
 	c1.Name = "m1"
 	m1, err := Create(c1)
 	require.NoError(t, err)
@@ -558,8 +558,8 @@ func TestMemberlist_Join(t *testing.T) {
 
 	// Create a second node
 	c2 := testConfig(t)
-	c2.BindPort = 56112
-	c2.AdvertisePort = 56112
+	c2.BindPort = 55112
+	c2.AdvertisePort = 55112
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -586,8 +586,8 @@ func TestMemberlist_Join(t *testing.T) {
 
 func TestMemberlist_JoinDifferentNetworksUniqueMask(t *testing.T) {
 	c1 := testConfigNet(t, 0)
-	c1.BindPort = 56113
-	c1.AdvertisePort = 56113
+	c1.BindPort = 55113
+	c1.AdvertisePort = 55113
 	c1.Name = "m1"
 	c1.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/8"})
 	m1, err := Create(c1)
@@ -597,8 +597,8 @@ func TestMemberlist_JoinDifferentNetworksUniqueMask(t *testing.T) {
 	// Create a second node
 	c2 := testConfigNet(t, 1)
 	c2.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/8"})
-	c2.BindPort = 56114
-	c2.AdvertisePort = 56114
+	c2.BindPort = 55114
+	c2.AdvertisePort = 55114
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -625,8 +625,8 @@ func TestMemberlist_JoinDifferentNetworksUniqueMask(t *testing.T) {
 
 func TestMemberlist_JoinDifferentNetworksMultiMasks(t *testing.T) {
 	c1 := testConfigNet(t, 0)
-	c1.BindPort = 56115
-	c1.AdvertisePort = 56115
+	c1.BindPort = 55115
+	c1.AdvertisePort = 55115
 	c1.Name = "m1"
 	c1.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/24", "127.0.1.0/24"})
 	m1, err := Create(c1)
@@ -636,8 +636,8 @@ func TestMemberlist_JoinDifferentNetworksMultiMasks(t *testing.T) {
 	// Create a second node
 	c2 := testConfigNet(t, 1)
 	c2.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/24", "127.0.1.0/24"})
-	c2.BindPort = 56116
-	c2.AdvertisePort = 56116
+	c2.BindPort = 55116
+	c2.AdvertisePort = 55116
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -654,8 +654,8 @@ func TestMemberlist_JoinDifferentNetworksMultiMasks(t *testing.T) {
 	// It should see others, but will not be seen by others
 	//c3 := testConfigNet(t, 2)
 	//c3.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/8"})
-	//c3.BindPort = 56117
-	//c3.AdvertisePort = 56117
+	//c3.BindPort = 55117
+	//c3.AdvertisePort = 55117
 	//c3.Name = "m3"
 	//
 	//m3, err := Create(c3)
@@ -689,8 +689,8 @@ func TestMemberlist_JoinDifferentNetworksMultiMasks(t *testing.T) {
 	//// It should see others, but will not be seen by others
 	//c4 := testConfigNet(t, 2)
 	//c4.CIDRsAllowed, _ = ParseCIDRs([]string{"127.0.0.0/24", "127.0.1.0/24"})
-	//c4.BindPort = 56118
-	//c4.AdvertisePort = 56118
+	//c4.BindPort = 55118
+	//c4.AdvertisePort = 55118
 	//c4.Name = "m4"
 	//
 	//m4, err := Create(c4)
@@ -728,8 +728,8 @@ func (c *CustomMergeDelegate) NotifyMerge(nodes []*Node) error {
 
 func TestMemberlist_Join_Cancel(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56117
-	c1.AdvertisePort = 56117
+	c1.BindPort = 55117
+	c1.AdvertisePort = 55117
 	c1.Name = "m1"
 	merge1 := &CustomMergeDelegate{t: t}
 	c1.Merge = merge1
@@ -740,8 +740,8 @@ func TestMemberlist_Join_Cancel(t *testing.T) {
 
 	// Create a second node
 	c2 := testConfig(t)
-	c2.BindPort = 56118
-	c2.AdvertisePort = 56118
+	c2.BindPort = 55118
+	c2.AdvertisePort = 55118
 	c2.Name = "m2"
 	merge2 := &CustomMergeDelegate{t: t}
 	c2.Merge = merge2
@@ -794,8 +794,8 @@ func (c *CustomAliveDelegate) NotifyAlive(peer *Node) error {
 
 func TestMemberlist_Join_Cancel_Passive(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56119
-	c1.AdvertisePort = 56119
+	c1.BindPort = 55119
+	c1.AdvertisePort = 55119
 	c1.Name = "m1"
 	alive1 := &CustomAliveDelegate{
 		Ignore: c1.Name,
@@ -809,8 +809,8 @@ func TestMemberlist_Join_Cancel_Passive(t *testing.T) {
 
 	// Create a second node
 	c2 := testConfig(t)
-	c2.BindPort = 56120
-	c2.AdvertisePort = 56120
+	c2.BindPort = 55120
+	c2.AdvertisePort = 55120
 	c2.Name = "m2"
 	alive2 := &CustomAliveDelegate{
 		Ignore: c2.Name,
@@ -850,16 +850,16 @@ func TestMemberlist_Join_Cancel_Passive(t *testing.T) {
 
 func TestMemberlist_Join_protocolVersions(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56121
-	c1.AdvertisePort = 56121
+	c1.BindPort = 55121
+	c1.AdvertisePort = 55121
 	c1.Name = "m1"
 	m1, err := Create(c1)
 	require.NoError(t, err)
 	defer m1.Shutdown()
 
 	c2 := testConfig(t)
-	c2.BindPort = 56110
-	c2.AdvertisePort = 56110
+	c2.BindPort = 55110
+	c2.AdvertisePort = 55110
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -867,8 +867,8 @@ func TestMemberlist_Join_protocolVersions(t *testing.T) {
 	defer m2.Shutdown()
 
 	c3 := testConfig(t)
-	c3.BindPort = 56109
-	c3.AdvertisePort = 56109
+	c3.BindPort = 55109
+	c3.AdvertisePort = 55109
 	c3.Name = "m3"
 	c3.ProtocolVersion = ProtocolVersionMax
 
@@ -915,8 +915,8 @@ func TestMemberlist_Leave(t *testing.T) {
 	}
 
 	c1 := newConfig()
-	c1.BindPort = 56108
-	c1.AdvertisePort = 56108
+	c1.BindPort = 55108
+	c1.AdvertisePort = 55108
 	c1.Name = "m1"
 
 	m1, err := Create(c1)
@@ -925,8 +925,8 @@ func TestMemberlist_Leave(t *testing.T) {
 
 	// Create a second node
 	c2 := newConfig()
-	c2.BindPort = 56107
-	c2.AdvertisePort = 56107
+	c2.BindPort = 55107
+	c2.AdvertisePort = 55107
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -970,8 +970,8 @@ func TestMemberlist_JoinShutdown(t *testing.T) {
 	}
 
 	c1 := newConfig()
-	c1.BindPort = 56106
-	c1.AdvertisePort = 56106
+	c1.BindPort = 55106
+	c1.AdvertisePort = 55106
 	c1.Name = "m1"
 
 	m1, err := Create(c1)
@@ -980,8 +980,8 @@ func TestMemberlist_JoinShutdown(t *testing.T) {
 
 	// Create a second node
 	c2 := newConfig()
-	c2.BindPort = 56105
-	c2.AdvertisePort = 56105
+	c2.BindPort = 55105
+	c2.AdvertisePort = 55105
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -1013,8 +1013,8 @@ func TestMemberlist_JoinShutdown(t *testing.T) {
 func TestMemberlist_delegateMeta(t *testing.T) {
 	c1 := testConfig(t)
 	c1.Delegate = &MockDelegate{meta: []byte("web")}
-	c1.BindPort = 56104
-	c1.AdvertisePort = 56104
+	c1.BindPort = 55104
+	c1.AdvertisePort = 55104
 	c1.Name = "c1"
 
 	m1, err := Create(c1)
@@ -1022,8 +1022,8 @@ func TestMemberlist_delegateMeta(t *testing.T) {
 	defer m1.Shutdown()
 
 	c2 := testConfig(t)
-	c2.BindPort = 56103
-	c2.AdvertisePort = 56103
+	c2.BindPort = 55103
+	c2.AdvertisePort = 55103
 	c2.Name = "c2"
 	c2.Delegate = &MockDelegate{meta: []byte("lb")}
 
@@ -1080,8 +1080,8 @@ func TestMemberlist_delegateMeta(t *testing.T) {
 
 func TestMemberlist_delegateMeta_Update(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56122
-	c1.AdvertisePort = 56122
+	c1.BindPort = 55122
+	c1.AdvertisePort = 55122
 	c1.Name = "m1"
 	mock1 := &MockDelegate{meta: []byte("web")}
 	c1.Delegate = mock1
@@ -1091,8 +1091,8 @@ func TestMemberlist_delegateMeta_Update(t *testing.T) {
 	defer m1.Shutdown()
 
 	c2 := testConfig(t)
-	c2.BindPort = 56123
-	c2.AdvertisePort = 56123
+	c2.BindPort = 55123
+	c2.AdvertisePort = 55123
 	c2.Name = "m2"
 	mock2 := &MockDelegate{meta: []byte("lb")}
 	c2.Delegate = mock2
@@ -1174,8 +1174,8 @@ func TestMemberlist_UserData(t *testing.T) {
 	}
 
 	c1, d1 := newConfig()
-	c1.BindPort = 56133
-	c1.AdvertisePort = 56133
+	c1.BindPort = 55133
+	c1.AdvertisePort = 55133
 	c1.Name = "m1"
 	d1.setState([]byte("something"))
 
@@ -1190,8 +1190,8 @@ func TestMemberlist_UserData(t *testing.T) {
 
 	// Create a second node
 	c2, d2 := newConfig()
-	c2.BindPort = 56134
-	c2.AdvertisePort = 56134
+	c2.BindPort = 55134
+	c2.AdvertisePort = 55134
 	c2.Name = "m2"
 
 	// Second delegate has things to send
@@ -1246,8 +1246,8 @@ func TestMemberlist_SendTo(t *testing.T) {
 	}
 
 	c1, d1, _ := newConfig()
-	c1.BindPort = 56144
-	c1.AdvertisePort = 56144
+	c1.BindPort = 55144
+	c1.AdvertisePort = 55144
 	c1.Name = "m1"
 
 	m1, err := Create(c1)
@@ -1255,8 +1255,8 @@ func TestMemberlist_SendTo(t *testing.T) {
 	defer m1.Shutdown()
 
 	c2, d2, addr2 := newConfig()
-	c2.BindPort = 56145
-	c2.AdvertisePort = 56145
+	c2.BindPort = 55145
+	c2.AdvertisePort = 55145
 	c2.Name = "m2"
 
 	m2, err := Create(c2)
@@ -1348,8 +1348,8 @@ func TestMemberlistProtocolVersion(t *testing.T) {
 func TestMemberlist_Join_DeadNode(t *testing.T) {
 	c1 := testConfig(t)
 	c1.TCPTimeout = 50 * time.Millisecond
-	c1.BindPort = 56155
-	c1.AdvertisePort = 56155
+	c1.BindPort = 55155
+	c1.AdvertisePort = 55155
 	c1.Name = "m1"
 
 	m1, err := Create(c1)
@@ -1388,8 +1388,8 @@ func TestMemberlist_Join_Protocol_Compatibility(t *testing.T) {
 
 		c1 := testConfig(t)
 		c1.ProtocolVersion = pv1
-		c1.BindPort = 56166
-		c1.AdvertisePort = 56166
+		c1.BindPort = 55166
+		c1.AdvertisePort = 55166
 		c1.Name = "m1"
 
 		m1, err := Create(c1)
@@ -1397,8 +1397,8 @@ func TestMemberlist_Join_Protocol_Compatibility(t *testing.T) {
 		defer m1.Shutdown()
 
 		c2 := testConfig(t)
-		c2.BindPort = 56167
-		c2.AdvertisePort = 56167
+		c2.BindPort = 55167
+		c2.AdvertisePort = 55167
 		c2.ProtocolVersion = pv2
 		c1.Name = "m2"
 
@@ -1588,8 +1588,8 @@ func (m *MockConflict) NotifyConflict(existing, other *Node) {
 
 func TestMemberlist_conflictDelegate(t *testing.T) {
 	c1 := testConfig(t)
-	c1.BindPort = 56177
-	c1.AdvertisePort = 56177
+	c1.BindPort = 55177
+	c1.AdvertisePort = 55177
 	mock := &MockConflict{}
 	c1.Conflict = mock
 
@@ -1600,8 +1600,8 @@ func TestMemberlist_conflictDelegate(t *testing.T) {
 	// Ensure name conflict
 	c2 := testConfig(t)
 	c2.Name = c1.Name
-	c2.BindPort = 56178
-	c2.AdvertisePort = 56178
+	c2.BindPort = 55178
+	c2.AdvertisePort = 55178
 
 	m2, err := Create(c2)
 	require.NoError(t, err)
