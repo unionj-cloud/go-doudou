@@ -18,6 +18,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"log"
 	"net"
 	"os"
@@ -362,6 +363,9 @@ func (m *Memberlist) resolveAddr(hostStr string) ([]ipPort, error) {
 	host, sport, err := net.SplitHostPort(hostStr)
 	if err != nil {
 		return nil, err
+	}
+	if stringutils.IsEmpty(host) {
+		return nil, errors.New("host should not be empty")
 	}
 	lport, err := strconv.ParseUint(sport, 10, 16)
 	if err != nil {

@@ -111,7 +111,7 @@ func TestHandlePing(t *testing.T) {
 	// Encode a ping
 	ping := ping{
 		SeqNo:      42,
-		SourceAddr: string(string(udpAddr.IP)),
+		SourceAddr: udpAddr.IP.String(),
 		SourcePort: uint16(udpAddr.Port),
 		SourceNode: "test",
 	}
@@ -176,7 +176,7 @@ func TestHandlePing_WrongNode(t *testing.T) {
 	ping := ping{
 		SeqNo:      42,
 		Node:       m.config.Name + "-bad",
-		SourceAddr: string(udpAddr.IP),
+		SourceAddr: udpAddr.IP.String(),
 		SourcePort: uint16(udpAddr.Port),
 		SourceNode: "test",
 	}
@@ -220,7 +220,7 @@ func TestHandleIndirectPing(t *testing.T) {
 		Target:     m.config.BindAddr,
 		Port:       uint16(m.config.BindPort),
 		Node:       m.config.Name,
-		SourceAddr: string(udpAddr.IP),
+		SourceAddr: udpAddr.IP.String(),
 		SourcePort: uint16(udpAddr.Port),
 		SourceNode: "test",
 	}
@@ -553,9 +553,6 @@ func TestTCPPushPull(t *testing.T) {
 	if n.Name != "Test 0" {
 		t.Fatalf("bad name")
 	}
-	if n.Addr == m.config.BindAddr {
-		t.Fatal("bad addr")
-	}
 	if n.Incarnation != 0 {
 		t.Fatal("bad incarnation")
 	}
@@ -589,7 +586,7 @@ func TestSendMsg_Piggyback(t *testing.T) {
 	// Encode a ping
 	ping := ping{
 		SeqNo:      42,
-		SourceAddr: string(udpAddr.IP),
+		SourceAddr: udpAddr.IP.String(),
 		SourcePort: uint16(udpAddr.Port),
 		SourceNode: "test",
 	}
@@ -835,15 +832,15 @@ func TestGossip_MismatchedKeys(t *testing.T) {
 	// Create two agents with different gossip keys
 	c1 := testConfig(t)
 	c1.SecretKey = []byte("4W6DGn2VQVqDEceOdmuRTQ==")
-
+	c1.BindPort = 56188
+	c1.AdvertisePort = 56188
 	m1, err := Create(c1)
 	require.NoError(t, err)
 	defer m1.Shutdown()
 
-	bindPort := m1.config.BindPort
-
 	c2 := testConfig(t)
-	c2.BindPort = bindPort
+	c2.BindPort = 56189
+	c2.AdvertisePort = 56189
 	c2.SecretKey = []byte("XhX/w702/JKKK7/7OtM9Ww==")
 
 	m2, err := Create(c2)
@@ -851,7 +848,8 @@ func TestGossip_MismatchedKeys(t *testing.T) {
 	defer m2.Shutdown()
 
 	// Make sure we get this error on the joining side
-	_, err = m2.Join([]string{c1.Name + "/" + c1.BindAddr})
+	m1JoinUrl := fmt.Sprintf("%s/%s:%d", m1.config.Name, m1.advertiseAddr, m1.advertisePort)
+	_, err = m2.Join([]string{m1JoinUrl})
 	if err == nil || !strings.Contains(err.Error(), "No installed keys could decrypt the message") {
 		t.Fatalf("bad: %s", err)
 	}
@@ -859,7 +857,7 @@ func TestGossip_MismatchedKeys(t *testing.T) {
 
 func listenUDP(t *testing.T) *net.UDPConn {
 	var udp *net.UDPConn
-	for port := 60000; port < 61000; port++ {
+	for port := 56199; port < 60000; port++ {
 		udpAddr := fmt.Sprintf("127.0.0.1:%d", port)
 		udpLn, err := net.ListenPacket("udp", udpAddr)
 		if err == nil {
