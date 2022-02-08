@@ -1214,10 +1214,11 @@ func TestMemberlist_UserData(t *testing.T) {
 		t.Fatalf("should have 2 nodes! %v", m2.Members())
 	}
 
+	time.Sleep(1 * time.Second)
+
 	// Wait for a little while
 	iretry.Run(t, func(r *iretry.R) {
 		msgs1 := d1.getMessages()
-
 		// Ensure we got the messages. Ordering of messages is not guaranteed so just
 		// check we got them both in either order.
 		require.ElementsMatch(r, bcasts, msgs1)
