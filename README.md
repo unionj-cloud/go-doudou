@@ -75,7 +75,8 @@ framework. It supports monolith service application as well. Currently, it suppo
     - [name](#name)
     - [ddl](#ddl)
   - [TODO](#todo)
-  - [Community](#community)
+- [Credits](#credits)
+- [Community](#community)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
