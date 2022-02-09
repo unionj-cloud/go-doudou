@@ -36,7 +36,7 @@ func Init() (opentracing.Tracer, io.Closer) {
 		logger.Panic(errors.Wrap(err, "cannot parse Jaeger env vars"))
 	}
 	jaegerLogger := jaegerLoggerAdapter{logger: logger.Entry()}
-	metricsRoot := ddconfig.FrameworkName
+	metricsRoot := ddconfig.DefaultGddTracingMetricsRoot
 	if stringutils.IsNotEmpty(ddconfig.GddTracingMetricsRoot.Load()) {
 		metricsRoot = ddconfig.GddTracingMetricsRoot.Load()
 	}

@@ -7,50 +7,6 @@ import (
 	"testing"
 )
 
-func TestSwitch_Decode(t *testing.T) {
-	var sw1 Switch
-	var sw2 Switch
-	type args struct {
-		value string
-	}
-	tests := []struct {
-		name    string
-		s       *Switch
-		args    args
-		wantErr bool
-		want    bool
-	}{
-		{
-			name: "1",
-			s:    &sw1,
-			args: args{
-				value: "on",
-			},
-			wantErr: false,
-			want:    true,
-		},
-		{
-			name: "2",
-			s:    &sw2,
-			args: args{
-				value: "off",
-			},
-			wantErr: false,
-			want:    false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.Decode(tt.args.value); (err != nil) != tt.wantErr {
-				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if bool(*tt.s) != tt.want {
-				t.Errorf("Decode() want %v, got %v", tt.want, bool(*tt.s))
-			}
-		})
-	}
-}
-
 func TestLogLevel_Decode(t *testing.T) {
 	var ll1 LogLevel
 	var ll2 LogLevel

@@ -57,6 +57,22 @@ func TestToIntE(t *testing.T) {
 			want:    0,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: "",
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: "003",
+			},
+			want:    3,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

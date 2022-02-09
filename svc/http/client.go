@@ -88,7 +88,11 @@ func NewClient() *resty.Client {
 			MaxConnsPerHost:       100,
 		},
 	})
-	client.SetRetryCount(cast.ToInt(config.GddRetryCount.Load()))
+	retryCnt := config.DefaultGddRetryCount
+	if cnt, err := cast.ToIntE(config.GddRetryCount.Load()); err == nil {
+		retryCnt = cnt
+	}
+	client.SetRetryCount(retryCnt)
 	return client
 }
 

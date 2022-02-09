@@ -140,10 +140,10 @@ func (t *NetTransport) FinalAdvertiseAddr(ip string, port int) (string, int, err
 			var err error
 			ip, err = sockaddr.GetPrivateIP()
 			if err != nil {
-				return "", 0, fmt.Errorf("Failed to get interface addresses: %v", err)
+				return "", 0, fmt.Errorf("failed to get interface addresses: %v", err)
 			}
 			if ip == "" {
-				return "", 0, fmt.Errorf("No private IP address found, and explicit IP not provided")
+				return "", 0, fmt.Errorf("no private IP address found, and explicit IP not provided")
 			}
 			advertiseAddr = ip
 		} else {

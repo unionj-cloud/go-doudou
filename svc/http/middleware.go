@@ -240,17 +240,20 @@ func Rest(inner http.Handler) http.Handler {
 // BasicAuth adds http basic auth validation
 func BasicAuth(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username := config.GddManageUser.Load()
-		password := config.GddManagePass.Load()
-		if stringutils.IsNotEmpty(username) || stringutils.IsNotEmpty(password) {
-			user, pass, ok := r.BasicAuth()
-
-			if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
-				w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
-				w.WriteHeader(401)
-				w.Write([]byte("Unauthorised.\n"))
-				return
-			}
+		username := config.DefaultGddManageUser
+		if stringutils.IsNotEmpty(config.GddManageUser.Load()) {
+			username = config.GddManageUser.Load()
+		}
+		password := config.DefaultGddManagePass
+		if stringutils.IsNotEmpty(config.GddManagePass.Load()) {
+			password = config.GddManagePass.Load()
+		}
+		user, pass, ok := r.BasicAuth()
+		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
+			w.WriteHeader(401)
+			w.Write([]byte("Unauthorised.\n"))
+			return
 		}
 		inner.ServeHTTP(w, r)
 	})

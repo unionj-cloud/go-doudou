@@ -10,8 +10,6 @@ import (
 // Seed starts a seed node
 func Seed() {
 	config.GddServiceName.Write("seed")
-	config.GddPort.Write("56200")
-	config.GddMemPort.Write("56199")
 	err := registry.NewNode()
 	if err != nil {
 		logger.Panicln(fmt.Sprintf("%+v", err))

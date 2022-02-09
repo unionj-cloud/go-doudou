@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,8 +32,6 @@ var (
 	GddVer string
 )
 
-const FrameworkName = "Go-doudou"
-
 type envVariable string
 
 func (receiver envVariable) MarshalJSON() ([]byte, error) {
@@ -44,9 +43,9 @@ const (
 	GddBanner envVariable = "GDD_BANNER"
 	// GddBannerText sets text content of banner
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
-	// GddLogLevel please reference logrus.ParseLevel
+	// GddLogLevel accepts values are panic, fatal, error, warn, warning, info, debug, trace, please reference logrus.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
-	// GddLogFormat text or json, default is text
+	// GddLogFormat text or json
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
@@ -82,44 +81,36 @@ const (
 	// if GddMemHost starts with dot such as .seed-svc-headless.default.svc.cluster.local,
 	// it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
 	// for supporting k8s stateful service
+	// if empty or not set, private ip will be used instead.
 	GddMemHost envVariable = "GDD_MEM_HOST"
 	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
 	GddMemPort envVariable = "GDD_MEM_PORT"
 	// GddMemDeadTimeout dead node will be removed from node map if not received refute messages from it in GddMemDeadTimeout second
 	// expose GossipToTheDeadTime property of memberlist.Config
-	// default value is 60 in second
 	GddMemDeadTimeout envVariable = "GDD_MEM_DEAD_TIMEOUT"
 	// GddMemSyncInterval local node will synchronize states from other random node every GddMemSyncInterval second
 	// expose PushPullInterval property of memberlist.Config
-	// default value is 10 in second
 	GddMemSyncInterval envVariable = "GDD_MEM_SYNC_INTERVAL"
 	// GddMemReclaimTimeout dead node will be replaced with new node with the same name but different full address in GddMemReclaimTimeout second
 	// expose DeadNodeReclaimTime property of memberlist.Config
-	// default value is 3 in second
 	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
 	// GddMemProbeInterval probe interval
 	// expose ProbeInterval property of memberlist.Config
-	// default value is 5 in second
 	GddMemProbeInterval envVariable = "GDD_MEM_PROBE_INTERVAL"
 	// GddMemProbeTimeout probe timeout
 	// expose ProbeTimeout property of memberlist.Config
-	// default value is 3 in second
 	GddMemProbeTimeout envVariable = "GDD_MEM_PROBE_TIMEOUT"
 	// GddMemSuspicionMult is the multiplier for determining the time an inaccessible node is considered suspect before declaring it dead.
 	// expose SuspicionMult property of memberlist.Config
-	// default value is 6
 	GddMemSuspicionMult envVariable = "GDD_MEM_SUSPICION_MULT"
 	// GddMemGossipNodes how many remote nodes you want to gossip messages
 	// expose GossipNodes property of memberlist.Config
-	// default value is 4
 	GddMemGossipNodes envVariable = "GDD_MEM_GOSSIP_NODES"
 	// GddMemGossipInterval gossip interval
 	// expose GossipInterval property of memberlist.Config
-	// default value is 500 in millisecond
 	GddMemGossipInterval envVariable = "GDD_MEM_GOSSIP_INTERVAL"
 	// GddMemTCPTimeout tcp timeout
 	// expose TCPTimeout property of memberlist.Config
-	// default value is 30 in second
 	GddMemTCPTimeout envVariable = "GDD_MEM_TCP_TIMEOUT"
 	// GddMemWeight node weight
 	GddMemWeight envVariable = "GDD_MEM_WEIGHT"
@@ -147,22 +138,14 @@ func (receiver envVariable) Write(value string) error {
 	return os.Setenv(string(receiver), value)
 }
 
-// Switch represents a switch
-type Switch bool
-
-// Decode decodes string on to true
-func (s *Switch) Decode(value string) error {
-	if value == "on" {
-		*s = true
-	}
-	return nil
-}
-
 // LogLevel alias for logrus.Level
 type LogLevel logrus.Level
 
 // Decode decodes value to LogLevel
 func (ll *LogLevel) Decode(value string) error {
+	if stringutils.IsEmpty(value) {
+		value = DefaultGddLogLevel
+	}
 	switch value {
 	case "panic":
 		*ll = LogLevel(logrus.PanicLevel)

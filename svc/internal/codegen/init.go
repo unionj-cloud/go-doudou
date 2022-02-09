@@ -115,12 +115,7 @@ const gitignoreTmpl = `# Binaries for programs and plugins
 .DS_Store
 .idea`
 
-const envTmpl = `GDD_BANNER=on
-GDD_BANNER_TEXT=Go-doudou
-# GddLogLevel accept values are panic, fatal, error, warn, warning, info, debug, trace
-GDD_LOG_LEVEL=info
-
-DB_HOST=localhost
+const envTmpl = `DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWD=1234
@@ -128,43 +123,7 @@ DB_SCHEMA=test
 DB_CHARSET=utf8mb4
 DB_DRIVER=mysql
 
-GDD_GRACE_TIMEOUT=15s
-GDD_WRITE_TIMEOUT=15s
-GDD_READ_TIMEOUT=15s
-GDD_IDLE_TIMEOUT=60s
-
-# GDD_ROUTE_ROOT_PATH add prefix path to all routes
-GDD_ROUTE_ROOT_PATH=
-
-# GDD_MANAGE_ENABLE if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
-# if you don't' need the feature, just set it false or remove it
-GDD_MANAGE_ENABLE=true
-# GDD_MANAGE_USER if you want to disable http basic auth for management api endpoints, just set GDD_MANAGE_USER and GDD_MANAGE_PASS empty 
-# or remove them
-GDD_MANAGE_USER=admin
-GDD_MANAGE_PASS=admin
-
 GDD_SERVICE_NAME={{.SvcName}}
-GDD_PORT=6060
-# GDD_MODE accept 'mono' for monolith mode or 'micro' for microservice mode
-GDD_MODE=micro
-
-# GDD_MEM_PORT if empty or not set, an available port will be chosen randomly. recommend specifying a port
-GDD_MEM_PORT=
-GDD_MEM_SEED=localhost:56199
-# GDD_MEM_DEAD_TIMEOUT dead node will be removed from node map if not received refute messages from it in GDD_MEM_DEAD_TIMEOUT seconds
-GDD_MEM_DEAD_TIMEOUT=30s
-# GDD_MEM_SYNC_INTERVAL local node will synchronize states from other random node every GDD_MEM_SYNC_INTERVAL seconds
-GDD_MEM_SYNC_INTERVAL=5s
-# GDD_MEM_RECLAIM_TIMEOUT dead node will be replaced with new node with the same name but different full address in GDD_MEM_RECLAIM_TIMEOUT seconds
-GDD_MEM_RECLAIM_TIMEOUT=3s
-# GDD_MEM_NAME unique name of this node in cluster. if not provided, hostname will be used instead
-GDD_MEM_NAME=
-# GDD_MEM_HOST specify AdvertiseAddr attribute of memberlist config struct.
-# if GDD_MEM_HOST starts with dot such as .seed-svc-headless.default.svc.cluster.local,
-# it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
-# for supporting k8s stateful service
-GDD_MEM_HOST=
 
 JAEGER_AGENT_HOST=localhost
 JAEGER_AGENT_PORT=6831`

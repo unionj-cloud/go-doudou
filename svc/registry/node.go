@@ -37,8 +37,17 @@ func seeds(seedstr string) []string {
 	}
 	s := strings.Split(seedstr, ",")
 	for i, seed := range s {
-		if !strings.Contains(seed, ":") {
-			s[i] = seed + ":56199"
+		li := strings.LastIndex(seed, ":")
+		if li < 0 {
+			s[i] = fmt.Sprintf("%s:%d", seed, config.DefaultGddMemPort)
+			continue
+		}
+		if len(seed) > li+1 {
+			if port, err := cast.ToIntE(seed[li+1:]); err != nil {
+				s[i] = fmt.Sprintf("%s:%d", seed[:li], config.DefaultGddMemPort)
+			} else {
+				s[i] = fmt.Sprintf("%s:%d", seed[:li], port)
+			}
 		}
 	}
 	return s
@@ -48,7 +57,11 @@ func join() error {
 	if mlist == nil {
 		return errors.New("mlist is nil")
 	}
-	s := seeds(config.GddMemSeed.Load())
+	seed := config.DefaultGddMemSeed
+	if stringutils.IsNotEmpty(config.GddMemSeed.Load()) {
+		seed = config.GddMemSeed.Load()
+	}
+	s := seeds(seed)
 	if len(s) == 0 {
 		logger.Warnln("No seed found")
 		return nil
@@ -113,144 +126,147 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
+	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
 		cfg.IndirectChecks = indirectChecks
 	}
-	minLevel := strings.ToUpper(config.GddLogLevel.Load())
-	if minLevel == "ERROR" {
-		minLevel = "ERR"
-	} else if minLevel == "WARNING" {
-		minLevel = "WARN"
+	minLevel := config.DefaultGddLogLevel
+	if stringutils.IsNotEmpty(config.GddLogLevel.Load()) {
+		minLevel = strings.ToUpper(config.GddLogLevel.Load())
+		if minLevel == "ERROR" {
+			minLevel = "ERR"
+		} else if minLevel == "WARNING" {
+			minLevel = "WARN"
+		}
 	}
 	lf := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERR", "INFO"},
 		MinLevel: logutils.LogLevel(minLevel),
 	}
-	if config.GddMemLogDisable.Load() == "true" {
+	disable := config.DefaultGddMemLogDisable
+	if d, err := cast.ToBoolE(config.GddMemLogDisable.Load()); err == nil {
+		disable = d
+	}
+	if disable {
 		lf.Writer = ioutil.Discard
 	} else {
 		lf.Writer = logrus.StandardLogger().Writer()
 	}
 	cfg.LogOutput = lf
+	cfg.GossipToTheDeadTime, _ = time.ParseDuration(config.DefaultGddMemDeadTimeout)
 	deadTimeoutStr := config.GddMemDeadTimeout.Load()
 	if stringutils.IsNotEmpty(deadTimeoutStr) {
 		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {
 			cfg.GossipToTheDeadTime = time.Duration(deadTimeout) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(deadTimeoutStr); err == nil {
+			if duration, err := time.ParseDuration(deadTimeoutStr); err == nil {
 				cfg.GossipToTheDeadTime = duration
 			}
 		}
 	}
-	cfg.PushPullInterval = 10 * time.Second
+	cfg.PushPullInterval, _ = time.ParseDuration(config.DefaultGddMemSyncInterval)
 	syncIntervalStr := config.GddMemSyncInterval.Load()
 	if stringutils.IsNotEmpty(syncIntervalStr) {
 		if syncInterval, err := strconv.Atoi(syncIntervalStr); err == nil {
 			cfg.PushPullInterval = time.Duration(syncInterval) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(syncIntervalStr); err == nil {
+			if duration, err := time.ParseDuration(syncIntervalStr); err == nil {
 				cfg.PushPullInterval = duration
 			}
 		}
 	}
-	cfg.DeadNodeReclaimTime = 3 * time.Second
+	cfg.DeadNodeReclaimTime, _ = time.ParseDuration(config.DefaultGddMemReclaimTimeout)
 	reclaimTimeoutStr := config.GddMemReclaimTimeout.Load()
 	if stringutils.IsNotEmpty(reclaimTimeoutStr) {
 		if reclaimTimeout, err := strconv.Atoi(reclaimTimeoutStr); err == nil {
 			cfg.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(reclaimTimeoutStr); err == nil {
+			if duration, err := time.ParseDuration(reclaimTimeoutStr); err == nil {
 				cfg.DeadNodeReclaimTime = duration
 			}
 		}
 	}
+	cfg.ProbeInterval, _ = time.ParseDuration(config.DefaultGddMemProbeInterval)
 	probeIntervalStr := config.GddMemProbeInterval.Load()
 	if stringutils.IsNotEmpty(probeIntervalStr) {
 		if probeInterval, err := strconv.Atoi(probeIntervalStr); err == nil {
 			cfg.ProbeInterval = time.Duration(probeInterval) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(probeIntervalStr); err == nil {
+			if duration, err := time.ParseDuration(probeIntervalStr); err == nil {
 				cfg.ProbeInterval = duration
 			}
 		}
 	}
+	cfg.ProbeTimeout, _ = time.ParseDuration(config.DefaultGddMemProbeTimeout)
 	probeTimeoutStr := config.GddMemProbeTimeout.Load()
 	if stringutils.IsNotEmpty(probeTimeoutStr) {
 		if probeTimeout, err := strconv.Atoi(probeTimeoutStr); err == nil {
 			cfg.ProbeTimeout = time.Duration(probeTimeout) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(probeTimeoutStr); err == nil {
+			if duration, err := time.ParseDuration(probeTimeoutStr); err == nil {
 				cfg.ProbeTimeout = duration
 			}
 		}
 	}
-	suspicionMultStr := config.GddMemSuspicionMult.Load()
-	if stringutils.IsNotEmpty(suspicionMultStr) {
-		if suspicionMult, err := strconv.Atoi(suspicionMultStr); err == nil {
-			cfg.SuspicionMult = suspicionMult
-		}
+	cfg.SuspicionMult = config.DefaultGddMemSuspicionMult
+	if sm, err := cast.ToIntE(config.GddMemSuspicionMult.Load()); err == nil {
+		cfg.SuspicionMult = sm
 	}
-	gossipNodesStr := config.GddMemGossipNodes.Load()
-	if stringutils.IsNotEmpty(gossipNodesStr) {
-		if gossipNodes, err := strconv.Atoi(gossipNodesStr); err == nil {
-			cfg.GossipNodes = gossipNodes
-		}
+	cfg.GossipNodes = config.DefaultGddMemGossipNodes
+	if gn, err := cast.ToIntE(config.GddMemGossipNodes.Load()); err == nil {
+		cfg.GossipNodes = gn
 	}
+	cfg.GossipInterval, _ = time.ParseDuration(config.DefaultGddMemGossipInterval)
 	gossipIntervalStr := config.GddMemGossipInterval.Load()
 	if stringutils.IsNotEmpty(gossipIntervalStr) {
 		if gossipInterval, err := strconv.Atoi(gossipIntervalStr); err == nil {
 			cfg.GossipInterval = time.Duration(gossipInterval) * time.Millisecond
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(gossipIntervalStr); err == nil {
+			if duration, err := time.ParseDuration(gossipIntervalStr); err == nil {
 				cfg.GossipInterval = duration
 			}
 		}
 	}
 	// if env GDD_MEM_WEIGHT is set to > 0, then disable weight calculation, client will always use the same weight
-	if cast.ToInt(config.GddMemWeight.Load()) > 0 {
+	weight := config.DefaultGddMemWeight
+	if w, err := cast.ToIntE(config.GddMemWeight.Load()); err == nil {
+		weight = w
+	}
+	if weight > 0 {
 		cfg.WeightInterval = 0
 	} else {
+		cfg.WeightInterval = config.DefaultGddMemWeightInterval
 		weightIntervalStr := config.GddMemWeightInterval.Load()
 		if stringutils.IsNotEmpty(weightIntervalStr) {
 			if weightInterval, err := strconv.Atoi(weightIntervalStr); err == nil {
 				cfg.WeightInterval = time.Duration(weightInterval) * time.Millisecond
 			} else {
-				var duration time.Duration
-				if duration, err = time.ParseDuration(weightIntervalStr); err == nil {
+				if duration, err := time.ParseDuration(weightIntervalStr); err == nil {
 					cfg.WeightInterval = duration
 				}
 			}
 		}
 	}
+	cfg.TCPTimeout, _ = time.ParseDuration(config.DefaultGddMemTCPTimeout)
 	tcpTimeoutStr := config.GddMemTCPTimeout.Load()
 	if stringutils.IsNotEmpty(tcpTimeoutStr) {
 		if tcpTimeout, err := strconv.Atoi(tcpTimeoutStr); err == nil {
 			cfg.TCPTimeout = time.Duration(tcpTimeout) * time.Second
 		} else {
-			var duration time.Duration
-			if duration, err = time.ParseDuration(tcpTimeoutStr); err == nil {
+			if duration, err := time.ParseDuration(tcpTimeoutStr); err == nil {
 				cfg.TCPTimeout = duration
 			}
 		}
 	}
-	nodename := config.GddMemName.Load()
-	if stringutils.IsNotEmpty(nodename) {
-		cfg.Name = nodename
+	if stringutils.IsNotEmpty(config.GddMemName.Load()) {
+		cfg.Name = config.GddMemName.Load()
 	}
-	memport := cast.ToInt(config.GddMemPort.Load())
-	if memport == 0 {
-		memport, _ = getFreePort()
+	memport := config.DefaultGddMemPort
+	if m, err := cast.ToIntE(config.GddMemPort.Load()); err == nil {
+		memport = m
 	}
-	if memport > 0 {
-		cfg.BindPort = memport
-		cfg.AdvertisePort = memport
-	}
+	cfg.BindPort = memport
+	cfg.AdvertisePort = memport
 	memhost := config.GddMemHost.Load()
 	if stringutils.IsNotEmpty(memhost) {
 		if strings.HasPrefix(memhost, ".") {
@@ -269,15 +285,17 @@ func newConf() *memberlist.Config {
 // only first parameter will be used.
 func NewNode(data ...map[string]interface{}) error {
 	mconf := newConf()
-	service := config.GddServiceName.Load()
+	service := config.DefaultGddServiceName
+	if stringutils.IsNotEmpty(config.GddServiceName.Load()) {
+		service = config.GddServiceName.Load()
+	}
 	if stringutils.IsEmpty(service) {
 		return errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))
 	}
-	port := cast.ToInt(config.GddPort.Load())
-	if port == 0 {
-		port, _ = getFreePort()
+	httpPort := config.DefaultGddPort
+	if port, err := cast.ToIntE(config.GddPort.Load()); err == nil {
+		httpPort = port
 	}
-	config.GddPort.Write(fmt.Sprint(port))
 	now := time.Now()
 	var buildTime string
 	if stringutils.IsNotEmpty(config.BuildTime) {
@@ -285,17 +303,25 @@ func NewNode(data ...map[string]interface{}) error {
 			buildTime = t.Local().Format(constants.FORMAT)
 		}
 	}
+	rr := config.DefaultGddRouteRootPath
+	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
+		rr = config.GddRouteRootPath.Load()
+	}
+	weight := config.DefaultGddMemWeight
+	if w, err := cast.ToIntE(config.GddMemWeight.Load()); err == nil {
+		weight = w
+	}
 	mmeta := mergedMeta{
 		Meta: nodeMeta{
 			Service:       service,
-			RouteRootPath: config.GddRouteRootPath.Load(),
-			Port:          port,
+			RouteRootPath: rr,
+			Port:          httpPort,
 			RegisterAt:    &now,
 			GoVer:         runtime.Version(),
 			GddVer:        config.GddVer,
 			BuildUser:     config.BuildUser,
 			BuildTime:     buildTime,
-			Weight:        cast.ToInt(config.GddMemWeight.Load()),
+			Weight:        weight,
 		},
 		Data: make(map[string]interface{}),
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
+	"github.com/unionj-cloud/go-doudou/cast"
 	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	configui "github.com/unionj-cloud/go-doudou/svc/http/config"
@@ -17,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -33,9 +35,17 @@ const gddPathPrefix = "/go-doudou/"
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rootRouter := mux.NewRouter().StrictSlash(true)
-	bizRouter := rootRouter.PathPrefix(config.GddRouteRootPath.Load()).Subrouter().StrictSlash(true)
+	rr := config.DefaultGddRouteRootPath
+	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
+		rr = config.GddRouteRootPath.Load()
+	}
+	bizRouter := rootRouter.PathPrefix(rr).Subrouter().StrictSlash(true)
 	var routes []model.Route
-	if config.GddManage.Load() == "true" {
+	manage := config.DefaultGddManage
+	if m, err := cast.ToBoolE(config.GddManage.Load()); err == nil {
+		manage = m
+	}
+	if manage {
 		bizRouter.Use(prometheus.PrometheusMiddleware)
 		gddRouter := rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
 		gddRouter.Use(BasicAuth)
@@ -80,11 +90,15 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 func (srv *DefaultHttpSrv) printRoutes() {
 	logger.Infoln("================ Registered Routes ================")
 	data := [][]string{}
+	rr := config.DefaultGddRouteRootPath
+	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
+		rr = config.GddRouteRootPath.Load()
+	}
 	for _, r := range srv.routes {
 		if strings.HasPrefix(r.Pattern, gddPathPrefix) {
 			data = append(data, []string{r.Name, r.Method, r.Pattern})
 		} else {
-			data = append(data, []string{r.Name, r.Method, path.Clean(config.GddRouteRootPath.Load() + r.Pattern)})
+			data = append(data, []string{r.Name, r.Method, path.Clean(rr + r.Pattern)})
 		}
 	}
 
@@ -114,27 +128,35 @@ func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler)
 func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_WRITE_TIMEOUT",
-			config.GddWriteTimeout.Load(), err.Error())
-		write = 15 * time.Second
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
+			config.GddWriteTimeout.Load(), err.Error(), config.DefaultGddWriteTimeout)
+		write, _ = time.ParseDuration(config.DefaultGddWriteTimeout)
 	}
 
 	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_READ_TIMEOUT",
-			config.GddReadTimeout.Load(), err.Error())
-		read = 15 * time.Second
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
+			config.GddReadTimeout.Load(), err.Error(), config.DefaultGddReadTimeout)
+		read, _ = time.ParseDuration(config.DefaultGddReadTimeout)
 	}
 
 	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 60s instead.\n", "GDD_IDLE_TIMEOUT",
-			config.GddIdleTimeout.Load(), err.Error())
-		idle = 60 * time.Second
+		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
+			config.GddIdleTimeout.Load(), err.Error(), config.DefaultGddIdleTimeout)
+		idle, _ = time.ParseDuration(config.DefaultGddIdleTimeout)
 	}
 
+	httpPort := strconv.Itoa(config.DefaultGddPort)
+	if _, err = cast.ToIntE(config.GddPort.Load()); err == nil {
+		httpPort = config.GddPort.Load()
+	}
+	httpHost := config.DefaultGddHost
+	if stringutils.IsNotEmpty(config.GddHost.Load()) {
+		httpHost = config.GddHost.Load()
+	}
 	httpServer := &http.Server{
-		Addr: strings.Join([]string{config.GddHost.Load(), config.GddPort.Load()}, ":"),
+		Addr: strings.Join([]string{httpHost, httpPort}, ":"),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: write,
 		ReadTimeout:  read,
@@ -156,14 +178,16 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
 	start := time.Now()
-	var bannerSwitch config.Switch
-	(&bannerSwitch).Decode(config.GddBanner.Load())
-	if bannerSwitch {
-		banner := config.GddBannerText.Load()
-		if stringutils.IsEmpty(banner) {
-			banner = config.FrameworkName
+	banner := config.DefaultGddBanner
+	if b, err := cast.ToBoolE(config.GddBanner.Load()); err == nil {
+		banner = b
+	}
+	if banner {
+		bannerText := config.DefaultGddBannerText
+		if stringutils.IsNotEmpty(config.GddBannerText.Load()) {
+			bannerText = config.GddBannerText.Load()
 		}
-		figure.NewColorFigure(banner, "doom", "green", true).Print()
+		figure.NewColorFigure(bannerText, "doom", "green", true).Print()
 	}
 
 	srv.printRoutes()
@@ -174,9 +198,9 @@ func (srv *DefaultHttpSrv) Run() {
 		// Create a deadline to wait for.
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
-			logger.Warnf("Parse %s %s as time.Duration failed: %s, use default 15s instead.\n", "GDD_GRACETIMEOUT",
-				config.GddGraceTimeout.Load(), err.Error())
-			grace = 15 * time.Second
+			logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
+				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
+			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), grace)

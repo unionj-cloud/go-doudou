@@ -158,6 +158,7 @@ type Config struct {
 	//
 	// local node weight messages will be gossiped to remote nodes. Remote nodes will use it to implement smooth
 	// weighted round-robin load balance algo for choosing the next service provider
+	// By default, this is 0, means not enabled
 	WeightInterval time.Duration
 
 	// GossipVerifyIncoming controls whether to enforce encryption for incoming
@@ -307,8 +308,6 @@ func DefaultLANConfig() *Config {
 		GossipVerifyIncoming: true,
 		GossipVerifyOutgoing: true,
 
-		WeightInterval: 1 * time.Second,
-
 		EnableCompression: true, // Enable compression by default
 
 		SecretKey: nil,
@@ -335,7 +334,6 @@ func DefaultWANConfig() *Config {
 	conf.GossipNodes = 4 // Gossip less frequently, but to an additional node
 	conf.GossipInterval = 500 * time.Millisecond
 	conf.GossipToTheDeadTime = 60 * time.Second
-	conf.WeightInterval = 5 * time.Second
 	return conf
 }
 

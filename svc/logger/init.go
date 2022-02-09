@@ -2,6 +2,7 @@ package logger
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/stringutils"
 	"github.com/unionj-cloud/go-doudou/svc/config"
 	"io"
 )
@@ -27,18 +28,23 @@ func WithReportCaller(reportCaller bool) LoggerOption {
 }
 
 func defaultFormatter() logrus.Formatter {
+	format := config.DefaultGddLogFormat
+	if stringutils.IsNotEmpty(config.GddLogFormat.Load()) {
+		format = config.GddLogFormat.Load()
+	}
 	var formatter logrus.Formatter
-	switch config.GddLogFormat.Load() {
+	switch format {
 	case "json":
 		jf := new(logrus.JSONFormatter)
 		jf.TimestampFormat = "2006-01-02 15:04:05"
 		jf.DisableHTMLEscape = true
 		formatter = jf
-	default:
+	case "text":
 		tf := new(logrus.TextFormatter)
 		tf.TimestampFormat = "2006-01-02 15:04:05"
 		tf.FullTimestamp = true
 		formatter = tf
+	default:
 	}
 	return formatter
 }

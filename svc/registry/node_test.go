@@ -68,7 +68,7 @@ func Test_seeds(t *testing.T) {
 			args: args{
 				seedstr: "seed-01,seed-02,seed-03",
 			},
-			want: []string{"seed-01:56199", "seed-02:56199", "seed-03:56199"},
+			want: []string{"seed-01:7946", "seed-02:7946", "seed-03:7946"},
 		},
 		{
 			name: "",
@@ -76,6 +76,13 @@ func Test_seeds(t *testing.T) {
 				seedstr: "",
 			},
 			want: nil,
+		},
+		{
+			name: "",
+			args: args{
+				seedstr: "seed-01:56199,seed-02,seed-03:03,seed-04:abc",
+			},
+			want: []string{"seed-01:56199", "seed-02:7946", "seed-03:3", "seed-04:7946"},
 		},
 	}
 	for _, tt := range tests {
