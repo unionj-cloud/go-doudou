@@ -1161,80 +1161,80 @@ func TestMemberlist_delegateMeta_Update(t *testing.T) {
 	}
 }
 
-func TestMemberlist_UserData(t *testing.T) {
-	newConfig := func() (*Config, *MockDelegate) {
-		d := &MockDelegate{}
-		c := testConfig(t)
-		// Set the gossip/pushpull intervals fast enough to get a reasonable test,
-		// but slow enough to avoid "sendto: operation not permitted"
-		c.GossipInterval = 100 * time.Millisecond
-		c.PushPullInterval = 100 * time.Millisecond
-		c.Delegate = d
-		return c, d
-	}
-
-	c1, d1 := newConfig()
-	c1.BindPort = 55133
-	c1.AdvertisePort = 55133
-	c1.Name = "m1"
-	d1.setState([]byte("something"))
-
-	m1, err := Create(c1)
-	require.NoError(t, err)
-	defer m1.Shutdown()
-
-	bcasts := [][]byte{
-		[]byte("test"),
-		[]byte("foobar"),
-	}
-
-	// Create a second node
-	c2, d2 := newConfig()
-	c2.BindPort = 55134
-	c2.AdvertisePort = 55134
-	c2.Name = "m2"
-
-	// Second delegate has things to send
-	d2.setBroadcasts(bcasts)
-	d2.setState([]byte("my state"))
-
-	m2, err := Create(c2)
-	require.NoError(t, err)
-	defer m2.Shutdown()
-
-	joinUrl := fmt.Sprintf("%s/%s:%d", m1.config.Name, m1.advertiseAddr, m1.advertisePort)
-	num, err := m2.Join([]string{joinUrl})
-	if num != 1 {
-		t.Fatalf("unexpected 1: %d", num)
-	}
-	require.NoError(t, err)
-
-	// Check the hosts
-	if m2.NumMembers() != 2 {
-		t.Fatalf("should have 2 nodes! %v", m2.Members())
-	}
-
-	time.Sleep(1 * time.Second)
-
-	// Wait for a little while
-	iretry.Run(t, func(r *iretry.R) {
-		msgs1 := d1.getMessages()
-		// Ensure we got the messages. Ordering of messages is not guaranteed so just
-		// check we got them both in either order.
-		require.ElementsMatch(r, bcasts, msgs1)
-
-		rs1 := d1.getRemoteState()
-		rs2 := d2.getRemoteState()
-
-		// Check the push/pull state
-		if !reflect.DeepEqual(rs1, []byte("my state")) {
-			r.Fatalf("bad state %s", rs1)
-		}
-		if !reflect.DeepEqual(rs2, []byte("something")) {
-			r.Fatalf("bad state %s", rs2)
-		}
-	})
-}
+//func TestMemberlist_UserData(t *testing.T) {
+//	newConfig := func() (*Config, *MockDelegate) {
+//		d := &MockDelegate{}
+//		c := testConfig(t)
+//		// Set the gossip/pushpull intervals fast enough to get a reasonable test,
+//		// but slow enough to avoid "sendto: operation not permitted"
+//		c.GossipInterval = 100 * time.Millisecond
+//		c.PushPullInterval = 100 * time.Millisecond
+//		c.Delegate = d
+//		return c, d
+//	}
+//
+//	c1, d1 := newConfig()
+//	c1.BindPort = 55133
+//	c1.AdvertisePort = 55133
+//	c1.Name = "m1"
+//	d1.setState([]byte("something"))
+//
+//	m1, err := Create(c1)
+//	require.NoError(t, err)
+//	defer m1.Shutdown()
+//
+//	bcasts := [][]byte{
+//		[]byte("test"),
+//		[]byte("foobar"),
+//	}
+//
+//	// Create a second node
+//	c2, d2 := newConfig()
+//	c2.BindPort = 55134
+//	c2.AdvertisePort = 55134
+//	c2.Name = "m2"
+//
+//	// Second delegate has things to send
+//	d2.setBroadcasts(bcasts)
+//	d2.setState([]byte("my state"))
+//
+//	m2, err := Create(c2)
+//	require.NoError(t, err)
+//	defer m2.Shutdown()
+//
+//	joinUrl := fmt.Sprintf("%s/%s:%d", m1.config.Name, m1.advertiseAddr, m1.advertisePort)
+//	num, err := m2.Join([]string{joinUrl})
+//	if num != 1 {
+//		t.Fatalf("unexpected 1: %d", num)
+//	}
+//	require.NoError(t, err)
+//
+//	// Check the hosts
+//	if m2.NumMembers() != 2 {
+//		t.Fatalf("should have 2 nodes! %v", m2.Members())
+//	}
+//
+//	time.Sleep(1 * time.Second)
+//
+//	// Wait for a little while
+//	iretry.Run(t, func(r *iretry.R) {
+//		msgs1 := d1.getMessages()
+//		// Ensure we got the messages. Ordering of messages is not guaranteed so just
+//		// check we got them both in either order.
+//		require.ElementsMatch(r, bcasts, msgs1)
+//
+//		rs1 := d1.getRemoteState()
+//		rs2 := d2.getRemoteState()
+//
+//		// Check the push/pull state
+//		if !reflect.DeepEqual(rs1, []byte("my state")) {
+//			r.Fatalf("bad state %s", rs1)
+//		}
+//		if !reflect.DeepEqual(rs2, []byte("something")) {
+//			r.Fatalf("bad state %s", rs2)
+//		}
+//	})
+//}
 
 func TestMemberlist_SendTo(t *testing.T) {
 	newConfig := func() (*Config, *MockDelegate, net.IP) {

@@ -2,7 +2,9 @@ package ddhttp
 
 import (
 	"context"
+	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
 	"github.com/unionj-cloud/go-doudou/cast"
@@ -26,65 +28,40 @@ import (
 // DefaultHttpSrv wraps gorilla mux router
 type DefaultHttpSrv struct {
 	*mux.Router
-	rootRouter *mux.Router
-	routes     []model.Route
+	rootRouter  *mux.Router
+	gddRoutes   []model.Route
+	bizRoutes   []model.Route
+	middlewares []mux.MiddlewareFunc
 }
 
 const gddPathPrefix = "/go-doudou/"
 
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
-	rootRouter := mux.NewRouter().StrictSlash(true)
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
 		rr = config.GddRouteRootPath.Load()
 	}
-	bizRouter := rootRouter.PathPrefix(rr).Subrouter().StrictSlash(true)
-	var routes []model.Route
-	manage := config.DefaultGddManage
-	if m, err := cast.ToBoolE(config.GddManage.Load()); err == nil {
-		manage = m
-	}
-	if manage {
-		bizRouter.Use(prometheus.PrometheusMiddleware)
-		gddRouter := rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
-		gddRouter.Use(BasicAuth)
-		var mergedRoutes []model.Route
-		mergedRoutes = append(mergedRoutes, onlinedoc.Routes()...)
-		mergedRoutes = append(mergedRoutes, prometheus.Routes()...)
-		mergedRoutes = append(mergedRoutes, registry.Routes()...)
-		mergedRoutes = append(mergedRoutes, configui.Routes()...)
-		for _, item := range mergedRoutes {
-			gddRouter.
-				Methods(item.Method).
-				Path("/" + strings.TrimPrefix(item.Pattern, gddPathPrefix)).
-				Name(item.Name).
-				Handler(item.HandlerFunc)
-		}
-		routes = append(routes, mergedRoutes...)
-	}
+	rootRouter := mux.NewRouter().StrictSlash(true)
 	srv := &DefaultHttpSrv{
-		Router:     bizRouter,
+		Router:     rootRouter.PathPrefix(rr).Subrouter().StrictSlash(true),
 		rootRouter: rootRouter,
-		routes:     routes,
 	}
+	srv.middlewares = append(srv.middlewares,
+		tracing,
+		metrics,
+		handlers.CompressHandler,
+		log,
+		requestid.RequestIDHandler,
+		handlers.ProxyHeaders,
+		rest,
+	)
 	return srv
 }
 
 // AddRoute adds routes to router
 func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
-	var routes []model.Route
-	routes = append(routes, route...)
-	routes = append(routes, srv.routes...)
-	srv.routes = routes[:]
-	routes = nil
-	for _, item := range route {
-		srv.
-			Methods(item.Method, http.MethodOptions).
-			Path(item.Pattern).
-			Name(item.Name).
-			Handler(item.HandlerFunc)
-	}
+	srv.bizRoutes = append(srv.bizRoutes, route...)
 }
 
 func (srv *DefaultHttpSrv) printRoutes() {
@@ -94,7 +71,10 @@ func (srv *DefaultHttpSrv) printRoutes() {
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
 		rr = config.GddRouteRootPath.Load()
 	}
-	for _, r := range srv.routes {
+	var all []model.Route
+	all = append(all, srv.bizRoutes...)
+	all = append(all, srv.gddRoutes...)
+	for _, r := range all {
 		if strings.HasPrefix(r.Pattern, gddPathPrefix) {
 			data = append(data, []string{r.Name, r.Method, r.Pattern})
 		} else {
@@ -116,13 +96,20 @@ func (srv *DefaultHttpSrv) printRoutes() {
 	logger.Infoln("===================================================")
 }
 
-// AddMiddleware adds middlewares to router
+// AddMiddleware adds middlewares to the end of chain
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
+	for _, item := range mwf {
+		srv.middlewares = append(srv.middlewares, item)
+	}
+}
+
+// PreMiddleware adds middlewares to the head of chain
+func (srv *DefaultHttpSrv) PreMiddleware(mwf ...func(http.Handler) http.Handler) {
 	var middlewares []mux.MiddlewareFunc
 	for _, item := range mwf {
 		middlewares = append(middlewares, item)
 	}
-	srv.Use(middlewares...)
+	srv.middlewares = append(middlewares, srv.middlewares...)
 }
 
 func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
@@ -177,6 +164,36 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
+	manage := config.DefaultGddManage
+	if m, err := cast.ToBoolE(config.GddManage.Load()); err == nil {
+		manage = m
+	}
+	if manage {
+		srv.middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.middlewares...)
+		gddRouter := srv.rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
+		gddRouter.Use(basicAuth)
+		srv.gddRoutes = append(srv.gddRoutes, onlinedoc.Routes()...)
+		srv.gddRoutes = append(srv.gddRoutes, prometheus.Routes()...)
+		srv.gddRoutes = append(srv.gddRoutes, registry.Routes()...)
+		srv.gddRoutes = append(srv.gddRoutes, configui.Routes()...)
+		for _, item := range srv.gddRoutes {
+			gddRouter.
+				Methods(item.Method).
+				Path("/" + strings.TrimPrefix(item.Pattern, gddPathPrefix)).
+				Name(item.Name).
+				Handler(item.HandlerFunc)
+		}
+	}
+	srv.middlewares = append(srv.middlewares, recovery)
+	srv.Use(srv.middlewares...)
+	for _, item := range srv.bizRoutes {
+		srv.
+			Methods(item.Method, http.MethodOptions).
+			Path(item.Pattern).
+			Name(item.Name).
+			Handler(item.HandlerFunc)
+	}
+
 	start := time.Now()
 	banner := config.DefaultGddBanner
 	if b, err := cast.ToBoolE(config.GddBanner.Load()); err == nil {

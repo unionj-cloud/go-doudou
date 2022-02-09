@@ -22,8 +22,6 @@ const (
 	DefaultGddManageUser         = "admin"
 	DefaultGddManagePass         = "admin"
 	DefaultGddTracingMetricsRoot = FrameworkName
-	DefaultGddMode               = ""
-	DefaultGddOutput             = ""
 
 	// Default configs for memberlist component
 	DefaultGddMemSeed           = ""

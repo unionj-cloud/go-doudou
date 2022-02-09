@@ -115,18 +115,7 @@ const gitignoreTmpl = `# Binaries for programs and plugins
 .DS_Store
 .idea`
 
-const envTmpl = `DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWD=1234
-DB_SCHEMA=test
-DB_CHARSET=utf8mb4
-DB_DRIVER=mysql
-
-GDD_SERVICE_NAME={{.SvcName}}
-
-JAEGER_AGENT_HOST=localhost
-JAEGER_AGENT_PORT=6831`
+const envTmpl = ``
 
 const dockerfileTmpl = `FROM golang:1.16.6-alpine AS builder
 

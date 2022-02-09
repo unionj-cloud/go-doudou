@@ -28,8 +28,8 @@ import (
 	"time"
 )
 
-// Metrics logs some metrics for http request
-func Metrics(inner http.Handler) http.Handler {
+// metrics logs some metrics for http request
+func metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
 		logger.WithFields(logrus.Fields{
@@ -165,8 +165,8 @@ func getRespBody(rec *httptest.ResponseRecorder) string {
 	return respBody
 }
 
-// Logger logs http request body and response body for debugging
-func Logger(inner http.Handler) http.Handler {
+// log logs http request body and response body for debugging
+func log(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.URL.RequestURI(), "/go-doudou/") || os.Getenv("GDD_LOG_LEVEL") != "debug" {
 			inner.ServeHTTP(w, r)
@@ -227,8 +227,8 @@ func Logger(inner http.Handler) http.Handler {
 	})
 }
 
-// Rest set Content-Type to application/json
-func Rest(inner http.Handler) http.Handler {
+// rest set Content-Type to application/json
+func rest(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -237,8 +237,8 @@ func Rest(inner http.Handler) http.Handler {
 	})
 }
 
-// BasicAuth adds http basic auth validation
-func BasicAuth(inner http.Handler) http.Handler {
+// basicAuth adds http basic auth validation
+func basicAuth(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := config.DefaultGddManageUser
 		if stringutils.IsNotEmpty(config.GddManageUser.Load()) {
@@ -259,8 +259,8 @@ func BasicAuth(inner http.Handler) http.Handler {
 	})
 }
 
-// Recover handles panic from processing incoming http request
-func Recover(inner http.Handler) http.Handler {
+// recovery handles panic from processing incoming http request
+func recovery(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -278,8 +278,8 @@ func Recover(inner http.Handler) http.Handler {
 	})
 }
 
-// Tracing add jaeger tracing middleware
-func Tracing(inner http.Handler) http.Handler {
+// tracing add jaeger tracing middleware
+func tracing(inner http.Handler) http.Handler {
 	return nethttp.Middleware(
 		opentracing.GlobalTracer(),
 		inner,

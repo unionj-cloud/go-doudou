@@ -53,7 +53,7 @@ type {{.Meta.Name}}Impl struct {
 
 ` + appendPart + `
 
-func New{{.Meta.Name}}(conf *config.Config, db *sqlx.DB) {{.Meta.Name}} {
+func New{{.Meta.Name}}(conf *config.Config) {{.Meta.Name}} {
 	return &{{.Meta.Name}}Impl{
 		conf,
 	}

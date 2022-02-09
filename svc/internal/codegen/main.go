@@ -31,42 +31,13 @@ import (
 
 func main() {
 	ddconfig.InitEnv()
-	conf := config.LoadFromEnv()
-
 	logger.Init()
 
-	conn, err := db.NewDb(conf.DbConf)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if conn == nil {
-			return
-		}
-		if err := conn.Close(); err == nil {
-			logrus.Infoln("Database connection is closed")
-		} else {
-			logrus.Warnln("Failed to close database connection")
-		}
-	}()
-
-	if ddconfig.GddMode.Load() == "micro" {
-		err := registry.NewNode()
-		if err != nil {
-			logrus.Panicln(fmt.Sprintf("%+v", err))
-		}
-		defer registry.Shutdown()
-	}
-
-	tracer, closer := tracing.Init()
-	defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
-
-    svc := {{.ServiceAlias}}.New{{.SvcName}}(conf, conn)
-
+	conf := config.LoadFromEnv()
+    svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
 	srv := ddhttp.NewDefaultHttpSrv()
-	srv.AddMiddleware(ddhttp.Tracing, ddhttp.Metrics, requestid.RequestIDHandler, handlers.CompressHandler, handlers.ProxyHeaders, ddhttp.Logger, ddhttp.Rest, ddhttp.Recover)
+	srv.AddMiddleware(ddhttp.Metrics, ddhttp.Rest, ddhttp.Recover)
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }

@@ -45,6 +45,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/btree v1.0.1
 	github.com/google/go-github/v42 v42.0.0
+	github.com/gorilla/handlers v0.0.0-20150720190736-60c7bfde3e33
 	github.com/hashicorp/go-msgpack v1.1.5
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-sockaddr v1.0.2
