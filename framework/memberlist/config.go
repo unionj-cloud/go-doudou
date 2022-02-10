@@ -2,7 +2,6 @@ package memberlist
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"io"
 	"log"
 	"net"
@@ -10,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/gobwas/glob"
+	"github.com/hashicorp/go-multierror"
 )
 
 type Config struct {
@@ -248,8 +248,10 @@ type Config struct {
 	// allowed to connect (you must specify IPv6/IPv4 separately)
 	// Using [] will block all connections.
 	CIDRsAllowed []net.IPNet
-	// Whitelist is whitelist for advertise address of nodes
-	Whitelist []string
+	// Whitelist is whitelist for advertise address of nodes, support wildcard and multiple patterns separated by comma
+	// underlying based on https://github.com/gobwas/glob
+	// By default, it is nil, means disable
+	Whitelist glob.Glob
 }
 
 // ParseCIDRs return a possible empty list of all Network that have been parsed
@@ -345,7 +347,7 @@ func (c *Config) IPMustBeChecked() bool {
 
 // AddrMustBeChecked return true if AddrAllowed must be called
 func (c *Config) AddrMustBeChecked() bool {
-	return len(c.Whitelist) > 0
+	return c.Whitelist != nil
 }
 
 // IPAllowed return an error if access to memberlist is denied
@@ -366,7 +368,7 @@ func (c *Config) AddrAllowed(ip string) error {
 	if !c.AddrMustBeChecked() {
 		return nil
 	}
-	if sliceutils.StringContains(c.Whitelist, ip) {
+	if c.Whitelist.Match(ip) {
 		return nil
 	}
 	return fmt.Errorf("%s is not allowed", ip)

@@ -43,6 +43,7 @@ require (
 require (
 	github.com/armon/go-metrics v0.3.9
 	github.com/go-redis/redis/v8 v8.11.4
+	github.com/gobwas/glob v0.2.3
 	github.com/google/btree v1.0.1
 	github.com/google/go-github/v42 v42.0.0
 	github.com/gorilla/handlers v0.0.0-20150720190736-60c7bfde3e33

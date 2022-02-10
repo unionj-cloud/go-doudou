@@ -99,7 +99,9 @@ const (
 	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
 	GddMemIndirectChecks envVariable = "GDD_MEM_INDIRECT_CHECKS"
 	GddMemLogDisable     envVariable = "GDD_MEM_LOG_DISABLE"
-	// GddMemWhitelist is whitelist for advertise address of nodes, multiple addresses should be separated by ,
+	// GddMemWhitelist is whitelist for advertise address of nodes, support wildcard and multiple patterns separated by comma
+	// underlying based on https://github.com/gobwas/glob
+	// By default, it is empty, means disable
 	GddMemWhitelist envVariable = "GDD_MEM_WHITELIST"
 
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"

@@ -3,14 +3,15 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gobwas/glob"
 	"github.com/hako/durafmt"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -132,7 +133,7 @@ func newConf() *memberlist.Config {
 		whitelist = config.GddMemWhitelist.Load()
 	}
 	if stringutils.IsNotEmpty(whitelist) {
-		cfg.Whitelist = strings.Split(whitelist, ",")
+		cfg.Whitelist = glob.MustCompile(fmt.Sprintf("{%s}", whitelist))
 	}
 	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
