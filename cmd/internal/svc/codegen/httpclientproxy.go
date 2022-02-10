@@ -86,7 +86,6 @@ import (
 	"github.com/slok/goresilience/metrics"
 	"github.com/slok/goresilience/retry"
 	"github.com/slok/goresilience/timeout"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	"os"
 	"time"
@@ -127,11 +126,7 @@ func New{{.SvcName}}ClientProxy(client *{{.SvcName}}Client, opts ...ProxyOption)
 
 	if cp.runner == nil {
 		var mid []goresilience.Middleware
-
-		if enable, _ := cast.ToBoolE(os.Getenv("GDD_MANAGE_ENABLE")); enable {
-			mid = append(mid, metrics.NewMiddleware("{{.ServicePackage}}_client", metrics.NewPrometheusRecorder(prometheus.DefaultRegisterer)))
-		}
-
+		mid = append(mid, metrics.NewMiddleware("{{.ServicePackage}}_client", metrics.NewPrometheusRecorder(prometheus.DefaultRegisterer)))
 		mid = append(mid, circuitbreaker.NewMiddleware(circuitbreaker.Config{
 			ErrorPercentThresholdToOpen:        50,
 			MinimumRequestToOpen:               6,
