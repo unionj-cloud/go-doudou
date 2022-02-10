@@ -211,7 +211,7 @@ func log(inner http.Handler) http.Handler {
 		if log, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
 			log = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: %s", err)
 		}
-		logger.WithFields(fields).Debugln(log)
+		logger.WithFields(fields).Infoln(log)
 
 		header := rec.Result().Header
 		for k, v := range header {

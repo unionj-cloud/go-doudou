@@ -61,3 +61,7 @@ func Init(opts ...LoggerOption) {
 		opt(logger)
 	}
 }
+
+func init() {
+	Init()
+}
