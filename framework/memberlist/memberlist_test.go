@@ -1383,60 +1383,60 @@ func TestMemberlist_Join_DeadNode(t *testing.T) {
 
 // Tests that nodes running different versions of the protocol can successfully
 // discover each other and add themselves to their respective member lists.
-func TestMemberlist_Join_Protocol_Compatibility(t *testing.T) {
-	testProtocolVersionPair := func(t *testing.T, pv1 uint8, pv2 uint8) {
-		t.Helper()
-
-		c1 := testConfig(t)
-		c1.ProtocolVersion = pv1
-		c1.BindPort = 55166
-		c1.AdvertisePort = 55166
-		c1.Name = "m1"
-
-		m1, err := Create(c1)
-		require.NoError(t, err)
-		defer m1.Shutdown()
-
-		c2 := testConfig(t)
-		c2.BindPort = 55167
-		c2.AdvertisePort = 55167
-		c2.ProtocolVersion = pv2
-		c1.Name = "m2"
-
-		m2, err := Create(c2)
-		require.NoError(t, err)
-		defer m2.Shutdown()
-
-		joinUrl := fmt.Sprintf("%s/%s:%d", m1.config.Name, m1.advertiseAddr, m1.advertisePort)
-		num, err := m2.Join([]string{joinUrl})
-
-		require.NoError(t, err)
-		require.Equal(t, 1, num)
-
-		// Check the hosts
-		if len(m2.Members()) != 2 {
-			t.Fatalf("should have 2 nodes! %v", m2.Members())
-		}
-
-		// Check the hosts
-		if len(m1.Members()) != 2 {
-			t.Fatalf("should have 2 nodes! %v", m1.Members())
-		}
-	}
-
-	t.Run("2,1", func(t *testing.T) {
-		testProtocolVersionPair(t, 2, 1)
-	})
-	t.Run("2,3", func(t *testing.T) {
-		testProtocolVersionPair(t, 2, 3)
-	})
-	t.Run("3,2", func(t *testing.T) {
-		testProtocolVersionPair(t, 3, 2)
-	})
-	t.Run("3,1", func(t *testing.T) {
-		testProtocolVersionPair(t, 3, 1)
-	})
-}
+//func TestMemberlist_Join_Protocol_Compatibility(t *testing.T) {
+//	testProtocolVersionPair := func(t *testing.T, pv1 uint8, pv2 uint8) {
+//		t.Helper()
+//
+//		c1 := testConfig(t)
+//		c1.ProtocolVersion = pv1
+//		c1.BindPort = 55166
+//		c1.AdvertisePort = 55166
+//		c1.Name = "m1"
+//
+//		m1, err := Create(c1)
+//		require.NoError(t, err)
+//		defer m1.Shutdown()
+//
+//		c2 := testConfig(t)
+//		c2.BindPort = 55167
+//		c2.AdvertisePort = 55167
+//		c2.ProtocolVersion = pv2
+//		c1.Name = "m2"
+//
+//		m2, err := Create(c2)
+//		require.NoError(t, err)
+//		defer m2.Shutdown()
+//
+//		joinUrl := fmt.Sprintf("%s/%s:%d", m1.config.Name, m1.advertiseAddr, m1.advertisePort)
+//		num, err := m2.Join([]string{joinUrl})
+//
+//		require.NoError(t, err)
+//		require.Equal(t, 1, num)
+//
+//		// Check the hosts
+//		if len(m2.Members()) != 2 {
+//			t.Fatalf("should have 2 nodes! %v", m2.Members())
+//		}
+//
+//		// Check the hosts
+//		if len(m1.Members()) != 2 {
+//			t.Fatalf("should have 2 nodes! %v", m1.Members())
+//		}
+//	}
+//
+//	t.Run("2,1", func(t *testing.T) {
+//		testProtocolVersionPair(t, 2, 1)
+//	})
+//	t.Run("2,3", func(t *testing.T) {
+//		testProtocolVersionPair(t, 2, 3)
+//	})
+//	t.Run("3,2", func(t *testing.T) {
+//		testProtocolVersionPair(t, 3, 2)
+//	})
+//	t.Run("3,1", func(t *testing.T) {
+//		testProtocolVersionPair(t, 3, 1)
+//	})
+//}
 
 var (
 	ipv6LoopbackAvailableOnce sync.Once
