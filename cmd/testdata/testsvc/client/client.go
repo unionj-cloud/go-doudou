@@ -12,8 +12,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
 )
 
 type TestsvcClient struct {

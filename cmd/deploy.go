@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 )
 
 // deployCmd deploy service to k8s

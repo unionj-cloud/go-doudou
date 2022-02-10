@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"os"
 	"testing"
 )

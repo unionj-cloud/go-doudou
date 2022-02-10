@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: usersvc-statefulset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usersvc
+  serviceName: usersvc-svc-headless
+  template:
+    metadata:
+      labels:
+        app: usersvc
+    spec:
+      containers:
+      - image: wubin1989/go-doudou-usersvc:v20220210133753
+        imagePullPolicy: Always
+        name: usersvc
+        ports:
+        - containerPort: 6060
+          name: http-port
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usersvc-svc-headless
+spec:
+  selector:
+    app: usersvc
+  ports:
+    - protocol: TCP
+      port: 6060
+      targetPort: 6060
+  clusterIP: None

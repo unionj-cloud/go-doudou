@@ -6,19 +6,17 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/unionj-cloud/go-doudou/logutils"
 )
 
 // PrepareTestEnvironment prepares test environment
 func PrepareTestEnvironment() (func(), string, int) {
-	logger := logutils.NewLogger()
 	var terminateContainer func() // variable to store function to terminate container
 	var host string
 	var port int
 	var err error
-	terminateContainer, host, port, err = SetupEs6Container(logger)
+	terminateContainer, host, port, err = SetupEs6Container(logrus.New())
 	if err != nil {
-		logger.Panicln("failed to setup Elasticsearch container")
+		panic("failed to setup Elasticsearch container")
 	}
 	return terminateContainer, host, port
 }

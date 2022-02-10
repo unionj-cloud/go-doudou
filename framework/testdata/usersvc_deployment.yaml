@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usersvc-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usersvc
+  template:
+    metadata:
+      labels:
+        app: usersvc
+    spec:
+      containers:
+      - image: wubin1989/go-doudou-usersvc:v20220210015930
+        imagePullPolicy: Always
+        name: usersvc
+        ports:
+        - containerPort: 6060
+          name: http-port
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usersvc-service
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  selector:
+    app: usersvc
+  ports:
+    - protocol: TCP
+      port: 6060
+      targetPort: 6060

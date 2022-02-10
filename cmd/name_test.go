@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/unionj-cloud/go-doudou/astutils"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"os"
 	"path/filepath"
 	"testing"

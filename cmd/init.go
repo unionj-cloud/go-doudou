@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 )
 
 var modName string

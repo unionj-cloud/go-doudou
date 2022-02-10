@@ -4,10 +4,10 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/ddl"
-	"github.com/unionj-cloud/go-doudou/ddl/config"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/config"
+	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 )
 
 var dir string
@@ -23,7 +23,7 @@ var ddlCmd = &cobra.Command{
 	Short: "migration tool between database table structure and golang struct",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		ddconfig.InitEnv()
+		dotenv.Load(env)
 		var conf config.DbConfig
 		err := envconfig.Process("db", &conf)
 		if err != nil {
@@ -51,7 +51,7 @@ func init() {
 	ddlCmd.Flags().StringVar(&dir, "domain", "domain", "Path of domain folder.")
 	ddlCmd.Flags().StringVar(&pre, "pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
 	ddlCmd.Flags().StringVar(&df, "df", "dao", "Name of dao folder.")
-	ddlCmd.Flags().StringVar(&env, "env", ".env", "Path of database connection config .env file")
+	ddlCmd.Flags().StringVar(&env, "env", "dev", "Environment name such as dev, uat, test, prod, default is dev")
 	ddlCmd.Flags().BoolVarP(&reverse, "reverse", "r", false, "If true, generate domain code from database. If false, update or create database tables from domain code.")
 	ddlCmd.Flags().BoolVarP(&dao, "dao", "d", false, "If true, generate dao code.")
 }

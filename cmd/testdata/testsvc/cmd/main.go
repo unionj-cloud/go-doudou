@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
 	service "testsvc"
 	"testsvc/config"
 	"testsvc/transport/httpsrv"

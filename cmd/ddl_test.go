@@ -3,9 +3,9 @@ package cmd
 import (
 	"bytes"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/ddl/table"
-	"github.com/unionj-cloud/go-doudou/pathutils"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/table"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"

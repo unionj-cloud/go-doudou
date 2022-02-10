@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 
 	"github.com/spf13/cobra"
 )

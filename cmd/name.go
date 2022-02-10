@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/name"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/name"
 )
 
 var file string

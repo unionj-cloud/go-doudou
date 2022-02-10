@@ -116,31 +116,31 @@ Latest release version is v0.9.8
 ✔ Yes
 go install -v github.com/unionj-cloud/go-doudou@v0.9.8
 go: downloading github.com/unionj-cloud/go-doudou v0.9.8
-github.com/unionj-cloud/go-doudou/ddl/columnenum
-github.com/unionj-cloud/go-doudou/ddl/sortenum
-github.com/unionj-cloud/go-doudou/ddl/nullenum
-github.com/unionj-cloud/go-doudou/ddl/keyenum
-github.com/unionj-cloud/go-doudou/ddl/extraenum
-github.com/unionj-cloud/go-doudou/ddl/config
-github.com/unionj-cloud/go-doudou/constants
-github.com/unionj-cloud/go-doudou/stringutils
-github.com/unionj-cloud/go-doudou/sliceutils
-github.com/unionj-cloud/go-doudou/templateutils
-github.com/unionj-cloud/go-doudou/ddl/wrapper
-github.com/unionj-cloud/go-doudou/pathutils
-github.com/unionj-cloud/go-doudou/svc/config
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/columnenum
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/sortenum
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/nullenum
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/keyenum
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/extraenum
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/config
+github.com/unionj-cloud/go-doudou/toolkit/constants
+github.com/unionj-cloud/go-doudou/toolkit/stringutils
+github.com/unionj-cloud/go-doudou/toolkit/sliceutils
+github.com/unionj-cloud/go-doudou/toolkit/templateutils
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/wrapper
+github.com/unionj-cloud/go-doudou/toolkit/pathutils
+github.com/unionj-cloud/go-doudou/framework/internal/config
 github.com/unionj-cloud/go-doudou/copier
 github.com/unionj-cloud/go-doudou/executils
-github.com/unionj-cloud/go-doudou/astutils
+github.com/unionj-cloud/go-doudou/cmd/internal/astutils
 github.com/unionj-cloud/go-doudou/logutils
 github.com/unionj-cloud/go-doudou/test
 github.com/unionj-cloud/go-doudou/name
-github.com/unionj-cloud/go-doudou/ddl/ddlast
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/ddlast
 github.com/unionj-cloud/go-doudou/openapi/v3
-github.com/unionj-cloud/go-doudou/ddl/table
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/table
 github.com/unionj-cloud/go-doudou/openapi/v3/codegen/client
-github.com/unionj-cloud/go-doudou/svc/internal/codegen
-github.com/unionj-cloud/go-doudou/ddl/codegen
+github.com/unionj-cloud/go-doudou/framework/internal/codegen
+github.com/unionj-cloud/go-doudou/toolkit/sqlext/codegen
 github.com/unionj-cloud/go-doudou/ddl
 github.com/unionj-cloud/go-doudou/svc
 github.com/unionj-cloud/go-doudou/cmd
@@ -454,9 +454,9 @@ import (
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/sirupsen/logrus"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
+	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
 	service "ordersvc"
 	"ordersvc/config"
 	"ordersvc/transport/httpsrv"
@@ -498,9 +498,9 @@ import (
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/sirupsen/logrus"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
+	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
 	service "ordersvc"
 	"ordersvc/config"
 	"ordersvc/transport/httpsrv"
@@ -551,11 +551,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/ratelimit"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/logger"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/logger"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/framework/tracing"
 	"time"
 	service "usersvc"
 	"usersvc/config"
@@ -597,7 +597,7 @@ func main() {
 
 ### 隔仓
 #### 用法
-go-doudou在`github.com/unionj-cloud/go-doudou/svc/http`包中内置了基于[github.com/slok/goresilience](github.com/slok/goresilience) 实现的隔仓模式中间件。
+go-doudou在`github.com/unionj-cloud/go-doudou/framework/http`包中内置了基于[github.com/slok/goresilience](github.com/slok/goresilience) 实现的隔仓模式中间件。
 
 ```go
 http.BulkHead(3, 10*time.Millisecond)
@@ -616,11 +616,11 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/logger"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/logger"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/framework/tracing"
 	"time"
 	service "usersvc"
 	"usersvc/config"
@@ -686,11 +686,11 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	ddconfig "github.com/unionj-cloud/go-doudou/svc/config"
-	ddhttp "github.com/unionj-cloud/go-doudou/svc/http"
-	"github.com/unionj-cloud/go-doudou/svc/logger"
-	"github.com/unionj-cloud/go-doudou/svc/registry"
-	"github.com/unionj-cloud/go-doudou/svc/tracing"
+	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/logger"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/framework/tracing"
 	service "ordersvc"
 	"ordersvc/config"
 	"ordersvc/transport/httpsrv"

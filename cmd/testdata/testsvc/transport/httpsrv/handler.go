@@ -3,7 +3,7 @@ package httpsrv
 import (
 	"net/http"
 
-	ddmodel "github.com/unionj-cloud/go-doudou/svc/http/model"
+	ddmodel "github.com/unionj-cloud/go-doudou/framework/http/model"
 )
 
 type TestsvcHandler interface {

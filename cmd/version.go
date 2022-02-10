@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-github/v42/github"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/svc"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"os"
 	"time"
 )
