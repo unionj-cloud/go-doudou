@@ -3,7 +3,7 @@ package registry
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/framework/internal/memberlist"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"net/http"
 	"text/template"

@@ -248,7 +248,8 @@ type Config struct {
 	// allowed to connect (you must specify IPv6/IPv4 separately)
 	// Using [] will block all connections.
 	CIDRsAllowed []net.IPNet
-	WhiteList    []string
+	// Whitelist is whitelist for advertise address of nodes
+	Whitelist []string
 }
 
 // ParseCIDRs return a possible empty list of all Network that have been parsed
@@ -344,7 +345,7 @@ func (c *Config) IPMustBeChecked() bool {
 
 // AddrMustBeChecked return true if AddrAllowed must be called
 func (c *Config) AddrMustBeChecked() bool {
-	return len(c.WhiteList) > 0
+	return len(c.Whitelist) > 0
 }
 
 // IPAllowed return an error if access to memberlist is denied
@@ -365,7 +366,7 @@ func (c *Config) AddrAllowed(ip string) error {
 	if !c.AddrMustBeChecked() {
 		return nil
 	}
-	if sliceutils.StringContains(c.WhiteList, ip) {
+	if sliceutils.StringContains(c.Whitelist, ip) {
 		return nil
 	}
 	return fmt.Errorf("%s is not allowed", ip)

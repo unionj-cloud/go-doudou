@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/unionj-cloud/go-doudou/framework/internal/memberlist"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 )
 
 // IServiceProvider defines service provider interface for server discovery

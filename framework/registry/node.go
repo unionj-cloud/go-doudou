@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/internal/memberlist"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
@@ -127,6 +127,13 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
+	whitelist := config.DefaultGddMemWhitelist
+	if stringutils.IsNotEmpty(config.GddMemWhitelist.Load()) {
+		whitelist = config.GddMemWhitelist.Load()
+	}
+	if stringutils.IsNotEmpty(whitelist) {
+		cfg.Whitelist = strings.Split(whitelist, ",")
+	}
 	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
 		cfg.IndirectChecks = indirectChecks

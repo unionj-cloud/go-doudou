@@ -41,4 +41,5 @@ const (
 	DefaultGddMemWeightInterval = 0
 	DefaultGddMemName           = ""
 	DefaultGddMemHost           = ""
+	DefaultGddMemWhitelist      = ""
 )

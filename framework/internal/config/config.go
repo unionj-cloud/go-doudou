@@ -99,6 +99,8 @@ const (
 	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
 	GddMemIndirectChecks envVariable = "GDD_MEM_INDIRECT_CHECKS"
 	GddMemLogDisable     envVariable = "GDD_MEM_LOG_DISABLE"
+	// GddMemWhitelist is whitelist for advertise address of nodes, multiple addresses should be separated by ,
+	GddMemWhitelist envVariable = "GDD_MEM_WHITELIST"
 
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
