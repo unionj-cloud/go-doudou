@@ -612,87 +612,87 @@ func TestToBoolE(t *testing.T) {
 	}
 }
 
-func TestToComplex64E(t *testing.T) {
-	type args struct {
-		s string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    complex64
-		wantErr bool
-	}{
-		{
-			name: "",
-			args: args{
-				s: "21",
-			},
-			want:    21,
-			wantErr: false,
-		},
-		{
-			name: "",
-			args: args{
-				s: "21a",
-			},
-			want:    0,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ToComplex64E(tt.args.s)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ToComplex64E() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("ToComplex64E() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func TestToComplex64E(t *testing.T) {
+//	type args struct {
+//		s string
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		want    complex64
+//		wantErr bool
+//	}{
+//		{
+//			name: "",
+//			args: args{
+//				s: "21",
+//			},
+//			want:    21,
+//			wantErr: false,
+//		},
+//		{
+//			name: "",
+//			args: args{
+//				s: "21a",
+//			},
+//			want:    0,
+//			wantErr: true,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			got, err := ToComplex64E(tt.args.s)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("ToComplex64E() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if got != tt.want {
+//				t.Errorf("ToComplex64E() got = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
-func TestToComplex128E(t *testing.T) {
-	type args struct {
-		s string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    complex128
-		wantErr bool
-	}{
-		{
-			name: "",
-			args: args{
-				s: "21",
-			},
-			want:    21,
-			wantErr: false,
-		},
-		{
-			name: "",
-			args: args{
-				s: "21a",
-			},
-			want:    0,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ToComplex128E(tt.args.s)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ToComplex128E() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("ToComplex128E() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func TestToComplex128E(t *testing.T) {
+//	type args struct {
+//		s string
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		want    complex128
+//		wantErr bool
+//	}{
+//		{
+//			name: "",
+//			args: args{
+//				s: "21",
+//			},
+//			want:    21,
+//			wantErr: false,
+//		},
+//		{
+//			name: "",
+//			args: args{
+//				s: "21a",
+//			},
+//			want:    0,
+//			wantErr: true,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			got, err := ToComplex128E(tt.args.s)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("ToComplex128E() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if got != tt.want {
+//				t.Errorf("ToComplex128E() got = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
 func TestToRuneSliceE(t *testing.T) {
 	type args struct {

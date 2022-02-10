@@ -547,87 +547,87 @@ func TestToBoolSliceE(t *testing.T) {
 	}
 }
 
-func TestToComplex64SliceE(t *testing.T) {
-	type args struct {
-		s []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []complex64
-		wantErr bool
-	}{
-		{
-			name: "",
-			args: args{
-				s: []string{"2", "3.1314926", "4"},
-			},
-			want:    []complex64{2, 3.1314926, 4},
-			wantErr: false,
-		},
-		{
-			name: "",
-			args: args{
-				s: []string{"2", "3q", "4"},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ToComplex64SliceE(tt.args.s)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ToComplex64SliceE() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ToComplex64SliceE() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func TestToComplex64SliceE(t *testing.T) {
+//	type args struct {
+//		s []string
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		want    []complex64
+//		wantErr bool
+//	}{
+//		{
+//			name: "",
+//			args: args{
+//				s: []string{"2", "3.1314926", "4"},
+//			},
+//			want:    []complex64{2, 3.1314926, 4},
+//			wantErr: false,
+//		},
+//		{
+//			name: "",
+//			args: args{
+//				s: []string{"2", "3q", "4"},
+//			},
+//			want:    nil,
+//			wantErr: true,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			got, err := ToComplex64SliceE(tt.args.s)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("ToComplex64SliceE() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if !reflect.DeepEqual(got, tt.want) {
+//				t.Errorf("ToComplex64SliceE() got = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
-func TestToComplex128SliceE(t *testing.T) {
-	type args struct {
-		s []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []complex128
-		wantErr bool
-	}{
-		{
-			name: "",
-			args: args{
-				s: []string{"2", "3.1314926", "4"},
-			},
-			want:    []complex128{2, 3.1314926, 4},
-			wantErr: false,
-		},
-		{
-			name: "",
-			args: args{
-				s: []string{"2", "3q", "4"},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ToComplex128SliceE(tt.args.s)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ToComplex128SliceE() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ToComplex128SliceE() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func TestToComplex128SliceE(t *testing.T) {
+//	type args struct {
+//		s []string
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		want    []complex128
+//		wantErr bool
+//	}{
+//		{
+//			name: "",
+//			args: args{
+//				s: []string{"2", "3.1314926", "4"},
+//			},
+//			want:    []complex128{2, 3.1314926, 4},
+//			wantErr: false,
+//		},
+//		{
+//			name: "",
+//			args: args{
+//				s: []string{"2", "3q", "4"},
+//			},
+//			want:    nil,
+//			wantErr: true,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			got, err := ToComplex128SliceE(tt.args.s)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("ToComplex128SliceE() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if !reflect.DeepEqual(got, tt.want) {
+//				t.Errorf("ToComplex128SliceE() got = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
 func TestToRuneSliceSliceE(t *testing.T) {
 	type args struct {

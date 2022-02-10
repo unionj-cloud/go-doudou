@@ -125,8 +125,8 @@ var appendHttpHandlerImplTmpl = `
 		{{- range $p := $m.Params }}
 		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if not $multipartFormParsed }}
-		if err := _req.ParseMultipartForm(32 << 20); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
+		if _err := _req.ParseMultipartForm(32 << 20); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
 			return
 		}
 		{{- $multipartFormParsed = true }}
@@ -141,8 +141,8 @@ var appendHttpHandlerImplTmpl = `
 		{{- end}}
 		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") (eq $p.Type "...v3.FileModel") }}
 		{{- if not $multipartFormParsed }}
-		if err := _req.ParseMultipartForm(32 << 20); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
+		if _err := _req.ParseMultipartForm(32 << 20); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
 			return
 		}
 		{{- $multipartFormParsed = true }}
@@ -162,9 +162,9 @@ var appendHttpHandlerImplTmpl = `
 			}
 			{{- end }}
 			for _, _fh :=range {{$p.Name}}FileHeaders {
-				_f, err := _fh.Open()
-				if err != nil {
-					http.Error(_writer, err.Error(), http.StatusBadRequest)
+				_f, _err := _fh.Open()
+				if _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
 				{{- if isOptional $p.Type }}
@@ -182,9 +182,9 @@ var appendHttpHandlerImplTmpl = `
 			{{- else}}
 			if len({{$p.Name}}FileHeaders) > 0 {
 				_fh := {{$p.Name}}FileHeaders[0]
-				_f, err := _fh.Open()
-				if err != nil {
-					http.Error(_writer, err.Error(), http.StatusBadRequest)
+				_f, _err := _fh.Open()
+				if _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
 				{{- if isOptional $p.Type }}
@@ -209,8 +209,8 @@ var appendHttpHandlerImplTmpl = `
 		{{- else if not (isBuiltin $p)}}
 		{{- if isOptional $p.Type }}
 		if _req.Body != nil {
-			if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
+			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			}
 		}
@@ -219,16 +219,16 @@ var appendHttpHandlerImplTmpl = `
 			http.Error(_writer, "missing request body", http.StatusBadRequest)
 			return
 		} else {
-			if err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
+			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			}
 		}
 		{{- end }}
 		{{- else if isSlice $p.Type }}
 		{{- if not $formParsed }}
-		if err := _req.ParseForm(); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
+		if _err := _req.ParseForm(); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
 			return
 		}
 		{{- $formParsed = true }}
@@ -281,8 +281,8 @@ var appendHttpHandlerImplTmpl = `
 		}
 		{{- else }}
 		{{- if not $formParsed }}
-		if err := _req.ParseForm(); err != nil {
-			http.Error(_writer, err.Error(), http.StatusBadRequest)
+		if _err := _req.ParseForm(); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
 			return
 		}
 		{{- $formParsed = true }}
@@ -327,8 +327,8 @@ var appendHttpHandlerImplTmpl = `
 				if {{ $r.Name }} != nil {
 					if errors.Is({{ $r.Name }}, context.Canceled) {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
-					} else if err, ok := {{ $r.Name }}.(*ddhttp.BizError); ok {
-						http.Error(_writer, err.Error(), err.StatusCode)
+					} else if _err, ok := {{ $r.Name }}.(*ddhttp.BizError); ok {
+						http.Error(_writer, _err.Error(), _err.StatusCode)
 					} else {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
 					}
@@ -358,7 +358,7 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		{{- end }}
 		{{- if not $done }}
-			if err := json.NewEncoder(_writer).Encode(struct{
+			if _err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}
 				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Omitempty}},omitempty{{end}}"` + "`" + `
@@ -370,8 +370,8 @@ var appendHttpHandlerImplTmpl = `
 				{{ $r.Name | toCamel }}: {{ $r.Name }},
 				{{- end }}
 				{{- end }}
-			}); err != nil {
-				http.Error(_writer, err.Error(), http.StatusInternalServerError)
+			}); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusInternalServerError)
 				return
 			}
 		{{- end }}

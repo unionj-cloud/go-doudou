@@ -214,35 +214,35 @@ func ToBoolSliceE(s []string) ([]bool, error) {
 	return ret, nil
 }
 
-func ToComplex64SliceE(s []string) ([]complex64, error) {
-	if s == nil {
-		return nil, fmt.Errorf("unable to cast string slice %#v to []complex64", s)
-	}
-	var ret []complex64
-	for _, item := range s {
-		i, err := ToComplex64E(item)
-		if err != nil {
-			return nil, fmt.Errorf("unable to cast string slice %#v to []complex64 because of error %s", s, err)
-		}
-		ret = append(ret, i)
-	}
-	return ret, nil
-}
-
-func ToComplex128SliceE(s []string) ([]complex128, error) {
-	if s == nil {
-		return nil, fmt.Errorf("unable to cast string slice %#v to []complex128", s)
-	}
-	var ret []complex128
-	for _, item := range s {
-		i, err := ToComplex128E(item)
-		if err != nil {
-			return nil, fmt.Errorf("unable to cast string slice %#v to []complex128 because of error %s", s, err)
-		}
-		ret = append(ret, i)
-	}
-	return ret, nil
-}
+//func ToComplex64SliceE(s []string) ([]complex64, error) {
+//	if s == nil {
+//		return nil, fmt.Errorf("unable to cast string slice %#v to []complex64", s)
+//	}
+//	var ret []complex64
+//	for _, item := range s {
+//		i, err := ToComplex64E(item)
+//		if err != nil {
+//			return nil, fmt.Errorf("unable to cast string slice %#v to []complex64 because of error %s", s, err)
+//		}
+//		ret = append(ret, i)
+//	}
+//	return ret, nil
+//}
+//
+//func ToComplex128SliceE(s []string) ([]complex128, error) {
+//	if s == nil {
+//		return nil, fmt.Errorf("unable to cast string slice %#v to []complex128", s)
+//	}
+//	var ret []complex128
+//	for _, item := range s {
+//		i, err := ToComplex128E(item)
+//		if err != nil {
+//			return nil, fmt.Errorf("unable to cast string slice %#v to []complex128 because of error %s", s, err)
+//		}
+//		ret = append(ret, i)
+//	}
+//	return ret, nil
+//}
 
 func ToRuneSliceSliceE(s []string) ([][]rune, error) {
 	if s == nil {
