@@ -250,7 +250,7 @@ type Config struct {
 	CIDRsAllowed []net.IPNet
 	// Whitelist is whitelist for advertise address of nodes, support wildcard and multiple patterns separated by comma
 	// underlying based on https://github.com/gobwas/glob
-	// By default, it is nil, means disable
+	// By default, it is nil, same as allow all
 	Whitelist glob.Glob
 }
 

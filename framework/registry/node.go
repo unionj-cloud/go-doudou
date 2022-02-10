@@ -3,7 +3,6 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gobwas/glob"
 	"github.com/hako/durafmt"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
@@ -128,13 +127,13 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
-	whitelist := config.DefaultGddMemWhitelist
-	if stringutils.IsNotEmpty(config.GddMemWhitelist.Load()) {
-		whitelist = config.GddMemWhitelist.Load()
-	}
-	if stringutils.IsNotEmpty(whitelist) {
-		cfg.Whitelist = glob.MustCompile(fmt.Sprintf("{%s}", whitelist))
-	}
+	//whitelist := config.DefaultGddMemWhitelist
+	//if stringutils.IsNotEmpty(config.GddMemWhitelist.Load()) {
+	//	whitelist = config.GddMemWhitelist.Load()
+	//}
+	//if stringutils.IsNotEmpty(whitelist) {
+	//	cfg.Whitelist = glob.MustCompile(fmt.Sprintf("{%s}", whitelist))
+	//}
 	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
 		cfg.IndirectChecks = indirectChecks
