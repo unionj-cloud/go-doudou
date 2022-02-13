@@ -21,6 +21,7 @@ import (
 var httpHandlerImpl = `package httpsrv
 
 import (
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 )
@@ -386,6 +387,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"

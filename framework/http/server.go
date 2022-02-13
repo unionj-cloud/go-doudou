@@ -123,21 +123,21 @@ func (srv *DefaultHttpSrv) PreMiddleware(mwf ...func(http.Handler) http.Handler)
 func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
+		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
 			config.GddWriteTimeout.Load(), err.Error(), config.DefaultGddWriteTimeout)
 		write, _ = time.ParseDuration(config.DefaultGddWriteTimeout)
 	}
 
 	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
+		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
 			config.GddReadTimeout.Load(), err.Error(), config.DefaultGddReadTimeout)
 		read, _ = time.ParseDuration(config.DefaultGddReadTimeout)
 	}
 
 	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
+		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
 			config.GddIdleTimeout.Load(), err.Error(), config.DefaultGddIdleTimeout)
 		idle, _ = time.ParseDuration(config.DefaultGddIdleTimeout)
 	}
@@ -223,7 +223,7 @@ func (srv *DefaultHttpSrv) Run() {
 		// Create a deadline to wait for.
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
-			logger.Warnf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
+			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
 				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
 			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
 		}
