@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -19,7 +18,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -346,10 +344,6 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		v3helper.Schemas[item.Title] = item
 	}
 	paths = pathsOf(ic, routePatternStrategy)
-	httpPort := strconv.Itoa(6060)
-	if _, err = cast.ToIntE(os.Getenv("GDD_PORT")); err == nil {
-		httpPort = os.Getenv("GDD_PORT")
-	}
 	api = v3.API{
 		Openapi: "3.0.2",
 		Info: &v3.Info{
@@ -359,7 +353,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		},
 		Servers: []v3.Server{
 			{
-				URL: fmt.Sprintf("http://localhost:%s", httpPort),
+				URL: fmt.Sprintf("http://localhost:%d", 6060),
 			},
 		},
 		Paths: paths,
