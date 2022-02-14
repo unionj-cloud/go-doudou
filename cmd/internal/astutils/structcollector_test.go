@@ -38,7 +38,7 @@ func ExampleInter() {
 	fmt.Println(sc.Interfaces)
 
 	// Output:
-	// [{Usersvc [func PageUsers(ctx context.Context, query PageQuery) (code int, data PageRet, msg error) func GetUser(ctx context.Context, userId string, photo string) (code int, data string, msg error) func SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error) func UploadAvatar(pc context.Context, pf []*multipart.FileHeader, ps string) (ri int, rs string, re error) func DownloadAvatar(ctx context.Context, userId string, userAttrs ...int) (a string, b string) func BulkSaveOrUpdate(pc context.Context, pi int) (re error)] [用户服务接口 v1版本]}]
+	// [{Usersvc [func PageUsers(ctx context.Context, query PageQuery) (code int, data PageRet, msg error) func GetUser(ctx context.Context, userId string, school string, photo string) (code int, data string, msg error) func SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error) func UploadAvatar(pc context.Context, pf []*multipart.FileHeader, ps string) (ri int, rs string, re error) func DownloadAvatar(ctx context.Context, userId string, userAttrs ...int) (a string, b string) func BulkSaveOrUpdate(pc context.Context, pi int) (re error)] [用户服务接口 v1版本]}]
 }
 
 func TestStructFuncDecl(t *testing.T) {

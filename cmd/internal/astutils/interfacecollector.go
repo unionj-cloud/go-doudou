@@ -92,23 +92,33 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 	var params []FieldMeta
 	pkeymap := make(map[string]int)
 	for _, param := range list {
+		pt := ic.exprString(param.Type)
+		if len(param.Names) > 0 {
+			for i, name := range param.Names {
+				field := FieldMeta{
+					Name: name.Name,
+					Type: pt,
+				}
+				var cnode ast.Node
+				if i == 0 {
+					cnode = param
+				} else {
+					cnode = name
+				}
+				if cmts, exists := ic.cmap[cnode]; exists {
+					for _, comment := range cmts {
+						field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
+					}
+				}
+				params = append(params, field)
+			}
+			continue
+		}
 		var pComments []string
 		if cmts, exists := ic.cmap[param]; exists {
 			for _, comment := range cmts {
 				pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
 			}
-		}
-		pt := ic.exprString(param.Type)
-		if len(param.Names) > 0 {
-			for _, name := range param.Names {
-				params = append(params, FieldMeta{
-					Name:     name.Name,
-					Type:     pt,
-					Tag:      "",
-					Comments: pComments,
-				})
-			}
-			continue
 		}
 		var pn string
 		elemt := strings.TrimPrefix(pt, "*")
@@ -130,7 +140,6 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 		params = append(params, FieldMeta{
 			Name:     pn,
 			Type:     pt,
-			Tag:      "",
 			Comments: pComments,
 		})
 	}

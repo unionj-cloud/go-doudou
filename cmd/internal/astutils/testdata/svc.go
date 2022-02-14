@@ -15,7 +15,9 @@ type Usersvc interface {
 	// comment2
 	GetUser(ctx context.Context,
 		// 用户ID
-		userId string,
+		userId,
+		// 测试
+		school,
 		// 图片地址
 		photo string,
 	) (

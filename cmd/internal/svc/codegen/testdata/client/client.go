@@ -135,7 +135,7 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	}
 	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (_resp *resty.Response, ri int, rs string, re error) {
+func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (_resp *resty.Response, ri int, ri2 interface{}, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -179,21 +179,21 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 		return
 	}
 	var _result struct {
-		Ri int    `json:"ri"`
-		Rs string `json:"rs"`
+		Ri  int         `json:"ri"`
+		Ri2 interface{} `json:"ri2"`
 	}
 	if _err = json.Unmarshal(_resp.Body(), &_result); _err != nil {
 		re = errors.Wrap(_err, "error")
 		return
 	}
-	return _resp, _result.Ri, _result.Rs, nil
+	return _resp, _result.Ri, _result.Ri2, nil
 }
-func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId string, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
+func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId interface{}, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_urlValues.Set("userId", fmt.Sprintf("%v", userId))
+	_req.SetBody(userId)
 	if userAttrs != nil {
 		for _, _item := range userAttrs {
 			_urlValues.Add("userAttrs", fmt.Sprintf("%v", _item))
