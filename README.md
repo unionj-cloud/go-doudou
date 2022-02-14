@@ -46,11 +46,15 @@ star!
 
 Welcome to contact me from
 
-- facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
-- twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
-- email: 328454505@qq.com
-- wechat:  
-  ![qrcode.png](qrcode.png)
+- Facebook: [https://www.facebook.com/bin.wu.94617999/](https://www.facebook.com/bin.wu.94617999/)
+- Twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
+- Email: 328454505@qq.com
+- WeChat:  
+  ![qrcode.png](qrcode.png)  
+- WeChat Group:
+  ![go-doudou-wechat-group.png](go-doudou-wechat-group.png)
+- QQ group:  
+  ![go-doudou-qq-group.png](go-doudou-qq-group.png)
 
 ## License
 
