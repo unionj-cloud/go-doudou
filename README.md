@@ -51,7 +51,7 @@ Welcome to contact me from
 - Email: 328454505@qq.com
 - WeChat:  
   ![qrcode.png](qrcode.png)  
-- WeChat Group:
+- WeChat Group:  
   ![go-doudou-wechat-group.png](go-doudou-wechat-group.png)
 - QQ group:  
   ![go-doudou-qq-group.png](go-doudou-qq-group.png)
