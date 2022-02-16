@@ -20,7 +20,7 @@
 
 # go-doudou
 
-> Gossip Protocol Distributed Golang Microservice Framework
+> Gossip Protocol Decentralized Golang Microservice Framework
 
 - 💡 Starts from golang interface, no need to learn new IDL(interface definition language).
 - 🛠️ Built-in SWIM gossip protocol based service register and discovery mechanism to help you build a robust, scalable and decentralized service cluster.
