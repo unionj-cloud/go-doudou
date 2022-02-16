@@ -50,11 +50,17 @@ Welcome to contact me from
 - Twitter: [https://twitter.com/BINWU49205513](https://twitter.com/BINWU49205513)
 - Email: 328454505@qq.com
 - WeChat:  
-  ![qrcode.png](qrcode.png)  
+  <img src="./qrcode.png" alt="wechat-group" width="240">
 - WeChat Group:  
-  ![go-doudou-wechat-group.png](go-doudou-wechat-group.png)
+  <img src="./go-doudou-wechat-group.png" alt="wechat-group" width="240">
 - QQ group:  
-  ![go-doudou-qq-group.png](go-doudou-qq-group.png)
+  <img src="./go-doudou-qq-group.png" alt="qq-group" width="240">
+
+## 🔋 JetBrains Open Source License
+
+Go-doudou has been being developed with GoLand under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my gratitude here.
+
+<a href="https://jb.gg/OpenSourceSupport" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo." width="300"></a>
 
 ## License
 
