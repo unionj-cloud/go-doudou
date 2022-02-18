@@ -50,7 +50,7 @@ func TestSvc_Http(t *testing.T) {
 	type fields struct {
 		Dir          string
 		Handler      bool
-		Client       string
+		Client       bool
 		Omitempty    bool
 		Doc          bool
 		Jsonattrcase string
@@ -64,7 +64,7 @@ func TestSvc_Http(t *testing.T) {
 			fields: fields{
 				Dir:          testDir + "2",
 				Handler:      true,
-				Client:       "go",
+				Client:       true,
 				Omitempty:    true,
 				Doc:          true,
 				Jsonattrcase: "snake",
@@ -75,7 +75,7 @@ func TestSvc_Http(t *testing.T) {
 			fields: fields{
 				Dir:       testDir + "3",
 				Handler:   true,
-				Client:    "go",
+				Client:    true,
 				Omitempty: false,
 				Doc:       false,
 			},
@@ -85,7 +85,7 @@ func TestSvc_Http(t *testing.T) {
 			fields: fields{
 				Dir:       testDir + "4",
 				Handler:   false,
-				Client:    "go",
+				Client:    true,
 				Omitempty: false,
 				Doc:       false,
 			},
@@ -302,7 +302,6 @@ func Test_GenClient(t *testing.T) {
 		dir:       testDir,
 		DocPath:   filepath.Join(testDir, "testfilesdoc1_openapi3.json"),
 		Omitempty: true,
-		Client:    "go",
 		ClientPkg: "client",
 	}
 	assert.NotPanics(t, func() {
@@ -402,44 +401,14 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 }
 
 func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
-	type fields struct {
-		dir                  string
-		Handler              bool
-		Client               string
-		Omitempty            bool
-		Doc                  bool
-		Jsonattrcase         string
-		DocPath              string
-		Env                  string
-		ClientPkg            string
-		cmd                  *exec.Cmd
-		restartSig           chan int
-		RoutePatternStrategy int
-		runner               executils.Runner
-		w                    *watcher.Watcher
-		ModName              string
+	defer os.RemoveAll(filepath.Join(testDir, "openapi", "client"))
+	receiver := Svc{
+		dir:       filepath.Join(testDir, "openapi"),
+		ClientPkg: "client",
 	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		{
-			name: "",
-			fields: fields{
-				dir: filepath.Join("testdata", "openapi"),
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			receiver := Svc{
-				dir: tt.fields.dir,
-			}
-			assert.NotPanics(t, func() {
-				receiver.GenClient()
-			})
-		})
-	}
+	assert.NotPanics(t, func() {
+		receiver.GenClient()
+	})
 }
 
 func TestNewSvc(t *testing.T) {

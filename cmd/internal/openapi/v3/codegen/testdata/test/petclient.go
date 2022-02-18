@@ -29,70 +29,6 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetPetPetId Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context,
-	// ID of pet to return
-	// required
-	petId int64) (ret Pet, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
-
-	_resp, _err = _req.Get("/pet/{petId}")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// PostPetPetIdUploadImage uploads an image
-func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
-	queryParams *struct {
-		AdditionalMetadata *string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	// ID of pet to update
-	// required
-	petId int64,
-	file *v3.FileModel) (ret ApiResponse, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
-	if file != nil {
-		_req.SetFileReader("file", file.Filename, file.Reader)
-	}
-
-	_resp, _err = _req.Post("/pet/{petId}/uploadImage")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
 // PostPet Add a new pet to the store
 // Add a new pet to the store
 func (receiver *PetClient) PostPet(ctx context.Context,
@@ -174,6 +110,70 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context,
 	return
 }
 
+// GetPetPetId Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context,
+	// ID of pet to return
+	// required
+	petId int64) (ret Pet, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+
+	_resp, _err = _req.Get("/pet/{petId}")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// PostPetPetIdUploadImage uploads an image
+func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context,
+	queryParams *struct {
+		AdditionalMetadata *string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+	},
+	// ID of pet to update
+	// required
+	petId int64,
+	file *v3.FileModel) (ret ApiResponse, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+	if file != nil {
+		_req.SetFileReader("file", file.Filename, file.Reader)
+	}
+
+	_resp, _err = _req.Post("/pet/{petId}/uploadImage")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
 // GetPetFindByStatus Finds Pets by status
 // Multiple status values can be provided with comma separated strings
 func (receiver *PetClient) GetPetFindByStatus(ctx context.Context,
@@ -223,7 +223,7 @@ func NewPet(opts ...ddhttp.DdClientOption) *PetClient {
 
 	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
 		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
-			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.URL.Path)))
 		*request = *traceReq
 		return nil
 	})

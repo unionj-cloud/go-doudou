@@ -35,7 +35,7 @@ type Svc struct {
 	// Handler indicates whether generate default http handler implementation code or not
 	Handler bool
 	// Client is client language name
-	Client string
+	Client bool
 	// Omitempty indicates whether omit empty when marshal structs to json
 	Omitempty bool
 	// Doc indicates whether generate OpenAPI 3.0 json doc file
@@ -102,12 +102,9 @@ func (receiver Svc) Http() {
 	} else {
 		codegen.GenHttpHandlerImpl(dir, ic)
 	}
-	if stringutils.IsNotEmpty(receiver.Client) {
-		switch receiver.Client {
-		case "go":
-			codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
-			codegen.GenGoClientProxy(dir, ic)
-		}
+	if receiver.Client {
+		codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
+		codegen.GenGoClientProxy(dir, ic)
 	}
 	codegen.GenSvcImpl(dir, ic)
 	if receiver.Doc {
@@ -315,9 +312,7 @@ func (receiver Svc) GenClient() {
 	if stringutils.IsEmpty(docpath) {
 		panic("openapi 3.0 spec json file path is empty")
 	}
-	if receiver.Client == "go" {
-		client.GenGoClient(receiver.dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
-	}
+	client.GenGoClient(receiver.dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
 }
 
 func (receiver Svc) run() *exec.Cmd {

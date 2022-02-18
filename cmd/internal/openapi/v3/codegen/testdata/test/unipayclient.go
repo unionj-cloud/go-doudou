@@ -29,13 +29,13 @@ func (receiver *UnipayClient) SetClient(client *resty.Client) {
 func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context,
 	queryParams struct {
 		// required
+		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
+		// required
 		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
 		// required
 		Token string `json:"token,omitempty" url:"token"`
 		// required
 		CompanyId string `json:"companyId,omitempty" url:"companyId"`
-		// required
-		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
 	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
@@ -77,7 +77,7 @@ func NewUnipay(opts ...ddhttp.DdClientOption) *UnipayClient {
 
 	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
 		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
-			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.URL.Path)))
 		*request = *traceReq
 		return nil
 	})

@@ -262,7 +262,7 @@ func NewUsersvcClient(opts ...ddhttp.DdClientOption) *UsersvcClient {
 
 	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
 		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
-			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.URL.Path)))
 		*request = *traceReq
 		return nil
 	})

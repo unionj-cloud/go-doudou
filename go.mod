@@ -53,6 +53,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/miekg/dns v1.1.42
+	github.com/rs/cors v1.8.2
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/slok/goresilience v0.2.0

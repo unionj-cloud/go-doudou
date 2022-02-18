@@ -18,7 +18,10 @@ import (
 
 // Init returns an instance of Jaeger Tracer.
 func Init() (opentracing.Tracer, io.Closer) {
-	service := ddconfig.GddServiceName.Load()
+	service := ddconfig.DefaultGddServiceName
+	if stringutils.IsNotEmpty(ddconfig.GddServiceName.Load()) {
+		service = ddconfig.GddServiceName.Load()
+	}
 	cfg := &config.Configuration{
 		Sampler:  &config.SamplerConfig{},
 		Reporter: &config.ReporterConfig{},

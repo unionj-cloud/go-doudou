@@ -2,11 +2,13 @@ package ddhttp
 
 import (
 	"context"
+	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/olekukonko/tablewriter"
+	"github.com/rs/cors"
 	configui "github.com/unionj-cloud/go-doudou/framework/http/config"
 	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
@@ -179,6 +181,29 @@ func (srv *DefaultHttpSrv) Run() {
 	if manage {
 		srv.middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
+		corsOpts := cors.New(cors.Options{
+			AllowedMethods: []string{
+				http.MethodGet,
+				http.MethodPost,
+				http.MethodPut,
+				http.MethodPatch,
+				http.MethodDelete,
+				http.MethodOptions,
+				http.MethodHead,
+			},
+
+			AllowedHeaders: []string{
+				"*",
+			},
+
+			AllowOriginRequestFunc: func(r *http.Request, origin string) bool {
+				if r.URL.Path == fmt.Sprintf("%sopenapi.json", gddPathPrefix) {
+					return true
+				}
+				return false
+			},
+		})
+		gddRouter.Use(corsOpts.Handler)
 		gddRouter.Use(basicAuth)
 		srv.gddRoutes = append(srv.gddRoutes, onlinedoc.Routes()...)
 		srv.gddRoutes = append(srv.gddRoutes, prometheus.Routes()...)
@@ -186,7 +211,7 @@ func (srv *DefaultHttpSrv) Run() {
 		srv.gddRoutes = append(srv.gddRoutes, configui.Routes()...)
 		for _, item := range srv.gddRoutes {
 			gddRouter.
-				Methods(item.Method).
+				Methods(item.Method, http.MethodOptions).
 				Path("/" + strings.TrimPrefix(item.Pattern, gddPathPrefix)).
 				Name(item.Name).
 				Handler(item.HandlerFunc)

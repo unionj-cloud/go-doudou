@@ -27,18 +27,18 @@ func (receiver *PageClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
-func (receiver *PageClient) PostPageUsers(ctx context.Context,
+// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
+func (receiver *PageClient) PostPageUsers2(ctx context.Context,
 	// comments above input and output struct type parameters in vo package will display on online document
 	// not comments here
-	bodyJSON PageQuery) (ret PageUsersResp, _resp *resty.Response, err error) {
+	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Post("/page/users")
+	_resp, _err = _req.Post("/page/users/2")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -54,18 +54,18 @@ func (receiver *PageClient) PostPageUsers(ctx context.Context,
 	return
 }
 
-// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
-func (receiver *PageClient) PostPageUsers2(ctx context.Context,
+// PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
+func (receiver *PageClient) PostPageUsers(ctx context.Context,
 	// comments above input and output struct type parameters in vo package will display on online document
 	// not comments here
-	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
+	bodyJSON PageQuery) (ret PageUsersResp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
 	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Post("/page/users/2")
+	_resp, _err = _req.Post("/page/users")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -101,7 +101,7 @@ func NewPage(opts ...ddhttp.DdClientOption) *PageClient {
 
 	svcClient.client.SetPreRequestHook(func(_ *resty.Client, request *http.Request) error {
 		traceReq, _ := nethttp.TraceRequest(opentracing.GlobalTracer(), request,
-			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.RequestURI)))
+			nethttp.OperationName(fmt.Sprintf("HTTP %s: %s", request.Method, request.URL.Path)))
 		*request = *traceReq
 		return nil
 	})

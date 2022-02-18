@@ -7,7 +7,7 @@ import (
 )
 
 var handler bool
-var client string
+var client bool
 var doc bool
 var jsonattrcase string
 var routePatternStrategy int
@@ -35,7 +35,7 @@ func init() {
 	svcCmd.AddCommand(httpCmd)
 
 	httpCmd.Flags().BoolVarP(&handler, "handler", "", false, "Whether generate default handler implementation or not")
-	httpCmd.Flags().StringVarP(&client, "client", "c", "", `if empty, then no http client implementation will be generated. Only one value "go" supported currently`)
+	httpCmd.Flags().BoolVarP(&client, "client", "c", false, `Whether generate default golang http client code or not`)
 	httpCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
 	httpCmd.Flags().StringVarP(&jsonattrcase, "case", "", "lowerCamel", `apply to json tag of fields in every generated anonymous struct in handlers. optional values: lowerCamel, snake`)
 	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)

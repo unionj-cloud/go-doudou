@@ -26,7 +26,7 @@ const (
 	GddBanner envVariable = "GDD_BANNER"
 	// GddBannerText sets text content of banner
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
-	// GddLogLevel accepts values are panic, fatal, error, warn, warning, info, debug, trace, please reference logrus.ParseLevel
+	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, please reference logrus.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
 	// GddLogFormat text or json
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"

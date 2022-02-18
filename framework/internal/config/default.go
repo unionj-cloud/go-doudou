@@ -18,7 +18,6 @@ const (
 	DefaultGddHost               = ""
 	DefaultGddPort               = 6060
 	DefaultGddRetryCount         = 0
-	DefaultGddMemLogDisable      = false
 	DefaultGddManage             = true
 	DefaultGddManageUser         = "admin"
 	DefaultGddManagePass         = "admin"
@@ -42,4 +41,5 @@ const (
 	DefaultGddMemName           = ""
 	DefaultGddMemHost           = ""
 	DefaultGddMemWhitelist      = ""
+	DefaultGddMemLogDisable      = false
 )
