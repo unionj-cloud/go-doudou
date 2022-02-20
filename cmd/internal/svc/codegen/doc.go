@@ -104,7 +104,9 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 					continue
 				}
 				pschema := v3helper.CopySchema(item)
-				pschema.Description = strings.Join(item.Comments, "\n")
+				if stringutils.IsEmpty(pschema.Ref) {
+					pschema.Description = strings.Join(item.Comments, "\n")
+				}
 				required := !v3helper.IsOptional(item.Type)
 				if v3helper.IsBuiltin(item) {
 					params = append(params, v3.Parameter{
@@ -169,7 +171,9 @@ func response(method astutils.MethodMeta) *v3.Responses {
 				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
 			}
 			rschema := v3helper.CopySchema(item)
-			rschema.Description = strings.Join(item.Comments, "\n")
+			if stringutils.IsEmpty(rschema.Ref) {
+				rschema.Description = strings.Join(item.Comments, "\n")
+			}
 			prop := strcase.ToLowerCamel(key)
 			respSchema.Properties[prop] = &rschema
 			if !v3helper.IsOptional(item.Type) {

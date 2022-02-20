@@ -126,7 +126,7 @@ type Link struct {
 
 // Response https://spec.openapis.org/oas/v3.0.3#response-object
 type Response struct {
-	Description string   `json:"description,omitempty"`
+	Description string   `json:"description"`
 	Content     *Content `json:"content,omitempty"`
 	// TODO
 	Headers map[string]Header `json:"headers,omitempty"`

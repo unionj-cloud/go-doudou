@@ -194,7 +194,9 @@ func NewSchema(structmeta astutils.StructMeta) Schema {
 	var required []string
 	for _, field := range structmeta.Fields {
 		fschema := CopySchema(field)
-		fschema.Description = strings.Join(field.Comments, "\n")
+		if stringutils.IsEmpty(fschema.Ref) {
+			fschema.Description = strings.Join(field.Comments, "\n")
+		}
 		properties[field.DocName] = &fschema
 		if !strings.HasPrefix(field.Type, "*") {
 			required = append(required, field.DocName)
