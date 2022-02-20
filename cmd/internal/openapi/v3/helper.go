@@ -188,15 +188,24 @@ func CopySchema(field astutils.FieldMeta) Schema {
 	return schema
 }
 
+func RefAddDoc(schema *Schema, doc string) {
+	if stringutils.IsNotEmpty(schema.Ref) {
+		title := strings.TrimPrefix(schema.Ref, "#/components/schemas/")
+		temp := Schemas[title]
+		temp.Description = strings.Join([]string{doc, temp.Description}, "\n")
+		Schemas[title] = temp
+	} else {
+		schema.Description = doc
+	}
+}
+
 // NewSchema new schema from astutils.StructMeta
 func NewSchema(structmeta astutils.StructMeta) Schema {
 	properties := make(map[string]*Schema)
 	var required []string
 	for _, field := range structmeta.Fields {
 		fschema := CopySchema(field)
-		if stringutils.IsEmpty(fschema.Ref) {
-			fschema.Description = strings.Join(field.Comments, "\n")
-		}
+		RefAddDoc(&fschema, strings.Join(field.Comments, "\n"))
 		properties[field.DocName] = &fschema
 		if !strings.HasPrefix(field.Type, "*") {
 			required = append(required, field.DocName)
