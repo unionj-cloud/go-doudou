@@ -94,18 +94,6 @@ func Test_seeds(t *testing.T) {
 	}
 }
 
-func Test_registry_Register2(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	_ = config.GddMemSeed.Write("not exist seed")
-	_ = config.GddServiceName.Write("testsvc")
-	require.Error(t, NewNode())
-}
-
 func Test_join(t *testing.T) {
 	setup()
 	err := NewNode()
