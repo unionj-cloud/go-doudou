@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gobwas/glob"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -248,14 +247,10 @@ type Config struct {
 	// allowed to connect (you must specify IPv6/IPv4 separately)
 	// Using [] will block all connections.
 	CIDRsAllowed []net.IPNet
-	// Whitelist is whitelist for advertise address of nodes, support wildcard and multiple patterns separated by comma
-	// underlying based on https://github.com/gobwas/glob
-	// By default, it is nil, same as allow all
-	Whitelist glob.Glob
 }
 
 // ParseCIDRs return a possible empty list of all Network that have been parsed
-// In case of error, it returns succesfully parsed CIDRs and the last error found
+// In case of error, it returns successfully parsed CIDRs and the last error found
 func ParseCIDRs(v []string) ([]net.IPNet, error) {
 	nets := make([]net.IPNet, 0)
 	if v == nil {
@@ -345,11 +340,6 @@ func (c *Config) IPMustBeChecked() bool {
 	return len(c.CIDRsAllowed) > 0
 }
 
-// AddrMustBeChecked return true if AddrAllowed must be called
-func (c *Config) AddrMustBeChecked() bool {
-	return c.Whitelist != nil
-}
-
 // IPAllowed return an error if access to memberlist is denied
 func (c *Config) IPAllowed(ip net.IP) error {
 	if !c.IPMustBeChecked() {
@@ -364,14 +354,17 @@ func (c *Config) IPAllowed(ip net.IP) error {
 }
 
 // AddrAllowed return an error if access to memberlist is denied
-func (c *Config) AddrAllowed(ip string) error {
-	if !c.AddrMustBeChecked() {
-		return nil
+// addr can either be an ip address or a dns address
+func (c *Config) AddrAllowed(addr string) error {
+	ip := net.ParseIP(addr)
+	if ip == nil {
+		ips, err := net.LookupIP(addr)
+		if err != nil || len(ips) == 0 {
+			return fmt.Errorf("%s is not allowed", addr)
+		}
+		ip = ips[0]
 	}
-	if c.Whitelist.Match(ip) {
-		return nil
-	}
-	return fmt.Errorf("%s is not allowed", ip)
+	return c.IPAllowed(ip)
 }
 
 // DefaultLocalConfig works like DefaultConfig, however it returns a configuration

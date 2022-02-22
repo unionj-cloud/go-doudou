@@ -1,6 +1,7 @@
 package memberlist
 
 import (
+	"github.com/stretchr/testify/require"
 	"net"
 	"testing"
 )
@@ -89,4 +90,12 @@ func Test_IsValidAddressOverride(t *testing.T) {
 
 	}
 
+}
+
+func TestParseCIDRs(t *testing.T) {
+	got, _ := ParseCIDRs([]string{"172.28.0.0/16"})
+	config := DefaultWANConfig()
+	config.CIDRsAllowed = got
+	err := config.AddrAllowed("172.16.238.10")
+	require.Error(t, err)
 }

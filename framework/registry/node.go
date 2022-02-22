@@ -127,13 +127,17 @@ func getFreePort() (int, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
-	//whitelist := config.DefaultGddMemWhitelist
-	//if stringutils.IsNotEmpty(config.GddMemWhitelist.Load()) {
-	//	whitelist = config.GddMemWhitelist.Load()
-	//}
-	//if stringutils.IsNotEmpty(whitelist) {
-	//	cfg.Whitelist = glob.MustCompile(fmt.Sprintf("{%s}", whitelist))
-	//}
+	cidrs := config.DefaultGddMemCIDRsAllowed
+	if stringutils.IsNotEmpty(config.GddMemCIDRsAllowed.Load()) {
+		cidrs = config.GddMemCIDRsAllowed.Load()
+	}
+	if stringutils.IsNotEmpty(cidrs) {
+		var err error
+		if cfg.CIDRsAllowed, err = memberlist.ParseCIDRs(strings.Split(cidrs, ",")); err != nil {
+			logger.Debugf("call ParseCIDRs error: %s", err.Error())
+		}
+		logger.Infof(cfg.CIDRsAllowed[0].String())
+	}
 	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
 		cfg.IndirectChecks = indirectChecks

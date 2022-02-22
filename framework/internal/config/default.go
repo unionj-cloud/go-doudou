@@ -40,6 +40,6 @@ const (
 	DefaultGddMemWeightInterval = 0
 	DefaultGddMemName           = ""
 	DefaultGddMemHost           = ""
-	DefaultGddMemWhitelist      = ""
-	DefaultGddMemLogDisable      = false
+	DefaultGddMemCIDRsAllowed   = ""
+	DefaultGddMemLogDisable     = false
 )

@@ -241,7 +241,14 @@ func (m *Memberlist) handleConn(conn net.Conn) {
 
 	metrics.IncrCounter([]string{"memberlist", "tcp", "accept"}, 1)
 
+	from := conn.RemoteAddr()
+	if err := m.ensureCanConnect(from); err != nil {
+		m.logger.Printf("[DEBUG] memberlist: Blocked message: %s from %s", err, LogAddress(from))
+		return
+	}
+
 	conn.SetDeadline(time.Now().Add(m.config.TCPTimeout))
+
 	msgType, bufConn, dec, err := m.readStream(conn)
 	if err != nil {
 		if err != io.EOF {
@@ -285,6 +292,18 @@ func (m *Memberlist) handleConn(conn net.Conn) {
 			return
 		}
 
+		if join {
+			remote := remoteNodes[0]
+			if m.config.IPMustBeChecked() {
+				if stringutils.IsNotEmpty(remote.Addr) {
+					if err := m.config.AddrAllowed(remote.Addr); err != nil {
+						m.logger.Printf("[DEBUG] memberlist: Blocked join.Addr=%s message from: %s %s", remote.Addr, err, LogAddress(from))
+						return
+					}
+				}
+			}
+		}
+
 		if err := m.sendLocalState(conn, join); err != nil {
 			m.logger.Printf("[ERR] memberlist: Failed to push local state: %s %s", err, LogConn(conn))
 			return
@@ -306,6 +325,15 @@ func (m *Memberlist) handleConn(conn net.Conn) {
 			return
 		}
 
+		if m.config.IPMustBeChecked() {
+			if stringutils.IsNotEmpty(p.SourceAddr) {
+				if err := m.config.AddrAllowed(p.SourceAddr); err != nil {
+					m.logger.Printf("[DEBUG] memberlist: Blocked ping.Addr=%s message from: %s %s", p.SourceAddr, err, LogAddress(from))
+					return
+				}
+			}
+		}
+
 		ack := ackResp{p.SeqNo, nil}
 		out, err := encode(ackRespMsg, &ack)
 		if err != nil {
@@ -323,7 +351,7 @@ func (m *Memberlist) handleConn(conn net.Conn) {
 	}
 }
 
-// packetListen is a long running goroutine that pulls packets out of the
+// packetListen is a long-running goroutine that pulls packets out of the
 // transport and hands them off for processing.
 func (m *Memberlist) packetListen() {
 	for {
@@ -338,6 +366,10 @@ func (m *Memberlist) packetListen() {
 }
 
 func (m *Memberlist) ingestPacket(buf []byte, from net.Addr, timestamp time.Time) {
+	if err := m.ensureCanConnect(from); err != nil {
+		m.logger.Printf("[DEBUG] memberlist: Blocked message: %s from %s", err, LogAddress(from))
+		return
+	}
 	// Check if encryption is enabled
 	if m.config.EncryptionEnabled() {
 		// Decrypt the payload
@@ -447,7 +479,7 @@ func (m *Memberlist) getNextMessage() (msgHandoff, bool) {
 	return msgHandoff{}, false
 }
 
-// packetHandler is a long running goroutine that processes messages received
+// packetHandler is a long-running goroutine that processes messages received
 // over the packet interface, but is decoupled from the listener to avoid
 // blocking the listener which may cause ping/ack messages to be delayed.
 func (m *Memberlist) packetHandler() {
@@ -515,6 +547,16 @@ func (m *Memberlist) handlePing(buf []byte, from net.Addr) {
 		m.logger.Printf("[WARN] memberlist: Got ping for unexpected node '%s' %s", p.Node, LogAddress(from))
 		return
 	}
+
+	if m.config.IPMustBeChecked() {
+		if stringutils.IsNotEmpty(p.SourceAddr) {
+			if err := m.config.AddrAllowed(p.SourceAddr); err != nil {
+				m.logger.Printf("[DEBUG] memberlist: Blocked ping.Addr=%s message from: %s %s", p.SourceAddr, err, LogAddress(from))
+				return
+			}
+		}
+	}
+
 	var ack ackResp
 	ack.SeqNo = p.SeqNo
 	if m.config.Ping != nil {
@@ -542,6 +584,15 @@ func (m *Memberlist) handleIndirectPing(buf []byte, from net.Addr) {
 	if err := decode(buf, &ind); err != nil {
 		m.logger.Printf("[ERR] memberlist: Failed to decode indirect ping request: %s %s", err, LogAddress(from))
 		return
+	}
+
+	if m.config.IPMustBeChecked() {
+		if stringutils.IsNotEmpty(ind.SourceAddr) {
+			if err := m.config.AddrAllowed(ind.SourceAddr); err != nil {
+				m.logger.Printf("[DEBUG] memberlist: Blocked indirectPing.Addr=%s message from: %s %s", ind.SourceAddr, err, LogAddress(from))
+				return
+			}
+		}
 	}
 
 	// For proto versions < 2, there is no port provided. Mask old
@@ -649,7 +700,7 @@ func (m *Memberlist) handleSuspect(buf []byte, from net.Addr) {
 // ensureCanConnect return the IP from a RemoteAddress
 // return error if this client must not connect
 func (m *Memberlist) ensureCanConnect(from net.Addr) error {
-	if !m.config.AddrMustBeChecked() {
+	if !m.config.IPMustBeChecked() {
 		return nil
 	}
 	source := from.String()
@@ -673,7 +724,7 @@ func (m *Memberlist) handleAlive(buf []byte, from net.Addr) {
 		m.logger.Printf("[ERR] memberlist: Failed to decode alive message: %s %s", err, LogAddress(from))
 		return
 	}
-	if m.config.AddrMustBeChecked() {
+	if m.config.IPMustBeChecked() {
 		if stringutils.IsNotEmpty(live.Addr) {
 			if err := m.config.AddrAllowed(live.Addr); err != nil {
 				m.logger.Printf("[DEBUG] memberlist: Blocked alive.Addr=%s message from: %s %s", live.Addr, err, LogAddress(from))

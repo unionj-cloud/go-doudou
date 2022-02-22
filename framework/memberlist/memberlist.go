@@ -269,7 +269,6 @@ func (m *Memberlist) Join(existing []string) (int, error) {
 			}
 			numSuccess++
 		}
-
 	}
 	if numSuccess > 0 {
 		errs = nil
