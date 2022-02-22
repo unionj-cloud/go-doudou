@@ -27,19 +27,16 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetStoreOrderOrderId Find purchase order by ID
-// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
-func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
-	// ID of order that needs to be fetched
-	// required
-	orderId int64) (ret Order, _resp *resty.Response, err error) {
+// GetStoreInventory Returns pet inventories by status
+// Returns a map of status codes to quantities
+func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
+}, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
-	_resp, _err = _req.Get("/store/order/{orderId}")
+	_resp, _err = _req.Get("/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -55,16 +52,19 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
 	return
 }
 
-// GetStoreInventory Returns pet inventories by status
-// Returns a map of status codes to quantities
-func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
-}, _resp *resty.Response, err error) {
+// GetStoreOrderOrderId Find purchase order by ID
+// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
+func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
+	// ID of order that needs to be fetched
+	// required
+	orderId int64) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
-	_resp, _err = _req.Get("/store/inventory")
+	_resp, _err = _req.Get("/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

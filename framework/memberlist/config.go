@@ -356,6 +356,9 @@ func (c *Config) IPAllowed(ip net.IP) error {
 // AddrAllowed return an error if access to memberlist is denied
 // addr can either be an ip address or a dns address
 func (c *Config) AddrAllowed(addr string) error {
+	if !c.IPMustBeChecked() {
+		return nil
+	}
 	ip := net.ParseIP(addr)
 	if ip == nil {
 		ips, err := net.LookupIP(addr)
