@@ -82,13 +82,13 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	// {{$c}}
 	{{- end}}
 	{{- end }}
-	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, {{ range $i, $p := $m.Params}}
+	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, _headers map[string]string, {{ range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
 	{{- range $c := $p.Comments }}
 	// {{$c}}
 	{{- end }}
     {{ $p.Name}} {{$p.Type}}
-    {{- end }}{{- if $m.Params }}, {{- end }}_headers map[string]string) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, _resp *resty.Response, err error) {
+    {{- end }}) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, _resp *resty.Response, err error) {
 		var _err error
 
 		_req := receiver.client.R()

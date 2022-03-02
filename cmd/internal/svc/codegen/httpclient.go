@@ -52,10 +52,11 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 }
 
 {{- range $m := .Meta.Methods }}
-	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}({{- range $i, $p := $m.Params}}
-    {{- if $i}},{{end}}
-    {{- $p.Name}} {{$p.Type}}
-    {{- end }}{{- if $m.Params }}, {{- end }}_headers map[string]string) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
+	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}(ctx context.Context, _headers map[string]string, {{- range $i, $p := $m.Params}}
+	{{- if ne $p.Type "context.Context" }}
+	{{- $p.Name}} {{$p.Type}},
+	{{- end }}
+    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {

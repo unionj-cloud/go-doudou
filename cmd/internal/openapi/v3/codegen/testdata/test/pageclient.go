@@ -27,11 +27,11 @@ func (receiver *PageClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
-func (receiver *PageClient) PostPageUsers2(ctx context.Context,
+// PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
+func (receiver *PageClient) PostPageUsers(ctx context.Context, _headers map[string]string,
 	// comments above input and output struct type parameters in vo package will display on online document
 	// not comments here
-	bodyJSON *PageQuery, _headers map[string]string) (ret PageUsers2Resp, _resp *resty.Response, err error) {
+	bodyJSON PageQuery) (ret PageUsersResp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -41,7 +41,7 @@ func (receiver *PageClient) PostPageUsers2(ctx context.Context,
 	}
 	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Post("/page/users/2")
+	_resp, _err = _req.Post("/page/users")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -57,11 +57,11 @@ func (receiver *PageClient) PostPageUsers2(ctx context.Context,
 	return
 }
 
-// PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
-func (receiver *PageClient) PostPageUsers(ctx context.Context,
+// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
+func (receiver *PageClient) PostPageUsers2(ctx context.Context, _headers map[string]string,
 	// comments above input and output struct type parameters in vo package will display on online document
 	// not comments here
-	bodyJSON PageQuery, _headers map[string]string) (ret PageUsersResp, _resp *resty.Response, err error) {
+	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -71,7 +71,7 @@ func (receiver *PageClient) PostPageUsers(ctx context.Context,
 	}
 	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Post("/page/users")
+	_resp, _err = _req.Post("/page/users/2")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

@@ -28,10 +28,13 @@ func (receiver *TestsvcClient) SetProvider(provider registry.IServiceProvider) {
 func (receiver *TestsvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *TestsvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (_resp *resty.Response, code int, data vo.PageRet, err error) {
+func (receiver *TestsvcClient) PageUsers(ctx context.Context, _headers map[string]string, query vo.PageQuery) (_resp *resty.Response, code int, data vo.PageRet, err error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(ctx)
 	_req.SetBody(query)
 	_path := "/page/users"

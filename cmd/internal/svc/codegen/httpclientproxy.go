@@ -19,10 +19,11 @@ import (
 
 var appendTmpl = `
 {{- range $m := .Meta.Methods }}
-	func (receiver *{{$.SvcName}}ClientProxy) {{$m.Name}}({{- range $i, $p := $m.Params}}
-    {{- if $i}},{{end}}
-    {{- $p.Name}} {{$p.Type}}
-    {{- end }}) ({{- range $i, $r := $m.Results}}
+	func (receiver *{{$.SvcName}}ClientProxy) {{$m.Name}}(ctx context.Context, _headers map[string]string, {{- range $i, $p := $m.Params}}
+	{{- if ne $p.Type "context.Context" }}
+	{{- $p.Name}} {{$p.Type}},
+	{{- end }}
+    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
@@ -40,12 +41,16 @@ var appendTmpl = `
 		{{- if not $ctxSet }}
 		if _err := receiver.runner.Run(context.Background(), func(ctx context.Context) error {
 		{{- end }}
-			_, {{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
+			_resp, {{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
+				ctx,
+				_headers,
 				{{- range $p := $m.Params }}
+				{{- if ne $p.Type "context.Context" }}
 				{{- if isVarargs $p.Type }}
 				{{ $p.Name }}...,
 				{{- else }}
 				{{ $p.Name }},
+				{{- end }}
 				{{- end }}
 				{{- end }}
 			)
@@ -81,6 +86,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"github.com/slok/goresilience"
+	"github.com/go-resty/resty/v2"
 	"github.com/slok/goresilience/circuitbreaker"
 	rerrors "github.com/slok/goresilience/errors"
 	"github.com/slok/goresilience/metrics"

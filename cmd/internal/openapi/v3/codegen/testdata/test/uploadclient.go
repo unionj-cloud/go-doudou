@@ -32,12 +32,12 @@ func (receiver *UploadClient) SetClient(client *resty.Client) {
 // PostUploadAvatar UploadAvatar demonstrate how to define upload files api
 // there must be one []v3.FileModel or v3.FileModel parameter among input parameters
 // remember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic
-func (receiver *UploadClient) PostUploadAvatar(ctx context.Context,
+func (receiver *UploadClient) PostUploadAvatar(ctx context.Context, _headers map[string]string,
 	bodyParams struct {
 		// required
 		Ps string `json:"ps,omitempty" url:"ps"`
 	},
-	pf []v3.FileModel, _headers map[string]string) (ret UploadAvatarResp, _resp *resty.Response, err error) {
+	pf []v3.FileModel) (ret UploadAvatarResp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -73,14 +73,14 @@ func (receiver *UploadClient) PostUploadAvatar(ctx context.Context,
 
 // PostUploadAvatar2 UploadAvatar2 demonstrate how to define upload files api
 // remember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic
-func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context,
+func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context, _headers map[string]string,
 	bodyParams struct {
 		// required
 		Ps string `json:"ps,omitempty" url:"ps"`
 	},
+	pf []v3.FileModel,
 	pf2 *v3.FileModel,
-	pf3 *v3.FileModel,
-	pf []v3.FileModel, _headers map[string]string) (ret UploadAvatar2Resp, _resp *resty.Response, err error) {
+	pf3 *v3.FileModel) (ret UploadAvatar2Resp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -90,18 +90,18 @@ func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context,
 	}
 	_bodyParams, _ := _querystring.Values(bodyParams)
 	_req.SetFormDataFromValues(_bodyParams)
-	if pf2 != nil {
-		_req.SetFileReader("pf2", pf2.Filename, pf2.Reader)
-	}
-	if pf3 != nil {
-		_req.SetFileReader("pf3", pf3.Filename, pf3.Reader)
-	}
 	if len(pf) == 0 {
 		err = errors.New("at least one file should be uploaded for parameter pf")
 		return
 	}
 	for _, _f := range pf {
 		_req.SetFileReader("pf", _f.Filename, _f.Reader)
+	}
+	if pf2 != nil {
+		_req.SetFileReader("pf2", pf2.Filename, pf2.Reader)
+	}
+	if pf3 != nil {
+		_req.SetFileReader("pf3", pf3.Filename, pf3.Reader)
 	}
 
 	_resp, _err = _req.Post("/upload/avatar/2")

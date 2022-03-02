@@ -27,11 +27,11 @@ func (receiver *CustomerClient) SetProvider(provider registry.IServiceProvider) 
 func (receiver *CustomerClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
+func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context, _headers map[string]string,
 	queryParams struct {
 		// required
 		Token string `json:"token,omitempty" url:"token"`
-	}, _headers map[string]string) (ret bool, _resp *resty.Response, err error) {
+	}) (ret bool, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()

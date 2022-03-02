@@ -26,17 +26,17 @@ func (receiver *UnipayClient) SetProvider(provider registry.IServiceProvider) {
 func (receiver *UnipayClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context,
+func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context, _headers map[string]string,
 	queryParams struct {
+		// required
+		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
 		// required
 		Token string `json:"token,omitempty" url:"token"`
 		// required
 		CompanyId string `json:"companyId,omitempty" url:"companyId"`
 		// required
 		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
-		// required
-		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
-	}, _headers map[string]string) (ret string, _resp *resty.Response, err error) {
+	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()

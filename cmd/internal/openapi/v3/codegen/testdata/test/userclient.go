@@ -28,10 +28,40 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
+// GetUserUsername Get user by user name
+func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[string]string,
+	// The name that needs to be fetched. Use user1 for testing.
+	// required
+	username string) (ret User, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetPathParam("username", fmt.Sprintf("%v", username))
+
+	_resp, _err = _req.Get("/user/{username}")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
 // PostUserCreateWithList Creates list of users with given input array
 // Creates list of users with given input array
-func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
-	bodyJSON *[]User, _headers map[string]string) (ret User, _resp *resty.Response, err error) {
+func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers map[string]string,
+	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -58,11 +88,11 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 }
 
 // GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context,
+func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Password *string `json:"password,omitempty" url:"password"`
 		Username *string `json:"username,omitempty" url:"username"`
-	}, _headers map[string]string) (ret string, _resp *resty.Response, err error) {
+		Password *string `json:"password,omitempty" url:"password"`
+	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -83,36 +113,6 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 		return
 	}
 	ret = _resp.String()
-	return
-}
-
-// GetUserUsername Get user by user name
-func (receiver *UserClient) GetUserUsername(ctx context.Context,
-	// The name that needs to be fetched. Use user1 for testing.
-	// required
-	username string, _headers map[string]string) (ret User, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_req.SetPathParam("username", fmt.Sprintf("%v", username))
-
-	_resp, _err = _req.Get("/user/{username}")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
 	return
 }
 

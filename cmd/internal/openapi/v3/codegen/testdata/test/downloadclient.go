@@ -35,11 +35,11 @@ func (receiver *DownloadClient) SetClient(client *resty.Client) {
 
 // GetDownloadAvatar GetDownloadAvatar demonstrate how to define download file api
 // there must be *os.File parameter among output parameters
-func (receiver *DownloadClient) GetDownloadAvatar(ctx context.Context,
+func (receiver *DownloadClient) GetDownloadAvatar(ctx context.Context, _headers map[string]string,
 	queryParams struct {
 		// required
 		UserId string `json:"userId,omitempty" url:"userId"`
-	}, _headers map[string]string) (_downloadFile *os.File, _resp *resty.Response, err error) {
+	}) (_downloadFile *os.File, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
