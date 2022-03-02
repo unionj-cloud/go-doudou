@@ -88,12 +88,14 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	// {{$c}}
 	{{- end }}
     {{ $p.Name}} {{$p.Type}}
-    {{- end }}) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, _resp *resty.Response, err error) {
+    {{- end }}{{- if $m.Params }}, {{- end }}_headers map[string]string) ({{(index $m.Results 0).Name}} {{(index $m.Results 0).Type}}, _resp *resty.Response, err error) {
 		var _err error
 
 		_req := receiver.client.R()
 		_req.SetContext(ctx)
-
+		if len(_headers) > 0 {
+			_req.SetHeaders(_headers)
+		}
 		{{- if $m.QueryParams }}
 			_queryParams, _ := _querystring.Values({{$m.QueryParams.Name}})
 			_req.SetQueryParamsFromValues(_queryParams)

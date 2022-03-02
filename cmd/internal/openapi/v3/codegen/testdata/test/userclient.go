@@ -31,11 +31,14 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 // PostUserCreateWithList Creates list of users with given input array
 // Creates list of users with given input array
 func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
-	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
+	bodyJSON *[]User, _headers map[string]string) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetBody(bodyJSON)
 
 	_resp, _err = _req.Post("/user/createWithList")
@@ -57,13 +60,16 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context,
 // GetUserLogin Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context,
 	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
 		Password *string `json:"password,omitempty" url:"password"`
-	}) (ret string, _resp *resty.Response, err error) {
+		Username *string `json:"username,omitempty" url:"username"`
+	}, _headers map[string]string) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
@@ -84,11 +90,14 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context,
 func (receiver *UserClient) GetUserUsername(ctx context.Context,
 	// The name that needs to be fetched. Use user1 for testing.
 	// required
-	username string) (ret User, _resp *resty.Response, err error) {
+	username string, _headers map[string]string) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetPathParam("username", fmt.Sprintf("%v", username))
 
 	_resp, _err = _req.Get("/user/{username}")

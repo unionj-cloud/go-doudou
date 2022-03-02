@@ -30,11 +30,14 @@ func (receiver *SignClient) SetClient(client *resty.Client) {
 
 // PostSignUp SignUp demonstrate how to define POST and Content-Type as application/x-www-form-urlencoded api
 func (receiver *SignClient) PostSignUp(ctx context.Context,
-	bodyParams SignUpReq) (ret SignUpResp, _resp *resty.Response, err error) {
+	bodyParams SignUpReq, _headers map[string]string) (ret SignUpResp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_bodyParams, _ := _querystring.Values(bodyParams)
 	_req.SetFormDataFromValues(_bodyParams)
 

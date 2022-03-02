@@ -29,18 +29,21 @@ func (receiver *UnipayClient) SetClient(client *resty.Client) {
 func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context,
 	queryParams struct {
 		// required
-		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
-		// required
 		Token string `json:"token,omitempty" url:"token"`
 		// required
 		CompanyId string `json:"companyId,omitempty" url:"companyId"`
 		// required
 		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
-	}) (ret string, _resp *resty.Response, err error) {
+		// required
+		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
+	}, _headers map[string]string) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 

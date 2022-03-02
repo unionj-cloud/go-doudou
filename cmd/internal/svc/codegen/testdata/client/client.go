@@ -36,10 +36,13 @@ func (receiver *UsersvcClient) SetProvider(provider registry.IServiceProvider) {
 func (receiver *UsersvcClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
-func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery) (_resp *resty.Response, code int, data vo.PageRet, msg error) {
+func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery, _headers map[string]string) (_resp *resty.Response, code int, data vo.PageRet, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(ctx)
 	_req.SetBody(query)
 	_path := "/usersvc/pageusers"
@@ -67,10 +70,13 @@ func (receiver *UsersvcClient) PageUsers(ctx context.Context, query vo.PageQuery
 	}
 	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo string) (_resp *resty.Response, code int, data string, msg error) {
+func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo string, _headers map[string]string) (_resp *resty.Response, code int, data string, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(ctx)
 	_urlValues.Set("userId", fmt.Sprintf("%v", userId))
 	_urlValues.Set("photo", fmt.Sprintf("%v", photo))
@@ -95,10 +101,13 @@ func (receiver *UsersvcClient) GetUser(ctx context.Context, userId string, photo
 	}
 	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, password int, actived bool, score []int) (_resp *resty.Response, code int, data string, msg error) {
+func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, password int, actived bool, score []int, _headers map[string]string) (_resp *resty.Response, code int, data string, msg error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(ctx)
 	_urlValues.Set("username", fmt.Sprintf("%v", username))
 	_urlValues.Set("password", fmt.Sprintf("%v", password))
@@ -135,10 +144,13 @@ func (receiver *UsersvcClient) SignUp(ctx context.Context, username string, pass
 	}
 	return _resp, _result.Code, _result.Data, nil
 }
-func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (_resp *resty.Response, ri int, ri2 interface{}, re error) {
+func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader, _headers map[string]string) (_resp *resty.Response, ri int, ri2 interface{}, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(pc)
 	if len(pf) == 0 {
 		re = errors.New("at least one file should be uploaded for parameter pf")
@@ -188,10 +200,13 @@ func (receiver *UsersvcClient) UploadAvatar(pc context.Context, pf []v3.FileMode
 	}
 	return _resp, _result.Ri, _result.Ri2, nil
 }
-func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId interface{}, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
+func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, userId interface{}, userAttrs ...string, _headers map[string]string) (_resp *resty.Response, rf *os.File, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetContext(ctx)
 	_req.SetBody(userId)
 	if userAttrs != nil {

@@ -39,11 +39,14 @@ func (receiver *DownloadClient) GetDownloadAvatar(ctx context.Context,
 	queryParams struct {
 		// required
 		UserId string `json:"userId,omitempty" url:"userId"`
-	}) (_downloadFile *os.File, _resp *resty.Response, err error) {
+	}, _headers map[string]string) (_downloadFile *os.File, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 	_req.SetDoNotParseResponse(true)

@@ -27,16 +27,20 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetStoreInventory Returns pet inventories by status
-// Returns a map of status codes to quantities
-func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct {
-}, _resp *resty.Response, err error) {
+// PostStoreOrder Place an order for a pet
+// Place a new order in the store
+func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
+	bodyJSON *Order, _headers map[string]string) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Get("/store/inventory")
+	_resp, _err = _req.Post("/store/order")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -57,11 +61,14 @@ func (receiver *StoreClient) GetStoreInventory(ctx context.Context) (ret struct 
 func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
 	// ID of order that needs to be fetched
 	// required
-	orderId int64) (ret Order, _resp *resty.Response, err error) {
+	orderId int64, _headers map[string]string) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
 	_resp, _err = _req.Get("/store/order/{orderId}")
@@ -80,17 +87,19 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context,
 	return
 }
 
-// PostStoreOrder Place an order for a pet
-// Place a new order in the store
-func (receiver *StoreClient) PostStoreOrder(ctx context.Context,
-	bodyJSON *Order) (ret Order, _resp *resty.Response, err error) {
+// GetStoreInventory Returns pet inventories by status
+// Returns a map of status codes to quantities
+func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map[string]string) (ret struct {
+}, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
-	_req.SetBody(bodyJSON)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 
-	_resp, _err = _req.Post("/store/order")
+	_resp, _err = _req.Get("/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

@@ -31,11 +31,14 @@ func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context,
 	queryParams struct {
 		// required
 		Token string `json:"token,omitempty" url:"token"`
-	}) (ret bool, _resp *resty.Response, err error) {
+	}, _headers map[string]string) (ret bool, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
 	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 

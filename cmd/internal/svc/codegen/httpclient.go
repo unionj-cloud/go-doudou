@@ -55,13 +55,16 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	func (receiver *{{$.Meta.Name}}Client) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
     {{- $p.Name}} {{$p.Type}}
-    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
+    {{- end }}{{- if $m.Params }}, {{- end }}_headers map[string]string) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
 		var _err error
 		_urlValues := url.Values{}
 		_req := receiver.client.R()
+		if len(_headers) > 0 {
+			_req.SetHeaders(_headers)
+		}
 		{{- range $p := $m.Params }}
 		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if contains $p.Type "["}}
