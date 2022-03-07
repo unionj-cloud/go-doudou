@@ -103,6 +103,7 @@ func (receiver Svc) Http() {
 		codegen.GenHttpHandlerImpl(dir, ic)
 	}
 	if receiver.Client {
+		codegen.GenGoIClient(dir, ic)
 		codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
 		codegen.GenGoClientProxy(dir, ic)
 	}

@@ -122,7 +122,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file handler.go will be overwrited")
+		logrus.Warningln("file handler.go will be overwritten")
 	}
 	if f, err = os.Create(handlerfile); err != nil {
 		panic(err)

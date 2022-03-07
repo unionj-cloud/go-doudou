@@ -339,7 +339,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file client.go will be overwrited")
+		logrus.Warningln("file client.go will be overwritten")
 	}
 	if f, err = os.Create(clientfile); err != nil {
 		panic(err)

@@ -301,7 +301,7 @@ func genGoHTTP(paths map[string]v3.Path, svcname, dir, env, pkg string) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file " + svcname + "client.go will be overwrited")
+		logrus.Warningln("file " + svcname + "client.go will be overwritten")
 	}
 	var f *os.File
 	if f, err = os.Create(output); err != nil {
@@ -838,7 +838,7 @@ func GenGoClient(dir string, file string, omit bool, env, pkg string) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file vo.go will be overwrited")
+		logrus.Warningln("file vo.go will be overwritten")
 	}
 	if f, err = os.Create(vofile); err != nil {
 		panic(err)

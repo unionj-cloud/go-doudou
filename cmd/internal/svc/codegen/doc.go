@@ -318,7 +318,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file " + docfile + " will be overwrited")
+		logrus.Warningln("file " + docfile + " will be overwritten")
 	}
 	gofile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.go")
 	fi, err = os.Stat(gofile)
@@ -326,7 +326,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file " + gofile + " will be overwrited")
+		logrus.Warningln("file " + gofile + " will be overwritten")
 	}
 	vodir := filepath.Join(dir, "vo")
 	var files []string
