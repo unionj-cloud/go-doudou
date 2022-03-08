@@ -1,9 +1,10 @@
 package registry
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"github.com/hako/durafmt"
+	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"io/ioutil"
-	"net"
 	"os"
 	"runtime"
 	"strconv"
@@ -102,27 +102,13 @@ type nodeMeta struct {
 func newMeta(node *memberlist.Node) (mergedMeta, error) {
 	var mm mergedMeta
 	if len(node.Meta) > 0 {
-		if err := json.Unmarshal(node.Meta, &mm); err != nil {
-			return mm, errors.Wrap(err, "Unmarshal node meta failed, not a valid json")
+		r := bytes.NewReader(node.Meta)
+		dec := codec.NewDecoder(r, &codec.MsgpackHandle{})
+		if err := dec.Decode(&mm); err != nil {
+			logger.Panic(errors.Wrap(err, "[go-doudou] parse node meta data error"))
 		}
 	}
 	return mm, nil
-}
-
-// getFreePort Borrow source code from https://github.com/phayes/freeport/blob/master/freeport.go
-// GetFreePort asks the kernel for a free open port that is ready to use.
-func getFreePort() (int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		return 0, err
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		return 0, err
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
 func newConf() *memberlist.Config {

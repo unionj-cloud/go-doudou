@@ -1053,7 +1053,7 @@ func (m *Memberlist) aliveNode(a *alive, notify chan struct{}, bootstrap bool) {
 		// Update numNodes after we've added a new node
 		atomic.AddUint32(&m.numNodes, 1)
 	} else {
-		// Check if this address is different than the existing node unless the old node is dead.
+		// Check if this address is different from the existing node unless the old node is dead.
 		if state.Addr != a.Addr || state.Port != a.Port {
 			errCon := m.config.AddrAllowed(a.Addr)
 			if errCon != nil {

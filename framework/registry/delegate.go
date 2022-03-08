@@ -1,8 +1,9 @@
 package registry
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"sync"
@@ -18,7 +19,14 @@ type delegate struct {
 func (d *delegate) NodeMeta(limit int) []byte {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	raw, _ := json.Marshal(d.mmeta)
+
+	var buf bytes.Buffer
+	enc := codec.NewEncoder(&buf, &codec.MsgpackHandle{})
+	if err := enc.Encode(d.mmeta); err != nil {
+		logger.Panic(fmt.Sprintf("[go-doudou] Failed to encode node meta data: %v", err))
+	}
+	raw := buf.Bytes()
+
 	if len(raw) > limit {
 		logger.Panic(fmt.Errorf("[go-doudou] Node meta data '%v' exceeds length limit of %d bytes", d.mmeta, limit))
 	}

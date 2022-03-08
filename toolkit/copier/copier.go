@@ -11,7 +11,10 @@ func DeepCopy(src, target interface{}) error {
 	if src == nil || target == nil {
 		return nil
 	}
-	b, _ := json.Marshal(src)
+	b, err := json.Marshal(src)
+	if err != nil {
+		return err
+	}
 	if reflect.ValueOf(target).Kind() != reflect.Ptr {
 		return errors.New("Target should be a pointer")
 	}

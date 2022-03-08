@@ -100,6 +100,10 @@ func TestRetransmitLimit(t *testing.T) {
 	if lim != 6 {
 		t.Fatalf("bad val %v", lim)
 	}
+	lim = retransmitLimit(4, 15)
+	if lim != 8 {
+		t.Fatalf("bad val %v", lim)
+	}
 }
 
 func TestShuffleNodes(t *testing.T) {
