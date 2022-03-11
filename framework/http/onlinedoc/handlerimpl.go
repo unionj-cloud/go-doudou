@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"net/http"
 	"text/template"
 )
@@ -29,7 +27,6 @@ func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *
 		err    error
 		buf    bytes.Buffer
 		scheme string
-		host   string
 	)
 	if tpl, err = template.New("onlinedoc.tmpl").Parse(indexTmpl); err != nil {
 		panic(err)
@@ -40,17 +37,12 @@ func (receiver *OnlineDocHandlerImpl) GetDoc(_writer http.ResponseWriter, _req *
 	} else {
 		scheme = "https"
 	}
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
-	host = fmt.Sprintf("%s://%s%s", scheme, _req.Host, rr)
 	if err = tpl.Execute(&buf, struct {
 		Doc    string
 		DocUrl string
 	}{
 		Doc:    string(doc),
-		DocUrl: host + "/go-doudou/openapi.json",
+		DocUrl: fmt.Sprintf("%s://%s/go-doudou/openapi.json", scheme, _req.Host),
 	}); err != nil {
 		panic(err)
 	}
