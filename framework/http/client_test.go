@@ -113,7 +113,9 @@ func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(services.Hosts, nil)
 
-	n := ddhttp.NewNacosRRServiceProvider(namingClient, "testsvc", ddhttp.WithNacosClusters([]string{"a"}))
+	n := ddhttp.NewNacosRRServiceProvider("testsvc",
+		ddhttp.WithNacosNamingClient(namingClient),
+		ddhttp.WithNacosClusters([]string{"a"}))
 	for i := 0; i < len(services.Hosts)*2; i++ {
 		got := n.SelectServer()
 		fmt.Println(got)
@@ -134,7 +136,9 @@ func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(&services.Hosts[0], nil)
 
-	n := ddhttp.NewNacosWRRServiceProvider(namingClient, "testsvc", ddhttp.WithNacosClusters([]string{"a"}))
+	n := ddhttp.NewNacosWRRServiceProvider("testsvc",
+		ddhttp.WithNacosNamingClient(namingClient),
+		ddhttp.WithNacosClusters([]string{"a"}))
 	got := n.SelectServer()
 	require.Equal(t, got, "http://10.10.10.10:80/api")
 }

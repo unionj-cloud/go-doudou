@@ -105,6 +105,23 @@ const (
 
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
+
+	GddServiceDiscoveryMode envVariable = "GDD_SERVICE_DISCOVERY_MODE"
+
+	GddNacosNamespaceId         envVariable = "GDD_NACOS_NAMESPACE_ID"
+	GddNacosTimeoutMs           envVariable = "GDD_NACOS_TIMEOUT_MS"
+	GddNacosNotLoadCacheAtStart envVariable = "GDD_NACOS_NOT_LOAD_CACHE_AT_START"
+	GddNacosLogDir              envVariable = "GDD_NACOS_LOG_DIR"
+	GddNacosCacheDir            envVariable = "GDD_NACOS_CACHE_DIR"
+	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
+	GddNacosServerHost          envVariable = "GDD_NACOS_SERVER_HOST"
+	GddNacosServerPort          envVariable = "GDD_NACOS_SERVER_PORT"
+	GddNacosServerScheme        envVariable = "GDD_NACOS_SERVER_SCHEME"
+	GddNacosServerContextPath   envVariable = "GDD_NACOS_SERVER_CONTEXT_PATH"
+	GddNacosRegisterHost        envVariable = "GDD_NACOS_REGISTER_HOST"
+
+	// GddWeight node weight
+	GddWeight envVariable = "GDD_WEIGHT"
 )
 
 // Load loads value from environment variable

@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"net"
 	"net/http"
@@ -270,6 +271,7 @@ func NewSmoothWeightedRoundRobinProvider(name string) *SmoothWeightedRoundRobinP
 type iNacosServiceProvider interface {
 	SetClusters(clusters []string)
 	SetGroupName(groupName string)
+	SetNamingClient(namingClient naming_client.INamingClient)
 }
 
 type nacosBase struct {
@@ -287,6 +289,10 @@ func (b *nacosBase) SetClusters(clusters []string) {
 
 func (b *nacosBase) SetGroupName(groupName string) {
 	b.groupName = groupName
+}
+
+func (b *nacosBase) SetNamingClient(namingClient naming_client.INamingClient) {
+	b.namingClient = namingClient
 }
 
 func (b *nacosBase) AddNode(node *memberlist.Node) {
@@ -309,6 +315,12 @@ func WithNacosClusters(clusters []string) NacosProviderOption {
 func WithNacosGroupName(groupName string) NacosProviderOption {
 	return func(provider iNacosServiceProvider) {
 		provider.SetGroupName(groupName)
+	}
+}
+
+func WithNacosNamingClient(namingClient naming_client.INamingClient) NacosProviderOption {
+	return func(provider iNacosServiceProvider) {
+		provider.SetNamingClient(namingClient)
 	}
 }
 
@@ -336,6 +348,10 @@ type NacosRRServiceProvider struct {
 func (n *NacosRRServiceProvider) SelectServer() string {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
+	if n.namingClient == nil {
+		logger.Error("[go-doudou] nacos discovery client has not been initialized")
+		return ""
+	}
 	instances, err := n.namingClient.SelectInstances(vo.SelectInstancesParam{
 		Clusters:    n.clusters,
 		ServiceName: n.serviceName,
@@ -354,11 +370,11 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 }
 
 // NewNacosRRServiceProvider creates new ServiceProvider instance
-func NewNacosRRServiceProvider(namingClient naming_client.INamingClient, serviceName string, opts ...NacosProviderOption) *NacosRRServiceProvider {
+func NewNacosRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosRRServiceProvider {
 	provider := &NacosRRServiceProvider{
 		nacosBase: nacosBase{
 			serviceName:  serviceName,
-			namingClient: namingClient,
+			namingClient: nacos.NamingClient,
 		},
 	}
 	for _, opt := range opts {
@@ -376,24 +392,28 @@ type NacosWRRServiceProvider struct {
 func (n *NacosWRRServiceProvider) SelectServer() string {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
+	if n.namingClient == nil {
+		logger.Error("[go-doudou] nacos discovery client has not been initialized")
+		return ""
+	}
 	instance, err := n.namingClient.SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
 		Clusters:    n.clusters,
 		ServiceName: n.serviceName,
 		GroupName:   n.groupName,
 	})
 	if err != nil {
-		logger.Error(fmt.Sprintf("[go-doudou] error:%s", err))
+		logger.Error(fmt.Sprintf("[go-doudou] failed to select one healthy instance:%s", err))
 		return ""
 	}
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])
 }
 
 // NewNacosWRRServiceProvider creates new ServiceProvider instance
-func NewNacosWRRServiceProvider(namingClient naming_client.INamingClient, serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
+func NewNacosWRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
 	provider := &NacosWRRServiceProvider{
 		nacosBase{
 			serviceName:  serviceName,
-			namingClient: namingClient,
+			namingClient: nacos.NamingClient,
 		},
 	}
 	for _, opt := range opts {

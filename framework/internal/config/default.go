@@ -22,6 +22,7 @@ const (
 	DefaultGddManageUser         = "admin"
 	DefaultGddManagePass         = "admin"
 	DefaultGddTracingMetricsRoot = FrameworkName
+	DefaultGddWeight             = 1
 
 	// Default configs for memberlist component
 	DefaultGddMemSeed           = ""
@@ -36,10 +37,24 @@ const (
 	DefaultGddMemGossipInterval = "500ms"
 	DefaultGddMemTCPTimeout     = "30s"
 	DefaultGddMemIndirectChecks = 3
-	DefaultGddMemWeight         = 0
+	DefaultGddMemWeight         = 1
 	DefaultGddMemWeightInterval = 0
 	DefaultGddMemName           = ""
 	DefaultGddMemHost           = ""
 	DefaultGddMemCIDRsAllowed   = ""
 	DefaultGddMemLogDisable     = false
+
+	DefaultGddServiceDiscoveryMode = "memberlist"
+
+	DefaultGddNacosNamespaceId         = ""
+	DefaultGddNacosTimeoutMs           = 10000
+	DefaultGddNacosNotLoadCacheAtStart = false
+	DefaultGddNacosLogDir              = "/tmp/nacos/log"
+	DefaultGddNacosCacheDir            = "/tmp/nacos/cache"
+	DefaultGddNacosLogLevel            = "info"
+	DefaultGddNacosServerHost          = ""
+	DefaultGddNacosServerPort          = 8848
+	DefaultGddNacosServerScheme        = "http"
+	DefaultGddNacosServerContextPath   = "/nacos"
+	DefaultGddNacosRegisterHost        = ""
 )

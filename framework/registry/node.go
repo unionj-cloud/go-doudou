@@ -12,6 +12,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
+	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -277,11 +278,7 @@ func newConf() *memberlist.Config {
 	return cfg
 }
 
-// NewNode creates a new go-doudou node.
-// service related custom data (<= 512 bytes after being marshalled as json format) can be passed into it by data parameter.
-// it is made as a variadic function only for backward compatibility purposes,
-// only first parameter will be used.
-func NewNode(data ...map[string]interface{}) error {
+func newNode(data ...map[string]interface{}) error {
 	mconf := newConf()
 	service := config.DefaultGddServiceName
 	if stringutils.IsNotEmpty(config.GddServiceName.Load()) {
@@ -291,23 +288,31 @@ func NewNode(data ...map[string]interface{}) error {
 		return errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))
 	}
 	httpPort := config.DefaultGddPort
-	if port, err := cast.ToIntE(config.GddPort.Load()); err == nil {
-		httpPort = port
+	if stringutils.IsNotEmpty(config.GddPort.Load()) {
+		if port, err := cast.ToIntE(config.GddPort.Load()); err == nil {
+			httpPort = port
+		}
 	}
 	now := time.Now()
 	var buildTime string
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
-			buildTime = t.Local().Format(constants.FORMAT)
+			buildTime = t.Local().Format(constants.FORMAT8)
 		}
 	}
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
 		rr = config.GddRouteRootPath.Load()
 	}
-	weight := config.DefaultGddMemWeight
-	if w, err := cast.ToIntE(config.GddMemWeight.Load()); err == nil {
-		weight = w
+	weight := config.DefaultGddWeight
+	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
+		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
+			weight = w
+		}
+	} else if stringutils.IsNotEmpty(config.GddMemWeight.Load()) {
+		if w, err := cast.ToIntE(config.GddMemWeight.Load()); err == nil {
+			weight = w
+		}
 	}
 	mmeta := mergedMeta{
 		Meta: nodeMeta{
@@ -356,12 +361,59 @@ func NewNode(data ...map[string]interface{}) error {
 	return nil
 }
 
-// Shutdown stops all connections and communications with other nodes in the cluster
-func Shutdown() {
+func getModemap() map[string]struct{} {
+	modeStr := config.DefaultGddServiceDiscoveryMode
+	if stringutils.IsNotEmpty(config.GddServiceDiscoveryMode.Load()) {
+		modeStr = config.GddServiceDiscoveryMode.Load()
+	}
+	modes := strings.Split(modeStr, ",")
+	modemap := make(map[string]struct{})
+	for _, mode := range modes {
+		modemap[mode] = struct{}{}
+	}
+	return modemap
+}
+
+// NewNode creates a new go-doudou node.
+// service related custom data (<= 512 bytes after being marshalled as json format) can be passed into it by data parameter.
+// it is made as a variadic function only for backward compatibility purposes,
+// only first parameter will be used.
+func NewNode(data ...map[string]interface{}) error {
+	for mode, _ := range getModemap() {
+		switch mode {
+		case "nacos":
+			nacos.NewNode(data...)
+		case "memberlist":
+			err := newNode(data...)
+			if err != nil {
+				return err
+			}
+		default:
+			logger.Warn(fmt.Sprintf("[go-doudou] unknown service discovery mode: %s", mode))
+		}
+	}
+	return nil
+}
+
+func shutdown() {
 	if mlist != nil {
 		_ = mlist.Shutdown()
 		mlist = nil
 		logger.Info("memberlist shutdown")
+	}
+}
+
+// Shutdown stops all connections and communications with other nodes in the cluster
+func Shutdown() {
+	for mode, _ := range getModemap() {
+		switch mode {
+		case "nacos":
+			nacos.Shutdown()
+		case "memberlist":
+			shutdown()
+		default:
+			logger.Warn(fmt.Sprintf("[go-doudou] unknown service discovery mode: %s", mode))
+		}
 	}
 }
 
