@@ -114,10 +114,7 @@ const (
 	GddNacosLogDir              envVariable = "GDD_NACOS_LOG_DIR"
 	GddNacosCacheDir            envVariable = "GDD_NACOS_CACHE_DIR"
 	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
-	GddNacosServerHost          envVariable = "GDD_NACOS_SERVER_HOST"
-	GddNacosServerPort          envVariable = "GDD_NACOS_SERVER_PORT"
-	GddNacosServerScheme        envVariable = "GDD_NACOS_SERVER_SCHEME"
-	GddNacosServerContextPath   envVariable = "GDD_NACOS_SERVER_CONTEXT_PATH"
+	GddNacosServerAddr          envVariable = "GDD_NACOS_SERVER_ADDR"
 	GddNacosRegisterHost        envVariable = "GDD_NACOS_REGISTER_HOST"
 
 	// GddWeight node weight

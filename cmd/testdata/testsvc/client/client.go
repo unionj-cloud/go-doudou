@@ -19,6 +19,11 @@ import (
 type TestsvcClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *TestsvcClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *TestsvcClient) SetProvider(provider registry.IServiceProvider) {
@@ -77,7 +82,7 @@ func NewTestsvcClient(opts ...ddhttp.DdClientOption) *TestsvcClient {
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 

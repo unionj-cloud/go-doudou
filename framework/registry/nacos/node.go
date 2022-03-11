@@ -13,8 +13,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"net"
+	"net/url"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -94,30 +97,31 @@ func NewNode(data ...map[string]interface{}) {
 		constant.WithCacheDir(cacheDir),
 		constant.WithLogLevel(logLevel),
 	)
-
-	serverHost := config.DefaultGddNacosServerHost
-	if stringutils.IsNotEmpty(config.GddNacosServerHost.Load()) {
-		serverHost = config.GddNacosServerHost.Load()
+	serverAddrStr := config.DefaultGddNacosServerAddr
+	if stringutils.IsNotEmpty(config.GddNacosServerAddr.Load()) {
+		serverAddrStr = config.GddNacosServerAddr.Load()
 	}
-	serverPort := config.DefaultGddNacosServerPort
-	if stringutils.IsNotEmpty(config.GddNacosServerPort.Load()) {
-		serverPort = cast.ToInt(config.GddNacosServerPort.Load())
-	}
-	scheme := config.DefaultGddNacosServerScheme
-	if stringutils.IsNotEmpty(config.GddNacosServerScheme.Load()) {
-		scheme = config.GddNacosServerScheme.Load()
-	}
-	ctxPath := config.DefaultGddNacosServerContextPath
-	if stringutils.IsNotEmpty(config.GddNacosServerContextPath.Load()) {
-		ctxPath = config.GddNacosServerContextPath.Load()
-	}
-	serverConfigs := []constant.ServerConfig{
-		*constant.NewServerConfig(
-			serverHost,
+	var serverConfigs []constant.ServerConfig
+	addrs := strings.Split(serverAddrStr, ",")
+	for _, addr := range addrs {
+		u, err := url.Parse(addr)
+		if err != nil {
+			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		host, port, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		serverPort, err := cast.ToIntE(port)
+		if err != nil {
+			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		serverConfigs = append(serverConfigs, *constant.NewServerConfig(
+			host,
 			uint64(serverPort),
-			constant.WithScheme(scheme),
-			constant.WithContextPath(ctxPath),
-		),
+			constant.WithScheme(u.Scheme),
+			constant.WithContextPath(u.Path),
+		))
 	}
 
 	var err error

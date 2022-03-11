@@ -52,9 +52,6 @@ const (
 	DefaultGddNacosLogDir              = "/tmp/nacos/log"
 	DefaultGddNacosCacheDir            = "/tmp/nacos/cache"
 	DefaultGddNacosLogLevel            = "info"
-	DefaultGddNacosServerHost          = ""
-	DefaultGddNacosServerPort          = 8848
-	DefaultGddNacosServerScheme        = "http"
-	DefaultGddNacosServerContextPath   = "/nacos"
+	DefaultGddNacosServerAddr          = ""
 	DefaultGddNacosRegisterHost        = ""
 )
