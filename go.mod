@@ -67,6 +67,7 @@ require (
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.4.1
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
@@ -75,6 +76,7 @@ require (
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/nacos-group/nacos-sdk-go v1.1.1
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect

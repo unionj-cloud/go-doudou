@@ -1,17 +1,22 @@
 package ddhttp
 
 import (
+	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
+	"github.com/nacos-group/nacos-sdk-go/model"
+	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"net"
 	"net/http"
 	"os"
 	"runtime"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -252,4 +257,137 @@ func NewSmoothWeightedRoundRobinProvider(name string) *SmoothWeightedRoundRobinP
 	}
 	registry.RegisterServiceProvider(sp)
 	return sp
+}
+
+type iNacosServiceProvider interface {
+	SetClusters(clusters []string)
+	SetGroupName(groupName string)
+}
+
+type nacosBase struct {
+	clusters    []string //optional,default:DEFAULT
+	serviceName string   //required
+	groupName   string   //optional,default:DEFAULT_GROUP
+
+	lock         sync.RWMutex
+	namingClient naming_client.INamingClient
+}
+
+func (b *nacosBase) SetClusters(clusters []string) {
+	b.clusters = clusters
+}
+
+func (b *nacosBase) SetGroupName(groupName string) {
+	b.groupName = groupName
+}
+
+func (b *nacosBase) AddNode(node *memberlist.Node) {
+}
+
+func (b *nacosBase) RemoveNode(node *memberlist.Node) {
+}
+
+func (b *nacosBase) UpdateWeight(node *memberlist.Node) {
+}
+
+type NacosProviderOption func(iNacosServiceProvider)
+
+func WithNacosClusters(clusters []string) NacosProviderOption {
+	return func(provider iNacosServiceProvider) {
+		provider.SetClusters(clusters)
+	}
+}
+
+func WithNacosGroupName(groupName string) NacosProviderOption {
+	return func(provider iNacosServiceProvider) {
+		provider.SetGroupName(groupName)
+	}
+}
+
+type instance []model.Instance
+
+func (a instance) Len() int {
+	return len(a)
+}
+
+func (a instance) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a instance) Less(i, j int) bool {
+	return a[i].InstanceId < a[j].InstanceId
+}
+
+// NacosRRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
+type NacosRRServiceProvider struct {
+	nacosBase
+	current uint64
+}
+
+// SelectServer return service address from environment variable
+func (n *NacosRRServiceProvider) SelectServer() string {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+	instances, err := n.namingClient.SelectInstances(vo.SelectInstancesParam{
+		Clusters:    n.clusters,
+		ServiceName: n.serviceName,
+		GroupName:   n.groupName,
+		HealthyOnly: true,
+	})
+	if err != nil {
+		return ""
+	}
+	sort.Sort(instance(instances))
+	next := int(atomic.AddUint64(&n.current, uint64(1)) % uint64(len(instances)))
+	n.current = uint64(next)
+	selected := instances[next]
+	return fmt.Sprintf("http://%s:%d%s", selected.Ip, selected.Port, selected.Metadata["rootPath"])
+}
+
+// NewNacosRRServiceProvider creates new ServiceProvider instance
+func NewNacosRRServiceProvider(namingClient naming_client.INamingClient, serviceName string, opts ...NacosProviderOption) *NacosRRServiceProvider {
+	provider := &NacosRRServiceProvider{
+		nacosBase: nacosBase{
+			serviceName:  serviceName,
+			namingClient: namingClient,
+		},
+	}
+	for _, opt := range opts {
+		opt(provider)
+	}
+	return provider
+}
+
+// NacosWRRServiceProvider is a WRR load balance implementation for IServiceProvider
+type NacosWRRServiceProvider struct {
+	nacosBase
+}
+
+// SelectServer return service address from environment variable
+func (n *NacosWRRServiceProvider) SelectServer() string {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+	instance, err := n.namingClient.SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
+		Clusters:    n.clusters,
+		ServiceName: n.serviceName,
+		GroupName:   n.groupName,
+	})
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])
+}
+
+// NewNacosWRRServiceProvider creates new ServiceProvider instance
+func NewNacosWRRServiceProvider(namingClient naming_client.INamingClient, serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
+	provider := &NacosWRRServiceProvider{
+		nacosBase{
+			serviceName:  serviceName,
+			namingClient: namingClient,
+		},
+	}
+	for _, opt := range opts {
+		opt(provider)
+	}
+	return provider
 }
