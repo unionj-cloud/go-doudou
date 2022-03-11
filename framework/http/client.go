@@ -335,6 +335,7 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 		HealthyOnly: true,
 	})
 	if err != nil {
+		logger.Error(fmt.Sprintf("[go-doudou] error:%s", err))
 		return ""
 	}
 	sort.Sort(instance(instances))
@@ -373,6 +374,7 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 		GroupName:   n.groupName,
 	})
 	if err != nil {
+		logger.Error(fmt.Sprintf("[go-doudou] error:%s", err))
 		return ""
 	}
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])
