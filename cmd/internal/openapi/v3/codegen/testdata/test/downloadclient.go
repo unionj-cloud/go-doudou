@@ -23,6 +23,11 @@ import (
 type DownloadClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *DownloadClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *DownloadClient) SetProvider(provider registry.IServiceProvider) {
@@ -101,7 +106,7 @@ func NewDownload(opts ...ddhttp.DdClientOption) *DownloadClient {
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 

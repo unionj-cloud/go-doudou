@@ -18,6 +18,11 @@ import (
 type UserClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *UserClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *UserClient) SetProvider(provider registry.IServiceProvider) {
@@ -26,35 +31,6 @@ func (receiver *UserClient) SetProvider(provider registry.IServiceProvider) {
 
 func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
-}
-
-// PostUserCreateWithList Creates list of users with given input array
-// Creates list of users with given input array
-func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers map[string]string,
-	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_req.SetBody(bodyJSON)
-
-	_resp, _err = _req.Post("/user/createWithList")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
 }
 
 // GetUserUsername Get user by user name
@@ -87,11 +63,40 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[st
 	return
 }
 
+// PostUserCreateWithList Creates list of users with given input array
+// Creates list of users with given input array
+func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers map[string]string,
+	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetBody(bodyJSON)
+
+	_resp, _err = _req.Post("/user/createWithList")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
 // GetUserLogin Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
 		Password *string `json:"password,omitempty" url:"password"`
+		Username *string `json:"username,omitempty" url:"username"`
 	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
@@ -130,7 +135,7 @@ func NewUser(opts ...ddhttp.DdClientOption) *UserClient {
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 

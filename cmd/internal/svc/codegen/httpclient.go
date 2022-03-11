@@ -41,6 +41,11 @@ import (
 type {{.Meta.Name}}Client struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *{{.Meta.Name}}Client) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *{{.Meta.Name}}Client) SetProvider(provider registry.IServiceProvider) {
@@ -287,7 +292,7 @@ func New{{.Meta.Name}}Client(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Clien
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 

@@ -17,6 +17,11 @@ import (
 type UnipayClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *UnipayClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *UnipayClient) SetProvider(provider registry.IServiceProvider) {
@@ -29,13 +34,13 @@ func (receiver *UnipayClient) SetClient(client *resty.Client) {
 func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context, _headers map[string]string,
 	queryParams struct {
 		// required
-		CompanyId string `json:"companyId,omitempty" url:"companyId"`
-		// required
-		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
-		// required
 		TxnAmt string `json:"txnAmt,omitempty" url:"txnAmt"`
 		// required
 		Token string `json:"token,omitempty" url:"token"`
+		// required
+		CompanyId string `json:"companyId,omitempty" url:"companyId"`
+		// required
+		FrontUrl string `json:"frontUrl,omitempty" url:"frontUrl"`
 	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
@@ -74,7 +79,7 @@ func NewUnipay(opts ...ddhttp.DdClientOption) *UnipayClient {
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 

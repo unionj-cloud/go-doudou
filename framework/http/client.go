@@ -26,6 +26,7 @@ import (
 type DdClient interface {
 	SetProvider(provider registry.IServiceProvider)
 	SetClient(client *resty.Client)
+	SetRootPath(rootPath string)
 }
 
 // DdClientOption defines configure function type
@@ -42,6 +43,13 @@ func WithProvider(provider registry.IServiceProvider) DdClientOption {
 func WithClient(client *resty.Client) DdClientOption {
 	return func(c DdClient) {
 		c.SetClient(client)
+	}
+}
+
+// WithRootPath sets root path for sending http requests
+func WithRootPath(rootPath string) DdClientOption {
+	return func(c DdClient) {
+		c.SetRootPath(rootPath)
 	}
 }
 

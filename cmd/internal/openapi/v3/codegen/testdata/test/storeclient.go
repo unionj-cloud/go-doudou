@@ -17,6 +17,11 @@ import (
 type StoreClient struct {
 	provider registry.IServiceProvider
 	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *StoreClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
 }
 
 func (receiver *StoreClient) SetProvider(provider registry.IServiceProvider) {
@@ -25,6 +30,34 @@ func (receiver *StoreClient) SetProvider(provider registry.IServiceProvider) {
 
 func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
+}
+
+// GetStoreInventory Returns pet inventories by status
+// Returns a map of status codes to quantities
+func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map[string]string) (ret struct {
+}, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+
+	_resp, _err = _req.Get("/store/inventory")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
 }
 
 // GetStoreOrderOrderId Find purchase order by ID
@@ -43,34 +76,6 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers 
 	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
 	_resp, _err = _req.Get("/store/order/{orderId}")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// GetStoreInventory Returns pet inventories by status
-// Returns a map of status codes to quantities
-func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map[string]string) (ret struct {
-}, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-
-	_resp, _err = _req.Get("/store/inventory")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -129,7 +134,7 @@ func NewStore(opts ...ddhttp.DdClientOption) *StoreClient {
 	}
 
 	svcClient.client.OnBeforeRequest(func(_ *resty.Client, request *resty.Request) error {
-		request.URL = svcClient.provider.SelectServer() + request.URL
+		request.URL = svcClient.provider.SelectServer() + svcClient.rootPath + request.URL
 		return nil
 	})
 
