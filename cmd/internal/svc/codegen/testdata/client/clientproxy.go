@@ -91,7 +91,7 @@ func (receiver *UsersvcClientProxy) SignUp(ctx context.Context, _headers map[str
 	return
 }
 func (receiver *UsersvcClientProxy) UploadAvatar(ctx context.Context, _headers map[string]string, pf []v3.FileModel, ps string, pf2 v3.FileModel, pf3 *multipart.FileHeader, pf4 []*multipart.FileHeader) (_resp *resty.Response, ri int, ri2 interface{}, re error) {
-	if _err := receiver.runner.Run(pc, func(ctx context.Context) error {
+	if _err := receiver.runner.Run(ctx, func(ctx context.Context) error {
 		_resp, ri, ri2, re = receiver.client.UploadAvatar(
 			ctx,
 			_headers,

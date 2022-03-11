@@ -27,20 +27,7 @@ var appendTmpl = `
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
-
-		{{- $ctxSet := false }}
-		{{- range $p := $m.Params }}
-			{{- if not $ctxSet }}
-				{{- if eq $p.Type "context.Context" }}
-		if _err := receiver.runner.Run({{$p.Name}}, func(ctx context.Context) error {
-				{{- $ctxSet = true }}
-				{{- end }}
-			{{- end }}
-		{{- end }}
-		
-		{{- if not $ctxSet }}
-		if _err := receiver.runner.Run(context.Background(), func(ctx context.Context) error {
-		{{- end }}
+		if _err := receiver.runner.Run(ctx, func(ctx context.Context) error {
 			_resp, {{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.client.{{$m.Name}}(
 				ctx,
 				_headers,

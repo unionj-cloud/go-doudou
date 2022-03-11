@@ -71,6 +71,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		if len(_headers) > 0 {
 			_req.SetHeaders(_headers)
 		}
+		_req.SetContext(ctx)
 		{{- range $p := $m.Params }}
 		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if contains $p.Type "["}}
@@ -133,7 +134,6 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 		{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
-		_req.SetContext({{$p.Name}})
 		{{- else if not (isBuiltin $p)}}
 		_req.SetBody({{$p.Name}})
 		{{- else if isSlice $p.Type }}

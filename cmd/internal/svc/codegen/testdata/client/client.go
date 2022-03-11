@@ -156,7 +156,7 @@ func (receiver *UsersvcClient) UploadAvatar(ctx context.Context, _headers map[st
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetContext(pc)
+	_req.SetContext(ctx)
 	if len(pf) == 0 {
 		re = errors.New("at least one file should be uploaded for parameter pf")
 		return
