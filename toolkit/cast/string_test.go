@@ -597,6 +597,14 @@ func TestToBoolE(t *testing.T) {
 			want:    false,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: "",
+			},
+			want:    false,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -755,6 +763,50 @@ func TestToByteSliceE(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToByteSliceE() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToBoolOrDefault(t *testing.T) {
+	type args struct {
+		s string
+		d bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "",
+			args: args{
+				s: "true",
+				d: false,
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: "21a",
+				d: true,
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: "",
+				d: true,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToBoolOrDefault(tt.args.s, tt.args.d); got != tt.want {
+				t.Errorf("ToBoolOrDefault() = %v, want %v", got, tt.want)
 			}
 		})
 	}

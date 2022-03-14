@@ -122,21 +122,13 @@ func ToBoolE(s string) (bool, error) {
 	return false, fmt.Errorf("unable to cast string %#v to bool", s)
 }
 
-//func ToComplex64E(s string) (complex64, error) {
-//	v, err := strconv.ParseComplex(s, 64)
-//	if err == nil {
-//		return complex64(v), nil
-//	}
-//	return 0, fmt.Errorf("unable to cast string %#v to complex64", s)
-//}
-//
-//func ToComplex128E(s string) (complex128, error) {
-//	v, err := strconv.ParseComplex(s, 128)
-//	if err == nil {
-//		return v, nil
-//	}
-//	return 0, fmt.Errorf("unable to cast string %#v to complex128", s)
-//}
+func ToBoolOrDefault(s string, d bool) bool {
+	enableGzip := d
+	if eg, err := ToBoolE(s); err == nil {
+		enableGzip = eg
+	}
+	return enableGzip
+}
 
 func ToRuneSliceE(s string) ([]rune, error) {
 	return []rune(s), nil

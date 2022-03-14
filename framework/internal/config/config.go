@@ -54,6 +54,9 @@ const (
 	GddManageUser envVariable = "GDD_MANAGE_USER"
 	// GddManagePass manage api endpoint http basic auth password
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
+
+	GddEnableResponseGzip envVariable = "GDD_ENABLE_RESPONSE_GZIP"
+
 	// GddMemSeed sets cluster seeds for joining
 	GddMemSeed envVariable = "GDD_MEM_SEED"
 	// GddMemName unique name of this node in cluster. if empty or not set, hostname will be used instead

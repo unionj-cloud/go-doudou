@@ -53,11 +53,10 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		tracing,
 		metrics,
 	)
-	logReq := config.DefaultGddLogReqEnable
-	if l, err := cast.ToBoolE(config.GddLogReqEnable.Load()); err == nil {
-		logReq = l
+	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
+		srv.middlewares = append(srv.middlewares, handlers.CompressHandler)
 	}
-	if logReq {
+	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
 		srv.middlewares = append(srv.middlewares, log)
 	}
 	srv.middlewares = append(srv.middlewares,
