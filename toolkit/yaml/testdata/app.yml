@@ -1,0 +1,5 @@
+gdd:
+  port: 6060
+  tracing:
+    metrics:
+      root: "go-doudou"

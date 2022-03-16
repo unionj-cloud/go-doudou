@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
 	"os"
 	"strconv"
 )
@@ -12,6 +13,7 @@ func init() {
 	if "" == env {
 		env = "dev"
 	}
+	yaml.Load(env)
 	dotenv.Load(env)
 }
 

@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
+	github.com/jeremywohl/flatten v1.0.1
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -66,6 +67,7 @@ require (
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.4.1
 	github.com/hashicorp/errwrap v1.1.0 // indirect
