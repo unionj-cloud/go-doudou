@@ -41,9 +41,9 @@ func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context, _headers ma
 		// required
 		Ps string `json:"ps,omitempty" url:"ps"`
 	},
-	pf3 *v3.FileModel,
 	pf []v3.FileModel,
-	pf2 *v3.FileModel) (ret UploadAvatar2Resp, _resp *resty.Response, err error) {
+	pf2 *v3.FileModel,
+	pf3 *v3.FileModel) (ret UploadAvatar2Resp, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -53,9 +53,6 @@ func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context, _headers ma
 	}
 	_bodyParams, _ := _querystring.Values(bodyParams)
 	_req.SetFormDataFromValues(_bodyParams)
-	if pf3 != nil {
-		_req.SetFileReader("pf3", pf3.Filename, pf3.Reader)
-	}
 	if len(pf) == 0 {
 		err = errors.New("at least one file should be uploaded for parameter pf")
 		return
@@ -65,6 +62,9 @@ func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context, _headers ma
 	}
 	if pf2 != nil {
 		_req.SetFileReader("pf2", pf2.Filename, pf2.Reader)
+	}
+	if pf3 != nil {
+		_req.SetFileReader("pf3", pf3.Filename, pf3.Reader)
 	}
 
 	_resp, _err = _req.Post("/upload/avatar/2")
