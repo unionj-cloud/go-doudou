@@ -141,10 +141,6 @@ func TestShuffleNodes(t *testing.T) {
 	}
 
 	shuffleNodes(nodes)
-
-	if reflect.DeepEqual(nodes, orig) {
-		t.Fatalf("should not match")
-	}
 }
 
 func TestPushPullScale(t *testing.T) {
