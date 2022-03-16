@@ -4,25 +4,22 @@ import (
 	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/jeremywohl/flatten"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func load(file string) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
+func load(data []byte) error {
 	config := make(map[string]interface{})
-	err = yaml.Unmarshal(data, &config)
+	err := yaml.Unmarshal(data, &config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	flat, err := flatten.Flatten(config, "", flatten.UnderscoreStyle)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	currentEnv := map[string]bool{}
 	rawEnv := os.Environ()
@@ -36,6 +33,26 @@ func load(file string) {
 			_ = os.Setenv(upperK, fmt.Sprint(v))
 		}
 	}
+	return nil
+}
+
+func LoadReader(reader io.Reader) error {
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+	return load(data)
+}
+
+func loadFile(file string) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	err = load(data)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Load(env string) {
@@ -45,7 +62,7 @@ func Load(env string) {
 		panic(err)
 	}
 	for _, item := range matches {
-		load(item)
+		loadFile(item)
 	}
 	if "test" != env {
 		matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-local.%s", "y*ml")))
@@ -53,7 +70,7 @@ func Load(env string) {
 			panic(err)
 		}
 		for _, item := range matches {
-			load(item)
+			loadFile(item)
 		}
 	}
 	matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s.%s", env, "y*ml")))
@@ -61,13 +78,13 @@ func Load(env string) {
 		panic(err)
 	}
 	for _, item := range matches {
-		load(item)
+		loadFile(item)
 	}
 	matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app.%s", "y*ml")))
 	if err != nil {
 		panic(err)
 	}
 	for _, item := range matches {
-		load(item)
+		loadFile(item)
 	}
 }

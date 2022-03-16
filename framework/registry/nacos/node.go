@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/go-sockaddr"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
@@ -13,11 +12,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	"net"
-	"net/url"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -63,78 +59,11 @@ func getServiceName() string {
 }
 
 func NewNode(data ...map[string]interface{}) {
-	namespaceId := config.DefaultGddNacosNamespaceId
-	if stringutils.IsNotEmpty(config.GddNacosNamespaceId.Load()) {
-		namespaceId = config.GddNacosNamespaceId.Load()
-	}
-	timeoutMs := config.DefaultGddNacosTimeoutMs
-	if stringutils.IsNotEmpty(config.GddNacosTimeoutMs.Load()) {
-		if t, err := cast.ToIntE(config.GddNacosTimeoutMs.Load()); err == nil {
-			timeoutMs = t
-		}
-	}
-	notLoadCacheAtStart := config.DefaultGddNacosNotLoadCacheAtStart
-	if stringutils.IsNotEmpty(config.GddNacosNotLoadCacheAtStart.Load()) {
-		notLoadCacheAtStart, _ = cast.ToBoolE(config.GddNacosNotLoadCacheAtStart.Load())
-	}
-	logDir := config.DefaultGddNacosLogDir
-	if stringutils.IsNotEmpty(config.GddNacosLogDir.Load()) {
-		logDir = config.GddNacosLogDir.Load()
-	}
-	cacheDir := config.DefaultGddNacosCacheDir
-	if stringutils.IsNotEmpty(config.GddNacosCacheDir.Load()) {
-		cacheDir = config.GddNacosCacheDir.Load()
-	}
-	logLevel := config.DefaultGddNacosLogLevel
-	if stringutils.IsNotEmpty(config.GddNacosLogLevel.Load()) {
-		logLevel = config.GddNacosLogLevel.Load()
-	}
-	clientConfig := *constant.NewClientConfig(
-		constant.WithNamespaceId(namespaceId),
-		constant.WithTimeoutMs(uint64(timeoutMs)),
-		constant.WithNotLoadCacheAtStart(notLoadCacheAtStart),
-		constant.WithLogDir(logDir),
-		constant.WithCacheDir(cacheDir),
-		constant.WithLogLevel(logLevel),
-	)
-	serverAddrStr := config.DefaultGddNacosServerAddr
-	if stringutils.IsNotEmpty(config.GddNacosServerAddr.Load()) {
-		serverAddrStr = config.GddNacosServerAddr.Load()
-	}
-	var serverConfigs []constant.ServerConfig
-	addrs := strings.Split(serverAddrStr, ",")
-	for _, addr := range addrs {
-		u, err := url.Parse(addr)
-		if err != nil {
-			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
-		}
-		host, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
-		}
-		serverPort, err := cast.ToIntE(port)
-		if err != nil {
-			logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
-		}
-		serverConfigs = append(serverConfigs, *constant.NewServerConfig(
-			host,
-			uint64(serverPort),
-			constant.WithScheme(u.Scheme),
-			constant.WithContextPath(u.Path),
-		))
-	}
-
 	var err error
-	NamingClient, err = clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &clientConfig,
-			ServerConfigs: serverConfigs,
-		},
-	)
+	NamingClient, err = clients.NewNamingClient(config.GetNacosClientParam())
 	if err != nil {
 		logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 	}
-
 	registerHost := getRegisterHost()
 	httpPort := getPort()
 	service := getServiceName()

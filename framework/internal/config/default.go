@@ -1,5 +1,7 @@
 package config
 
+import "github.com/unionj-cloud/go-doudou/framework/configmgr"
+
 const FrameworkName = "Go-doudou"
 
 const (
@@ -23,7 +25,6 @@ const (
 	DefaultGddManagePass         = "admin"
 	DefaultGddTracingMetricsRoot = FrameworkName
 	DefaultGddWeight             = 1
-	DefaultGddEnableResponseGzip = true
 
 	// Default configs for memberlist component
 	DefaultGddMemSeed           = ""
@@ -55,4 +56,10 @@ const (
 	DefaultGddNacosLogLevel            = "info"
 	DefaultGddNacosServerAddr          = ""
 	DefaultGddNacosRegisterHost        = ""
+
+	DefaultGddNacosConfigFormat = configmgr.DotenvConfigFormat
+	DefaultGddNacosConfigGroup  = "DEFAULT_GROUP"
+
+	DefaultGddEnableResponseGzip = true
+	DefaultGddConfigRemoteType   = ""
 )

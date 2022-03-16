@@ -1,11 +1,21 @@
 package config
 
 import (
+	"fmt"
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/vo"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"net"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func init() {
@@ -15,6 +25,28 @@ func init() {
 	}
 	yaml.Load(env)
 	dotenv.Load(env)
+
+	configType := DefaultGddConfigRemoteType
+	if stringutils.IsNotEmpty(GddConfigRemoteType.Load()) {
+		configType = GddConfigRemoteType.Load()
+	}
+	switch configType {
+	case nacosConfigType:
+		nacosConfigFormat := DefaultGddNacosConfigFormat
+		if stringutils.IsNotEmpty(GddNacosConfigFormat.Load()) {
+			nacosConfigFormat = GddNacosConfigFormat.Load()
+		}
+		nacosConfigGroup := DefaultGddNacosConfigGroup
+		if stringutils.IsNotEmpty(GddNacosConfigGroup.Load()) {
+			nacosConfigGroup = GddNacosConfigGroup.Load()
+		}
+		err := configmgr.LoadFromNacos(env, GetNacosClientParam(), GddServiceName.Load(), nacosConfigFormat, nacosConfigGroup)
+		if err != nil {
+			logrus.Warn(errors.Wrap(err, "[go-doudou] fail to load config from Nacos"))
+		}
+	default:
+
+	}
 }
 
 type envVariable string
@@ -22,6 +54,10 @@ type envVariable string
 func (receiver envVariable) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.Quote(receiver.Load())), nil
 }
+
+const (
+	nacosConfigType = "nacos"
+)
 
 const (
 	// GddBanner indicates banner enabled or not
@@ -58,6 +94,8 @@ const (
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
 	GddEnableResponseGzip envVariable = "GDD_ENABLE_RESPONSE_GZIP"
+	// GddConfigRemoteType has only one option available: nacos
+	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"
 
 	// GddMemSeed sets cluster seeds for joining
 	GddMemSeed envVariable = "GDD_MEM_SEED"
@@ -116,11 +154,15 @@ const (
 	GddNacosNamespaceId         envVariable = "GDD_NACOS_NAMESPACE_ID"
 	GddNacosTimeoutMs           envVariable = "GDD_NACOS_TIMEOUT_MS"
 	GddNacosNotLoadCacheAtStart envVariable = "GDD_NACOS_NOT_LOAD_CACHE_AT_START"
+	GddNacosNotloadcacheatstart envVariable = "GDD_NACOS_NOTLOADCACHEATSTART"
 	GddNacosLogDir              envVariable = "GDD_NACOS_LOG_DIR"
 	GddNacosCacheDir            envVariable = "GDD_NACOS_CACHE_DIR"
 	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
 	GddNacosServerAddr          envVariable = "GDD_NACOS_SERVER_ADDR"
 	GddNacosRegisterHost        envVariable = "GDD_NACOS_REGISTER_HOST"
+	// GddNacosConfigFormat has two options available: dotenv, yaml
+	GddNacosConfigFormat envVariable = "GDD_NACOS_CONFIG_FORMAT"
+	GddNacosConfigGroup  envVariable = "GDD_NACOS_CONFIG_GROUP"
 
 	// GddWeight node weight
 	GddWeight envVariable = "GDD_WEIGHT"
@@ -166,4 +208,74 @@ func (ll *LogLevel) Decode(value string) error {
 		*ll = LogLevel(logrus.InfoLevel)
 	}
 	return nil
+}
+
+func GetNacosClientParam() vo.NacosClientParam {
+	namespaceId := DefaultGddNacosNamespaceId
+	if stringutils.IsNotEmpty(GddNacosNamespaceId.Load()) {
+		namespaceId = GddNacosNamespaceId.Load()
+	}
+	timeoutMs := DefaultGddNacosTimeoutMs
+	if stringutils.IsNotEmpty(GddNacosTimeoutMs.Load()) {
+		if t, err := cast.ToIntE(GddNacosTimeoutMs.Load()); err == nil {
+			timeoutMs = t
+		}
+	}
+	notLoadCacheAtStart := DefaultGddNacosNotLoadCacheAtStart
+	if stringutils.IsNotEmpty(GddNacosNotLoadCacheAtStart.Load()) {
+		notLoadCacheAtStart, _ = cast.ToBoolE(GddNacosNotLoadCacheAtStart.Load())
+	} else if stringutils.IsNotEmpty(GddNacosNotloadcacheatstart.Load()) {
+		notLoadCacheAtStart, _ = cast.ToBoolE(GddNacosNotloadcacheatstart.Load())
+	}
+	logDir := DefaultGddNacosLogDir
+	if stringutils.IsNotEmpty(GddNacosLogDir.Load()) {
+		logDir = GddNacosLogDir.Load()
+	}
+	cacheDir := DefaultGddNacosCacheDir
+	if stringutils.IsNotEmpty(GddNacosCacheDir.Load()) {
+		cacheDir = GddNacosCacheDir.Load()
+	}
+	logLevel := DefaultGddNacosLogLevel
+	if stringutils.IsNotEmpty(GddNacosLogLevel.Load()) {
+		logLevel = GddNacosLogLevel.Load()
+	}
+	clientConfig := *constant.NewClientConfig(
+		constant.WithNamespaceId(namespaceId),
+		constant.WithTimeoutMs(uint64(timeoutMs)),
+		constant.WithNotLoadCacheAtStart(notLoadCacheAtStart),
+		constant.WithLogDir(logDir),
+		constant.WithCacheDir(cacheDir),
+		constant.WithLogLevel(logLevel),
+	)
+	serverAddrStr := DefaultGddNacosServerAddr
+	if stringutils.IsNotEmpty(GddNacosServerAddr.Load()) {
+		serverAddrStr = GddNacosServerAddr.Load()
+	}
+	var serverConfigs []constant.ServerConfig
+	addrs := strings.Split(serverAddrStr, ",")
+	for _, addr := range addrs {
+		u, err := url.Parse(addr)
+		if err != nil {
+			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		host, port, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		serverPort, err := cast.ToIntE(port)
+		if err != nil {
+			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		}
+		serverConfigs = append(serverConfigs, *constant.NewServerConfig(
+			host,
+			uint64(serverPort),
+			constant.WithScheme(u.Scheme),
+			constant.WithContextPath(u.Path),
+		))
+	}
+
+	return vo.NacosClientParam{
+		ClientConfig:  &clientConfig,
+		ServerConfigs: serverConfigs,
+	}
 }
