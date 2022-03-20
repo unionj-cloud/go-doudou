@@ -32,12 +32,10 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetStoreOrderOrderId Find purchase order by ID
-// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
-func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers map[string]string,
-	// ID of order that needs to be fetched
-	// required
-	orderId int64) (ret Order, _resp *resty.Response, err error) {
+// PostStoreOrder Place an order for a pet
+// Place a new order in the store
+func (receiver *StoreClient) PostStoreOrder(ctx context.Context, _headers map[string]string,
+	bodyJSON *Order) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -45,9 +43,9 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers 
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
+	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Get("/store/order/{orderId}")
+	_resp, _err = _req.Post("/store/order")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -91,10 +89,12 @@ func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map
 	return
 }
 
-// PostStoreOrder Place an order for a pet
-// Place a new order in the store
-func (receiver *StoreClient) PostStoreOrder(ctx context.Context, _headers map[string]string,
-	bodyJSON *Order) (ret Order, _resp *resty.Response, err error) {
+// GetStoreOrderOrderId Find purchase order by ID
+// For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
+func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers map[string]string,
+	// ID of order that needs to be fetched
+	// required
+	orderId int64) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -102,9 +102,9 @@ func (receiver *StoreClient) PostStoreOrder(ctx context.Context, _headers map[st
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetBody(bodyJSON)
+	_req.SetPathParam("orderId", fmt.Sprintf("%v", orderId))
 
-	_resp, _err = _req.Post("/store/order")
+	_resp, _err = _req.Get("/store/order/{orderId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
