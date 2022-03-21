@@ -123,11 +123,19 @@ func ToBoolE(s string) (bool, error) {
 }
 
 func ToBoolOrDefault(s string, d bool) bool {
-	enableGzip := d
+	result := d
 	if eg, err := ToBoolE(s); err == nil {
-		enableGzip = eg
+		result = eg
 	}
-	return enableGzip
+	return result
+}
+
+func ToIntOrDefault(s string, d int) int {
+	result := d
+	if eg, err := ToIntE(s); err == nil {
+		result = eg
+	}
+	return result
 }
 
 func ToRuneSliceE(s string) ([]rune, error) {

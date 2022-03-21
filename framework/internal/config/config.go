@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"github.com/apolloconfig/agollo/v4"
+	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/pkg/errors"
@@ -26,26 +28,50 @@ func init() {
 	yaml.Load(env)
 	dotenv.Load(env)
 
-	configType := DefaultGddConfigRemoteType
-	if stringutils.IsNotEmpty(GddConfigRemoteType.Load()) {
-		configType = GddConfigRemoteType.Load()
+	configType := GddConfigRemoteType.LoadOrDefault(DefaultGddConfigRemoteType)
+	if stringutils.IsNotEmpty(configType) && stringutils.IsEmpty(GddServiceName.Load()) {
+		panic(errors.New("[go-doudou] service name is required"))
 	}
 	switch configType {
 	case nacosConfigType:
-		nacosConfigFormat := DefaultGddNacosConfigFormat
-		if stringutils.IsNotEmpty(GddNacosConfigFormat.Load()) {
-			nacosConfigFormat = GddNacosConfigFormat.Load()
-		}
-		nacosConfigGroup := DefaultGddNacosConfigGroup
-		if stringutils.IsNotEmpty(GddNacosConfigGroup.Load()) {
-			nacosConfigGroup = GddNacosConfigGroup.Load()
-		}
+		nacosConfigFormat := GddNacosConfigFormat.LoadOrDefault(DefaultGddNacosConfigFormat)
+		nacosConfigGroup := GddNacosConfigGroup.LoadOrDefault(DefaultGddNacosConfigGroup)
 		err := configmgr.LoadFromNacos(env, GetNacosClientParam(), GddServiceName.Load(), nacosConfigFormat, nacosConfigGroup)
 		if err != nil {
 			logrus.Warn(errors.Wrap(err, "[go-doudou] fail to load config from Nacos"))
 		}
+	case apolloConfigType:
+		apolloCluster := GddApolloCluster.LoadOrDefault(DefaultGddApolloCluster)
+		apolloAddr := GddApolloAddr.LoadOrDefault(DefaultGddApolloAddr)
+		apolloNamespace := GddApolloNamespace.LoadOrDefault(DefaultGddApolloNamespace)
+		apolloBackup := cast.ToBoolOrDefault(GddApolloBackupEnable.Load(), DefaultGddApolloBackupEnable)
+		apolloBackupPath := GddApolloBackupPath.LoadOrDefault(DefaultGddApolloBackupPath)
+		apolloSecret := GddApolloSecret.LoadOrDefault(DefaultGddApolloSecret)
+		apolloMustStart := cast.ToBoolOrDefault(GddApolloMuststart.Load(), DefaultGddApolloMuststart)
+		apolloLogEnable := cast.ToBoolOrDefault(GddApolloLogEnable.Load(), DefaultGddApolloLogEnable)
+		if apolloLogEnable {
+			agollo.SetLogger(logrus.StandardLogger())
+		}
+		c := &config.AppConfig{
+			AppID:            GddServiceName.Load(),
+			Cluster:          apolloCluster,
+			IP:               apolloAddr,
+			NamespaceName:    apolloNamespace,
+			IsBackupConfig:   apolloBackup,
+			Secret:           apolloSecret,
+			BackupConfigPath: apolloBackupPath,
+			MustStart:        apolloMustStart,
+		}
+		err := configmgr.LoadFromApollo(c)
+		if err != nil {
+			err = errors.Wrap(err, "[go-doudou] fail to load config from Apollo")
+			if apolloMustStart {
+				panic(err)
+			}
+			logrus.Warn(err)
+		}
 	default:
-
+		logrus.Warnf("[go-doudou] unknown config type: %s\n", configType)
 	}
 }
 
@@ -56,7 +82,8 @@ func (receiver envVariable) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	nacosConfigType = "nacos"
+	nacosConfigType  = "nacos"
+	apolloConfigType = "apollo"
 )
 
 const (
@@ -94,7 +121,7 @@ const (
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
 	GddEnableResponseGzip envVariable = "GDD_ENABLE_RESPONSE_GZIP"
-	// GddConfigRemoteType has only one option available: nacos
+	// GddConfigRemoteType has two options available: nacos, apollo
 	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"
 
 	// GddMemSeed sets cluster seeds for joining
@@ -126,7 +153,8 @@ const (
 	GddMemProbeTimeout envVariable = "GDD_MEM_PROBE_TIMEOUT"
 	// GddMemSuspicionMult is the multiplier for determining the time an inaccessible node is considered suspect before declaring it dead.
 	// expose SuspicionMult property of memberlist.Config
-	GddMemSuspicionMult envVariable = "GDD_MEM_SUSPICION_MULT"
+	GddMemSuspicionMult  envVariable = "GDD_MEM_SUSPICION_MULT"
+	GddMemRetransmitMult envVariable = "GDD_MEM_RETRANSMIT_MULT"
 	// GddMemGossipNodes how many remote nodes you want to gossip messages
 	// expose GossipNodes property of memberlist.Config
 	GddMemGossipNodes envVariable = "GDD_MEM_GOSSIP_NODES"
@@ -166,11 +194,28 @@ const (
 
 	// GddWeight node weight
 	GddWeight envVariable = "GDD_WEIGHT"
+
+	GddApolloCluster      envVariable = "GDD_APOLLO_CLUSTER"
+	GddApolloAddr         envVariable = "GDD_APOLLO_ADDR"
+	GddApolloNamespace    envVariable = "GDD_APOLLO_NAMESPACE"
+	GddApolloBackupEnable envVariable = "GDD_APOLLO_BACKUP_ENABLE"
+	GddApolloBackupPath   envVariable = "GDD_APOLLO_BACKUP_PATH"
+	GddApolloMuststart    envVariable = "GDD_APOLLO_MUSTSTART"
+	GddApolloSecret       envVariable = "GDD_APOLLO_SECRET"
+	GddApolloLogEnable    envVariable = "GDD_APOLLO_LOG_ENABLE"
 )
 
 // Load loads value from environment variable
 func (receiver envVariable) Load() string {
 	return os.Getenv(string(receiver))
+}
+
+func (receiver envVariable) LoadOrDefault(d string) string {
+	val := d
+	if stringutils.IsNotEmpty(receiver.Load()) {
+		val = receiver.Load()
+	}
+	return val
 }
 
 // String return string representation for receiver
@@ -256,15 +301,15 @@ func GetNacosClientParam() vo.NacosClientParam {
 	for _, addr := range addrs {
 		u, err := url.Parse(addr)
 		if err != nil {
-			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+			panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 		}
 		host, port, err := net.SplitHostPort(u.Host)
 		if err != nil {
-			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+			panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 		}
 		serverPort, err := cast.ToIntE(port)
 		if err != nil {
-			logrus.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+			panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 		}
 		serverConfigs = append(serverConfigs, *constant.NewServerConfig(
 			host,

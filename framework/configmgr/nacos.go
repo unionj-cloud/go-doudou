@@ -6,7 +6,6 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
 	"os"
 	"strings"
@@ -62,9 +61,6 @@ func loadYaml(dataId, group string) error {
 }
 
 func LoadFromNacos(env string, param vo.NacosClientParam, service, format, group string) error {
-	if stringutils.IsEmpty(service) {
-		return errors.New("service name is required")
-	}
 	var err error
 	NacosConfigClient, err = clients.NewConfigClient(param)
 	if err != nil {

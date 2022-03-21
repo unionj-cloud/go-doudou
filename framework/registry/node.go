@@ -114,10 +114,7 @@ func newMeta(node *memberlist.Node) (mergedMeta, error) {
 
 func newConf() *memberlist.Config {
 	cfg := memberlist.DefaultWANConfig()
-	cidrs := config.DefaultGddMemCIDRsAllowed
-	if stringutils.IsNotEmpty(config.GddMemCIDRsAllowed.Load()) {
-		cidrs = config.GddMemCIDRsAllowed.Load()
-	}
+	cidrs := config.GddMemCIDRsAllowed.LoadOrDefault(config.DefaultGddMemCIDRsAllowed)
 	if stringutils.IsNotEmpty(cidrs) {
 		var err error
 		if cfg.CIDRsAllowed, err = memberlist.ParseCIDRs(strings.Split(cidrs, ",")); err != nil {
@@ -125,10 +122,7 @@ func newConf() *memberlist.Config {
 		}
 		logger.Infof(cfg.CIDRsAllowed[0].String())
 	}
-	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
-	if indirectChecks, err := cast.ToIntE(config.GddMemIndirectChecks.Load()); err == nil {
-		cfg.IndirectChecks = indirectChecks
-	}
+	cfg.IndirectChecks = cast.ToIntOrDefault(config.GddMemIndirectChecks.Load(), config.DefaultGddMemIndirectChecks)
 	minLevel := config.DefaultGddLogLevel
 	if stringutils.IsNotEmpty(config.GddLogLevel.Load()) {
 		minLevel = strings.ToUpper(config.GddLogLevel.Load())
@@ -142,10 +136,7 @@ func newConf() *memberlist.Config {
 		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERR", "INFO"},
 		MinLevel: logutils.LogLevel(minLevel),
 	}
-	disable := config.DefaultGddMemLogDisable
-	if d, err := cast.ToBoolE(config.GddMemLogDisable.Load()); err == nil {
-		disable = d
-	}
+	disable := cast.ToBoolOrDefault(config.GddMemLogDisable.Load(), config.DefaultGddMemLogDisable)
 	if disable {
 		lf.Writer = ioutil.Discard
 	} else {
@@ -207,14 +198,9 @@ func newConf() *memberlist.Config {
 			}
 		}
 	}
-	cfg.SuspicionMult = config.DefaultGddMemSuspicionMult
-	if sm, err := cast.ToIntE(config.GddMemSuspicionMult.Load()); err == nil {
-		cfg.SuspicionMult = sm
-	}
-	cfg.GossipNodes = config.DefaultGddMemGossipNodes
-	if gn, err := cast.ToIntE(config.GddMemGossipNodes.Load()); err == nil {
-		cfg.GossipNodes = gn
-	}
+	cfg.SuspicionMult = cast.ToIntOrDefault(config.GddMemSuspicionMult.Load(), config.DefaultGddMemSuspicionMult)
+	cfg.RetransmitMult = cast.ToIntOrDefault(config.GddMemRetransmitMult.Load(), config.DefaultGddMemRetransmitMult)
+	cfg.GossipNodes = cast.ToIntOrDefault(config.GddMemGossipNodes.Load(), config.DefaultGddMemGossipNodes)
 	cfg.GossipInterval, _ = time.ParseDuration(config.DefaultGddMemGossipInterval)
 	gossipIntervalStr := config.GddMemGossipInterval.Load()
 	if stringutils.IsNotEmpty(gossipIntervalStr) {

@@ -35,6 +35,7 @@ const (
 	DefaultGddMemProbeInterval  = "5s"
 	DefaultGddMemProbeTimeout   = "3s"
 	DefaultGddMemSuspicionMult  = 6
+	DefaultGddMemRetransmitMult = 4
 	DefaultGddMemGossipNodes    = 4
 	DefaultGddMemGossipInterval = "500ms"
 	DefaultGddMemTCPTimeout     = "30s"
@@ -62,4 +63,13 @@ const (
 
 	DefaultGddEnableResponseGzip = true
 	DefaultGddConfigRemoteType   = ""
+
+	DefaultGddApolloCluster      = "default"
+	DefaultGddApolloAddr         = ""
+	DefaultGddApolloNamespace    = "application.properties"
+	DefaultGddApolloBackupEnable = true
+	DefaultGddApolloBackupPath   = ""
+	DefaultGddApolloSecret       = ""
+	DefaultGddApolloMuststart    = false
+	DefaultGddApolloLogEnable    = false
 )
