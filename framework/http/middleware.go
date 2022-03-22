@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
+	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"
 	"github.com/felixge/httpsnoop"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -14,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/slok/goresilience"
 	"github.com/slok/goresilience/bulkhead"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -22,10 +24,44 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"runtime/debug"
 	"strings"
 	"time"
 )
+
+type httpConfigListener struct {
+	configmgr.BaseApolloListener
+}
+
+func (c *httpConfigListener) OnChange(event *storage.ChangeEvent) {
+	c.Lock.Lock()
+	defer c.Lock.Unlock()
+	if !c.SkippedFirstEvent {
+		c.SkippedFirstEvent = true
+		return
+	}
+	for key, value := range event.Changes {
+		upperKey := strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
+		if strings.HasPrefix(upperKey, "GDD_MANAGE_") {
+			_ = os.Setenv(upperKey, fmt.Sprint(value.NewValue))
+		}
+	}
+}
+
+func init() {
+	configType := config.GddConfigRemoteType.LoadOrDefault(config.DefaultGddConfigRemoteType)
+	switch configType {
+	case "":
+		return
+	case config.NacosConfigType:
+		// TODO
+	case config.ApolloConfigType:
+		configmgr.ApolloClient.AddChangeListener(&httpConfigListener{})
+	default:
+		logrus.Warnf("[go-doudou] from ddhttp pkg: unknown config type: %s\n", configType)
+	}
+}
 
 // metrics logs some metrics for http request
 func metrics(inner http.Handler) http.Handler {
@@ -233,25 +269,27 @@ func rest(inner http.Handler) http.Handler {
 }
 
 // basicAuth adds http basic auth validation
-func basicAuth(inner http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username := config.DefaultGddManageUser
-		if stringutils.IsNotEmpty(config.GddManageUser.Load()) {
-			username = config.GddManageUser.Load()
-		}
-		password := config.DefaultGddManagePass
-		if stringutils.IsNotEmpty(config.GddManagePass.Load()) {
-			password = config.GddManagePass.Load()
-		}
-		user, pass, ok := r.BasicAuth()
-		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
-			w.WriteHeader(401)
-			w.Write([]byte("Unauthorised.\n"))
-			return
-		}
-		inner.ServeHTTP(w, r)
-	})
+func basicAuth() func(inner http.Handler) http.Handler {
+	username := config.DefaultGddManageUser
+	password := config.DefaultGddManagePass
+	return func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if stringutils.IsNotEmpty(config.GddManageUser.Load()) {
+				username = config.GddManageUser.Load()
+			}
+			if stringutils.IsNotEmpty(config.GddManagePass.Load()) {
+				password = config.GddManagePass.Load()
+			}
+			user, pass, ok := r.BasicAuth()
+			if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
+				w.Header().Set("WWW-Authenticate", `Basic realm="Provide user name and password"`)
+				w.WriteHeader(401)
+				w.Write([]byte("Unauthorised.\n"))
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
 }
 
 // recovery handles panic from processing incoming http request

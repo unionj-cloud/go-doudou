@@ -172,10 +172,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
-	manage := config.DefaultGddManage
-	if m, err := cast.ToBoolE(config.GddManage.Load()); err == nil {
-		manage = m
-	}
+	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
 		srv.middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
@@ -202,7 +199,7 @@ func (srv *DefaultHttpSrv) Run() {
 			},
 		})
 		gddRouter.Use(corsOpts.Handler)
-		gddRouter.Use(basicAuth)
+		gddRouter.Use(basicAuth())
 		srv.gddRoutes = append(srv.gddRoutes, onlinedoc.Routes()...)
 		srv.gddRoutes = append(srv.gddRoutes, prometheus.Routes()...)
 		srv.gddRoutes = append(srv.gddRoutes, registry.Routes()...)

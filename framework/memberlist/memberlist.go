@@ -79,6 +79,10 @@ type Memberlist struct {
 	logger *log.Logger
 }
 
+func (m *Memberlist) UpdateConfig() {
+
+}
+
 // BuildVsnArray creates the array of Vsn
 func (conf *Config) BuildVsnArray() []uint8 {
 	return []uint8{
@@ -199,8 +203,10 @@ func newMemberlist(conf *Config) (*Memberlist, error) {
 		nodeTimers:           make(map[string]*suspicion),
 		awareness:            newAwareness(conf.AwarenessMaxMultiplier),
 		ackHandlers:          make(map[uint32]*ackHandler),
-		broadcasts:           &TransmitLimitedQueue{RetransmitMult: conf.RetransmitMult},
-		logger:               logger,
+		broadcasts: &TransmitLimitedQueue{RetransmitMultGetter: func() int {
+			return conf.RetransmitMult
+		}},
+		logger: logger,
 	}
 	m.broadcasts.NumNodes = func() int {
 		return m.estNumNodes()

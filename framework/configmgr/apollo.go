@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
+	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
+	"sync"
 )
 
 var ApolloClient agollo.Client
@@ -40,4 +42,12 @@ func LoadFromApollo(appConfig *config.AppConfig) error {
 		})
 	}
 	return nil
+}
+
+type BaseApolloListener struct {
+	SkippedFirstEvent bool
+	Lock              sync.Mutex
+}
+
+func (c *BaseApolloListener) OnNewestChange(event *storage.FullChangeEvent) {
 }

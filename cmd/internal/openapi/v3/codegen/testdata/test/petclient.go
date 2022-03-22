@@ -34,10 +34,12 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// PostPet Add a new pet to the store
-// Add a new pet to the store
-func (receiver *PetClient) PostPet(ctx context.Context, _headers map[string]string,
-	bodyJSON Pet) (ret Pet, _resp *resty.Response, err error) {
+// GetPetFindByStatus Finds Pets by status
+// Multiple status values can be provided with comma separated strings
+func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Status *string `json:"status,omitempty" url:"status"`
+	}) (ret []Pet, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -45,38 +47,10 @@ func (receiver *PetClient) PostPet(ctx context.Context, _headers map[string]stri
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetBody(bodyJSON)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err = _req.Post("/pet")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// PutPet Update an existing pet
-// Update an existing pet by Id
-func (receiver *PetClient) PutPet(ctx context.Context, _headers map[string]string,
-	bodyJSON *Pet) (ret Pet, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_req.SetBody(bodyJSON)
-
-	_resp, _err = _req.Put("/pet")
+	_resp, _err = _req.Get("/pet/findByStatus")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -109,6 +83,37 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[st
 	_req.SetQueryParamsFromValues(_queryParams)
 
 	_resp, _err = _req.Get("/pet/findByTags")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// GetPetPetId Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
+	// ID of pet to return
+	// required
+	petId int64) (ret Pet, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+
+	_resp, _err = _req.Get("/pet/{petId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -163,12 +168,10 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers
 	return
 }
 
-// GetPetFindByStatus Finds Pets by status
-// Multiple status values can be provided with comma separated strings
-func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Status *string `json:"status,omitempty" url:"status"`
-	}) (ret []Pet, _resp *resty.Response, err error) {
+// PostPet Add a new pet to the store
+// Add a new pet to the store
+func (receiver *PetClient) PostPet(ctx context.Context, _headers map[string]string,
+	bodyJSON Pet) (ret Pet, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -176,10 +179,9 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Get("/pet/findByStatus")
+	_resp, _err = _req.Post("/pet")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -195,12 +197,10 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[
 	return
 }
 
-// GetPetPetId Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
-	// ID of pet to return
-	// required
-	petId int64) (ret Pet, _resp *resty.Response, err error) {
+// PutPet Update an existing pet
+// Update an existing pet by Id
+func (receiver *PetClient) PutPet(ctx context.Context, _headers map[string]string,
+	bodyJSON *Pet) (ret Pet, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -208,9 +208,9 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Get("/pet/{petId}")
+	_resp, _err = _req.Put("/pet")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

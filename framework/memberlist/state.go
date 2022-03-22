@@ -122,7 +122,9 @@ func (m *Memberlist) schedule() {
 	// Create a new probeTicker
 	if m.config.ProbeInterval > 0 {
 		t := time.NewTicker(m.config.ProbeInterval)
-		go m.triggerFunc(m.config.ProbeInterval, t.C, stopCh, m.probe)
+		go m.triggerFuncDynamic(func() time.Duration {
+			return m.config.ProbeInterval
+		}, t, stopCh, m.probe)
 		m.tickers = append(m.tickers, t)
 	}
 
@@ -134,7 +136,9 @@ func (m *Memberlist) schedule() {
 	// Create a gossip ticker if needed
 	if m.config.GossipInterval > 0 && m.config.GossipNodes > 0 {
 		t := time.NewTicker(m.config.GossipInterval)
-		go m.triggerFunc(m.config.GossipInterval, t.C, stopCh, m.gossip)
+		go m.triggerFuncDynamic(func() time.Duration {
+			return m.config.GossipInterval
+		}, t, stopCh, m.gossip)
 		m.tickers = append(m.tickers, t)
 	}
 
@@ -172,6 +176,25 @@ func (m *Memberlist) triggerFunc(stagger time.Duration, C <-chan time.Time, stop
 	}
 }
 
+func (m *Memberlist) triggerFuncDynamic(getter func() time.Duration, t *time.Ticker, stop <-chan struct{}, f func()) {
+	stagger := getter()
+	randStagger := time.Duration(uint64(rand.Int63()) % uint64(stagger))
+	select {
+	case <-time.After(randStagger):
+	case <-stop:
+		return
+	}
+	for {
+		select {
+		case <-t.C:
+			t.Reset(getter())
+			f()
+		case <-stop:
+			return
+		}
+	}
+}
+
 // pushPullTrigger is used to periodically trigger a push/pull until
 // a stop tick arrives. We don't use triggerFunc since the push/pull
 // timer is dynamically scaled based on cluster size to avoid network
@@ -189,7 +212,7 @@ func (m *Memberlist) pushPullTrigger(stop <-chan struct{}) {
 
 	// Tick using a dynamic timer
 	for {
-		tickTime := pushPullScale(interval, m.estNumNodes())
+		tickTime := pushPullScale(m.config.PushPullInterval, m.estNumNodes())
 		select {
 		case <-time.After(tickTime):
 			m.pushPull()

@@ -19,7 +19,8 @@ type TransmitLimitedQueue struct {
 
 	// RetransmitMult is the multiplier used to determine the maximum
 	// number of retransmissions attempted.
-	RetransmitMult int
+	RetransmitMult       int
+	RetransmitMultGetter func() int
 
 	mu    sync.Mutex
 	tq    *btree.BTree // stores *limitedBroadcast as btree.Item
@@ -294,7 +295,11 @@ func (q *TransmitLimitedQueue) GetBroadcasts(overhead, limit int) [][]byte {
 		return nil
 	}
 
-	transmitLimit := retransmitLimit(q.RetransmitMult, q.NumNodes())
+	mult := q.RetransmitMult
+	if q.RetransmitMultGetter != nil {
+		mult = q.RetransmitMultGetter()
+	}
+	transmitLimit := retransmitLimit(mult, q.NumNodes())
 
 	var (
 		bytesUsed int

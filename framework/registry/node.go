@@ -3,12 +3,14 @@ package registry
 import (
 	"bytes"
 	"fmt"
+	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/hako/durafmt"
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
@@ -25,6 +27,7 @@ import (
 )
 
 var mlist *memberlist.Memberlist
+var mconf *memberlist.Config
 var BroadcastQueue *memberlist.TransmitLimitedQueue
 var events = &eventDelegate{}
 
@@ -122,7 +125,8 @@ func newConf() *memberlist.Config {
 		}
 		logger.Infof(cfg.CIDRsAllowed[0].String())
 	}
-	cfg.IndirectChecks = cast.ToIntOrDefault(config.GddMemIndirectChecks.Load(), config.DefaultGddMemIndirectChecks)
+	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
+	setGddMemIndirectChecks(cfg)
 	minLevel := config.DefaultGddLogLevel
 	if stringutils.IsNotEmpty(config.GddLogLevel.Load()) {
 		minLevel = strings.ToUpper(config.GddLogLevel.Load())
@@ -144,74 +148,23 @@ func newConf() *memberlist.Config {
 	}
 	cfg.LogOutput = lf
 	cfg.GossipToTheDeadTime, _ = time.ParseDuration(config.DefaultGddMemDeadTimeout)
-	deadTimeoutStr := config.GddMemDeadTimeout.Load()
-	if stringutils.IsNotEmpty(deadTimeoutStr) {
-		if deadTimeout, err := strconv.Atoi(deadTimeoutStr); err == nil {
-			cfg.GossipToTheDeadTime = time.Duration(deadTimeout) * time.Second
-		} else {
-			if duration, err := time.ParseDuration(deadTimeoutStr); err == nil {
-				cfg.GossipToTheDeadTime = duration
-			}
-		}
-	}
+	setGddMemDeadTimeout(cfg)
 	cfg.PushPullInterval, _ = time.ParseDuration(config.DefaultGddMemSyncInterval)
-	syncIntervalStr := config.GddMemSyncInterval.Load()
-	if stringutils.IsNotEmpty(syncIntervalStr) {
-		if syncInterval, err := strconv.Atoi(syncIntervalStr); err == nil {
-			cfg.PushPullInterval = time.Duration(syncInterval) * time.Second
-		} else {
-			if duration, err := time.ParseDuration(syncIntervalStr); err == nil {
-				cfg.PushPullInterval = duration
-			}
-		}
-	}
+	setGddMemSyncInterval(cfg)
 	cfg.DeadNodeReclaimTime, _ = time.ParseDuration(config.DefaultGddMemReclaimTimeout)
-	reclaimTimeoutStr := config.GddMemReclaimTimeout.Load()
-	if stringutils.IsNotEmpty(reclaimTimeoutStr) {
-		if reclaimTimeout, err := strconv.Atoi(reclaimTimeoutStr); err == nil {
-			cfg.DeadNodeReclaimTime = time.Duration(reclaimTimeout) * time.Second
-		} else {
-			if duration, err := time.ParseDuration(reclaimTimeoutStr); err == nil {
-				cfg.DeadNodeReclaimTime = duration
-			}
-		}
-	}
+	setGddMemReclaimTimeout(cfg)
 	cfg.ProbeInterval, _ = time.ParseDuration(config.DefaultGddMemProbeInterval)
-	probeIntervalStr := config.GddMemProbeInterval.Load()
-	if stringutils.IsNotEmpty(probeIntervalStr) {
-		if probeInterval, err := strconv.Atoi(probeIntervalStr); err == nil {
-			cfg.ProbeInterval = time.Duration(probeInterval) * time.Second
-		} else {
-			if duration, err := time.ParseDuration(probeIntervalStr); err == nil {
-				cfg.ProbeInterval = duration
-			}
-		}
-	}
+	setGddMemProbeInterval(cfg)
 	cfg.ProbeTimeout, _ = time.ParseDuration(config.DefaultGddMemProbeTimeout)
-	probeTimeoutStr := config.GddMemProbeTimeout.Load()
-	if stringutils.IsNotEmpty(probeTimeoutStr) {
-		if probeTimeout, err := strconv.Atoi(probeTimeoutStr); err == nil {
-			cfg.ProbeTimeout = time.Duration(probeTimeout) * time.Second
-		} else {
-			if duration, err := time.ParseDuration(probeTimeoutStr); err == nil {
-				cfg.ProbeTimeout = duration
-			}
-		}
-	}
-	cfg.SuspicionMult = cast.ToIntOrDefault(config.GddMemSuspicionMult.Load(), config.DefaultGddMemSuspicionMult)
-	cfg.RetransmitMult = cast.ToIntOrDefault(config.GddMemRetransmitMult.Load(), config.DefaultGddMemRetransmitMult)
-	cfg.GossipNodes = cast.ToIntOrDefault(config.GddMemGossipNodes.Load(), config.DefaultGddMemGossipNodes)
+	setGddMemProbeTimeout(cfg)
+	cfg.SuspicionMult = config.DefaultGddMemSuspicionMult
+	setGddMemSuspicionMult(cfg)
+	cfg.RetransmitMult = config.DefaultGddMemRetransmitMult
+	setGddMemRetransmitMult(cfg)
+	cfg.GossipNodes = config.DefaultGddMemGossipNodes
+	setGddMemGossipNodes(cfg)
 	cfg.GossipInterval, _ = time.ParseDuration(config.DefaultGddMemGossipInterval)
-	gossipIntervalStr := config.GddMemGossipInterval.Load()
-	if stringutils.IsNotEmpty(gossipIntervalStr) {
-		if gossipInterval, err := strconv.Atoi(gossipIntervalStr); err == nil {
-			cfg.GossipInterval = time.Duration(gossipInterval) * time.Millisecond
-		} else {
-			if duration, err := time.ParseDuration(gossipIntervalStr); err == nil {
-				cfg.GossipInterval = duration
-			}
-		}
-	}
+	setGddMemGossipInterval(cfg)
 	// if env GDD_MEM_WEIGHT is set to > 0, then disable weight calculation, client will always use the same weight
 	weight := config.DefaultGddWeight
 	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
@@ -271,7 +224,7 @@ func newConf() *memberlist.Config {
 }
 
 func newNode(data ...map[string]interface{}) error {
-	mconf := newConf()
+	mconf = newConf()
 	service := config.DefaultGddServiceName
 	if stringutils.IsNotEmpty(config.GddServiceName.Load()) {
 		service = config.GddServiceName.Load()
@@ -330,7 +283,9 @@ func newNode(data ...map[string]interface{}) error {
 			}
 			return mlist.NumMembers()
 		},
-		RetransmitMult: mconf.RetransmitMult,
+		RetransmitMultGetter: func() int {
+			return mconf.RetransmitMult
+		},
 	}
 	BroadcastQueue = queue
 	mconf.Delegate = &delegate{
@@ -350,7 +305,54 @@ func newNode(data ...map[string]interface{}) error {
 	baseUrl, _ := BaseUrl(local)
 	logger.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
 		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
+	registerConfigListener(mconf)
 	return nil
+}
+
+type memConfigListener struct {
+	configmgr.BaseApolloListener
+	memConf *memberlist.Config
+}
+
+func (c *memConfigListener) OnChange(event *storage.ChangeEvent) {
+	c.Lock.Lock()
+	defer c.Lock.Unlock()
+	if !c.SkippedFirstEvent {
+		c.SkippedFirstEvent = true
+		return
+	}
+	for key, value := range event.Changes {
+		upperKey := strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
+		if strings.HasPrefix(upperKey, "GDD_MEM_") {
+			_ = os.Setenv(upperKey, fmt.Sprint(value.NewValue))
+		}
+	}
+	setGddMemDeadTimeout(c.memConf)
+	setGddMemSyncInterval(c.memConf)
+	setGddMemReclaimTimeout(c.memConf)
+	setGddMemProbeInterval(c.memConf)
+	setGddMemGossipInterval(c.memConf)
+	setGddMemProbeTimeout(c.memConf)
+	setGddMemSuspicionMult(c.memConf)
+	setGddMemRetransmitMult(c.memConf)
+	setGddMemGossipNodes(c.memConf)
+	setGddMemIndirectChecks(c.memConf)
+}
+
+func registerConfigListener(memConf *memberlist.Config) {
+	configType := config.GddConfigRemoteType.LoadOrDefault(config.DefaultGddConfigRemoteType)
+	switch configType {
+	case "":
+		return
+	case config.NacosConfigType:
+		// TODO
+	case config.ApolloConfigType:
+		configmgr.ApolloClient.AddChangeListener(&memConfigListener{
+			memConf: memConf,
+		})
+	default:
+		logrus.Warnf("[go-doudou] from registry pkg: unknown config type: %s\n", configType)
+	}
 }
 
 func getModemap() map[string]struct{} {

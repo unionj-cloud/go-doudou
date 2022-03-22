@@ -33,14 +33,16 @@ func init() {
 		panic(errors.New("[go-doudou] service name is required"))
 	}
 	switch configType {
-	case nacosConfigType:
+	case "":
+		return
+	case NacosConfigType:
 		nacosConfigFormat := GddNacosConfigFormat.LoadOrDefault(DefaultGddNacosConfigFormat)
 		nacosConfigGroup := GddNacosConfigGroup.LoadOrDefault(DefaultGddNacosConfigGroup)
 		err := configmgr.LoadFromNacos(env, GetNacosClientParam(), GddServiceName.Load(), nacosConfigFormat, nacosConfigGroup)
 		if err != nil {
 			logrus.Warn(errors.Wrap(err, "[go-doudou] fail to load config from Nacos"))
 		}
-	case apolloConfigType:
+	case ApolloConfigType:
 		apolloCluster := GddApolloCluster.LoadOrDefault(DefaultGddApolloCluster)
 		apolloAddr := GddApolloAddr.LoadOrDefault(DefaultGddApolloAddr)
 		apolloNamespace := GddApolloNamespace.LoadOrDefault(DefaultGddApolloNamespace)
@@ -82,8 +84,8 @@ func (receiver envVariable) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	nacosConfigType  = "nacos"
-	apolloConfigType = "apollo"
+	NacosConfigType  = "nacos"
+	ApolloConfigType = "apollo"
 )
 
 const (
