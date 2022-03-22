@@ -1,27 +1,55 @@
 package configmgr
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/clients/config_client"
-	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"github.com/wubin1989/nacos-sdk-go/clients"
+	"github.com/wubin1989/nacos-sdk-go/clients/cache"
+	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
+	"github.com/wubin1989/nacos-sdk-go/util"
+	"github.com/wubin1989/nacos-sdk-go/vo"
 	"os"
 	"strings"
+	"sync"
 )
 
-var NacosConfigClient config_client.IConfigClient
+type nacosConfigType string
 
 const (
-	DotenvConfigFormat = "dotenv"
-	YamlConfigFormat   = "yaml"
+	DotenvConfigFormat nacosConfigType = "dotenv"
+	YamlConfigFormat   nacosConfigType = "yaml"
 )
 
-func fetchConfig(dataId, group string) (string, error) {
-	content, err := NacosConfigClient.GetConfig(vo.ConfigParam{
+type NacosConfigMgr struct {
+	dataIds     []string
+	group       string
+	format      nacosConfigType
+	namespaceId string
+	client      config_client.IConfigClient
+	listeners   cache.ConcurrentMap
+}
+
+var NacosClient *NacosConfigMgr
+
+type NacosChangeEvent struct {
+	Namespace, Group, DataId string
+	Changes                  map[string]maputils.Change
+}
+
+type NacosConfigListenerParam struct {
+	DataId   string
+	OnChange func(event *NacosChangeEvent)
+}
+
+func (m *NacosConfigMgr) fetchConfig(dataId string) (string, error) {
+	content, err := m.client.GetConfig(vo.ConfigParam{
 		DataId: dataId,
-		Group:  group,
+		Group:  m.group,
 	})
 	if err != nil {
 		return "", err
@@ -29,8 +57,8 @@ func fetchConfig(dataId, group string) (string, error) {
 	return content, nil
 }
 
-func loadDotenv(dataId, group string) error {
-	content, err := fetchConfig(dataId, group)
+func (m *NacosConfigMgr) loadDotenv(dataId string) error {
+	content, err := m.fetchConfig(dataId)
 	if err != nil {
 		return err
 	}
@@ -46,53 +74,115 @@ func loadDotenv(dataId, group string) error {
 	}
 	for key, value := range envMap {
 		if !currentEnv[key] {
-			os.Setenv(key, value)
+			_ = os.Setenv(key, value)
 		}
 	}
 	return nil
 }
 
-func loadYaml(dataId, group string) error {
-	content, err := fetchConfig(dataId, group)
+func (m *NacosConfigMgr) loadYaml(dataId string) error {
+	content, err := m.fetchConfig(dataId)
 	if err != nil {
 		return err
 	}
 	return yaml.LoadReader(strings.NewReader(content))
 }
 
-func LoadFromNacos(env string, param vo.NacosClientParam, service, format, group string) error {
-	var err error
-	NacosConfigClient, err = clients.NewConfigClient(param)
-	if err != nil {
-		return errors.Wrap(err, "[go-doudou] failed to create nacos config client")
-	}
-	switch format {
+var onceNacos sync.Once
+
+func LoadFromNacos(param vo.NacosClientParam, dataId, format, group string) error {
+	onceNacos.Do(func() {
+		client, err := clients.NewConfigClient(param)
+		if err != nil {
+			panic(errors.Wrap(err, "[go-doudou] failed to create nacos config client"))
+		}
+		dataIds := strings.Split(dataId, ",")
+		NacosClient = &NacosConfigMgr{
+			dataIds:     dataIds,
+			group:       group,
+			format:      nacosConfigType(format),
+			namespaceId: param.ClientConfig.NamespaceId,
+			client:      client,
+			listeners:   cache.NewConcurrentMap(),
+		}
+	})
+	switch nacosConfigType(format) {
 	case YamlConfigFormat:
-		err = loadYaml(service+"-"+env+".yml", group)
-		if err != nil {
-			return err
+		for _, item := range NacosClient.dataIds {
+			if err := NacosClient.loadYaml(item); err != nil {
+				return errors.Wrap(err, "[go-doudou] failed to load yaml config")
+			}
 		}
-		err = loadYaml(service+".yml", group)
-		if err != nil {
-			return err
-		}
-		err = loadYaml("app.yml", group)
-		if err != nil {
-			return err
+	case DotenvConfigFormat:
+		for _, item := range NacosClient.dataIds {
+			if err := NacosClient.loadDotenv(item); err != nil {
+				return errors.Wrap(err, "[go-doudou] failed to load dotenv config")
+			}
 		}
 	default:
-		err = loadDotenv(service+".env."+env, group)
-		if err != nil {
-			return err
-		}
-		err = loadDotenv(service+".env", group)
-		if err != nil {
-			return err
-		}
-		err = loadDotenv(".env", group)
-		if err != nil {
-			return err
+		return fmt.Errorf("[go-doudou] unknown config format: %s\n" + format)
+	}
+	NacosClient.listenConfig()
+	return nil
+}
+
+func (m *NacosConfigMgr) listenConfig() {
+	for _, dataId := range m.dataIds {
+		if err := m.client.ListenConfig(vo.ConfigParam{
+			DataId: dataId,
+			Group:  m.group,
+			OnChange: func(namespace, group, dataId, data, old string) {
+				var newData, oldData map[string]interface{}
+				var err error
+				switch m.format {
+				case YamlConfigFormat:
+					if newData, err = yaml.LoadReaderAsMap(strings.NewReader(data)); err != nil {
+						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+						return
+					}
+					if oldData, err = yaml.LoadReaderAsMap(strings.NewReader(old)); err != nil {
+						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+						return
+					}
+				case DotenvConfigFormat:
+					if newData, err = dotenv.LoadAsMap(strings.NewReader(data)); err != nil {
+						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+						return
+					}
+					if oldData, err = dotenv.LoadAsMap(strings.NewReader(old)); err != nil {
+						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+						return
+					}
+				}
+				changes := maputils.Diff(newData, oldData)
+				m.onChange("__"+dataId+"__"+"registry", group, namespace, changes)
+				m.onChange("__"+dataId+"__"+"ddhttp", group, namespace, changes)
+				m.onChange(dataId, group, namespace, changes)
+			},
+		}); err != nil {
+			panic(err)
 		}
 	}
-	return nil
+}
+
+func (m *NacosConfigMgr) onChange(dataId, group, namespace string, changes map[string]maputils.Change) {
+	key := util.GetConfigCacheKey(dataId, group, namespace)
+	if v, ok := m.listeners.Get(key); ok {
+		listener := v.(NacosConfigListenerParam)
+		listener.OnChange(&NacosChangeEvent{
+			Namespace: namespace,
+			Group:     group,
+			DataId:    dataId,
+			Changes:   changes,
+		})
+	}
+}
+
+func (m *NacosConfigMgr) AddChangeListener(param NacosConfigListenerParam) {
+	key := util.GetConfigCacheKey(param.DataId, m.group, m.namespaceId)
+	if _, ok := m.listeners.Get(key); ok {
+		logrus.Warnf("[go-doudou] you have already add a config change listener for dataId: %s, you cannot override it", param.DataId)
+		return
+	}
+	m.listeners.Set(key, param)
 }

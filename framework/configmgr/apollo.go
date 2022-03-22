@@ -12,17 +12,20 @@ import (
 	"sync"
 )
 
+var onceApollo sync.Once
 var ApolloClient agollo.Client
 
 func LoadFromApollo(appConfig *config.AppConfig) error {
-	var err error
-	ApolloClient, err = agollo.StartWithConfig(func() (*config.AppConfig, error) {
-		return appConfig, nil
+	onceApollo.Do(func() {
+		var err error
+		ApolloClient, err = agollo.StartWithConfig(func() (*config.AppConfig, error) {
+			return appConfig, nil
+		})
+		if err != nil {
+			panic(errors.Wrap(err, "[go-doudou] failed to initialise apollo client"))
+		}
+		logrus.Info("[go-doudou] initialise apollo client successfully")
 	})
-	if err != nil {
-		return errors.Wrap(err, "[go-doudou] failed to initialise apollo client")
-	}
-	logrus.Info("[go-doudou] initialise apollo client successfully")
 	currentEnv := map[string]bool{}
 	namespaces := strings.Split(appConfig.NamespaceName, ",")
 	for _, item := range namespaces {

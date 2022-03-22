@@ -88,3 +88,28 @@ func Load(env string) {
 		loadFile(item)
 	}
 }
+
+func LoadReaderAsMap(reader io.Reader) (map[string]interface{}, error) {
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return loadAsMap(data)
+}
+
+func LoadFileAsMap(file string) (map[string]interface{}, error) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	return loadAsMap(data)
+}
+
+func loadAsMap(data []byte) (map[string]interface{}, error) {
+	config := make(map[string]interface{})
+	err := yaml.Unmarshal(data, &config)
+	if err != nil {
+		return nil, err
+	}
+	return flatten.Flatten(config, "", flatten.DotStyle)
+}

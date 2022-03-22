@@ -66,38 +66,6 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[
 	return
 }
 
-// GetPetFindByTags Finds Pets by tags
-// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Tags *[]string `json:"tags,omitempty" url:"tags"`
-	}) (ret []Pet, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err = _req.Get("/pet/findByTags")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
 // GetPetPetId Find pet by ID
 // Returns a single pet
 func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
@@ -153,6 +121,38 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers
 	}
 
 	_resp, _err = _req.Post("/pet/{petId}/uploadImage")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// GetPetFindByTags Finds Pets by tags
+// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Tags *[]string `json:"tags,omitempty" url:"tags"`
+	}) (ret []Pet, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err = _req.Get("/pet/findByTags")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

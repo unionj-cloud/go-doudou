@@ -60,6 +60,7 @@ const (
 
 	DefaultGddNacosConfigFormat = configmgr.DotenvConfigFormat
 	DefaultGddNacosConfigGroup  = "DEFAULT_GROUP"
+	DefaultGddNacosConfigDataid = ""
 
 	DefaultGddEnableResponseGzip = true
 	DefaultGddConfigRemoteType   = ""

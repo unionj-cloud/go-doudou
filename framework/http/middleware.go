@@ -50,14 +50,36 @@ func (c *httpConfigListener) OnChange(event *storage.ChangeEvent) {
 }
 
 func init() {
+	listener := &httpConfigListener{}
 	configType := config.GddConfigRemoteType.LoadOrDefault(config.DefaultGddConfigRemoteType)
 	switch configType {
 	case "":
 		return
 	case config.NacosConfigType:
-		// TODO
+		dataIdStr := config.GddNacosConfigDataid.LoadOrDefault(config.DefaultGddNacosConfigDataid)
+		dataIds := strings.Split(dataIdStr, ",")
+		listener.SkippedFirstEvent = true
+		for _, dataId := range dataIds {
+			configmgr.NacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
+				DataId: "__" + dataId + "__" + "ddhttp",
+				OnChange: func(event *configmgr.NacosChangeEvent) {
+					changes := make(map[string]*storage.ConfigChange)
+					for k, v := range event.Changes {
+						changes[k] = &storage.ConfigChange{
+							OldValue:   v.OldValue,
+							NewValue:   v.NewValue,
+							ChangeType: storage.ConfigChangeType(v.ChangeType),
+						}
+					}
+					changeEvent := &storage.ChangeEvent{
+						Changes: changes,
+					}
+					listener.OnChange(changeEvent)
+				},
+			})
+		}
 	case config.ApolloConfigType:
-		configmgr.ApolloClient.AddChangeListener(&httpConfigListener{})
+		configmgr.ApolloClient.AddChangeListener(listener)
 	default:
 		logrus.Warnf("[go-doudou] from ddhttp pkg: unknown config type: %s\n", configType)
 	}

@@ -125,7 +125,6 @@ func newConf() *memberlist.Config {
 		}
 		logger.Infof(cfg.CIDRsAllowed[0].String())
 	}
-	cfg.IndirectChecks = config.DefaultGddMemIndirectChecks
 	setGddMemIndirectChecks(cfg)
 	minLevel := config.DefaultGddLogLevel
 	if stringutils.IsNotEmpty(config.GddLogLevel.Load()) {
@@ -147,23 +146,14 @@ func newConf() *memberlist.Config {
 		lf.Writer = logrus.StandardLogger().Writer()
 	}
 	cfg.LogOutput = lf
-	cfg.GossipToTheDeadTime, _ = time.ParseDuration(config.DefaultGddMemDeadTimeout)
 	setGddMemDeadTimeout(cfg)
-	cfg.PushPullInterval, _ = time.ParseDuration(config.DefaultGddMemSyncInterval)
 	setGddMemSyncInterval(cfg)
-	cfg.DeadNodeReclaimTime, _ = time.ParseDuration(config.DefaultGddMemReclaimTimeout)
 	setGddMemReclaimTimeout(cfg)
-	cfg.ProbeInterval, _ = time.ParseDuration(config.DefaultGddMemProbeInterval)
 	setGddMemProbeInterval(cfg)
-	cfg.ProbeTimeout, _ = time.ParseDuration(config.DefaultGddMemProbeTimeout)
 	setGddMemProbeTimeout(cfg)
-	cfg.SuspicionMult = config.DefaultGddMemSuspicionMult
 	setGddMemSuspicionMult(cfg)
-	cfg.RetransmitMult = config.DefaultGddMemRetransmitMult
 	setGddMemRetransmitMult(cfg)
-	cfg.GossipNodes = config.DefaultGddMemGossipNodes
 	setGddMemGossipNodes(cfg)
-	cfg.GossipInterval, _ = time.ParseDuration(config.DefaultGddMemGossipInterval)
 	setGddMemGossipInterval(cfg)
 	// if env GDD_MEM_WEIGHT is set to > 0, then disable weight calculation, client will always use the same weight
 	weight := config.DefaultGddWeight
@@ -324,6 +314,10 @@ func (c *memConfigListener) OnChange(event *storage.ChangeEvent) {
 	for key, value := range event.Changes {
 		upperKey := strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
 		if strings.HasPrefix(upperKey, "GDD_MEM_") {
+			if value.ChangeType == storage.DELETED {
+				_ = os.Unsetenv(upperKey)
+				continue
+			}
 			_ = os.Setenv(upperKey, fmt.Sprint(value.NewValue))
 		}
 	}
@@ -340,18 +334,40 @@ func (c *memConfigListener) OnChange(event *storage.ChangeEvent) {
 }
 
 func registerConfigListener(memConf *memberlist.Config) {
+	listener := &memConfigListener{
+		memConf: memConf,
+	}
 	configType := config.GddConfigRemoteType.LoadOrDefault(config.DefaultGddConfigRemoteType)
 	switch configType {
 	case "":
 		return
 	case config.NacosConfigType:
-		// TODO
+		dataIdStr := config.GddNacosConfigDataid.LoadOrDefault(config.DefaultGddNacosConfigDataid)
+		dataIds := strings.Split(dataIdStr, ",")
+		listener.SkippedFirstEvent = true
+		for _, dataId := range dataIds {
+			configmgr.NacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
+				DataId: "__" + dataId + "__" + "registry",
+				OnChange: func(event *configmgr.NacosChangeEvent) {
+					changes := make(map[string]*storage.ConfigChange)
+					for k, v := range event.Changes {
+						changes[k] = &storage.ConfigChange{
+							OldValue:   v.OldValue,
+							NewValue:   v.NewValue,
+							ChangeType: storage.ConfigChangeType(v.ChangeType),
+						}
+					}
+					changeEvent := &storage.ChangeEvent{
+						Changes: changes,
+					}
+					listener.OnChange(changeEvent)
+				},
+			})
+		}
 	case config.ApolloConfigType:
-		configmgr.ApolloClient.AddChangeListener(&memConfigListener{
-			memConf: memConf,
-		})
+		configmgr.ApolloClient.AddChangeListener(listener)
 	default:
-		logrus.Warnf("[go-doudou] from registry pkg: unknown config type: %s\n", configType)
+		panic(fmt.Errorf("[go-doudou] from registry pkg: unknown config type: %s\n", configType))
 	}
 }
 

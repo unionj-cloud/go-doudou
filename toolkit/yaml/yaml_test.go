@@ -31,3 +31,20 @@ func TestLoad_test(t *testing.T) {
 	rootPath := os.Getenv("GDD_ROUTE_ROOT_PATH")
 	require.Equal(t, "/api", rootPath)
 }
+
+func TestLoadReaderAsMap(t *testing.T) {
+	_ = os.Chdir("testdata")
+	f, _ := os.Open("app.yml")
+	result, err := yaml.LoadReaderAsMap(f)
+	require.NoError(t, err)
+	require.Equal(t, float64(6060), result["gdd.port"])
+	require.Equal(t, "go-doudou", result["gdd.tracing.metrics.root"])
+}
+
+func TestLoadFileAsMap(t *testing.T) {
+	_ = os.Chdir("testdata")
+	result, err := yaml.LoadFileAsMap("app.yml")
+	require.NoError(t, err)
+	require.Equal(t, float64(6060), result["gdd.port"])
+	require.Equal(t, "go-doudou", result["gdd.tracing.metrics.root"])
+}

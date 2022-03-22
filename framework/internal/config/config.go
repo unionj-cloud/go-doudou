@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
@@ -13,6 +11,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"github.com/wubin1989/nacos-sdk-go/common/constant"
+	"github.com/wubin1989/nacos-sdk-go/vo"
 	"net"
 	"net/url"
 	"os"
@@ -29,20 +29,24 @@ func init() {
 	dotenv.Load(env)
 
 	configType := GddConfigRemoteType.LoadOrDefault(DefaultGddConfigRemoteType)
-	if stringutils.IsNotEmpty(configType) && stringutils.IsEmpty(GddServiceName.Load()) {
-		panic(errors.New("[go-doudou] service name is required"))
-	}
 	switch configType {
 	case "":
 		return
 	case NacosConfigType:
-		nacosConfigFormat := GddNacosConfigFormat.LoadOrDefault(DefaultGddNacosConfigFormat)
+		nacosConfigFormat := GddNacosConfigFormat.LoadOrDefault(string(DefaultGddNacosConfigFormat))
 		nacosConfigGroup := GddNacosConfigGroup.LoadOrDefault(DefaultGddNacosConfigGroup)
-		err := configmgr.LoadFromNacos(env, GetNacosClientParam(), GddServiceName.Load(), nacosConfigFormat, nacosConfigGroup)
+		nacosConfigDataid := GddNacosConfigDataid.LoadOrDefault(DefaultGddNacosConfigDataid)
+		if stringutils.IsEmpty(nacosConfigDataid) {
+			panic(errors.New("[go-doudou] nacos config dataId is required"))
+		}
+		err := configmgr.LoadFromNacos(GetNacosClientParam(), nacosConfigDataid, nacosConfigFormat, nacosConfigGroup)
 		if err != nil {
-			logrus.Warn(errors.Wrap(err, "[go-doudou] fail to load config from Nacos"))
+			panic(errors.Wrap(err, "[go-doudou] fail to load config from Nacos"))
 		}
 	case ApolloConfigType:
+		if stringutils.IsEmpty(GddServiceName.Load()) {
+			panic(errors.New("[go-doudou] service name is required"))
+		}
 		apolloCluster := GddApolloCluster.LoadOrDefault(DefaultGddApolloCluster)
 		apolloAddr := GddApolloAddr.LoadOrDefault(DefaultGddApolloAddr)
 		apolloNamespace := GddApolloNamespace.LoadOrDefault(DefaultGddApolloNamespace)
@@ -73,7 +77,7 @@ func init() {
 			logrus.Warn(err)
 		}
 	default:
-		logrus.Warnf("[go-doudou] unknown config type: %s\n", configType)
+		panic(fmt.Errorf("[go-doudou] unknown config type: %s\n", configType))
 	}
 }
 
@@ -193,6 +197,7 @@ const (
 	// GddNacosConfigFormat has two options available: dotenv, yaml
 	GddNacosConfigFormat envVariable = "GDD_NACOS_CONFIG_FORMAT"
 	GddNacosConfigGroup  envVariable = "GDD_NACOS_CONFIG_GROUP"
+	GddNacosConfigDataid envVariable = "GDD_NACOS_CONFIG_DATAID"
 
 	// GddWeight node weight
 	GddWeight envVariable = "GDD_WEIGHT"
