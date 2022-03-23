@@ -34,38 +34,6 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetPetFindByStatus Finds Pets by status
-// Multiple status values can be provided with comma separated strings
-func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Status *string `json:"status,omitempty" url:"status"`
-	}) (ret []Pet, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err = _req.Get("/pet/findByStatus")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
 // GetPetPetId Find pet by ID
 // Returns a single pet
 func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
@@ -136,11 +104,11 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers
 	return
 }
 
-// GetPetFindByTags Finds Pets by tags
-// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[string]string,
+// GetPetFindByStatus Finds Pets by status
+// Multiple status values can be provided with comma separated strings
+func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Tags *[]string `json:"tags,omitempty" url:"tags"`
+		Status *string `json:"status,omitempty" url:"status"`
 	}) (ret []Pet, _resp *resty.Response, err error) {
 	var _err error
 
@@ -152,7 +120,7 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[st
 	_queryParams, _ := _querystring.Values(queryParams)
 	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err = _req.Get("/pet/findByTags")
+	_resp, _err = _req.Get("/pet/findByStatus")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -211,6 +179,38 @@ func (receiver *PetClient) PutPet(ctx context.Context, _headers map[string]strin
 	_req.SetBody(bodyJSON)
 
 	_resp, _err = _req.Put("/pet")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+// GetPetFindByTags Finds Pets by tags
+// Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Tags *[]string `json:"tags,omitempty" url:"tags"`
+	}) (ret []Pet, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err = _req.Get("/pet/findByTags")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

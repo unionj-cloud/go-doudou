@@ -38,7 +38,7 @@ func Test_pattern(t *testing.T) {
 			args: args{
 				method: "PostSelect_Books",
 			},
-			want: "select/books",
+			want: "select.books",
 		},
 	}
 	for _, tt := range tests {
