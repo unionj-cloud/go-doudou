@@ -48,7 +48,7 @@ func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
 
 func pattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(method)
+	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "."))
 	splits := strings.Split(snake, "_")
 	head := strings.ToUpper(splits[0])
 	if sliceutils.StringContains(httpMethods, head) {

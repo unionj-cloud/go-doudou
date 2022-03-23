@@ -126,3 +126,41 @@ func Routes(handler TestdatahttphandlerHandler) []ddmodel.Route {
 	}
 	assert.Equal(t, expect, string(content))
 }
+
+func Test_pattern1(t *testing.T) {
+	type args struct {
+		method string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				method: "GetHome_Html",
+			},
+			want: "home.html",
+		},
+		{
+			name: "",
+			args: args{
+				method: "GetHome_html",
+			},
+			want: "home.html",
+		},
+		{
+			name: "",
+			args: args{
+				method: "Get",
+			},
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, pattern(tt.args.method), "pattern(%v)", tt.args.method)
+		})
+	}
+}

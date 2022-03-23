@@ -127,6 +127,8 @@ const (
 	GddManagePass envVariable = "GDD_MANAGE_PASS"
 
 	GddEnableResponseGzip envVariable = "GDD_ENABLE_RESPONSE_GZIP"
+	GddAppType            envVariable = "GDD_APP_TYPE"
+
 	// GddConfigRemoteType has two options available: nacos, apollo
 	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"
 

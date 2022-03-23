@@ -62,8 +62,12 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 	srv.middlewares = append(srv.middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
-		rest,
 	)
+	appType := config.GddAppType.LoadOrDefault(config.DefaultGddAppType)
+	switch strings.TrimSpace(appType) {
+	case "rest":
+		srv.middlewares = append(srv.middlewares, rest)
+	}
 	return srv
 }
 

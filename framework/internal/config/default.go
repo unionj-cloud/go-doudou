@@ -63,6 +63,7 @@ const (
 	DefaultGddNacosConfigDataid = ""
 
 	DefaultGddEnableResponseGzip = true
+	DefaultGddAppType            = "rest"
 	DefaultGddConfigRemoteType   = ""
 
 	DefaultGddApolloCluster      = "default"
