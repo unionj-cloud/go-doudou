@@ -12,7 +12,6 @@
   <a href="https://codecov.io/gh/unionj-cloud/go-doudou"><img src="https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885" alt="codecov"></a>
   <a href="https://goreportcard.com/report/github.com/unionj-cloud/go-doudou"><img src="https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou" alt="Go Report Card"></a>
   <a href="https://github.com/unionj-cloud/go-doudou"><img src="https://img.shields.io/github/v/release/unionj-cloud/go-doudou?style=flat-square" alt="Release"></a>
-  <a href="https://goproxy.cn"><img src="https://goproxy.cn/stats/github.com/unionj-cloud/go-doudou/badges/download-count.svg" alt="Goproxy.cn"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://wakatime.com/badge/user/852bcf22-8a37-460a-a8e2-115833174eba/project/57c830f7-e507-4cb1-9fd1-feedd96685f6"><img src="https://wakatime.com/badge/user/852bcf22-8a37-460a-a8e2-115833174eba/project/57c830f7-e507-4cb1-9fd1-feedd96685f6.svg" alt="License: MIT"></a>
 </p>
@@ -26,18 +25,21 @@
 - 🛠️ Built-in SWIM gossip protocol based service register and discovery mechanism to help you build a robust, scalable and decentralized service cluster.
 - 🔩 Powerful code generator cli built-in. After defining your interface methods, your only job is implementing your awesome idea.
 - ⚡ Born from the cloud-native era. Built-in CLI can speed up your product iteration.
-- 🔑 Built-in service governance support including client-side load balancer, rate limiter, circuit breaker, bulkhead, timeout, retry and more.
+- 🔑 Built-in service governance support including remote configuration management, client-side load balancer, rate limiter, circuit breaker, bulkhead, timeout, retry and more.
 - 📦️ Supporting both monolith and microservice architectures gives you flexibility to design your system.
 
-Go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI 3.0 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports RESTful service only.  
+Go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI v3 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports RESTful service only.  
 
-[Read the Docs to Learn More](https://go-doudou.github.io).
+Read the Docs [https://go-doudou.github.io](https://go-doudou.github.io) to Learn More.
 
 ## Credits
 
 Give credits to following repositories and all their contributors:
-- [https://github.com/hashicorp/memberlist](https://github.com/hashicorp/memberlist): go-doudou is relying on it to implement service register/discovery/fault tolerance feature.
-- [github.com/go-redis/redis_rate](github.com/go-redis/redis_rate): go-doudou is relying on it to implement redis based rate limit feature
+- [hashicorp/memberlist](https://github.com/hashicorp/memberlist): go-doudou is relying on it to implement service register/discovery/fault tolerance feature.
+- [gorilla/mux](https://github.com/gorilla/mux): go-doudou is relying on it to implement http router.
+- [go-redis/redis_rate](github.com/go-redis/redis_rate): go-doudou is relying on it to implement redis based rate limit feature
+- [apolloconfig/agollo](https://github.com/apolloconfig/agollo): go-doudou is relying on it to implement remote configuration management support for [Apollo](https://github.com/apolloconfig/apollo)
+- [nacos-group/nacos-sdk-go](https://github.com/nacos-group/nacos-sdk-go): go-doudou is relying on it to implement service discovery and remote configuration management support for [Nacos](https://github.com/alibaba/nacos)
 
 ## Community
 
