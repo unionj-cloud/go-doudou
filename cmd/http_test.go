@@ -1,6 +1,7 @@
-package cmd
+package cmd_test
 
 import (
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ func TestHttpCmd(t *testing.T) {
 	dir := filepath.Join(testDir, "testsvc")
 	_ = os.Chdir(dir)
 	// go-doudou svc http --handler -c go -o
-	_, _, err := ExecuteCommandC(rootCmd, []string{"svc", "http", "--handler", "-c", "go", "-o"}...)
+	_, _, err := ExecuteCommandC(cmd.GetRootCmd(), []string{"svc", "http", "--handler", "-c", "go", "-o"}...)
 	if err != nil {
 		t.Fatal(err)
 	}

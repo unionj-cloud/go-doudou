@@ -1,7 +1,8 @@
-package cmd
+package cmd_test
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,6 +15,6 @@ func TestShutdownCmd(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Panics(t, func() {
-		ExecuteCommandC(rootCmd, []string{"svc", "shutdown"}...)
+		ExecuteCommandC(cmd.GetRootCmd(), []string{"svc", "shutdown"}...)
 	})
 }

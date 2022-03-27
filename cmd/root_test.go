@@ -1,11 +1,12 @@
-package cmd
+package cmd_test
 
 import (
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"testing"
 	"time"
 )
 
 func TestRootCmd(t *testing.T) {
-	go rootCmd.Run(nil, nil)
+	go cmd.GetRootCmd().Run(nil, nil)
 	time.Sleep(2 * time.Second)
 }

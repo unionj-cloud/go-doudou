@@ -1,6 +1,7 @@
-package cmd
+package cmd_test
 
 import (
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 func TestInitCmd(t *testing.T) {
 	dir := testDir + "/initcmd"
 	// go-doudou svc init ordersvc
-	_, _, err := ExecuteCommandC(rootCmd, []string{"svc", "init", dir}...)
+	_, _, err := ExecuteCommandC(cmd.GetRootCmd(), []string{"svc", "init", dir}...)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,15 +1,15 @@
-package cmd
+package cmd_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"os"
 	"testing"
 )
 
 func TestPushCmd(t *testing.T) {
 	dir := testDir + "/pushcmd"
-	receiver := svc.NewMockSvc(dir)
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
@@ -17,6 +17,6 @@ func TestPushCmd(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Panics(t, func() {
-		ExecuteCommandC(rootCmd, []string{"svc", "push", "-r", "testprivaterepo"}...)
+		ExecuteCommandC(cmd.GetRootCmd(), []string{"svc", "push", "-r", "testprivaterepo"}...)
 	})
 }

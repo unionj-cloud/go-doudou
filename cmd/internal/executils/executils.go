@@ -9,10 +9,15 @@ import (
 type Runner interface {
 	Run(string, ...string) error
 	Start(string, ...string) (*exec.Cmd, error)
+	Output(string, ...string) ([]byte, error)
 }
 
 // CmdRunner implements Runner interface
 type CmdRunner struct{}
+
+func (r CmdRunner) Output(command string, args ...string) ([]byte, error) {
+	return exec.Command(command, args...).Output()
+}
 
 // Run executes commands
 func (r CmdRunner) Run(command string, args ...string) error {

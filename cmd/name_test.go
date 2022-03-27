@@ -1,8 +1,8 @@
-package cmd
+package cmd_test
 
 import (
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +10,7 @@ import (
 
 func TestNameCmd(t *testing.T) {
 	dir := testDir + "/namecmd"
-	receiver := svc.NewMockSvc(dir)
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
@@ -18,7 +18,7 @@ func TestNameCmd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// go-doudou name -f /Users/wubin1989/workspace/chengdutreeyee/team3-cloud-analyse/vo/vo.go -o
-	_, _, err = ExecuteCommandC(rootCmd, []string{"name", "-f", filepath.Join(dir, "vo", "vo.go"), "-o"}...)
+	_, _, err = ExecuteCommandC(cmd.GetRootCmd(), []string{"name", "-f", filepath.Join(dir, "vo", "vo.go"), "-o"}...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestNameCmd(t *testing.T) {
 
 func TestGetImportPath(t *testing.T) {
 	dir := testDir + "/importpath"
-	receiver := svc.NewMockSvc(dir)
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)

@@ -1,4 +1,4 @@
-package svc
+package svc_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/executils"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"os"
 	"os/exec"
@@ -18,6 +19,44 @@ var testDir string
 
 func init() {
 	testDir = pathutils.Abs("testdata")
+}
+
+// NewMockSvc new Svc instance for unit test purpose
+func NewMockSvc(dir string) svc.Svc {
+	return svc.NewSvc(dir, svc.WithRunner(mockRunner{}))
+}
+
+type mockRunner struct {
+}
+
+func (r mockRunner) Output(command string, args ...string) ([]byte, error) {
+	return []byte("go version go1.17.8 darwin/amd64"), nil
+}
+
+func (r mockRunner) Run(command string, args ...string) error {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (r mockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	return cmd, nil
 }
 
 func TestSvc_Create(t *testing.T) {
@@ -37,9 +76,7 @@ func TestSvc_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			receiver := Svc{
-				dir: tt.fields.Dir,
-			}
+			receiver := svc.NewSvc(tt.fields.Dir)
 			receiver.Init()
 			defer os.RemoveAll(tt.fields.Dir)
 		})
@@ -93,14 +130,12 @@ func TestSvc_Http(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			receiver := Svc{
-				dir:          tt.fields.Dir,
-				Handler:      tt.fields.Handler,
-				Client:       tt.fields.Client,
-				Omitempty:    tt.fields.Omitempty,
-				Doc:          tt.fields.Doc,
-				Jsonattrcase: tt.fields.Jsonattrcase,
-			}
+			receiver := svc.NewSvc(tt.fields.Dir)
+			receiver.Handler = tt.fields.Handler
+			receiver.Client = tt.fields.Client
+			receiver.Omitempty = tt.fields.Omitempty
+			receiver.Doc = tt.fields.Doc
+			receiver.Jsonattrcase = tt.fields.Jsonattrcase
 			assert.NotPanics(t, func() {
 				receiver.Init()
 			})
@@ -132,7 +167,7 @@ func Test_checkIc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -158,7 +193,7 @@ func Test_checkIc2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -184,7 +219,7 @@ func Test_checkIc1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -210,7 +245,7 @@ func Test_checkIc_no_interface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -236,7 +271,7 @@ func Test_checkIc_input_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -262,7 +297,7 @@ func Test_checkIc_output_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				validateRestApi(ic)
+				svc.ValidateRestApi(ic)
 			})
 		})
 	}
@@ -286,26 +321,24 @@ func TestSvc_Shutdown(t *testing.T) {
 
 func Test_validateDataType(t *testing.T) {
 	assert.NotPanics(t, func() {
-		validateDataType(testDir)
+		svc.ValidateDataType(testDir)
 	})
 }
 
 func Test_validateDataType_shouldpanic(t *testing.T) {
 	assert.Panics(t, func() {
-		validateDataType(pathutils.Abs("testdata1"))
+		svc.ValidateDataType(pathutils.Abs("testdata1"))
 	})
 }
 
 func Test_GenClient(t *testing.T) {
 	defer os.RemoveAll(filepath.Join(testDir, "client"))
-	s := Svc{
-		dir:       testDir,
-		DocPath:   filepath.Join(testDir, "testfilesdoc1_openapi3.json"),
-		Omitempty: true,
-		ClientPkg: "client",
-	}
+	receiver := svc.NewSvc(testDir)
+	receiver.DocPath = filepath.Join(testDir, "testfilesdoc1_openapi3.json")
+	receiver.ClientPkg = "client"
+	receiver.Omitempty = true
 	assert.NotPanics(t, func() {
-		s.GenClient()
+		receiver.GenClient()
 	})
 }
 
@@ -325,34 +358,34 @@ func TestHelperProcess(*testing.T) {
 
 func TestSvc_run(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
-	s.run()
+	s.DoRun()
 }
 
 func TestSvc_restart(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata"))
-	s.cmd = s.run()
-	s.restart()
+	s.DoRun()
+	s.DoRestart()
 }
 
 func TestSvc_watch(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata/change"))
-	s.w = watcher.New()
-	go s.watch()
+	s.SetWatcher(watcher.New())
+	go s.DoWatch()
 	time.Sleep(1 * time.Second)
-	f, _ := os.Create(filepath.Join(s.dir, "change.go"))
+	f, _ := os.Create(filepath.Join(s.GetDir(), "change.go"))
 	defer f.Close()
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
-	s.w.Close()
+	s.GetWatcher().Close()
 }
 
 func TestSvc_Run(t *testing.T) {
 	s := NewMockSvc(pathutils.Abs("./testdata/change"))
-	s.w = watcher.New()
-	defer s.w.Close()
+	s.SetWatcher(watcher.New())
+	defer s.GetWatcher().Close()
 	go s.Run(true)
 	time.Sleep(1 * time.Second)
-	f, _ := os.Create(filepath.Join(s.dir, "change.go"))
+	f, _ := os.Create(filepath.Join(s.GetDir(), "change.go"))
 	defer f.Close()
 	f.WriteString("test")
 	time.Sleep(6 * time.Second)
@@ -392,7 +425,7 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			receiver := Svc{}
+			receiver := svc.Svc{}
 			assert.Panics(t, func() {
 				receiver.GenClient()
 			})
@@ -402,10 +435,8 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 
 func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
 	defer os.RemoveAll(filepath.Join(testDir, "openapi", "client"))
-	receiver := Svc{
-		dir:       filepath.Join(testDir, "openapi"),
-		ClientPkg: "client",
-	}
+	receiver := svc.NewSvc(filepath.Join(testDir, "openapi"))
+	receiver.ClientPkg = "client"
 	assert.NotPanics(t, func() {
 		receiver.GenClient()
 	})
@@ -413,6 +444,6 @@ func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
 
 func TestNewSvc(t *testing.T) {
 	assert.NotPanics(t, func() {
-		NewSvc("")
+		svc.NewSvc("")
 	})
 }

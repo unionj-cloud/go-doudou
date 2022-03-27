@@ -65,7 +65,7 @@ type Svc struct {
 	ImagePrefix string
 }
 
-func validateDataType(dir string) {
+func ValidateDataType(dir string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), codegen.ExprStringP)
 	vodir := filepath.Join(dir, "vo")
 	var files []string
@@ -75,14 +75,26 @@ func validateDataType(dir string) {
 	}
 }
 
+func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
+	receiver.w = w
+}
+
+func (receiver *Svc) GetWatcher() *watcher.Watcher {
+	return receiver.w
+}
+
+func (receiver *Svc) GetDir() string {
+	return receiver.dir
+}
+
 // Http generates main function, config files, db connection function, http routes, http handlers, service interface and service implementation
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver Svc) Http() {
 	dir := receiver.dir
-	validateDataType(dir)
+	ValidateDataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validateRestApi(ic)
+	ValidateRestApi(ic)
 
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
@@ -113,13 +125,13 @@ func (receiver Svc) Http() {
 	}
 }
 
-// validateRestApi is checking whether parameter types in each of service interface methods valid or not
+// ValidateRestApi is checking whether parameter types in each of service interface methods valid or not
 // Only support at most one golang non-built-in type as parameter in a service interface method
 // because go-doudou cannot put more than one parameter into request body except v3.FileModel.
 // If there are v3.FileModel parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
 // Not support anonymous struct as parameter
-func validateRestApi(ic astutils.InterfaceCollector) {
+func ValidateRestApi(ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
 	}
@@ -178,54 +190,28 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 
 // Init inits a project
 func (receiver Svc) Init() {
-	codegen.InitProj(receiver.dir, receiver.ModName)
+	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner)
+}
+
+type SvcOption func(svc *Svc)
+
+func WithRunner(runner executils.Runner) SvcOption {
+	return func(svc *Svc) {
+		svc.runner = runner
+	}
 }
 
 // NewSvc new Svc instance
-func NewSvc(dir string) Svc {
-	return Svc{
+func NewSvc(dir string, opts ...SvcOption) Svc {
+	ret := Svc{
 		dir:        dir,
 		runner:     executils.CmdRunner{},
 		restartSig: make(chan int),
 	}
-}
-
-type mockRunner struct {
-}
-
-func (r mockRunner) Run(command string, args ...string) error {
-	cs := []string{"-test.run=TestHelperProcess", "--"}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		panic(err)
+	for _, opt := range opts {
+		opt(&ret)
 	}
-	return nil
-}
-
-func (r mockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
-	cs := []string{"-test.run=TestHelperProcess", "--"}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		panic(err)
-	}
-	return cmd, nil
-}
-
-// NewMockSvc new Svc instance for unit test purpose
-func NewMockSvc(dir string) Svc {
-	return Svc{
-		dir:        dir,
-		runner:     mockRunner{},
-		restartSig: make(chan int),
-	}
+	return ret
 }
 
 // Push executes go mod vendor command first, then build docker image and push to remote image repository
@@ -316,7 +302,7 @@ func (receiver Svc) GenClient() {
 	client.GenGoClient(receiver.dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
 }
 
-func (receiver Svc) run() *exec.Cmd {
+func (receiver *Svc) DoRun() {
 	err := receiver.runner.Run("go", "build", filepath.FromSlash("cmd/main.go"))
 	if err != nil {
 		panic(err)
@@ -325,7 +311,7 @@ func (receiver Svc) run() *exec.Cmd {
 	if err != nil {
 		panic(err)
 	}
-	return start
+	receiver.cmd = start
 }
 
 //func terminateWinProc(pid int) error {
@@ -346,7 +332,7 @@ func (receiver Svc) run() *exec.Cmd {
 //}
 
 // TODO there is a bug here on windows
-func (receiver Svc) restart() *exec.Cmd {
+func (receiver *Svc) DoRestart() {
 	//if runtime.GOOS == "windows" {
 	//	if err := terminateWinProc(receiver.Cmd.Process.Pid); err != nil {
 	//		panic(err)
@@ -361,10 +347,10 @@ func (receiver Svc) restart() *exec.Cmd {
 			panic(err)
 		}
 	}
-	return receiver.run()
+	receiver.DoRun()
 }
 
-func (receiver Svc) watch() {
+func (receiver Svc) DoWatch() {
 	w := receiver.w
 	// SetMaxEvents to 1 to allow at most 1 event's to be received
 	// on the Event channel per watching cycle.
@@ -418,16 +404,16 @@ func (receiver Svc) watch() {
 
 // Run runs the project locally. Recommend to set watch flag to enable watch mode for rapid development.
 func (receiver Svc) Run(watch bool) {
-	receiver.cmd = receiver.run()
+	receiver.DoRun()
 	if watch {
 		if receiver.w == nil {
 			receiver.w = watcher.New()
 		}
-		go receiver.watch()
+		go receiver.DoWatch()
 		for {
 			select {
 			case <-receiver.restartSig:
-				receiver.cmd = receiver.restart()
+				receiver.DoRestart()
 			default:
 				time.Sleep(100 * time.Millisecond)
 			}

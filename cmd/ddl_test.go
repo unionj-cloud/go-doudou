@@ -1,13 +1,15 @@
-package cmd
+package cmd_test
 
 import (
 	"bytes"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/cmd"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/table"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -29,9 +31,47 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	return c, buf.String(), err
 }
 
+// NewMockSvc new Svc instance for unit test purpose
+func NewMockSvc(dir string) svc.Svc {
+	return svc.NewSvc(dir, svc.WithRunner(mockRunner{}))
+}
+
+type mockRunner struct {
+}
+
+func (r mockRunner) Output(command string, args ...string) ([]byte, error) {
+	return []byte("go version go1.17.8 darwin/amd64"), nil
+}
+
+func (r mockRunner) Run(command string, args ...string) error {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	c := exec.Command(os.Args[0], cs...)
+	c.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func (r mockRunner) Start(command string, args ...string) (*exec.Cmd, error) {
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	return cmd, nil
+}
+
 func TestDdlCmd(t *testing.T) {
 	dir := testDir + "/ddlcmd"
-	receiver := svc.NewMockSvc(dir)
+	receiver := NewMockSvc(dir)
 	receiver.Init()
 	defer os.RemoveAll(dir)
 	err := os.Chdir(dir)
@@ -45,7 +85,7 @@ func TestDdlCmd(t *testing.T) {
 	defer terminator()
 	defer db.Close()
 	// go-doudou ddl --dao --pre=ddl_ --domain=ddl/domain --env=ddl/.env
-	_, _, err = ExecuteCommandC(rootCmd, []string{"ddl", "--reverse", "--dao", "--pre=ddl_"}...)
+	_, _, err = ExecuteCommandC(cmd.GetRootCmd(), []string{"ddl", "--reverse", "--dao", "--pre=ddl_"}...)
 	if err != nil {
 		t.Fatal(err)
 	}

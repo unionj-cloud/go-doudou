@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/cmd/internal/executils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"os"
@@ -95,7 +96,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v1.0.3
+	github.com/unionj-cloud/go-doudou v1.0.4
 )`
 
 const gitignoreTmpl = `# Binaries for programs and plugins
@@ -141,10 +142,17 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-X 'github.com/union
 ENTRYPOINT ["/repo/api"]
 `
 
+func getGoVersionNum(goVersion string) string {
+	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(strings.TrimSpace(goVersion), "go"), "."))
+	nums := make([]interface{}, 2)
+	copy(nums, vnums)
+	return fmt.Sprintf("%s.%s", nums...)
+}
+
 // InitProj inits a service project
 // dir is root path
 // modName is module name
-func InitProj(dir string, modName string) {
+func InitProj(dir string, modName string, runner executils.Runner) {
 	var (
 		err       error
 		svcName   string
@@ -157,6 +165,7 @@ func InitProj(dir string, modName string) {
 		f         *os.File
 		tpl       *template.Template
 		envfile   string
+		out       []byte
 	)
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
@@ -166,8 +175,11 @@ func InitProj(dir string, modName string) {
 	gitInit(dir)
 	gitIgnore(dir)
 
-	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
-	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
+	if out, err = runner.Output("go", "version"); err != nil {
+		panic(err)
+	}
+	// go version go1.13 darwin/amd64
+	goVersion = getGoVersionNum(strings.Split(strings.TrimSpace(string(out)), " ")[2])
 	if stringutils.IsEmpty(modName) {
 		modName = filepath.Base(dir)
 	}
@@ -267,7 +279,7 @@ func InitProj(dir string, modName string) {
 	}
 }
 
-// InitSvc inits a service project
+// InitSvc inits a service project, test purpose only
 func InitSvc(dir string) {
 	var (
 		err       error
@@ -291,8 +303,7 @@ func InitSvc(dir string) {
 	gitInit(dir)
 	gitIgnore(dir)
 
-	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(runtime.Version(), "go"), "."))
-	goVersion = fmt.Sprintf("%s.%s%.s", vnums...)
+	goVersion = getGoVersionNum(runtime.Version())
 	modName = filepath.Base(dir)
 	modfile = filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {

@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "v1.0.3"
+const version = "v1.0.4"
 
 // rootCmd is the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,4 +33,8 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	customFormatter.FullTimestamp = true
 	logrus.SetFormatter(customFormatter)
+}
+
+func GetRootCmd() *cobra.Command {
+	return rootCmd
 }
