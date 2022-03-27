@@ -49,6 +49,9 @@ func init() {
 		}
 		apolloCluster := GddApolloCluster.LoadOrDefault(DefaultGddApolloCluster)
 		apolloAddr := GddApolloAddr.LoadOrDefault(DefaultGddApolloAddr)
+		if stringutils.IsEmpty(apolloAddr) {
+			panic(errors.New("[go-doudou] apollo config service address is required"))
+		}
 		apolloNamespace := GddApolloNamespace.LoadOrDefault(DefaultGddApolloNamespace)
 		apolloBackup := cast.ToBoolOrDefault(GddApolloBackupEnable.Load(), DefaultGddApolloBackupEnable)
 		apolloBackupPath := GddApolloBackupPath.LoadOrDefault(DefaultGddApolloBackupPath)

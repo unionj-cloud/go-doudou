@@ -8,6 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/config"
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
 )
 
 var dir string
@@ -23,6 +24,7 @@ var ddlCmd = &cobra.Command{
 	Short: "migration tool between database table structure and golang struct",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		yaml.Load(env)
 		dotenv.Load(env)
 		var conf config.DbConfig
 		err := envconfig.Process("db", &conf)
