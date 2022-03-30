@@ -109,6 +109,7 @@ func (receiver Svc) Http() {
 	default:
 		caseconvertor = strcase.ToLowerCamel
 	}
+	codegen.ParseVo(dir, ic)
 	if receiver.Handler {
 		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty, caseconvertor)
 	} else {

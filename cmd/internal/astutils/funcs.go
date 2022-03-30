@@ -166,6 +166,8 @@ type FieldMeta struct {
 	IsExport bool
 	// used in OpenAPI 3.0 spec as property name
 	DocName string
+	IsEnum  bool
+	Enums   []string
 }
 
 // StructMeta wraps struct info
@@ -175,6 +177,12 @@ type StructMeta struct {
 	Comments []string
 	Methods  []MethodMeta
 	IsExport bool
+}
+
+// EnumMeta wraps struct info
+type EnumMeta struct {
+	Name   string
+	Values []string
 }
 
 // ExprString return string representation from ast.Expr

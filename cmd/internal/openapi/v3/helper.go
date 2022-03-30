@@ -13,7 +13,9 @@ import (
 )
 
 // Schemas from components of OpenAPI3.0 json document
-var Schemas map[string]Schema
+var Schemas = make(map[string]Schema)
+
+var Enums = make(map[string]astutils.EnumMeta)
 
 // SchemaNames schema names from components of OpenAPI3.0 json document
 var SchemaNames []string
@@ -106,6 +108,16 @@ func handleDefaultCase(ft string) *Schema {
 					Ref: "#/components/schemas/" + title,
 				}
 			}
+		}
+		if enumMeta, ok := Enums[title]; ok {
+			enumSchema := &Schema{
+				Type: StringT,
+				Enum: enumMeta.Values,
+			}
+			if len(enumMeta.Values) > 0 {
+				enumSchema.Default = enumMeta.Values[0]
+			}
+			return enumSchema
 		}
 	}
 	return Any
@@ -223,9 +235,16 @@ func NewSchema(structmeta astutils.StructMeta) Schema {
 // IsBuiltin check whether field is built-in type https://pkg.go.dev/builtin or not
 func IsBuiltin(field astutils.FieldMeta) bool {
 	simples := []interface{}{Int, Int64, Bool, String, Float32, Float64}
+	types := []interface{}{IntegerT, StringT, BooleanT, NumberT}
 	pschema := SchemaOf(field)
 	if pschema == nil {
 		return false
 	}
-	return sliceutils.Contains(simples, pschema) || (pschema.Type == ArrayT && sliceutils.Contains(simples, pschema.Items))
+	if sliceutils.Contains(simples, pschema) || sliceutils.Contains(types, pschema.Type) {
+		return true
+	}
+	if pschema.Type == ArrayT && (sliceutils.Contains(simples, pschema.Items) || sliceutils.Contains(types, pschema.Items.Type)) {
+		return true
+	}
+	return false
 }

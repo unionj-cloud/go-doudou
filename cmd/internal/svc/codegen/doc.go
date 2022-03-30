@@ -55,6 +55,17 @@ func schemasOf(vofile string) []v3.Schema {
 	return ret
 }
 
+func enumsOf(vofile string) (map[string][]astutils.MethodMeta, map[string][]string) {
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := astutils.NewEnumCollector(ExprStringP)
+	ast.Walk(sc, root)
+	return sc.Methods, sc.Consts
+}
+
 const (
 	get    = "GET"
 	post   = "POST"
@@ -304,13 +315,78 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		fi      os.FileInfo
 		api     v3.API
 		data    []byte
-		vos     []v3.Schema
 		paths   map[string]v3.Path
 		tpl     *template.Template
 		sqlBuf  bytes.Buffer
 		source  string
 	)
-	v3helper.Schemas = make(map[string]v3.Schema)
+	svcname = ic.Interfaces[0].Name
+	docfile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.json")
+	fi, err = os.Stat(docfile)
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	if fi != nil {
+		logrus.Warningln("file " + docfile + " will be overwritten")
+	}
+	gofile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.go")
+	fi, err = os.Stat(gofile)
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	if fi != nil {
+		logrus.Warningln("file " + gofile + " will be overwritten")
+	}
+	paths = pathsOf(ic, routePatternStrategy)
+	api = v3.API{
+		Openapi: "3.0.2",
+		Info: &v3.Info{
+			Title:       svcname,
+			Description: strings.Join(ic.Interfaces[0].Comments, "\n"),
+			Version:     fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
+		},
+		Servers: []v3.Server{
+			{
+				URL: fmt.Sprintf("http://localhost:%d", 6060),
+			},
+		},
+		Paths: paths,
+		Components: &v3.Components{
+			Schemas: v3helper.Schemas,
+		},
+	}
+	data, err = json.Marshal(api)
+	err = ioutil.WriteFile(docfile, data, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	if tpl, err = template.New("doc.go.tmpl").Parse(gofileTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&sqlBuf, struct {
+		SvcPackage string
+		Doc        string
+	}{
+		SvcPackage: ic.Package.Name,
+		Doc:        string(data),
+	}); err != nil {
+		panic(err)
+	}
+	source = strings.TrimSpace(sqlBuf.String())
+	astutils.FixImport([]byte(source), gofile)
+}
+
+func ParseVo(dir string, ic astutils.InterfaceCollector) {
+	var (
+		err        error
+		svcname    string
+		docfile    string
+		gofile     string
+		fi         os.FileInfo
+		vos        []v3.Schema
+		allMethods map[string][]astutils.MethodMeta
+		allConsts  map[string][]string
+	)
 	svcname = ic.Interfaces[0].Name
 	docfile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.json")
 	fi, err = os.Stat(docfile)
@@ -337,48 +413,29 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	for _, file := range files {
 		v3helper.SchemaNames = append(v3helper.SchemaNames, getSchemaNames(file)...)
 	}
+	allMethods = make(map[string][]astutils.MethodMeta)
+	allConsts = make(map[string][]string)
+	for _, file := range files {
+		methods, consts := enumsOf(file)
+		for k, v := range methods {
+			allMethods[k] = append(allMethods[k], v...)
+		}
+		for k, v := range consts {
+			allConsts[k] = append(allConsts[k], v...)
+		}
+	}
+	for k, v := range allMethods {
+		if astutils.IsEnum(v) {
+			v3helper.Enums[k] = astutils.EnumMeta{
+				Name:   k,
+				Values: allConsts[k],
+			}
+		}
+	}
 	for _, file := range files {
 		vos = append(vos, schemasOf(file)...)
 	}
 	for _, item := range vos {
 		v3helper.Schemas[item.Title] = item
 	}
-	paths = pathsOf(ic, routePatternStrategy)
-	api = v3.API{
-		Openapi: "3.0.2",
-		Info: &v3.Info{
-			Title:       svcname,
-			Description: strings.Join(ic.Interfaces[0].Comments, "\n"),
-			Version:     fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT10)),
-		},
-		Servers: []v3.Server{
-			{
-				URL: fmt.Sprintf("http://localhost:%d", 6060),
-			},
-		},
-		Paths: paths,
-		Components: &v3.Components{
-			Schemas: v3helper.Schemas,
-		},
-	}
-	data, err = json.Marshal(api)
-	err = ioutil.WriteFile(docfile, data, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-
-	if tpl, err = template.New("doc.go.tmpl").Parse(gofileTmpl); err != nil {
-		panic(err)
-	}
-	if err = tpl.Execute(&sqlBuf, struct {
-		SvcPackage string
-		Doc        string
-	}{
-		SvcPackage: ic.Package.Name,
-		Doc:        string(data),
-	}); err != nil {
-		panic(err)
-	}
-	source = strings.TrimSpace(sqlBuf.String())
-	astutils.FixImport([]byte(source), gofile)
 }

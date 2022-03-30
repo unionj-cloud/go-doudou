@@ -17,6 +17,7 @@ type StructCollector struct {
 	Package          PackageMeta
 	NonStructTypeMap map[string]ast.Expr
 	exprString       func(ast.Expr) string
+	enums            map[string]EnumMeta
 }
 
 // Visit traverse each node from source code
@@ -36,13 +37,13 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 		return sc
 	case *ast.FuncDecl:
 		if spec.Recv != nil {
-			structName := strings.TrimPrefix(sc.exprString(spec.Recv.List[0].Type), "*")
-			methods, _ := sc.Methods[structName]
+			typeName := strings.TrimPrefix(sc.exprString(spec.Recv.List[0].Type), "*")
+			methods, _ := sc.Methods[typeName]
 			methods = append(methods, GetMethodMeta(spec))
 			if sc.Methods == nil {
 				sc.Methods = make(map[string][]MethodMeta)
 			}
-			sc.Methods[structName] = methods
+			sc.Methods[typeName] = methods
 		}
 	case *ast.GenDecl:
 		if spec.Tok == token.TYPE {
@@ -130,19 +131,30 @@ func (sc *StructCollector) DocFlatEmbed() []StructMeta {
 		}
 		result = append(result, _structMeta)
 	}
-
 	return result
 }
 
+type StructCollectorOption func(collector *StructCollector)
+
+func WithEnums(enums map[string]EnumMeta) StructCollectorOption {
+	return func(collector *StructCollector) {
+		collector.enums = enums
+	}
+}
+
 // NewStructCollector initializes an StructCollector
-func NewStructCollector(exprString func(ast.Expr) string) *StructCollector {
-	return &StructCollector{
+func NewStructCollector(exprString func(ast.Expr) string, opts ...StructCollectorOption) *StructCollector {
+	sc := &StructCollector{
 		Structs:          nil,
 		Methods:          make(map[string][]MethodMeta),
 		Package:          PackageMeta{},
 		NonStructTypeMap: make(map[string]ast.Expr),
 		exprString:       exprString,
 	}
+	for _, opt := range opts {
+		opt(sc)
+	}
+	return sc
 }
 
 // BuildStructCollector initializes an StructCollector and collects structs

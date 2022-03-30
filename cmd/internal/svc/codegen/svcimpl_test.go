@@ -93,7 +93,7 @@ func NewSvcimplappend(conf *config.Config, db *sqlx.DB) Svcimplappend {
 }
 `
 	defer func() {
-		os.WriteFile(file, []byte(original), os.ModePerm)
+		_ = ioutil.WriteFile(file, []byte(original), os.ModePerm)
 	}()
 	expect := `package service
 

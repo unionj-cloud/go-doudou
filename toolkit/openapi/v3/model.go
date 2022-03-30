@@ -213,7 +213,7 @@ type Schema struct {
 	MaxLength        int                `json:"maxLength,omitempty"`
 	MinLength        int                `json:"minLength,omitempty"`
 	Required         []string           `json:"required,omitempty"`
-	Enum             []interface{}      `json:"enum,omitempty"`
+	Enum             []string           `json:"enum,omitempty"`
 	AllOf            []*Schema          `json:"allOf,omitempty"`
 	OneOf            []*Schema          `json:"oneOf,omitempty"`
 	AnyOf            []*Schema          `json:"anyOf,omitempty"`
@@ -346,4 +346,18 @@ type FileModel struct {
 
 func (f *FileModel) Close() error {
 	return f.Reader.Close()
+}
+
+type IEnum interface {
+	StringSetter(value string)
+	StringGetter() string
+	UnmarshalJSON(bytes []byte) error
+	MarshalJSON() ([]byte, error)
+}
+
+var IEnumMethods = []string{
+	"func StringSetter(value string)",
+	"func StringGetter() string",
+	"func UnmarshalJSON(bytes []byte) error",
+	"func MarshalJSON() ([]byte, error)",
 }
