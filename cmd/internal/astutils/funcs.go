@@ -166,8 +166,6 @@ type FieldMeta struct {
 	IsExport bool
 	// used in OpenAPI 3.0 spec as property name
 	DocName string
-	IsEnum  bool
-	Enums   []string
 }
 
 // StructMeta wraps struct info

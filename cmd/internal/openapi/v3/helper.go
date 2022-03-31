@@ -240,11 +240,28 @@ func IsBuiltin(field astutils.FieldMeta) bool {
 	if pschema == nil {
 		return false
 	}
-	if sliceutils.Contains(simples, pschema) || sliceutils.Contains(types, pschema.Type) {
+	if sliceutils.Contains(simples, pschema) || (sliceutils.Contains(types, pschema.Type) && pschema.Format != BinaryF) {
 		return true
 	}
-	if pschema.Type == ArrayT && (sliceutils.Contains(simples, pschema.Items) || sliceutils.Contains(types, pschema.Items.Type)) {
+	if pschema.Type == ArrayT && (sliceutils.Contains(simples, pschema.Items) || (sliceutils.Contains(types, pschema.Items.Type) && pschema.Items.Format != BinaryF)) {
 		return true
 	}
 	return false
+}
+
+// IsEnum check whether field is enum
+func IsEnum(field astutils.FieldMeta) bool {
+	pschema := SchemaOf(field)
+	if pschema == nil {
+		return false
+	}
+	return len(pschema.Enum) > 0 || (pschema.Type == ArrayT && len(pschema.Items.Enum) > 0)
+}
+
+// ElementType get element type string from slice
+func ElementType(t string) string {
+	if IsVarargs(t) {
+		return strings.TrimPrefix(t, "...")
+	}
+	return t[strings.Index(t, "]")+1:]
 }

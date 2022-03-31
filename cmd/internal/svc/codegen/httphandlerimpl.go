@@ -235,7 +235,22 @@ var appendHttpHandlerImplTmpl = `
 		{{- $formParsed = true }}
 		{{- end }}
 		if _, exists := _req.Form["{{$p.Name}}"]; exists {
-			{{- if $p.Type | isSupport }}
+			{{- if IsEnum $p }}
+			{{- if isOptional $p.Type }}
+			{{- if not (isVarargs $p.Type) }}
+			{{$p.Name}} = new({{ TrimPrefix $p.Type "*"}})
+			{{- end }}
+			{{- end }}
+			for _, item := range _req.Form["{{$p.Name}}"] {
+				var _{{ $p.Name }} {{ ElementType $p.Type }}
+				_{{ $p.Name }}.StringSetter(item)
+				{{- if isOptional $p.Type }}
+				*{{ $p.Name }} = append(*{{ $p.Name }}, _{{ $p.Name }})
+				{{- else }}
+				{{ $p.Name }} = append({{ $p.Name }}, _{{ $p.Name }})
+				{{- end }}
+			}
+			{{- else if $p.Type | isSupport }}
 			if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
@@ -256,7 +271,22 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		} else {
 			if _, exists := _req.Form["{{$p.Name}}[]"]; exists {
-				{{- if $p.Type | isSupport }}
+				{{- if IsEnum $p }}
+				{{- if isOptional $p.Type }}
+				{{- if not (isVarargs $p.Type) }}
+				{{$p.Name}} = new({{ TrimPrefix $p.Type "*"}})
+				{{- end }}
+				{{- end }}
+				for _, item := range _req.Form["{{$p.Name}}[]"] {
+					var _{{ $p.Name }} {{ ElementType $p.Type }}
+					_{{ $p.Name }}.StringSetter(item)
+					{{- if isOptional $p.Type }}
+					*{{ $p.Name }} = append(*{{ $p.Name }}, _{{ $p.Name }})
+					{{- else }}
+					{{ $p.Name }} = append({{ $p.Name }}, _{{ $p.Name }})
+					{{- end }}
+				}
+				{{- else if $p.Type | isSupport }}
 				if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}[]"]); err != nil {
 					http.Error(_writer, err.Error(), http.StatusBadRequest)
 					return
@@ -289,7 +319,12 @@ var appendHttpHandlerImplTmpl = `
 		{{- $formParsed = true }}
 		{{- end }}
 		if _, exists := _req.Form["{{$p.Name}}"]; exists {
-			{{- if $p.Type | isSupport }}
+			{{- if IsEnum $p }}
+			{{- if isOptional $p.Type }}
+			{{$p.Name}} = new({{ TrimPrefix $p.Type "*"}})
+			{{- end }}
+			{{ $p.Name }}.StringSetter(_req.FormValue("{{$p.Name}}"))
+			{{- else if $p.Type | isSupport }}
 			if casted, err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
 				http.Error(_writer, err.Error(), http.StatusBadRequest)
 				return
@@ -482,6 +517,9 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["isVarargs"] = v3helper.IsVarargs
 	funcMap["toSlice"] = v3helper.ToSlice
 	funcMap["isSlice"] = v3helper.IsSlice
+	funcMap["IsEnum"] = v3helper.IsEnum
+	funcMap["TrimPrefix"] = strings.TrimPrefix
+	funcMap["ElementType"] = v3helper.ElementType
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}

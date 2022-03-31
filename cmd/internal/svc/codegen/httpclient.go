@@ -144,7 +144,11 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- else }}
 			for _, _item := range *{{$p.Name}} {
 			{{- end }}
+				{{- if IsEnum $p }}
+				_urlValues.Add("{{$p.Name}}", _item.StringGetter())
+				{{- else }}
 				_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
+				{{- end }}
 			}
 		}
 		{{- else }}
@@ -157,16 +161,28 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			return
 		}
 		for _, _item := range {{$p.Name}} {
+			{{- if IsEnum $p }}
+			_urlValues.Add("{{$p.Name}}", _item.StringGetter())
+			{{- else }}
 			_urlValues.Add("{{$p.Name}}", fmt.Sprintf("%v", _item))
+			{{- end }}
 		}
 		{{- end}}
 		{{- else }}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil { 
+            {{- if IsEnum $p }}
+			_urlValues.Set("{{$p.Name}}", {{$p.Name}}.StringGetter())
+			{{- else }}
 			_urlValues.Set("{{$p.Name}}", fmt.Sprintf("%v", *{{$p.Name}}))
+			{{- end }}
 		}
 		{{- else }}
+		{{- if IsEnum $p }}
+		_urlValues.Set("{{$p.Name}}", {{$p.Name}}.StringGetter())
+		{{- else }}
 		_urlValues.Set("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+		{{- end }}
 		{{- end }}
 		{{- end }}
 		{{- end }}
@@ -381,6 +397,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["convertCase"] = caseconvertor
 	funcMap["isSlice"] = v3helper.IsSlice
 	funcMap["isVarargs"] = v3helper.IsVarargs
+	funcMap["IsEnum"] = v3helper.IsEnum
 	if tpl, err = template.New("client.go.tmpl").Funcs(funcMap).Parse(clientTmpl); err != nil {
 		panic(err)
 	}

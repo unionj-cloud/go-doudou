@@ -270,14 +270,6 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 	}
 }
 
-func pathOf(method astutils.MethodMeta) v3.Path {
-	var ret v3.Path
-	hm := httpMethod(method.Name)
-	op := operationOf(method, hm)
-	reflect.ValueOf(&ret).Elem().FieldByName(strings.Title(strings.ToLower(hm))).Set(reflect.ValueOf(&op))
-	return ret
-}
-
 func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[string]v3.Path {
 	if len(ic.Interfaces) == 0 {
 		return nil
@@ -285,12 +277,20 @@ func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[strin
 	pathmap := make(map[string]v3.Path)
 	inter := ic.Interfaces[0]
 	for _, method := range inter.Methods {
-		v3path := pathOf(method)
 		endpoint := fmt.Sprintf("/%s", pattern(method.Name))
 		if routePatternStrategy == 1 {
 			endpoint = fmt.Sprintf("/%s/%s", strings.ToLower(inter.Name), noSplitPattern(method.Name))
 		}
-		pathmap[endpoint] = v3path
+		hm := httpMethod(method.Name)
+		op := operationOf(method, hm)
+		if val, ok := pathmap[endpoint]; ok {
+			reflect.ValueOf(&val).Elem().FieldByName(strings.Title(strings.ToLower(hm))).Set(reflect.ValueOf(&op))
+			pathmap[endpoint] = val
+		} else {
+			var v3path v3.Path
+			reflect.ValueOf(&v3path).Elem().FieldByName(strings.Title(strings.ToLower(hm))).Set(reflect.ValueOf(&op))
+			pathmap[endpoint] = v3path
+		}
 	}
 	return pathmap
 }

@@ -205,7 +205,7 @@ func (receiver *UsersvcClient) UploadAvatar(ctx context.Context, _headers map[st
 	}
 	return _resp, _result.Ri, _result.Ri2, nil
 }
-func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, _headers map[string]string, userId interface{}, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
+func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, _headers map[string]string, userId interface{}, data []byte, userAttrs ...string) (_resp *resty.Response, rf *os.File, re error) {
 	var _err error
 	_urlValues := url.Values{}
 	_req := receiver.client.R()
@@ -214,6 +214,13 @@ func (receiver *UsersvcClient) DownloadAvatar(ctx context.Context, _headers map[
 	}
 	_req.SetContext(ctx)
 	_req.SetBody(userId)
+	if len(data) == 0 {
+		re = errors.New("size of parameter data should be greater than zero")
+		return
+	}
+	for _, _item := range data {
+		_urlValues.Add("data", fmt.Sprintf("%v", _item))
+	}
 	if userAttrs != nil {
 		for _, _item := range userAttrs {
 			_urlValues.Add("userAttrs", fmt.Sprintf("%v", _item))
