@@ -1,12 +1,22 @@
 package registry
 
 import (
-	"github.com/stretchr/testify/assert"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"reflect"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
+	m.Run()
+}
 
 func setup() {
 	_ = config.GddMemSeed.Write("")
@@ -24,34 +34,11 @@ func setup() {
 	_ = config.GddMemGossipInterval.Write("8s")
 	_ = config.GddMemWeightInterval.Write("8s")
 	_ = config.GddMemTCPTimeout.Write("8s")
-	_ = config.GddMemName.Write("test00")
-	_ = config.GddMemHost.Write(".seed-svc-headless.default.svc.cluster.local")
-	_ = config.GddMemPort.Write("56199")
+	_ = config.GddMemHost.Write("seed.seed-svc-headless.default.svc.cluster.local")
 	_ = config.GddMemIndirectChecks.Write("8")
 	_ = config.GddLogLevel.Write("debug")
-}
-
-func setup1() {
-	_ = config.GddMemSeed.Write("")
-	_ = config.GddServiceName.Write("seed")
-	_ = config.GddMemName.Write("seed")
-	_ = config.GddMemPort.Write("56199")
-	_ = config.GddMemWeight.Write("8")
-	_ = config.GddMemDeadTimeout.Write("8")
-	_ = config.GddMemSyncInterval.Write("8")
-	_ = config.GddMemReclaimTimeout.Write("8")
-	_ = config.GddMemProbeInterval.Write("8")
-	_ = config.GddMemProbeTimeout.Write("8")
-	_ = config.GddMemSuspicionMult.Write("8")
-	_ = config.GddMemGossipNodes.Write("8")
-	_ = config.GddMemGossipInterval.Write("8")
-	_ = config.GddMemWeightInterval.Write("8")
-	_ = config.GddMemTCPTimeout.Write("8")
-	_ = config.GddMemName.Write("test00")
-	_ = config.GddMemHost.Write(".seed-svc-headless.default.svc.cluster.local")
-	_ = config.GddMemPort.Write("56199")
-	_ = config.GddMemIndirectChecks.Write("8")
-	_ = config.GddLogLevel.Write("debug")
+	_ = config.GddPort.Write("8088")
+	_ = config.GddRouteRootPath.Write("/v1")
 }
 
 func Test_seeds(t *testing.T) {
@@ -95,89 +82,43 @@ func Test_seeds(t *testing.T) {
 }
 
 func Test_join(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
 	_ = config.GddMemSeed.Write("not exist seed")
 	_ = config.GddServiceName.Write("testsvc")
 	require.Error(t, join())
 }
 
 func TestAllNodes(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	nodes, _ := AllNodes()
-	if got := len(nodes); got != 1 {
-		t.Errorf("got is not equal to 1, got is %d", got)
-	}
-}
-
-func TestShutdown(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	assert.NotPanics(t, func() {
-		Shutdown()
+	Convey("There should be only one node", t, func() {
+		nodes, _ := AllNodes()
+		So(len(nodes), ShouldEqual, 1)
 	})
 }
 
 func TestInfo(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	info := Info(LocalNode())
-	assert.NotZero(t, info)
+	Convey("Should not zero value", t, func() {
+		info := Info(LocalNode())
+		So(info, ShouldNotBeZeroValue)
+	})
 }
 
 func TestMetaWeight(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	weight, _ := MetaWeight(LocalNode())
-	assert.NotZero(t, weight)
+	Convey("Should not zero value", t, func() {
+		weight, _ := MetaWeight(LocalNode())
+		So(weight, ShouldNotBeZeroValue)
+	})
 }
 
 func TestSvcName(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	assert.Equalf(t, "seed", SvcName(LocalNode()), "SvcName(%v)", LocalNode())
+	Convey("Should be equal to seed", t, func() {
+		So(SvcName(LocalNode()), ShouldEqual, "seed")
+	})
 }
 
 func TestRegisterServiceProvider(t *testing.T) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
-	RegisterServiceProvider(newMockServiceProvider("TEST"))
-}
-
-func TestNewNode(t *testing.T) {
-	setup1()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer mlist.Shutdown()
+	Convey("", t, func() {
+		provider := newMockServiceProvider("TEST")
+		RegisterServiceProvider(provider)
+		So(len(events.ServiceProviders), ShouldEqual, 1)
+		So(len(provider.servers), ShouldEqual, 1)
+	})
 }

@@ -63,7 +63,6 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/containerd/containerd v1.5.2 // indirect
-	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/ghodss/yaml v1.0.0
@@ -77,6 +76,7 @@ require (
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/smartystreets/goconvey v1.7.2
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220322035024-78853a86edcd
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect

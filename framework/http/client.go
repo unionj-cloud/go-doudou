@@ -3,9 +3,6 @@ package ddhttp
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
-	"github.com/wubin1989/nacos-sdk-go/model"
-	"github.com/wubin1989/nacos-sdk-go/vo"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
@@ -13,6 +10,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
+	"github.com/wubin1989/nacos-sdk-go/model"
+	"github.com/wubin1989/nacos-sdk-go/vo"
 	"net"
 	"net/http"
 	"os"
@@ -118,6 +118,10 @@ type server struct {
 	currentWeight int
 }
 
+func (s *server) Weight() int {
+	return s.weight
+}
+
 type base struct {
 	name    string
 	nodes   []*server
@@ -170,6 +174,10 @@ func (m *base) UpdateWeight(node *memberlist.Node) {
 		s.weight = node.Weight
 		logger.Infof("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
 	}
+}
+
+func (m *base) GetServer(nodeName string) *server {
+	return m.nodeMap[nodeName]
 }
 
 func (m *base) RemoveNode(node *memberlist.Node) {
@@ -240,17 +248,11 @@ func (m *SmoothWeightedRoundRobinProvider) SelectServer() string {
 	total := 0
 	for i := 0; i < len(m.nodes); i++ {
 		s := m.nodes[i]
-		if s == nil {
-			continue
-		}
 		s.currentWeight += s.weight
 		total += s.weight
 		if selected == nil || s.currentWeight > selected.currentWeight {
 			selected = s
 		}
-	}
-	if selected == nil {
-		return ""
 	}
 	selected.currentWeight -= total
 	return selected.baseUrl

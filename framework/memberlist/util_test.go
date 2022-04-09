@@ -87,6 +87,11 @@ func TestSuspicionTimeout(t *testing.T) {
 	}
 }
 
+func TestSuspicionTimeout2(t *testing.T) {
+	timeout := suspicionTimeout(6, 6, 5*time.Second)
+	fmt.Println(timeout)
+}
+
 func TestRetransmitLimit(t *testing.T) {
 	lim := retransmitLimit(3, 0)
 	if lim != 0 {

@@ -34,6 +34,14 @@ type NacosConfigMgr struct {
 	listeners   cache.ConcurrentMap
 }
 
+func (m *NacosConfigMgr) Listeners() cache.ConcurrentMap {
+	return m.listeners
+}
+
+func NewNacosConfigMgr(dataIds []string, group string, format nacosConfigType, namespaceId string, client config_client.IConfigClient, listeners cache.ConcurrentMap) *NacosConfigMgr {
+	return &NacosConfigMgr{dataIds: dataIds, group: group, format: format, namespaceId: namespaceId, client: client, listeners: listeners}
+}
+
 var NacosClient *NacosConfigMgr
 
 type NacosChangeEvent struct {

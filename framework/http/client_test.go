@@ -1,15 +1,24 @@
 package ddhttp_test
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/golang/mock/gomock"
-	"github.com/wubin1989/nacos-sdk-go/common/constant"
-	"github.com/wubin1989/nacos-sdk-go/model"
-	"github.com/wubin1989/nacos-sdk-go/vo"
+	"github.com/hashicorp/go-msgpack/codec"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
 	"github.com/unionj-cloud/go-doudou/framework/http/mock"
+	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
+	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/wubin1989/nacos-sdk-go/common/constant"
+	"github.com/wubin1989/nacos-sdk-go/model"
+	"github.com/wubin1989/nacos-sdk-go/vo"
+	"os"
 	"testing"
+	"time"
 )
 
 var clientConfigTest = *constant.NewClientConfig(
@@ -141,4 +150,208 @@ func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
 		ddhttp.WithNacosClusters([]string{"a"}))
 	got := n.SelectServer()
 	require.Equal(t, got, "http://10.10.10.10:80/api")
+}
+
+type MockDdClient struct {
+	provider registry.IServiceProvider
+	client   *resty.Client
+	rootPath string
+}
+
+func (receiver *MockDdClient) SetRootPath(rootPath string) {
+	receiver.rootPath = rootPath
+}
+
+func (receiver *MockDdClient) SetProvider(provider registry.IServiceProvider) {
+	receiver.provider = provider
+}
+
+func (receiver *MockDdClient) SetClient(client *resty.Client) {
+	receiver.client = client
+}
+
+func NewMockDdClient(opts ...ddhttp.DdClientOption) *MockDdClient {
+	defaultProvider := ddhttp.NewServiceProvider("MOCKDDCLIENT")
+	defaultClient := ddhttp.NewClient()
+
+	svcClient := &MockDdClient{
+		provider: defaultProvider,
+		client:   defaultClient,
+	}
+
+	for _, opt := range opts {
+		opt(svcClient)
+	}
+
+	return svcClient
+}
+
+func TestWithProvider(t *testing.T) {
+	Convey("Create a DdClient instance with custom provider", t, func() {
+		m := NewMockDdClient(ddhttp.WithProvider(ddhttp.NewMemberlistServiceProvider("mock-svc")))
+		So(m.provider, ShouldNotBeZeroValue)
+	})
+}
+
+func TestWithClient(t *testing.T) {
+	Convey("Create a DdClient instance with custom client", t, func() {
+		m := NewMockDdClient(ddhttp.WithClient(resty.New()))
+		So(m.client, ShouldNotBeZeroValue)
+	})
+}
+
+func TestWithRootPath(t *testing.T) {
+	Convey("Create a DdClient instance with custom rootPath", t, func() {
+		m := NewMockDdClient(ddhttp.WithRootPath("/v1"))
+		So(m.rootPath, ShouldEqual, "/v1")
+	})
+}
+
+func TestRetryCount(t *testing.T) {
+	Convey("Create a DdClient instance with 10 retry count", t, func() {
+		os.Setenv("GDD_RETRY_COUNT", "10")
+		m := NewMockDdClient()
+		So(m.client.RetryCount, ShouldEqual, 10)
+	})
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	err := registry.NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer registry.Shutdown()
+	m.Run()
+}
+
+func setup() {
+	_ = config.GddMemSeed.Write("")
+	_ = config.GddServiceName.Write("ddhttp")
+	_ = config.GddMemName.Write("ddhttp")
+	_ = config.GddMemWeight.Write("8")
+	_ = config.GddMemDeadTimeout.Write("8s")
+	_ = config.GddMemSyncInterval.Write("8s")
+	_ = config.GddMemReclaimTimeout.Write("8s")
+	_ = config.GddMemProbeInterval.Write("8s")
+	_ = config.GddMemProbeTimeout.Write("8s")
+	_ = config.GddMemSuspicionMult.Write("8")
+	_ = config.GddMemGossipNodes.Write("8")
+	_ = config.GddMemGossipInterval.Write("8s")
+	_ = config.GddMemWeightInterval.Write("8s")
+	_ = config.GddMemTCPTimeout.Write("8s")
+	_ = config.GddMemHost.Write("ddhttp.ddhttp-svc-headless.default.svc.cluster.local")
+	_ = config.GddMemIndirectChecks.Write("8")
+	_ = config.GddLogLevel.Write("debug")
+	_ = config.GddPort.Write("8088")
+	_ = config.GddRouteRootPath.Write("/v1")
+}
+
+func Test_base_AddNode(t *testing.T) {
+	Convey("Should select one node", t, func() {
+		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider.AddNode(registry.LocalNode())
+		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "ddhttp.ddhttp-svc-headless.default.svc.cluster.local", 8088, "/v1"))
+
+		Convey("Node should be removed", func() {
+			provider.RemoveNode(registry.LocalNode())
+			So(provider.GetServer("ddhttp"), ShouldBeNil)
+		})
+	})
+}
+
+func Test_base_AddNode_Fail(t *testing.T) {
+	Convey("Should select one node", t, func() {
+		provider := ddhttp.NewMemberlistServiceProvider("test")
+		provider.AddNode(registry.LocalNode())
+		So(provider.SelectServer(), ShouldBeZeroValue)
+
+		Convey("Node should not be removed", func() {
+			provider.RemoveNode(registry.LocalNode())
+			So(provider.GetServer("ddhttp"), ShouldBeNil)
+		})
+	})
+}
+
+type nodeMeta struct {
+	Service       string     `json:"service"`
+	RouteRootPath string     `json:"routeRootPath"`
+	Port          int        `json:"port"`
+	RegisterAt    *time.Time `json:"registerAt"`
+	GoVer         string     `json:"goVer"`
+	GddVer        string     `json:"gddVer"`
+	BuildUser     string     `json:"buildUser"`
+	BuildTime     string     `json:"buildTime"`
+	Weight        int        `json:"weight"`
+}
+
+type mergedMeta struct {
+	Meta nodeMeta               `json:"_meta,omitempty"`
+	Data map[string]interface{} `json:"data,omitempty"`
+}
+
+func setMetaWeight(node *memberlist.Node, weight int) error {
+	var mm mergedMeta
+	if len(node.Meta) > 0 {
+		r := bytes.NewReader(node.Meta)
+		dec := codec.NewDecoder(r, &codec.MsgpackHandle{})
+		if err := dec.Decode(&mm); err != nil {
+			return err
+		}
+	}
+	mm.Meta.Weight = weight
+	var buf bytes.Buffer
+	enc := codec.NewEncoder(&buf, &codec.MsgpackHandle{})
+	if err := enc.Encode(mm); err != nil {
+		return err
+	}
+	node.Meta = buf.Bytes()
+	return nil
+}
+
+func Test_base_UpdateWeight(t *testing.T) {
+	_ = setMetaWeight(registry.LocalNode(), 0)
+	Convey("Weight should change", t, func() {
+		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider.AddNode(registry.LocalNode())
+		registry.LocalNode().Weight = 4
+		provider.UpdateWeight(registry.LocalNode())
+		So(provider.GetServer("ddhttp").Weight(), ShouldEqual, 4)
+	})
+}
+
+func Test_base_UpdateWeight_Fail(t *testing.T) {
+	_ = setMetaWeight(registry.LocalNode(), 8)
+	Convey("Weight should not change as meta weight greater than 0", t, func() {
+		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider.AddNode(registry.LocalNode())
+		registry.LocalNode().Weight = 4
+		provider.UpdateWeight(registry.LocalNode())
+		So(provider.GetServer("ddhttp").Weight(), ShouldEqual, 8)
+	})
+}
+
+func Test_base_UpdateWeight_Fail_SvcName_Mismatch(t *testing.T) {
+	_ = setMetaWeight(registry.LocalNode(), 0)
+	Convey("Weight should not change as service name mismatch", t, func() {
+		provider := ddhttp.NewMemberlistServiceProvider("test")
+		provider.UpdateWeight(registry.LocalNode())
+		So(provider.GetServer("ddhttp"), ShouldBeNil)
+	})
+}
+
+func Test_SMRR_AddNode(t *testing.T) {
+	Convey("Should select one node", t, func() {
+		provider := ddhttp.NewSmoothWeightedRoundRobinProvider("ddhttp")
+		provider.AddNode(registry.LocalNode())
+		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "ddhttp.ddhttp-svc-headless.default.svc.cluster.local", 8088, "/v1"))
+	})
+}
+
+func Test_SMRR_SelectServer(t *testing.T) {
+	Convey("Should select none node", t, func() {
+		provider := ddhttp.NewSmoothWeightedRoundRobinProvider("ddhttp")
+		provider.RemoveNode(registry.LocalNode())
+		So(provider.SelectServer(), ShouldBeZeroValue)
+	})
 }

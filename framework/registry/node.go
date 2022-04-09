@@ -220,7 +220,7 @@ func newNode(data ...map[string]interface{}) error {
 		service = config.GddServiceName.Load()
 	}
 	if stringutils.IsEmpty(service) {
-		return errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", config.GddServiceName))
+		return errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", string(config.GddServiceName)))
 	}
 	httpPort := config.DefaultGddPort
 	if stringutils.IsNotEmpty(config.GddPort.Load()) {
