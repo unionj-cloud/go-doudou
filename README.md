@@ -7,7 +7,6 @@
 <p align="center">
   <a href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Go"></a>
   <a href="https://godoc.org/github.com/unionj-cloud/go-doudou"><img src="https://godoc.org/github.com/unionj-cloud/go-doudou?status.png" alt="GoDoc"></a>
-  <a href="https://travis-ci.com/unionj-cloud/go-doudou"><img src="https://travis-ci.com/unionj-cloud/go-doudou.svg?branch=main" alt="Build Status"></a>
   <a href="https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml"><img src="https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml/badge.svg?branch=main" alt="Go"></a>
   <a href="https://codecov.io/gh/unionj-cloud/go-doudou"><img src="https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885" alt="codecov"></a>
   <a href="https://goreportcard.com/report/github.com/unionj-cloud/go-doudou"><img src="https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou" alt="Go Report Card"></a>
