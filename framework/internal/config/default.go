@@ -49,7 +49,7 @@ const (
 
 	DefaultGddServiceDiscoveryMode = "memberlist"
 
-	DefaultGddNacosNamespaceId         = ""
+	DefaultGddNacosNamespaceId         = "public"
 	DefaultGddNacosTimeoutMs           = 10000
 	DefaultGddNacosNotLoadCacheAtStart = false
 	DefaultGddNacosLogDir              = "/tmp/nacos/log"

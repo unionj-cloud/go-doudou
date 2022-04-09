@@ -97,10 +97,11 @@ func (m *NacosConfigMgr) loadYaml(dataId string) error {
 }
 
 var onceNacos sync.Once
+var NewConfigClient = clients.NewConfigClient
 
 func LoadFromNacos(param vo.NacosClientParam, dataId, format, group string) error {
 	onceNacos.Do(func() {
-		client, err := clients.NewConfigClient(param)
+		client, err := NewConfigClient(param)
 		if err != nil {
 			panic(errors.Wrap(err, "[go-doudou] failed to create nacos config client"))
 		}
