@@ -34,6 +34,10 @@ type httpConfigListener struct {
 	configmgr.BaseApolloListener
 }
 
+func NewHttpConfigListener() *httpConfigListener {
+	return &httpConfigListener{}
+}
+
 func (c *httpConfigListener) OnChange(event *storage.ChangeEvent) {
 	c.Lock.Lock()
 	defer c.Lock.Unlock()
@@ -49,7 +53,24 @@ func (c *httpConfigListener) OnChange(event *storage.ChangeEvent) {
 	}
 }
 
-func init() {
+func CallbackOnChange(listener *httpConfigListener) func(event *configmgr.NacosChangeEvent) {
+	return func(event *configmgr.NacosChangeEvent) {
+		changes := make(map[string]*storage.ConfigChange)
+		for k, v := range event.Changes {
+			changes[k] = &storage.ConfigChange{
+				OldValue:   v.OldValue,
+				NewValue:   v.NewValue,
+				ChangeType: storage.ConfigChangeType(v.ChangeType),
+			}
+		}
+		changeEvent := &storage.ChangeEvent{
+			Changes: changes,
+		}
+		listener.OnChange(changeEvent)
+	}
+}
+
+func InitialiseRemoteConfigListener() {
 	listener := &httpConfigListener{}
 	configType := config.GddConfigRemoteType.LoadOrDefault(config.DefaultGddConfigRemoteType)
 	switch configType {
@@ -61,21 +82,8 @@ func init() {
 		listener.SkippedFirstEvent = true
 		for _, dataId := range dataIds {
 			configmgr.NacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
-				DataId: "__" + dataId + "__" + "ddhttp",
-				OnChange: func(event *configmgr.NacosChangeEvent) {
-					changes := make(map[string]*storage.ConfigChange)
-					for k, v := range event.Changes {
-						changes[k] = &storage.ConfigChange{
-							OldValue:   v.OldValue,
-							NewValue:   v.NewValue,
-							ChangeType: storage.ConfigChangeType(v.ChangeType),
-						}
-					}
-					changeEvent := &storage.ChangeEvent{
-						Changes: changes,
-					}
-					listener.OnChange(changeEvent)
-				},
+				DataId:   "__" + dataId + "__" + "ddhttp",
+				OnChange: CallbackOnChange(listener),
 			})
 		}
 	case config.ApolloConfigType:
@@ -83,6 +91,10 @@ func init() {
 	default:
 		logrus.Warnf("[go-doudou] from ddhttp pkg: unknown config type: %s\n", configType)
 	}
+}
+
+func init() {
+	InitialiseRemoteConfigListener()
 }
 
 // metrics logs some metrics for http request
@@ -343,11 +355,13 @@ func tracing(inner http.Handler) http.Handler {
 		}))
 }
 
+var RunnerChain = goresilience.RunnerChain
+
 // BulkHead add bulk head pattern middleware based on https://github.com/slok/goresilience
 // workers is the number of workers in the execution pool.
 // maxWaitTime is the max time an incoming request will wait to execute before being dropped its execution and return 429 response.
 func BulkHead(workers int, maxWaitTime time.Duration) func(inner http.Handler) http.Handler {
-	runner := goresilience.RunnerChain(
+	runner := RunnerChain(
 		bulkhead.NewMiddleware(bulkhead.Config{
 			Workers:     workers,
 			MaxWaitTime: maxWaitTime,

@@ -27,7 +27,7 @@ func InitialiseApolloConfig(appConfig *config.AppConfig) {
 	logrus.Info("[go-doudou] initialise apollo client successfully")
 }
 
-func LoadFromApollo(appConfig *config.AppConfig) error {
+func LoadFromApollo(appConfig *config.AppConfig) {
 	onceApollo.Do(func() {
 		InitialiseApolloConfig(appConfig)
 	})
@@ -49,7 +49,6 @@ func LoadFromApollo(appConfig *config.AppConfig) error {
 			return true
 		})
 	}
-	return nil
 }
 
 type BaseApolloListener struct {

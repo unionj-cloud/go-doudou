@@ -240,7 +240,7 @@ func setup() {
 	_ = config.GddMemGossipInterval.Write("8s")
 	_ = config.GddMemWeightInterval.Write("8s")
 	_ = config.GddMemTCPTimeout.Write("8s")
-	_ = config.GddMemHost.Write("ddhttp.ddhttp-svc-headless.default.svc.cluster.local")
+	_ = config.GddMemHost.Write("localhost")
 	_ = config.GddMemIndirectChecks.Write("8")
 	_ = config.GddLogLevel.Write("debug")
 	_ = config.GddPort.Write("8088")
@@ -251,7 +251,7 @@ func Test_base_AddNode(t *testing.T) {
 	Convey("Should select one node", t, func() {
 		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
-		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "ddhttp.ddhttp-svc-headless.default.svc.cluster.local", 8088, "/v1"))
+		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "localhost", 8088, "/v1"))
 
 		Convey("Node should be removed", func() {
 			provider.RemoveNode(registry.LocalNode())
@@ -344,7 +344,7 @@ func Test_SMRR_AddNode(t *testing.T) {
 	Convey("Should select one node", t, func() {
 		provider := ddhttp.NewSmoothWeightedRoundRobinProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
-		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "ddhttp.ddhttp-svc-headless.default.svc.cluster.local", 8088, "/v1"))
+		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "localhost", 8088, "/v1"))
 	})
 }
 

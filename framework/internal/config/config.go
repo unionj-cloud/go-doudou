@@ -20,14 +20,16 @@ import (
 	"strings"
 )
 
-func init() {
+func LoadConfigFromLocal() {
 	env := os.Getenv("GDD_ENV")
 	if "" == env {
 		env = "dev"
 	}
 	yaml.Load(env)
 	dotenv.Load(env)
+}
 
+func LoadConfigFromRemote() {
 	configType := GddConfigRemoteType.LoadOrDefault(DefaultGddConfigRemoteType)
 	switch configType {
 	case "":
@@ -71,17 +73,15 @@ func init() {
 			BackupConfigPath: apolloBackupPath,
 			MustStart:        apolloMustStart,
 		}
-		err := configmgr.LoadFromApollo(c)
-		if err != nil {
-			err = errors.Wrap(err, "[go-doudou] fail to load config from Apollo")
-			if apolloMustStart {
-				panic(err)
-			}
-			logrus.Warn(err)
-		}
+		configmgr.LoadFromApollo(c)
 	default:
 		panic(fmt.Errorf("[go-doudou] unknown config type: %s\n", configType))
 	}
+}
+
+func init() {
+	LoadConfigFromLocal()
+	LoadConfigFromRemote()
 }
 
 type envVariable string
@@ -281,8 +281,6 @@ func GetNacosClientParam() vo.NacosClientParam {
 	notLoadCacheAtStart := DefaultGddNacosNotLoadCacheAtStart
 	if stringutils.IsNotEmpty(GddNacosNotLoadCacheAtStart.Load()) {
 		notLoadCacheAtStart, _ = cast.ToBoolE(GddNacosNotLoadCacheAtStart.Load())
-	} else if stringutils.IsNotEmpty(GddNacosNotloadcacheatstart.Load()) {
-		notLoadCacheAtStart, _ = cast.ToBoolE(GddNacosNotloadcacheatstart.Load())
 	}
 	logDir := DefaultGddNacosLogDir
 	if stringutils.IsNotEmpty(GddNacosLogDir.Load()) {
@@ -319,13 +317,9 @@ func GetNacosClientParam() vo.NacosClientParam {
 		if err != nil {
 			panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 		}
-		serverPort, err := cast.ToIntE(port)
-		if err != nil {
-			panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
-		}
 		serverConfigs = append(serverConfigs, *constant.NewServerConfig(
 			host,
-			uint64(serverPort),
+			uint64(cast.ToInt(port)),
 			constant.WithScheme(u.Scheme),
 			constant.WithContextPath(u.Path),
 		))

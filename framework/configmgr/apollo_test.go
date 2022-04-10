@@ -50,8 +50,9 @@ func TestLoadFromApollo(t *testing.T) {
 			BackupConfigPath: apolloBackupPath,
 			MustStart:        false,
 		}
-		err := configmgr.LoadFromApollo(c)
-		So(err, ShouldBeNil)
+		So(func() {
+			configmgr.LoadFromApollo(c)
+		}, ShouldNotPanic)
 	})
 }
 

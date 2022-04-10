@@ -1,25 +1,30 @@
-package config
+package config_test
 
 import (
+	"github.com/apolloconfig/agollo/v4"
+	"github.com/apolloconfig/agollo/v4/agcache/memory"
+	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
+	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"os"
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
+	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	"github.com/wubin1989/nacos-sdk-go/clients/cache"
+	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
+	"github.com/wubin1989/nacos-sdk-go/vo"
 	"testing"
 )
 
 func TestLogLevel_Decode(t *testing.T) {
-	var ll1 LogLevel
-	var ll2 LogLevel
-	var ll3 LogLevel
-	var ll4 LogLevel
-	var ll5 LogLevel
-	var ll6 LogLevel
-	var ll7 LogLevel
+	var ll1, ll2, ll3, ll4, ll5, ll6, ll7 config.LogLevel
 	type args struct {
 		value string
 	}
 	tests := []struct {
 		name    string
-		ll      *LogLevel
+		ll      *config.LogLevel
 		args    args
 		wantErr bool
 		want    logrus.Level
@@ -100,77 +105,324 @@ func TestLogLevel_Decode(t *testing.T) {
 	}
 }
 
-func Test_envVariable_Load(t *testing.T) {
-	os.Setenv("GDD_BANNER", "on")
-	tests := []struct {
-		name     string
-		receiver envVariable
-		want     string
-	}{
-		{
-			name:     "",
-			receiver: GddBanner,
-			want:     "on",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.receiver.Load(); got != tt.want {
-				t.Errorf("Load() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_envVariable_Write(t *testing.T) {
-	type args struct {
-		value string
-	}
-	tests := []struct {
-		name     string
-		receiver envVariable
-		args     args
-		wantErr  bool
-	}{
-		{
-			name:     "",
-			receiver: GddBanner,
-			args: args{
-				value: "on",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.receiver.Write(tt.args.value); (err != nil) != tt.wantErr {
-				t.Errorf("Write() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.receiver.Load() != "on" {
-				t.Errorf("got = %v, want = %v", tt.receiver.Load(), "on")
-			}
-		})
-	}
-}
-
 func Test_envVariable_String(t *testing.T) {
-	GddBanner.Write("on")
-	tests := []struct {
-		name     string
-		receiver envVariable
-		want     string
-	}{
-		{
-			name:     "",
-			receiver: GddBanner,
-			want:     "on",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.receiver.String(); got != tt.want {
-				t.Errorf("String() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	Convey("Should be on", t, func() {
+		config.GddBanner.Write("on")
+		So(config.GddBanner.String(), ShouldEqual, "on")
+		So(config.GddBanner.Load(), ShouldEqual, "on")
+	})
+}
+
+func TestMain(m *testing.M) {
+	config.GddNacosServerAddr.Write("http://localhost:8848")
+	m.Run()
+}
+
+func TestLoadConfigFromRemote_Apollo(t *testing.T) {
+	Convey("Should not panic to load config from apollo", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		config.GddApolloAddr.Write("http://apollo-config-dev-svc:8080")
+		config.GddConfigRemoteType.Write(config.ApolloConfigType)
+		config.GddServiceName.Write("configmgr")
+		configClient := mock.NewMockClient(ctrl)
+		factory := &memory.DefaultCacheFactory{}
+		cache := factory.Create()
+		cache.Set("gdd.retry.count", "3", 0)
+		cache.Set("gdd.weight", "5", 0)
+		configClient.
+			EXPECT().
+			GetConfigCache(config.DefaultGddApolloNamespace).
+			AnyTimes().
+			Return(cache)
+
+		configmgr.StartWithConfig = func(loadAppConfig func() (*apolloConfig.AppConfig, error)) (agollo.Client, error) {
+			_, _ = loadAppConfig()
+			return configClient, nil
+		}
+
+		if configmgr.ApolloClient != nil {
+			configmgr.ApolloClient = configClient
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Apollo_Panic(t *testing.T) {
+	Convey("Should panic to load config from apollo", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		config.GddApolloAddr.Write("http://apollo-config-dev-svc:8080")
+		config.GddConfigRemoteType.Write(config.ApolloConfigType)
+		config.GddServiceName.Write("")
+		configClient := mock.NewMockClient(ctrl)
+		factory := &memory.DefaultCacheFactory{}
+		cache := factory.Create()
+		cache.Set("gdd.retry.count", "3", 0)
+		cache.Set("gdd.weight", "5", 0)
+		configClient.
+			EXPECT().
+			GetConfigCache(config.DefaultGddApolloNamespace).
+			AnyTimes().
+			Return(cache)
+
+		configmgr.StartWithConfig = func(loadAppConfig func() (*apolloConfig.AppConfig, error)) (agollo.Client, error) {
+			_, _ = loadAppConfig()
+			return configClient, nil
+		}
+
+		if configmgr.ApolloClient != nil {
+			configmgr.ApolloClient = configClient
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Apollo_Panic2(t *testing.T) {
+	Convey("Should panic to load config from apollo", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		config.GddConfigRemoteType.Write(config.ApolloConfigType)
+		config.GddServiceName.Write("configmgr")
+		config.GddApolloAddr.Write("")
+		configClient := mock.NewMockClient(ctrl)
+		factory := &memory.DefaultCacheFactory{}
+		cache := factory.Create()
+		cache.Set("gdd.retry.count", "3", 0)
+		cache.Set("gdd.weight", "5", 0)
+		configClient.
+			EXPECT().
+			GetConfigCache(config.DefaultGddApolloNamespace).
+			AnyTimes().
+			Return(cache)
+
+		configmgr.StartWithConfig = func(loadAppConfig func() (*apolloConfig.AppConfig, error)) (agollo.Client, error) {
+			_, _ = loadAppConfig()
+			return configClient, nil
+		}
+
+		if configmgr.ApolloClient != nil {
+			configmgr.ApolloClient = configClient
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Apollo_Log(t *testing.T) {
+	Convey("Should panic to load config from apollo", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		config.GddConfigRemoteType.Write(config.ApolloConfigType)
+		config.GddServiceName.Write("configmgr")
+		config.GddApolloAddr.Write("http://apollo-config-dev-svc:8080")
+		config.GddApolloLogEnable.Write("true")
+		configClient := mock.NewMockClient(ctrl)
+		factory := &memory.DefaultCacheFactory{}
+		cache := factory.Create()
+		cache.Set("gdd.retry.count", "3", 0)
+		cache.Set("gdd.weight", "5", 0)
+		configClient.
+			EXPECT().
+			GetConfigCache(config.DefaultGddApolloNamespace).
+			AnyTimes().
+			Return(cache)
+
+		configmgr.StartWithConfig = func(loadAppConfig func() (*apolloConfig.AppConfig, error)) (agollo.Client, error) {
+			_, _ = loadAppConfig()
+			return configClient, nil
+		}
+
+		if configmgr.ApolloClient != nil {
+			configmgr.ApolloClient = configClient
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Nacos(t *testing.T) {
+	Convey("Should not panic to load config from nacos", t, func() {
+		config.GddConfigRemoteType.Write(config.NacosConfigType)
+		config.GddNacosConfigDataid.Write(".env")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Nacos_Panic(t *testing.T) {
+	Convey("Should panic to load config from nacos", t, func() {
+		config.GddConfigRemoteType.Write(config.NacosConfigType)
+		config.GddNacosConfigDataid.Write("")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Nacos_Panic2(t *testing.T) {
+	Convey("Should panic to load config from nacos", t, func() {
+		config.GddConfigRemoteType.Write(config.NacosConfigType)
+		config.GddNacosConfigDataid.Write(".env")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("", errors.New("mock error from GetConfig"))
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldPanic)
+	})
+}
+
+func TestLoadConfigFromRemote_Panic(t *testing.T) {
+	Convey("Should panic to load config from remote", t, func() {
+		config.GddConfigRemoteType.Write("Unknown remote config type")
+		So(func() {
+			config.LoadConfigFromRemote()
+		}, ShouldPanic)
+	})
+}
+
+func TestGetNacosClientParam(t *testing.T) {
+	Convey("Should panic because of invalid url", t, func() {
+		config.GddNacosNamespaceId.Write("test namespace")
+		config.GddNacosTimeoutMs.Write("300")
+		config.GddNacosNotLoadCacheAtStart.Write("true")
+		config.GddNacosLogDir.Write("/tmp")
+		config.GddNacosCacheDir.Write("/tmp")
+		config.GddNacosLogLevel.Write("debug")
+		So(func() {
+			config.GetNacosClientParam()
+		}, ShouldNotPanic)
+	})
+}
+
+func TestGetNacosClientParam_Panic(t *testing.T) {
+	Convey("Should panic because of invalid url", t, func() {
+		config.GddNacosNamespaceId.Write("test namespace")
+		config.GddNacosTimeoutMs.Write("300")
+		config.GddNacosNotLoadCacheAtStart.Write("true")
+		config.GddNacosLogDir.Write("/tmp")
+		config.GddNacosCacheDir.Write("/tmp")
+		config.GddNacosLogLevel.Write("debug")
+		config.GddNacosServerAddr.Write("invalid url")
+		So(func() {
+			config.GetNacosClientParam()
+		}, ShouldPanic)
+	})
+}
+
+func TestGetNacosClientParam_Panic1(t *testing.T) {
+	Convey("Should panic because of invalid url", t, func() {
+		config.GddNacosNamespaceId.Write("test namespace")
+		config.GddNacosTimeoutMs.Write("300")
+		config.GddNacosNotLoadCacheAtStart.Write("true")
+		config.GddNacosLogDir.Write("/tmp")
+		config.GddNacosCacheDir.Write("/tmp")
+		config.GddNacosLogLevel.Write("debug")
+		config.GddNacosServerAddr.Write("#$@$%^&$@@")
+		So(func() {
+			config.GetNacosClientParam()
+		}, ShouldPanic)
+	})
+}
+
+func Test_envVariable_MarshalJSON(t *testing.T) {
+	Convey("Should be equal to ", t, func() {
+		config.GddPort.Write("8080")
+		data, err := config.GddPort.MarshalJSON()
+		So(err, ShouldBeNil)
+		So(string(data), ShouldEqual, `"8080"`)
+	})
 }
