@@ -3,7 +3,9 @@ package yaml_test
 import (
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -34,8 +36,9 @@ func TestLoad_test(t *testing.T) {
 
 func TestLoadReaderAsMap(t *testing.T) {
 	_ = os.Chdir("testdata")
-	f, _ := os.Open("app.yml")
-	result, err := yaml.LoadReaderAsMap(f)
+	data, err := ioutil.ReadFile("app.yml")
+	require.NoError(t, err)
+	result, err := yaml.LoadReaderAsMap(strings.NewReader(string(data)))
 	require.NoError(t, err)
 	require.Equal(t, float64(6060), result["gdd.port"])
 	require.Equal(t, "go-doudou", result["gdd.tracing.metrics.root"])
@@ -44,6 +47,14 @@ func TestLoadReaderAsMap(t *testing.T) {
 func TestLoadFileAsMap(t *testing.T) {
 	_ = os.Chdir("testdata")
 	result, err := yaml.LoadFileAsMap("app.yml")
+	require.NoError(t, err)
+	require.Equal(t, float64(6060), result["gdd.port"])
+	require.Equal(t, "go-doudou", result["gdd.tracing.metrics.root"])
+}
+
+func TestLoadReaderAsMapFromString(t *testing.T) {
+	data := []byte("gdd:\n  port: 6060\n  tracing:\n    metrics:\n      root: \"go-doudou\"")
+	result, err := yaml.LoadReaderAsMap(strings.NewReader(string(data)))
 	require.NoError(t, err)
 	require.Equal(t, float64(6060), result["gdd.port"])
 	require.Equal(t, "go-doudou", result["gdd.tracing.metrics.root"])

@@ -13,6 +13,7 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/util"
 	"github.com/wubin1989/nacos-sdk-go/vo"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -70,7 +71,7 @@ func (m *NacosConfigMgr) loadDotenv(dataId string) error {
 	if err != nil {
 		return err
 	}
-	envMap, err := godotenv.Parse(strings.NewReader(content))
+	envMap, err := godotenv.Parse(StringReader(content))
 	if err != nil {
 		return err
 	}
@@ -99,21 +100,25 @@ func (m *NacosConfigMgr) loadYaml(dataId string) error {
 var onceNacos sync.Once
 var NewConfigClient = clients.NewConfigClient
 
+func InitialiseNacosConfig(param vo.NacosClientParam, dataId, format, group string) {
+	client, err := NewConfigClient(param)
+	if err != nil {
+		panic(errors.Wrap(err, "[go-doudou] failed to create nacos config client"))
+	}
+	dataIds := strings.Split(dataId, ",")
+	NacosClient = &NacosConfigMgr{
+		dataIds:     dataIds,
+		group:       group,
+		format:      nacosConfigType(format),
+		namespaceId: param.ClientConfig.NamespaceId,
+		client:      client,
+		listeners:   cache.NewConcurrentMap(),
+	}
+}
+
 func LoadFromNacos(param vo.NacosClientParam, dataId, format, group string) error {
 	onceNacos.Do(func() {
-		client, err := NewConfigClient(param)
-		if err != nil {
-			panic(errors.Wrap(err, "[go-doudou] failed to create nacos config client"))
-		}
-		dataIds := strings.Split(dataId, ",")
-		NacosClient = &NacosConfigMgr{
-			dataIds:     dataIds,
-			group:       group,
-			format:      nacosConfigType(format),
-			namespaceId: param.ClientConfig.NamespaceId,
-			client:      client,
-			listeners:   cache.NewConcurrentMap(),
-		}
+		InitialiseNacosConfig(param, dataId, format, group)
 	})
 	switch nacosConfigType(format) {
 	case YamlConfigFormat:
@@ -129,45 +134,51 @@ func LoadFromNacos(param vo.NacosClientParam, dataId, format, group string) erro
 			}
 		}
 	default:
-		return fmt.Errorf("[go-doudou] unknown config format: %s\n" + format)
+		return fmt.Errorf("[go-doudou] unknown config format: %s\n", format)
 	}
 	NacosClient.listenConfig()
 	return nil
 }
 
+var StringReader = func(s string) io.Reader {
+	return strings.NewReader(s)
+}
+
+func (m *NacosConfigMgr) CallbackOnChange(namespace, group, dataId, data, old string) {
+	var newData, oldData map[string]interface{}
+	var err error
+	switch m.format {
+	case YamlConfigFormat:
+		if newData, err = yaml.LoadReaderAsMap(StringReader(data)); err != nil {
+			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			return
+		}
+		if oldData, err = yaml.LoadReaderAsMap(StringReader(old)); err != nil {
+			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			return
+		}
+	case DotenvConfigFormat:
+		if newData, err = dotenv.LoadAsMap(StringReader(data)); err != nil {
+			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			return
+		}
+		if oldData, err = dotenv.LoadAsMap(StringReader(old)); err != nil {
+			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			return
+		}
+	}
+	changes := maputils.Diff(newData, oldData)
+	m.onChange("__"+dataId+"__"+"registry", group, namespace, changes)
+	m.onChange("__"+dataId+"__"+"ddhttp", group, namespace, changes)
+	m.onChange(dataId, group, namespace, changes)
+}
+
 func (m *NacosConfigMgr) listenConfig() {
 	for _, dataId := range m.dataIds {
 		if err := m.client.ListenConfig(vo.ConfigParam{
-			DataId: dataId,
-			Group:  m.group,
-			OnChange: func(namespace, group, dataId, data, old string) {
-				var newData, oldData map[string]interface{}
-				var err error
-				switch m.format {
-				case YamlConfigFormat:
-					if newData, err = yaml.LoadReaderAsMap(strings.NewReader(data)); err != nil {
-						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
-						return
-					}
-					if oldData, err = yaml.LoadReaderAsMap(strings.NewReader(old)); err != nil {
-						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
-						return
-					}
-				case DotenvConfigFormat:
-					if newData, err = dotenv.LoadAsMap(strings.NewReader(data)); err != nil {
-						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
-						return
-					}
-					if oldData, err = dotenv.LoadAsMap(strings.NewReader(old)); err != nil {
-						logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
-						return
-					}
-				}
-				changes := maputils.Diff(newData, oldData)
-				m.onChange("__"+dataId+"__"+"registry", group, namespace, changes)
-				m.onChange("__"+dataId+"__"+"ddhttp", group, namespace, changes)
-				m.onChange(dataId, group, namespace, changes)
-			},
+			DataId:   dataId,
+			Group:    m.group,
+			OnChange: m.CallbackOnChange,
 		}); err != nil {
 			panic(err)
 		}

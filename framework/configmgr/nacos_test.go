@@ -1,15 +1,20 @@
 package configmgr_test
 
 import (
+	"fmt"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/wubin1989/nacos-sdk-go/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/util"
 	"github.com/wubin1989/nacos-sdk-go/vo"
+	"io"
+	"strings"
 	"testing"
 )
 
@@ -106,5 +111,315 @@ func TestNacosConfigMgr_LoadFromNacos_Yaml(t *testing.T) {
 
 		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(configmgr.YamlConfigFormat), config.DefaultGddNacosConfigGroup)
 		So(err, ShouldBeNil)
+	})
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Dotenv(t *testing.T) {
+	Convey("Should react to dotenv config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		nacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
+			DataId: dataId,
+			OnChange: func(event *configmgr.NacosChangeEvent) {
+				So(len(event.Changes), ShouldEqual, 4)
+			},
+		})
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", "")
+	})
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Yaml(t *testing.T) {
+	Convey("Should react to yaml config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.YamlConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		nacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
+			DataId: dataId,
+			OnChange: func(event *configmgr.NacosChangeEvent) {
+				So(len(event.Changes), ShouldEqual, 2)
+			},
+		})
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "gdd:\n  port: 6060\n  tracing:\n    metrics:\n      root: \"go-doudou\"", "")
+	})
+}
+
+func ErrReader(err error) io.Reader {
+	return &errReader{err: err}
+}
+
+type errReader struct {
+	err error
+}
+
+func (r *errReader) Read(p []byte) (int, error) {
+	return 0, r.err
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Yaml_Error(t *testing.T) {
+	Convey("Should fail to react to yaml config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.YamlConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		configmgr.StringReader = func(s string) io.Reader {
+			return ErrReader(errors.New("mock read error"))
+		}
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "gdd:\n  port: 6060\n  tracing:\n    metrics:\n      root: \"go-doudou\"", "")
+	})
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Yaml_Error2(t *testing.T) {
+	Convey("Should fail to react to yaml config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.YamlConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		configmgr.StringReader = func(s string) io.Reader {
+			if stringutils.IsEmpty(s) {
+				return ErrReader(errors.New("mock read error"))
+			} else {
+				return strings.NewReader(s)
+			}
+		}
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "gdd:\n  port: 6060\n  tracing:\n    metrics:\n      root: \"go-doudou\"", "")
+	})
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Dotenv_Error(t *testing.T) {
+	Convey("Should fail to react to dotenv config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		configmgr.StringReader = func(s string) io.Reader {
+			return ErrReader(errors.New("mock read error"))
+		}
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", "")
+	})
+}
+
+func TestNacosConfigMgr_CallbackOnChange_Dotenv_Error2(t *testing.T) {
+	Convey("Should fail to react to dotenv config change", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		nacosClient := configmgr.NewNacosConfigMgr([]string{dataId},
+			config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		configmgr.StringReader = func(s string) io.Reader {
+			if stringutils.IsEmpty(s) {
+				return ErrReader(errors.New("mock read error"))
+			} else {
+				return strings.NewReader(s)
+			}
+		}
+		nacosClient.CallbackOnChange(config.DefaultGddNacosNamespaceId, config.DefaultGddNacosConfigGroup, dataId, "GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", "")
+	})
+}
+
+func TestNacosConfigMgr_LoadFromNacos_Panic(t *testing.T) {
+	Convey("Should panic from listenConfig", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("gdd:\n  port: 8088", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(errors.New("mock returned error"))
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.YamlConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		So(func() {
+			configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(configmgr.YamlConfigFormat), config.DefaultGddNacosConfigGroup)
+		}, ShouldPanic)
+	})
+}
+
+func TestNacosConfigMgr_LoadFromNacos_UnknownFormat(t *testing.T) {
+	Convey("Should return error", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("gdd:\n  port: 8088", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		unknownFormat := "Unknown format"
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, "Unknown format", config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, unknownFormat, config.DefaultGddNacosConfigGroup)
+		So(err, ShouldResemble, fmt.Errorf("[go-doudou] unknown config format: %s\n", unknownFormat))
+	})
+}
+
+func TestNacosConfigMgr_LoadFromNacos_Yaml_Error(t *testing.T) {
+	Convey("Should return error from GetConfig", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := "app.yml"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("", errors.New("mock error from GetConfig"))
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.YamlConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(configmgr.YamlConfigFormat), config.DefaultGddNacosConfigGroup)
+		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestNacosConfigMgr_LoadFromNacos_Dotenv_Error(t *testing.T) {
+	Convey("Should return error from GetConfig", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("", errors.New("mock error from GetConfig"))
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(configmgr.DotenvConfigFormat), config.DefaultGddNacosConfigGroup)
+		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestNacosConfigMgr_LoadFromNacos_Dotenv_Error2(t *testing.T) {
+	Convey("Should return error from GetConfig", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("GDD_SERVICE_NAME=configmgr\n\nGDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		configmgr.StringReader = func(s string) io.Reader {
+			return ErrReader(errors.New("mock read error"))
+		}
+
+		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(configmgr.DotenvConfigFormat), config.DefaultGddNacosConfigGroup)
+		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestNacosConfigMgr_InitialiseNacosConfig(t *testing.T) {
+	Convey("Should panic", t, func() {
+		dataId := ".env"
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return nil, errors.New("mock error from NewConfigClient")
+		}
+		So(func() {
+			configmgr.InitialiseNacosConfig(config.GetNacosClientParam(), dataId, string(config.DefaultGddNacosConfigFormat), config.DefaultGddNacosConfigGroup)
+		}, ShouldPanic)
 	})
 }
