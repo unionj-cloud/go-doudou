@@ -14,17 +14,22 @@ import (
 
 var onceApollo sync.Once
 var ApolloClient agollo.Client
+var StartWithConfig = agollo.StartWithConfig
+
+func InitialiseApolloConfig(appConfig *config.AppConfig) {
+	var err error
+	ApolloClient, err = StartWithConfig(func() (*config.AppConfig, error) {
+		return appConfig, nil
+	})
+	if err != nil {
+		panic(errors.Wrap(err, "[go-doudou] failed to initialise apollo client"))
+	}
+	logrus.Info("[go-doudou] initialise apollo client successfully")
+}
 
 func LoadFromApollo(appConfig *config.AppConfig) error {
 	onceApollo.Do(func() {
-		var err error
-		ApolloClient, err = agollo.StartWithConfig(func() (*config.AppConfig, error) {
-			return appConfig, nil
-		})
-		if err != nil {
-			panic(errors.Wrap(err, "[go-doudou] failed to initialise apollo client"))
-		}
-		logrus.Info("[go-doudou] initialise apollo client successfully")
+		InitialiseApolloConfig(appConfig)
 	})
 	currentEnv := map[string]bool{}
 	namespaces := strings.Split(appConfig.NamespaceName, ",")

@@ -19,6 +19,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	config.GddServiceName.Write("configmgr")
+	config.GddApolloAddr.Write("http://apollo-config-dev-svc:8080")
 	config.GddNacosServerAddr.Write("http://localhost:8848")
 	m.Run()
 }
