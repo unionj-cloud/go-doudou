@@ -331,9 +331,7 @@ func GetMod() string {
 		panic(err)
 	}
 	reader := bufio.NewReader(f)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
+	firstLine, _ = reader.ReadString('\n')
 	return strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 }
 

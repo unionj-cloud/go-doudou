@@ -44,25 +44,23 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 		alias     string
 	)
 	cmdDir = filepath.Join(dir, "cmd")
-	if err = os.MkdirAll(cmdDir, os.ModePerm); err != nil {
+	if err = MkdirAll(cmdDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 
 	svcName = ic.Interfaces[0].Name
 	alias = ic.Package.Name
 	mainfile = filepath.Join(cmdDir, "main.go")
-	if _, err = os.Stat(mainfile); os.IsNotExist(err) {
+	if _, err = Stat(mainfile); os.IsNotExist(err) {
 		modfile = filepath.Join(dir, "go.mod")
-		if f, err = os.Open(modfile); err != nil {
+		if f, err = Open(modfile); err != nil {
 			panic(err)
 		}
 		reader := bufio.NewReader(f)
-		if firstLine, err = reader.ReadString('\n'); err != nil {
-			panic(err)
-		}
+		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-		if f, err = os.Create(mainfile); err != nil {
+		if f, err = Create(mainfile); err != nil {
 			panic(err)
 		}
 		defer f.Close()

@@ -376,6 +376,8 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	astutils.FixImport([]byte(source), gofile)
 }
 
+var Walk = filepath.Walk
+
 func ParseVo(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err        error
@@ -389,7 +391,7 @@ func ParseVo(dir string, ic astutils.InterfaceCollector) {
 	)
 	svcname = ic.Interfaces[0].Name
 	docfile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.json")
-	fi, err = os.Stat(docfile)
+	fi, err = Stat(docfile)
 	if err != nil && !os.IsNotExist(err) {
 		panic(err)
 	}
@@ -397,7 +399,7 @@ func ParseVo(dir string, ic astutils.InterfaceCollector) {
 		logrus.Warningln("file " + docfile + " will be overwritten")
 	}
 	gofile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.go")
-	fi, err = os.Stat(gofile)
+	fi, err = Stat(gofile)
 	if err != nil && !os.IsNotExist(err) {
 		panic(err)
 	}
@@ -406,9 +408,9 @@ func ParseVo(dir string, ic astutils.InterfaceCollector) {
 	}
 	vodir := filepath.Join(dir, "vo")
 	var files []string
-	err = filepath.Walk(vodir, astutils.Visit(&files))
+	err = Walk(vodir, astutils.Visit(&files))
 	if err != nil {
-		logrus.Panicln(err)
+		panic(err)
 	}
 	for _, file := range files {
 		v3helper.SchemaNames = append(v3helper.SchemaNames, getSchemaNames(file)...)

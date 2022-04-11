@@ -243,9 +243,7 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 			panic(err)
 		}
 		reader := bufio.NewReader(f)
-		if firstLine, err = reader.ReadString('\n'); err != nil {
-			panic(err)
-		}
+		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
 		if f, err = os.Create(svcfile); err != nil {
@@ -365,9 +363,7 @@ func InitSvc(dir string) {
 			panic(err)
 		}
 		reader := bufio.NewReader(f)
-		if firstLine, err = reader.ReadString('\n'); err != nil {
-			panic(err)
-		}
+		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 		fmt.Println(modName)
 

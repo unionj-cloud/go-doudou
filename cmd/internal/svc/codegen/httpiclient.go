@@ -81,9 +81,7 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	reader := bufio.NewReader(modf)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
+	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
 	if tpl, err = template.New("iclient.go.tmpl").Parse(iclientTmpl); err != nil {

@@ -13,10 +13,10 @@ func TestExprStringP(t *testing.T) {
 			astutils.BuildStructCollector(filepath.Join(testDir, "vo", "vo2.go"), ExprStringP)
 		}, ShouldNotPanic)
 		So(func() {
-			astutils.BuildStructCollector(filepath.Join(testDir, "vo", "vo3.go"), ExprStringP)
+			astutils.BuildStructCollector(filepath.Join(testDir, "vop", "vo3.go"), ExprStringP)
 		}, ShouldPanic)
 		So(func() {
-			astutils.BuildStructCollector(filepath.Join(testDir, "vo", "vo4.go"), ExprStringP)
+			astutils.BuildStructCollector(filepath.Join(testDir, "vop", "vo4.go"), ExprStringP)
 		}, ShouldPanic)
 	})
 }

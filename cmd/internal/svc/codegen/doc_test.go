@@ -1,6 +1,8 @@
 package codegen
 
 import (
+	"github.com/pkg/errors"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
@@ -104,4 +106,62 @@ func Test_schemasOf(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseVo(t *testing.T) {
+	Convey("Test ParseVo", t, func() {
+		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+		So(func() {
+			ParseVo(testDir, ic)
+		}, ShouldNotPanic)
+		So(len(v3helper.Schemas), ShouldNotBeZeroValue)
+	})
+}
+
+func TestParseVoPanicWalk(t *testing.T) {
+	Convey("Test ParseVo should panic from Walk", t, func() {
+		Stat = os.Stat
+		Walk = filepath.Walk
+		Walk = func(root string, walkFn filepath.WalkFunc) error {
+			return errors.New("mock Walk error")
+		}
+		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+		So(func() {
+			ParseVo(testDir, ic)
+		}, ShouldPanic)
+	})
+}
+
+func TestParseVoPanicStat1(t *testing.T) {
+	Convey("Test ParseVo should panic from Stat1", t, func() {
+		Stat = os.Stat
+		Walk = filepath.Walk
+		Stat = func(name string) (os.FileInfo, error) {
+			if filepath.Base(name) == "usersvc_openapi3.json" {
+				return nil, errors.New("mock Walk error")
+			}
+			return os.Stat(name)
+		}
+		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+		So(func() {
+			ParseVo(testDir, ic)
+		}, ShouldPanic)
+	})
+}
+
+func TestParseVoPanicStat2(t *testing.T) {
+	Convey("Test ParseVo should panic from Stat2", t, func() {
+		Stat = os.Stat
+		Walk = filepath.Walk
+		Stat = func(name string) (os.FileInfo, error) {
+			if filepath.Base(name) == "usersvc_openapi3.go" {
+				return nil, errors.New("mock Walk error")
+			}
+			return os.Stat(name)
+		}
+		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+		So(func() {
+			ParseVo(testDir, ic)
+		}, ShouldPanic)
+	})
 }

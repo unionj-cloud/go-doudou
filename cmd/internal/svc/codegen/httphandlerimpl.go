@@ -69,9 +69,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector) {
 			panic(err)
 		}
 		reader := bufio.NewReader(f)
-		if firstLine, err = reader.ReadString('\n'); err != nil {
-			panic(err)
-		}
+		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
 		if f, err = os.Create(handlerimplfile); err != nil {
@@ -500,9 +498,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		panic(err)
 	}
 	reader := bufio.NewReader(modf)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
+	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
 	funcMap := make(map[string]interface{})

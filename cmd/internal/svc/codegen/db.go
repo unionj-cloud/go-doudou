@@ -39,6 +39,11 @@ func NewDb(conf config.DbConfig) (*sqlx.DB, error) {
 }
 `
 
+var MkdirAll = os.MkdirAll
+var Open = os.Open
+var Create = os.Create
+var Stat = os.Stat
+
 // GenDb generates db connection code
 func GenDb(dir string) {
 	var (
@@ -52,23 +57,21 @@ func GenDb(dir string) {
 		firstLine string
 	)
 	dbDir = filepath.Join(dir, "db")
-	if err = os.MkdirAll(dbDir, os.ModePerm); err != nil {
+	if err = MkdirAll(dbDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 
 	dbfile = filepath.Join(dbDir, "db.go")
-	if _, err = os.Stat(dbfile); os.IsNotExist(err) {
+	if _, err = Stat(dbfile); os.IsNotExist(err) {
 		modfile = filepath.Join(dir, "go.mod")
-		if f, err = os.Open(modfile); err != nil {
+		if f, err = Open(modfile); err != nil {
 			panic(err)
 		}
 		reader := bufio.NewReader(f)
-		if firstLine, err = reader.ReadString('\n'); err != nil {
-			panic(err)
-		}
+		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-		if f, err = os.Create(dbfile); err != nil {
+		if f, err = Create(dbfile); err != nil {
 			panic(err)
 		}
 		defer f.Close()
@@ -76,13 +79,11 @@ func GenDb(dir string) {
 		if tpl, err = template.New("db.go.tmpl").Parse(dbTmpl); err != nil {
 			panic(err)
 		}
-		if err = tpl.Execute(f, struct {
+		_ = tpl.Execute(f, struct {
 			ConfigPackage string
 		}{
 			ConfigPackage: modName + "/config",
-		}); err != nil {
-			panic(err)
-		}
+		})
 	} else {
 		logrus.Warnf("file %s already exists", dbfile)
 	}

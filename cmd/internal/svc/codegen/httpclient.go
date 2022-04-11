@@ -350,36 +350,31 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 		meta       astutils.InterfaceMeta
 	)
 	clientDir = filepath.Join(dir, "client")
-	if err = os.MkdirAll(clientDir, os.ModePerm); err != nil {
+	if err = MkdirAll(clientDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 
 	clientfile = filepath.Join(clientDir, "client.go")
-	fi, err = os.Stat(clientfile)
+	fi, err = Stat(clientfile)
 	if err != nil && !os.IsNotExist(err) {
 		panic(err)
 	}
 	if fi != nil {
 		logrus.Warningln("file client.go will be overwritten")
 	}
-	if f, err = os.Create(clientfile); err != nil {
+	if f, err = Create(clientfile); err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	err = copier.DeepCopy(ic.Interfaces[0], &meta)
-	if err != nil {
-		panic(err)
-	}
+	_ = copier.DeepCopy(ic.Interfaces[0], &meta)
 
 	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
+	if modf, err = Open(modfile); err != nil {
 		panic(err)
 	}
 	reader := bufio.NewReader(modf)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
+	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
 	funcMap := make(map[string]interface{})

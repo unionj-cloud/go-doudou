@@ -84,9 +84,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	reader := bufio.NewReader(f)
-	if firstLine, err = reader.ReadString('\n'); err != nil {
-		panic(err)
-	}
+	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 	if _, err = os.Stat(svcimplfile); os.IsNotExist(err) {
 		if f, err = os.Create(svcimplfile); err != nil {
