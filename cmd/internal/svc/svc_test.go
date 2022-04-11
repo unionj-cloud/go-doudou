@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewMockSvc new Svc instance for unit test purpose
-func NewMockSvc(dir string) svc.Svc {
+func NewMockSvc(dir string, opts ...svc.SvcOption) svc.ISvc {
 	return svc.NewSvc(dir, svc.WithRunner(mockRunner{}))
 }
 
@@ -131,11 +131,12 @@ func TestSvc_Http(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			receiver := svc.NewSvc(tt.fields.Dir)
-			receiver.Handler = tt.fields.Handler
-			receiver.Client = tt.fields.Client
-			receiver.Omitempty = tt.fields.Omitempty
-			receiver.Doc = tt.fields.Doc
-			receiver.Jsonattrcase = tt.fields.Jsonattrcase
+			s := receiver.(*svc.Svc)
+			s.Handler = tt.fields.Handler
+			s.Client = tt.fields.Client
+			s.Omitempty = tt.fields.Omitempty
+			s.Doc = tt.fields.Doc
+			s.Jsonattrcase = tt.fields.Jsonattrcase
 			assert.NotPanics(t, func() {
 				receiver.Init()
 			})
@@ -334,16 +335,18 @@ func Test_validateDataType_shouldpanic(t *testing.T) {
 func Test_GenClient(t *testing.T) {
 	defer os.RemoveAll(filepath.Join(testDir, "client"))
 	receiver := svc.NewSvc(testDir)
-	receiver.DocPath = filepath.Join(testDir, "testfilesdoc1_openapi3.json")
-	receiver.ClientPkg = "client"
-	receiver.Omitempty = true
+	s := receiver.(*svc.Svc)
+	s.DocPath = filepath.Join(testDir, "testfilesdoc1_openapi3.json")
+	s.ClientPkg = "client"
+	s.Omitempty = true
 	assert.NotPanics(t, func() {
-		receiver.GenClient()
+		s.GenClient()
 	})
 }
 
 func TestSvc_Push(t *testing.T) {
-	s := NewMockSvc(pathutils.Abs("./testdata"))
+	receiver := NewMockSvc(pathutils.Abs("./testdata"))
+	s := receiver.(*svc.Svc)
 	s.ImagePrefix = "go-doudou-"
 	s.Push("wubin1989")
 }
@@ -436,7 +439,8 @@ func TestSvc_GenClient_DocPathEmpty2(t *testing.T) {
 func TestSvc_GenClient_DocPathEmpty1(t *testing.T) {
 	defer os.RemoveAll(filepath.Join(testDir, "openapi", "client"))
 	receiver := svc.NewSvc(filepath.Join(testDir, "openapi"))
-	receiver.ClientPkg = "client"
+	s := receiver.(*svc.Svc)
+	s.ClientPkg = "client"
 	assert.NotPanics(t, func() {
 		receiver.GenClient()
 	})

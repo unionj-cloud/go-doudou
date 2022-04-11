@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 )
 
 var modName string
@@ -23,8 +23,7 @@ var initCmd = &cobra.Command{
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.NewSvc(svcdir)
-		s.ModName = modName
+		s := svc.NewSvc(svcdir, svc.WithModName(modName))
 		s.Init()
 	},
 }

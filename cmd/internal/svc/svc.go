@@ -28,6 +28,25 @@ const (
 	nosplit
 )
 
+//go:generate mockgen -destination ../../mock/mock_svc.go -package mock -source=./svc.go
+
+type ISvc interface {
+	SetWatcher(w *watcher.Watcher)
+	GetWatcher() *watcher.Watcher
+	GetDir() string
+	Http()
+	Init()
+	Push(repo string)
+	Deploy(k8sfile string)
+	Shutdown(k8sfile string)
+	GenClient()
+	DoRun()
+	DoRestart()
+	DoWatch()
+	Run(watch bool)
+	Upgrade(version string)
+}
+
 // Svc wraps all config properties for commands
 type Svc struct {
 	// dir is project root path
@@ -89,7 +108,7 @@ func (receiver *Svc) GetDir() string {
 
 // Http generates main function, config files, db connection function, http routes, http handlers, service interface and service implementation
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
-func (receiver Svc) Http() {
+func (receiver *Svc) Http() {
 	dir := receiver.dir
 	ValidateDataType(dir)
 
@@ -190,7 +209,7 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 }
 
 // Init inits a project
-func (receiver Svc) Init() {
+func (receiver *Svc) Init() {
 	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner)
 }
 
@@ -202,8 +221,20 @@ func WithRunner(runner executils.Runner) SvcOption {
 	}
 }
 
+func WithModName(modName string) SvcOption {
+	return func(svc *Svc) {
+		svc.ModName = modName
+	}
+}
+
+func WithImagePrefix(imagePrefix string) SvcOption {
+	return func(svc *Svc) {
+		svc.ImagePrefix = imagePrefix
+	}
+}
+
 // NewSvc new Svc instance
-func NewSvc(dir string, opts ...SvcOption) Svc {
+func NewSvc(dir string, opts ...SvcOption) ISvc {
 	ret := Svc{
 		dir:        dir,
 		runner:     executils.CmdRunner{},
@@ -212,13 +243,13 @@ func NewSvc(dir string, opts ...SvcOption) Svc {
 	for _, opt := range opts {
 		opt(&ret)
 	}
-	return ret
+	return &ret
 }
 
 // Push executes go mod vendor command first, then build docker image and push to remote image repository
 // It also generates deployment kind(for monolithic) and statefulset kind(for microservice) yaml files for kubernetes deploy, if these files already exist,
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
-func (receiver Svc) Push(repo string) {
+func (receiver *Svc) Push(repo string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	err := receiver.runner.Run("go", "mod", "vendor")
 	if err != nil {
@@ -262,7 +293,7 @@ func (receiver Svc) Push(repo string) {
 
 // Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as statefulset kind using statefulset.yaml file in the project root,
 // so if you want to deploy a monolithic project, please set k8sfile flag.
-func (receiver Svc) Deploy(k8sfile string) {
+func (receiver *Svc) Deploy(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
@@ -276,7 +307,7 @@ func (receiver Svc) Deploy(k8sfile string) {
 
 // Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use statefulset.yaml file in the project root,
 // so if you had already set k8sfile flag when you deploy the project, you should set the same k8sfile flag.
-func (receiver Svc) Shutdown(k8sfile string) {
+func (receiver *Svc) Shutdown(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
@@ -289,7 +320,7 @@ func (receiver Svc) Shutdown(k8sfile string) {
 }
 
 // GenClient generates http client code from OpenAPI3.0 description json file, only support Golang currently.
-func (receiver Svc) GenClient() {
+func (receiver *Svc) GenClient() {
 	docpath := receiver.DocPath
 	if stringutils.IsEmpty(docpath) {
 		matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
@@ -351,7 +382,7 @@ func (receiver *Svc) DoRestart() {
 	receiver.DoRun()
 }
 
-func (receiver Svc) DoWatch() {
+func (receiver *Svc) DoWatch() {
 	w := receiver.w
 	// SetMaxEvents to 1 to allow at most 1 event's to be received
 	// on the Event channel per watching cycle.
@@ -404,7 +435,7 @@ func (receiver Svc) DoWatch() {
 }
 
 // Run runs the project locally. Recommend to set watch flag to enable watch mode for rapid development.
-func (receiver Svc) Run(watch bool) {
+func (receiver *Svc) Run(watch bool) {
 	receiver.DoRun()
 	if watch {
 		if receiver.w == nil {
@@ -427,7 +458,7 @@ func (receiver Svc) Run(watch bool) {
 }
 
 // Upgrade upgrades go-doudou to latest release version
-func (receiver Svc) Upgrade(version string) {
+func (receiver *Svc) Upgrade(version string) {
 	fmt.Printf("go install -v github.com/unionj-cloud/go-doudou@%s\n", version)
 	if err := receiver.runner.Run("go", "install", "-v", fmt.Sprintf("github.com/unionj-cloud/go-doudou@%s", version)); err != nil {
 		panic(err)

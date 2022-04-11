@@ -33,12 +33,11 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
-		Password *string `json:"password,omitempty" url:"password"`
-	}) (ret string, _resp *resty.Response, err error) {
+// GetUserUsername Get user by user name
+func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[string]string,
+	// The name that needs to be fetched. Use user1 for testing.
+	// required
+	username string) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -46,10 +45,9 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[strin
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetPathParam("username", fmt.Sprintf("%v", username))
 
-	_resp, _err = _req.Get("/user/login")
+	_resp, _err = _req.Get("/user/{username}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -58,7 +56,10 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[strin
 		err = errors.New(_resp.String())
 		return
 	}
-	ret = _resp.String()
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
 	return
 }
 
@@ -91,11 +92,12 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 	return
 }
 
-// GetUserUsername Get user by user name
-func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[string]string,
-	// The name that needs to be fetched. Use user1 for testing.
-	// required
-	username string) (ret User, _resp *resty.Response, err error) {
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Username *string `json:"username,omitempty" url:"username"`
+		Password *string `json:"password,omitempty" url:"password"`
+	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -103,9 +105,10 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[st
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetPathParam("username", fmt.Sprintf("%v", username))
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err = _req.Get("/user/{username}")
+	_resp, _err = _req.Get("/user/login")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -114,10 +117,7 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[st
 		err = errors.New(_resp.String())
 		return
 	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	ret = _resp.String()
 	return
 }
 

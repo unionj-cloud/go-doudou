@@ -32,7 +32,7 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 }
 
 // NewMockSvc new Svc instance for unit test purpose
-func NewMockSvc(dir string) svc.Svc {
+func NewMockSvc(dir string, opts ...svc.SvcOption) svc.ISvc {
 	return svc.NewSvc(dir, svc.WithRunner(mockRunner{}))
 }
 

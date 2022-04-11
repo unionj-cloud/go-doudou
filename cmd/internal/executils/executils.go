@@ -5,6 +5,8 @@ import (
 	"os/exec"
 )
 
+//go:generate mockgen -destination ../../mock/mock_executils_runner.go -package mock -source=./executils.go
+
 // Runner is mainly for executing shell command
 type Runner interface {
 	Run(string, ...string) error

@@ -21,6 +21,19 @@ func latestReleaseVer() string {
 	return release.GetTagName()
 }
 
+var Prompt = func() ISelect {
+	return &promptui.Select{
+		Label:  "Do you want to upgrade?",
+		Items:  []string{"Yes", "No"},
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+	}
+}
+
+var VersionSvc = func() svc.ISvc {
+	return svc.NewSvc("")
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of go-doudou",
@@ -30,18 +43,13 @@ var versionCmd = &cobra.Command{
 		latest := latestReleaseVer()
 		if latest != version {
 			fmt.Printf("Latest release version is %s\n", latest)
-			prompt := promptui.Select{
-				Label:  "Do you want to upgrade?",
-				Items:  []string{"Yes", "No"},
-				Stdin:  os.Stdin,
-				Stdout: os.Stdout,
-			}
+			prompt := Prompt()
 			_, result, err := prompt.Run()
 			if err != nil {
 				panic(err)
 			}
 			if result == "Yes" {
-				s := svc.NewSvc("")
+				s := VersionSvc()
 				s.Upgrade(latest)
 				fmt.Println("DONE")
 			}
