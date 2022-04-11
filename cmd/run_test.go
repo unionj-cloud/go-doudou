@@ -10,7 +10,7 @@ import (
 )
 
 func Test_runCmd(t *testing.T) {
-	Convey("Should not panic when run run command", t, func() {
+	Convey("Should not panic when run svc run command", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		s := mock.NewMockISvc(ctrl)
@@ -25,7 +25,7 @@ func Test_runCmd(t *testing.T) {
 		}
 
 		So(func() {
-			ExecuteCommandC(cmd.GetRootCmd(), []string{"run"}...)
+			ExecuteCommandC(cmd.GetRootCmd(), []string{"svc", "run"}...)
 		}, ShouldNotPanic)
 	})
 }

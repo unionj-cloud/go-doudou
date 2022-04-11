@@ -21,9 +21,7 @@ func Test_versionCmd_No(t *testing.T) {
 			AnyTimes().
 			Return(0, "No", nil)
 
-		cmd.Prompt = func() cmd.ISelect {
-			return prompt
-		}
+		cmd.Prompt = prompt
 
 		So(func() {
 			ExecuteCommandC(cmd.GetRootCmd(), []string{"version"}...)
@@ -42,9 +40,7 @@ func Test_versionCmd_Yes(t *testing.T) {
 			AnyTimes().
 			Return(0, "Yes", nil)
 
-		cmd.Prompt = func() cmd.ISelect {
-			return prompt
-		}
+		cmd.Prompt = prompt
 
 		runner := mock.NewMockRunner(ctrl)
 		runner.
@@ -53,7 +49,7 @@ func Test_versionCmd_Yes(t *testing.T) {
 			AnyTimes().
 			Return(nil)
 
-		cmd.VersionSvc = func() svc.ISvc {
+		cmd.VersionSvc = func(dir string, opts ...svc.SvcOption) svc.ISvc {
 			return svc.NewSvc("", svc.WithRunner(runner))
 		}
 
@@ -74,9 +70,7 @@ func Test_versionCmd_Yes_Panic(t *testing.T) {
 			AnyTimes().
 			Return(0, "Yes", nil)
 
-		cmd.Prompt = func() cmd.ISelect {
-			return prompt
-		}
+		cmd.Prompt = prompt
 
 		runner := mock.NewMockRunner(ctrl)
 		runner.
@@ -85,7 +79,7 @@ func Test_versionCmd_Yes_Panic(t *testing.T) {
 			AnyTimes().
 			Return(errors.New("mock runner error"))
 
-		cmd.VersionSvc = func() svc.ISvc {
+		cmd.VersionSvc = func(dir string, opts ...svc.SvcOption) svc.ISvc {
 			return svc.NewSvc("", svc.WithRunner(runner))
 		}
 
