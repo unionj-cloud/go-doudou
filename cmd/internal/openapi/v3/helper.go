@@ -237,9 +237,6 @@ func IsBuiltin(field astutils.FieldMeta) bool {
 	simples := []interface{}{Int, Int64, Bool, String, Float32, Float64}
 	types := []interface{}{IntegerT, StringT, BooleanT, NumberT}
 	pschema := SchemaOf(field)
-	if pschema == nil {
-		return false
-	}
 	if sliceutils.Contains(simples, pschema) || (sliceutils.Contains(types, pschema.Type) && pschema.Format != BinaryF) {
 		return true
 	}
@@ -252,9 +249,6 @@ func IsBuiltin(field astutils.FieldMeta) bool {
 // IsEnum check whether field is enum
 func IsEnum(field astutils.FieldMeta) bool {
 	pschema := SchemaOf(field)
-	if pschema == nil {
-		return false
-	}
 	return len(pschema.Enum) > 0 || (pschema.Type == ArrayT && len(pschema.Items.Enum) > 0)
 }
 
