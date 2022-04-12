@@ -9,6 +9,9 @@ package memrate
 
 import (
 	"context"
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
+	"log"
 	"math"
 	"runtime"
 	"sync"
@@ -577,4 +580,65 @@ func TestTokenLimiter_Wait(t *testing.T) {
 	if err := tl.Wait(ctx); err.Error() != "rate: Wait(n=1) would exceed context deadline" {
 		t.Errorf("Wait() should return error: rate: Wait(n=1) would exceed context deadline, but actual error: %s", err.Error())
 	}
+}
+
+func TestLimiter_Limit(t *testing.T) {
+	Convey("Test limiter", t, func() {
+		tl := NewLimiter(1, 3)
+		Convey("Limit should equal to 1", func() {
+			So(tl.Limit(), ShouldEqual, 1)
+		})
+		Convey("Burst should equal to 3", func() {
+			So(tl.Burst(), ShouldEqual, 3)
+		})
+	})
+}
+
+func TestNewLimiterLimit(t *testing.T) {
+	Convey("Test limiter", t, func() {
+		tl := NewLimiterLimit(ratelimit.PerSecondBurst(1, 3), WithTimer(10*time.Second, func() {
+			log.Println("do nothing")
+		}))
+		Convey("Limit should equal to 1", func() {
+			So(tl.Limit(), ShouldEqual, 1)
+		})
+		Convey("Burst should equal to 3", func() {
+			So(tl.Burst(), ShouldEqual, 3)
+		})
+
+		tl.SetLimit(10)
+		Convey("Limit should equal to 10", func() {
+			So(tl.Limit(), ShouldEqual, 10)
+		})
+
+		tl.SetBurst(100)
+		Convey("Burst should equal to 100", func() {
+			So(tl.Burst(), ShouldEqual, 100)
+		})
+
+		tl.resetTimer()
+
+		ok := tl.AllowCtx(context.Background())
+		So(ok, ShouldBeTrue)
+		ok, err := tl.AllowECtx(context.Background())
+		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
+		dur, ok, err := tl.ReserveECtx(context.Background())
+		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
+		So(dur, ShouldEqual, 0)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+		time.Sleep(600 * time.Millisecond)
+		ok = tl.AllowCtx(ctx)
+		So(ok, ShouldBeFalse)
+		ok, err = tl.AllowECtx(ctx)
+		So(err, ShouldResemble, context.DeadlineExceeded)
+		So(ok, ShouldBeFalse)
+		dur, ok, err = tl.ReserveECtx(ctx)
+		So(err, ShouldResemble, context.DeadlineExceeded)
+		So(ok, ShouldBeFalse)
+		So(dur, ShouldEqual, 0)
+	})
 }

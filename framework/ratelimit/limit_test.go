@@ -1,6 +1,7 @@
 package ratelimit
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"reflect"
 	"testing"
 	"time"
@@ -40,6 +41,54 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "",
+			args: args{
+				value: "1000-H-1-1-1",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				value: "1000-Y",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				value: "a-H",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				value: "1000-Y-100",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				value: "a-H-100",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				value: "10-H-abc",
+			},
+			want:    Limit{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -53,4 +102,70 @@ func TestParse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPerSecond(t *testing.T) {
+	Convey("Should equal to 10 in 1s", t, func() {
+		So(PerSecond(10), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Second,
+			Burst:  1,
+		})
+	})
+
+	Convey("Should equal to 10 in 1s with 100 burst", t, func() {
+		So(PerSecondBurst(10, 100), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Second,
+			Burst:  100,
+		})
+	})
+
+	Convey("Should equal to 10 in 1m", t, func() {
+		So(PerMinute(10), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Minute,
+			Burst:  1,
+		})
+	})
+
+	Convey("Should equal to 10 in 1m with 100 burst", t, func() {
+		So(PerMinuteBurst(10, 100), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Minute,
+			Burst:  100,
+		})
+	})
+
+	Convey("Should equal to 10 in 1h", t, func() {
+		So(PerHour(10), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Hour,
+			Burst:  1,
+		})
+	})
+
+	Convey("Should equal to 10 in 1h with 100 burst", t, func() {
+		So(PerHourBurst(10, 100), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Hour,
+			Burst:  100,
+		})
+	})
+
+	Convey("Should equal to 10 in 1d", t, func() {
+		So(PerDay(10), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Hour * 24,
+			Burst:  1,
+		})
+	})
+
+	Convey("Should equal to 10 in 1d with 100 burst", t, func() {
+		So(PerDayBurst(10, 100), ShouldResemble, Limit{
+			Rate:   10,
+			Period: time.Hour * 24,
+			Burst:  100,
+		})
+	})
 }

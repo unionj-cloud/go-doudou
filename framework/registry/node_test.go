@@ -1,22 +1,16 @@
 package registry
 
 import (
+	"github.com/apolloconfig/agollo/v4/storage"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/framework/memberlist"
+	"os"
 	"reflect"
 	"testing"
+	"time"
 )
-
-func TestMain(m *testing.M) {
-	setup()
-	err := NewNode()
-	if err != nil {
-		panic(err)
-	}
-	defer Shutdown()
-	m.Run()
-}
 
 func setup() {
 	_ = config.GddMemSeed.Write("")
@@ -82,12 +76,24 @@ func Test_seeds(t *testing.T) {
 }
 
 func Test_join(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	_ = config.GddMemSeed.Write("not exist seed")
 	_ = config.GddServiceName.Write("testsvc")
 	require.Error(t, join())
 }
 
 func TestAllNodes(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	Convey("There should be only one node", t, func() {
 		nodes, _ := AllNodes()
 		So(len(nodes), ShouldEqual, 1)
@@ -95,6 +101,12 @@ func TestAllNodes(t *testing.T) {
 }
 
 func TestInfo(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	Convey("Should not zero value", t, func() {
 		info := Info(LocalNode())
 		So(info, ShouldNotBeZeroValue)
@@ -102,6 +114,12 @@ func TestInfo(t *testing.T) {
 }
 
 func TestMetaWeight(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	Convey("Should not zero value", t, func() {
 		weight, _ := MetaWeight(LocalNode())
 		So(weight, ShouldNotBeZeroValue)
@@ -109,16 +127,77 @@ func TestMetaWeight(t *testing.T) {
 }
 
 func TestSvcName(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	Convey("Should be equal to seed", t, func() {
 		So(SvcName(LocalNode()), ShouldEqual, "seed")
 	})
 }
 
 func TestRegisterServiceProvider(t *testing.T) {
+	setup()
+	err := NewNode()
+	if err != nil {
+		panic(err)
+	}
+	defer Shutdown()
 	Convey("", t, func() {
 		provider := newMockServiceProvider("TEST")
 		RegisterServiceProvider(provider)
 		So(len(events.ServiceProviders), ShouldEqual, 1)
 		So(len(provider.servers), ShouldEqual, 1)
+	})
+}
+
+func Test_memConfigListener_OnChange(t *testing.T) {
+	Convey("Test OnChange callback", t, func() {
+		c := &memConfigListener{
+			memConf: &memberlist.Config{},
+		}
+		c.OnChange(&storage.ChangeEvent{
+			Changes: map[string]*storage.ConfigChange{
+				"gdd.mem.dead.timeout": {
+					OldValue:   "60s",
+					NewValue:   "30s",
+					ChangeType: storage.MODIFIED,
+				},
+			},
+		})
+		Convey("Should equal to 8s", func() {
+			So(os.Getenv("GDD_MEM_DEAD_TIMEOUT"), ShouldEqual, "8s")
+		})
+
+		c.OnChange(&storage.ChangeEvent{
+			Changes: map[string]*storage.ConfigChange{
+				"gdd.mem.dead.timeout": {
+					OldValue:   "8s",
+					NewValue:   "30s",
+					ChangeType: storage.MODIFIED,
+				},
+			},
+		})
+		Convey("Should equal to 30s", func() {
+			So(os.Getenv("GDD_MEM_DEAD_TIMEOUT"), ShouldEqual, "30s")
+			So(c.memConf.GossipToTheDeadTime, ShouldEqual, 30*time.Second)
+		})
+
+		c.OnChange(&storage.ChangeEvent{
+			Changes: map[string]*storage.ConfigChange{
+				"gdd.mem.dead.timeout": {
+					OldValue:   "30s",
+					NewValue:   "",
+					ChangeType: storage.DELETED,
+				},
+			},
+		})
+		Convey("Should equal to 60s", func() {
+			So(os.Getenv("GDD_MEM_DEAD_TIMEOUT"), ShouldEqual, "")
+			So(c.memConf.GossipToTheDeadTime, ShouldEqual, 60*time.Second)
+		})
+
 	})
 }
