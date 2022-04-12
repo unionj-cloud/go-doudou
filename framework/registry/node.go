@@ -333,6 +333,23 @@ func (c *memConfigListener) OnChange(event *storage.ChangeEvent) {
 	setGddMemIndirectChecks(c.memConf)
 }
 
+func CallbackOnChange(listener *memConfigListener) func(event *configmgr.NacosChangeEvent) {
+	return func(event *configmgr.NacosChangeEvent) {
+		changes := make(map[string]*storage.ConfigChange)
+		for k, v := range event.Changes {
+			changes[k] = &storage.ConfigChange{
+				OldValue:   v.OldValue,
+				NewValue:   v.NewValue,
+				ChangeType: storage.ConfigChangeType(v.ChangeType),
+			}
+		}
+		changeEvent := &storage.ChangeEvent{
+			Changes: changes,
+		}
+		listener.OnChange(changeEvent)
+	}
+}
+
 func registerConfigListener(memConf *memberlist.Config) {
 	listener := &memConfigListener{
 		memConf: memConf,
@@ -347,21 +364,8 @@ func registerConfigListener(memConf *memberlist.Config) {
 		listener.SkippedFirstEvent = true
 		for _, dataId := range dataIds {
 			configmgr.NacosClient.AddChangeListener(configmgr.NacosConfigListenerParam{
-				DataId: "__" + dataId + "__" + "registry",
-				OnChange: func(event *configmgr.NacosChangeEvent) {
-					changes := make(map[string]*storage.ConfigChange)
-					for k, v := range event.Changes {
-						changes[k] = &storage.ConfigChange{
-							OldValue:   v.OldValue,
-							NewValue:   v.NewValue,
-							ChangeType: storage.ConfigChangeType(v.ChangeType),
-						}
-					}
-					changeEvent := &storage.ChangeEvent{
-						Changes: changes,
-					}
-					listener.OnChange(changeEvent)
-				},
+				DataId:   "__" + dataId + "__" + "registry",
+				OnChange: CallbackOnChange(listener),
 			})
 		}
 	case config.ApolloConfigType:

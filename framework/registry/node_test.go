@@ -2,10 +2,17 @@ package registry
 
 import (
 	"github.com/apolloconfig/agollo/v4/storage"
+	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
+	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
+	"github.com/wubin1989/nacos-sdk-go/clients/cache"
+	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
+	"github.com/wubin1989/nacos-sdk-go/vo"
 	"os"
 	"reflect"
 	"testing"
@@ -33,6 +40,8 @@ func setup() {
 	_ = config.GddLogLevel.Write("debug")
 	_ = config.GddPort.Write("8088")
 	_ = config.GddRouteRootPath.Write("/v1")
+	_ = config.GddApolloAddr.Write("http://apollo-config-dev-svc:8080")
+	_ = config.GddNacosServerAddr.Write("http://localhost:8848")
 }
 
 func Test_seeds(t *testing.T) {
@@ -199,5 +208,80 @@ func Test_memConfigListener_OnChange(t *testing.T) {
 			So(c.memConf.GossipToTheDeadTime, ShouldEqual, 60*time.Second)
 		})
 
+	})
+}
+
+func TestNewNode_NacosConfigType(t *testing.T) {
+	Convey("Should not have error", t, func() {
+		setup()
+		_ = config.GddConfigRemoteType.Write("nacos")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		dataId := ".env"
+		configClient := mock.NewMockIConfigClient(ctrl)
+		configClient.
+			EXPECT().
+			GetConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  config.DefaultGddNacosConfigGroup,
+			}).
+			AnyTimes().
+			Return("GDD_READ_TIMEOUT=60s\nGDD_WRITE_TIMEOUT=60s\nGDD_IDLE_TIMEOUT=120s", nil)
+
+		configClient.
+			EXPECT().
+			ListenConfig(gomock.Any()).
+			AnyTimes().
+			Return(nil)
+
+		configmgr.NewConfigClient = func(param vo.NacosClientParam) (iClient config_client.IConfigClient, err error) {
+			return configClient, nil
+		}
+
+		if configmgr.NacosClient != nil {
+			configmgr.NacosClient = configmgr.NewNacosConfigMgr([]string{dataId},
+				config.DefaultGddNacosConfigGroup, configmgr.DotenvConfigFormat, config.DefaultGddNacosNamespaceId, configClient, cache.NewConcurrentMap())
+		}
+
+		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(config.DefaultGddNacosConfigFormat), config.DefaultGddNacosConfigGroup)
+		So(err, ShouldBeNil)
+
+		err = NewNode()
+		So(err, ShouldBeNil)
+		defer Shutdown()
+	})
+}
+
+func TestCallbackOnChange(t *testing.T) {
+	Convey("Should equal to 30s", t, func() {
+		listener := &memConfigListener{
+			memConf: &memberlist.Config{},
+		}
+		CallbackOnChange(listener)(&configmgr.NacosChangeEvent{
+			Namespace: config.DefaultGddNacosNamespaceId,
+			Group:     config.DefaultGddNacosConfigGroup,
+			DataId:    ".env",
+			Changes: map[string]maputils.Change{
+				"gdd.mem.dead.timeout": {
+					OldValue:   "8s",
+					NewValue:   "30s",
+					ChangeType: maputils.MODIFIED,
+				},
+			},
+		})
+		CallbackOnChange(listener)(&configmgr.NacosChangeEvent{
+			Namespace: config.DefaultGddNacosNamespaceId,
+			Group:     config.DefaultGddNacosConfigGroup,
+			DataId:    ".env",
+			Changes: map[string]maputils.Change{
+				"gdd.mem.dead.timeout": {
+					OldValue:   "8s",
+					NewValue:   "30s",
+					ChangeType: maputils.MODIFIED,
+				},
+			},
+		})
+		So(os.Getenv("GDD_MEM_DEAD_TIMEOUT"), ShouldEqual, "30s")
+		So(listener.memConf.GossipToTheDeadTime, ShouldEqual, 30*time.Second)
 	})
 }
