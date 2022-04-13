@@ -79,10 +79,6 @@ type Memberlist struct {
 	logger *log.Logger
 }
 
-func (m *Memberlist) UpdateConfig() {
-
-}
-
 // BuildVsnArray creates the array of Vsn
 func (conf *Config) BuildVsnArray() []uint8 {
 	return []uint8{

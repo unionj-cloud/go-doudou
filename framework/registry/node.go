@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-var mlist *memberlist.Memberlist
+var mlist memberlist.IMemberlist
 var mconf *memberlist.Config
 var BroadcastQueue *memberlist.TransmitLimitedQueue
 var events = &eventDelegate{}
@@ -121,9 +121,8 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(cidrs) {
 		var err error
 		if cfg.CIDRsAllowed, err = memberlist.ParseCIDRs(strings.Split(cidrs, ",")); err != nil {
-			logger.Debugf("call ParseCIDRs error: %s", err.Error())
+			logger.Errorf("call ParseCIDRs error: %s\n", err.Error())
 		}
-		logger.Infof(cfg.CIDRsAllowed[0].String())
 	}
 	setGddMemIndirectChecks(cfg)
 	minLevel := config.DefaultGddLogLevel
@@ -213,6 +212,19 @@ func newConf() *memberlist.Config {
 	return cfg
 }
 
+var createMemberlist = memberlist.Create
+
+func numNodes() int {
+	if mlist == nil {
+		return 0
+	}
+	return mlist.NumMembers()
+}
+
+func retransmitMultGetter() int {
+	return mconf.RetransmitMult
+}
+
 func newNode(data ...map[string]interface{}) error {
 	mconf = newConf()
 	service := config.DefaultGddServiceName
@@ -267,15 +279,8 @@ func newNode(data ...map[string]interface{}) error {
 		mmeta.Data = data[0]
 	}
 	queue := &memberlist.TransmitLimitedQueue{
-		NumNodes: func() int {
-			if mlist == nil {
-				return 0
-			}
-			return mlist.NumMembers()
-		},
-		RetransmitMultGetter: func() int {
-			return mconf.RetransmitMult
-		},
+		NumNodes:             numNodes,
+		RetransmitMultGetter: retransmitMultGetter,
 	}
 	BroadcastQueue = queue
 	mconf.Delegate = &delegate{
@@ -284,7 +289,7 @@ func newNode(data ...map[string]interface{}) error {
 	}
 	mconf.Events = events
 	var err error
-	if mlist, err = memberlist.Create(mconf); err != nil {
+	if mlist, err = createMemberlist(mconf); err != nil {
 		return errors.Wrap(err, "NewNode() error: Failed to create memberlist")
 	}
 	if err = join(); err != nil {

@@ -3,12 +3,15 @@ package registry
 import (
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
+	memmock "github.com/unionj-cloud/go-doudou/framework/memberlist/mock"
 	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
 	"github.com/wubin1989/nacos-sdk-go/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
@@ -84,7 +87,7 @@ func Test_seeds(t *testing.T) {
 	}
 }
 
-func Test_join(t *testing.T) {
+func Test_join_fail(t *testing.T) {
 	setup()
 	err := NewNode()
 	if err != nil {
@@ -106,6 +109,13 @@ func TestAllNodes(t *testing.T) {
 	Convey("There should be only one node", t, func() {
 		nodes, _ := AllNodes()
 		So(len(nodes), ShouldEqual, 1)
+	})
+}
+
+func TestAllNodesError(t *testing.T) {
+	Convey("There should be only one node", t, func() {
+		_, err := AllNodes()
+		So(err.Error(), ShouldEqual, "mlist is nil")
 	})
 }
 
@@ -283,5 +293,131 @@ func TestCallbackOnChange(t *testing.T) {
 		})
 		So(os.Getenv("GDD_MEM_DEAD_TIMEOUT"), ShouldEqual, "30s")
 		So(listener.memConf.GossipToTheDeadTime, ShouldEqual, 30*time.Second)
+	})
+}
+
+func Test_join_fail1(t *testing.T) {
+	mlist = nil
+	require.Error(t, join())
+}
+
+func Test_join(t *testing.T) {
+	Convey("Join should be successful", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mem := memmock.NewMockIMemberlist(ctrl)
+		mlist = mem
+		seedAddr := "seed:7946"
+		config.GddMemSeed.Write(seedAddr)
+		mem.
+			EXPECT().
+			Join([]string{seedAddr}).
+			AnyTimes().
+			Return(0, nil)
+
+		mem.
+			EXPECT().
+			LocalNode().
+			AnyTimes().
+			Return(&memberlist.Node{
+				Name: "",
+				Addr: "test",
+				Port: 7946,
+			})
+
+		So(join(), ShouldBeNil)
+	})
+}
+
+func Test_newMeta(t *testing.T) {
+	Convey("Should panic", t, func() {
+		So(func() {
+			newMeta(&memberlist.Node{
+				Meta: []byte("fake meta"),
+			})
+		}, ShouldPanic)
+	})
+}
+
+func Test_newConf_GddMemCIDRsAllowed(t *testing.T) {
+	config.GddMemCIDRsAllowed.Write("172.28.0.0/16")
+	newConf()
+}
+
+func Test_newConf_GddMemCIDRsAllowed_error(t *testing.T) {
+	config.GddMemCIDRsAllowed.Write("invalid")
+	newConf()
+}
+
+func Test_newConf(t *testing.T) {
+	defer os.Clearenv()
+	config.GddLogLevel.Write("ERROR")
+	newConf()
+
+	config.GddLogLevel.Write("WARNING")
+	newConf()
+
+	config.GddMemLogDisable.Write("true")
+	newConf()
+
+	config.GddWeight.Write("5")
+	newConf()
+
+	config.GddWeight.Write("0")
+	newConf()
+
+	config.GddWeight.Write("0")
+	config.GddMemWeightInterval.Write("200")
+	newConf()
+
+	config.GddMemTCPTimeout.Write("10")
+	newConf()
+
+	config.GddMemHost.Write(".seed-headless")
+	newConf()
+}
+
+func Test_newNode(t *testing.T) {
+	Convey("Test newNode", t, func() {
+		Convey("Should return error as service name not set", func() {
+			So(newNode().Error(), ShouldEqual, "NewNode() error: No env variable GDD_SERVICE_NAME found")
+		})
+
+		Convey("Should return error as join failed", func() {
+			setup()
+			buildinfo.BuildTime = "Mon Jan 2 15:04:05 MST 2006"
+			config.GddWeight.Write("8")
+			config.GddMemSeed.Write("invalid seed")
+
+			Convey("Should return error as join failed", func() {
+				So(newNode(map[string]interface{}{
+					"foo": "bar",
+				}), ShouldNotBeNil)
+			})
+
+			Convey("Should return error as memberlist create failed", func() {
+				defer func() {
+					createMemberlist = memberlist.Create
+				}()
+				createMemberlist = func(conf *memberlist.Config) (*memberlist.Memberlist, error) {
+					return nil, errors.New("mock test error")
+				}
+				So(newNode(), ShouldNotBeNil)
+			})
+		})
+
+		Convey("Should return nil", func() {
+			setup()
+			So(newNode(), ShouldBeNil)
+			So(numNodes(), ShouldEqual, 1)
+			So(retransmitMultGetter(), ShouldEqual, 4)
+		})
+	})
+}
+
+func Test_numNodes(t *testing.T) {
+	Convey("Should return 0", t, func() {
+		mlist = nil
+		So(numNodes(), ShouldEqual, 0)
 	})
 }
