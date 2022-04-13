@@ -1,0 +1,4 @@
+gdd:
+  nacos:
+    server:
+      addr: "http://localhost:8848/nacos"

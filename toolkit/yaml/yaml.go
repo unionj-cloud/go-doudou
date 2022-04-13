@@ -17,10 +17,7 @@ func load(data []byte) error {
 	if err != nil {
 		return err
 	}
-	flat, err := flatten.Flatten(config, "", flatten.UnderscoreStyle)
-	if err != nil {
-		return err
-	}
+	flat, _ := flatten.Flatten(config, "", flatten.UnderscoreStyle)
 	currentEnv := map[string]bool{}
 	rawEnv := os.Environ()
 	for _, rawEnvLine := range rawEnv {
@@ -45,11 +42,8 @@ func LoadReader(reader io.Reader) error {
 }
 
 func loadFile(file string) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	err = load(data)
+	data, _ := ioutil.ReadFile(file)
+	err := load(data)
 	if err != nil {
 		panic(err)
 	}
@@ -57,33 +51,21 @@ func loadFile(file string) {
 
 func Load(env string) {
 	wd, _ := os.Getwd()
-	matches, err := filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s-local.%s", env, "y*ml")))
-	if err != nil {
-		panic(err)
-	}
+	matches, _ := filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s-local.%s", env, "y*ml")))
 	for _, item := range matches {
 		loadFile(item)
 	}
 	if "test" != env {
-		matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-local.%s", "y*ml")))
-		if err != nil {
-			panic(err)
-		}
+		matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-local.%s", "y*ml")))
 		for _, item := range matches {
 			loadFile(item)
 		}
 	}
-	matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s.%s", env, "y*ml")))
-	if err != nil {
-		panic(err)
-	}
+	matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s.%s", env, "y*ml")))
 	for _, item := range matches {
 		loadFile(item)
 	}
-	matches, err = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app.%s", "y*ml")))
-	if err != nil {
-		panic(err)
-	}
+	matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app.%s", "y*ml")))
 	for _, item := range matches {
 		loadFile(item)
 	}
