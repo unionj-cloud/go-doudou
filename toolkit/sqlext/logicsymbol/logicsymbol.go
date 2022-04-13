@@ -10,4 +10,6 @@ const (
 	Or LogicSymbol = "or"
 	// Append logic
 	Append LogicSymbol = " "
+	// End is similar with Append except that End does not add parentheses
+	End LogicSymbol = ""
 )

@@ -2,7 +2,9 @@ package query
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/sortenum"
+	"testing"
 )
 
 func ExampleCriteria() {
@@ -49,40 +51,6 @@ func ExampleCriteria() {
 		Sort: sortenum.Asc,
 	}).Limit(20, 10).Sql())
 
-	query = C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).
-		And(C().Col("age").Eq(18)).
-		Or(C().Col("score").Gte(90))
-	fmt.Println(query.Sql())
-
-	page = P().Order(Order{
-		Col:  "create_at",
-		Sort: sortenum.Desc,
-	}).Limit(0, 1)
-	var where Q
-	where = C().Col("project_id").Eq(1)
-	where = where.And(C().Col("delete_at").IsNull())
-	where = where.Append(page)
-	fmt.Println(where.Sql())
-
-	where = C().Col("project_id").Eq(1)
-	where = where.And(C().Col("delete_at").IsNull())
-	where = where.Append(String("for update"))
-	fmt.Println(where.Sql())
-
-	where = C().Col("cc.project_id").Eq(1)
-	where = where.And(C().Col("cc.delete_at").IsNull())
-	where = where.Append(String("for update"))
-	fmt.Println(where.Sql())
-
-	where = C().Col("cc.survey_id").Eq("abc").
-		And(C().Col("cc.year").Eq(2021)).
-		And(C().Col("cc.month").Eq(10)).
-		And(C().Col("cc.stat_type").Eq(2)).Append(String("for update"))
-	fmt.Println(where.Sql())
-
-	where = C().Col("cc.name").Like("%ba%")
-	fmt.Println(where.Sql())
-
 	// Output:
 	//((`name` = ? or `school` = ?) and `age` = ?) [wubin havard 18]
 	//((`name` = ? or `school` = ?) and `delete_at` is not null) [wubin havard]
@@ -93,10 +61,71 @@ func ExampleCriteria() {
 	//order by `create_at` desc,`score` asc limit ?,? [30 5]
 	//7
 	//order by `score` asc limit ?,? [20 10]
-	//(((`name` = ? or `school` = ?) and `age` = ?) or `score` >= ?) [wubin havard 18 90]
+}
+
+func TestCriteriaAppend(t *testing.T) {
+	sqlStatement := C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).
+		And(C().Col("age").Eq(18)).
+		Or(C().Col("score").Gte(90).And(C().Col("height").Gt(160).End(String("anything")).And(C().Col("height").Lte(170).
+			Append(String("and favourite = 'Go'")))))
+	str, _ := sqlStatement.Sql()
+	require.Equal(t, "(((`name` = ? or `school` = ?) and `age` = ?) or (`score` >= ? and (`height` > ? and (`height` <= ? and favourite = 'Go'))))", str)
+}
+
+func TestWhereAppend(t *testing.T) {
+	sqlStatement := C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).
+		And(C().Col("age").Eq(18)).
+		Or(C().Col("score").Gte(90).
+			And(C().Col("height").Gt(160).And(C().Col("height").Lte(170))).
+			Append(String("and favourite = 'Go'")))
+	str, _ := sqlStatement.Sql()
+	require.Equal(t, "(((`name` = ? or `school` = ?) and `age` = ?) or ((`score` >= ? and (`height` > ? and `height` <= ?)) and favourite = 'Go'))", str)
+}
+
+func ExampleEnd() {
+	page := P().Order(Order{
+		Col:  "create_at",
+		Sort: sortenum.Desc,
+	}).Limit(0, 1)
+	var where Q
+	where = C().Col("project_id").Eq(1)
+	where = where.And(C().Col("delete_at").IsNull())
+	where = where.End(page)
+	fmt.Println(where.Sql())
+
+	where = C().Col("project_id").Eq(1)
+	where = where.And(C().Col("delete_at").IsNull())
+	where = where.End(String("for update"))
+	fmt.Println(where.Sql())
+
+	where = C().Col("cc.project_id").Eq(1)
+	where = where.And(C().Col("cc.delete_at").IsNull())
+	where = where.End(String("for update"))
+	fmt.Println(where.Sql())
+
+	where = C().Col("cc.survey_id").Eq("abc").
+		And(C().Col("cc.year").Eq(2021)).
+		And(C().Col("cc.month").Eq(10)).
+		And(C().Col("cc.stat_type").Eq(2)).End(String("for update"))
+	fmt.Println(where.Sql())
+
+	where = C().Col("cc.name").Like("%ba%")
+	fmt.Println(where.Sql())
+
+	page = P().Order(Order{
+		Col:  "user.create_at",
+		Sort: sortenum.Desc,
+	}).Limit(0, 1)
+	where = C().Col("project_id").Eq(1)
+	where = where.And(C().Col("delete_at").IsNull())
+	where = where.End(page)
+	fmt.Println(where.Sql())
+
+	// Output:
 	//(`project_id` = ? and `delete_at` is null) order by `create_at` desc limit ?,? [1 0 1]
 	//(`project_id` = ? and `delete_at` is null) for update [1]
 	//(cc.`project_id` = ? and cc.`delete_at` is null) for update [1]
 	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) for update [abc 2021 10 2]
 	//cc.`name` like ? [%ba%]
+	//(`project_id` = ? and `delete_at` is null) order by user.`create_at` desc limit ?,? [1 0 1]
 }

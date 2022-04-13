@@ -190,10 +190,7 @@ func ToErrorSliceE(s []string) ([]error, error) {
 	}
 	var ret []error
 	for _, item := range s {
-		i, err := ToErrorE(item)
-		if err != nil {
-			return nil, fmt.Errorf("unable to cast string slice %#v to []error because of error %s", s, err)
-		}
+		i, _ := ToErrorE(item)
 		ret = append(ret, i)
 	}
 	return ret, nil
@@ -250,10 +247,7 @@ func ToRuneSliceSliceE(s []string) ([][]rune, error) {
 	}
 	var ret [][]rune
 	for _, item := range s {
-		i, err := ToRuneSliceE(item)
-		if err != nil {
-			return nil, fmt.Errorf("unable to cast string slice %#v to [][]rune because of error %s", s, err)
-		}
+		i, _ := ToRuneSliceE(item)
 		ret = append(ret, i)
 	}
 	return ret, nil
@@ -265,10 +259,7 @@ func ToByteSliceSliceE(s []string) ([][]byte, error) {
 	}
 	var ret [][]byte
 	for _, item := range s {
-		i, err := ToByteSliceE(item)
-		if err != nil {
-			return nil, fmt.Errorf("unable to cast string slice %#v to [][]byte because of error %s", s, err)
-		}
+		i, _ := ToByteSliceE(item)
 		ret = append(ret, i)
 	}
 	return ret, nil

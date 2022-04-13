@@ -2,6 +2,7 @@ package sliceutils
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"reflect"
 	"testing"
 )
@@ -23,6 +24,14 @@ func TestContains(t *testing.T) {
 				test: "2",
 			},
 			want: true,
+		},
+		{
+			name: "1",
+			args: args{
+				src:  []interface{}{"a", "2", "c"},
+				test: "3",
+			},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
@@ -72,7 +81,7 @@ func TestIndexOfAny(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "3",
+			name: "",
 			args: args{
 				target: "a",
 				anySlice: []string{
@@ -81,6 +90,15 @@ func TestIndexOfAny(t *testing.T) {
 			},
 			want:    2,
 			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				target:   "a",
+				anySlice: "abc",
+			},
+			want:    -1,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -188,6 +206,14 @@ func TestConvertAny2Interface(t *testing.T) {
 			},
 			want:    []interface{}{1, 2, 3},
 			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				src: "abc",
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -357,6 +383,14 @@ func TestIndexOf(t *testing.T) {
 			},
 			want: 2,
 		},
+		{
+			name: "",
+			args: args{
+				element: "d",
+				data:    []string{"a", "b", "c"},
+			},
+			want: -1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -404,4 +438,33 @@ func TestIsEmptyP(t *testing.T) {
 	assert.Panics(t, func() {
 		IsEmpty(1)
 	})
+}
+
+func TestStringFilter(t *testing.T) {
+	type args struct {
+		src []string
+		fn  func(item string) bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "",
+			args: args{
+				src: []string{"a", "2", "c"},
+				fn: func(item string) bool {
+					_, err := cast.ToIntE(item)
+					return err == nil
+				},
+			},
+			want: []string{"2"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, StringFilter(tt.args.src, tt.args.fn), "StringFilter(%v, %v)", tt.args.src, tt.args.fn)
+		})
+	}
 }

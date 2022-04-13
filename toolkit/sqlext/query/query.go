@@ -22,6 +22,7 @@ type Q interface {
 	And(q Base) Where
 	Or(q Base) Where
 	Append(q Base) Where
+	End(q Base) Where
 }
 
 // Criteria wrap a group of column, value and operator such as name = 20
@@ -185,6 +186,16 @@ func (c Criteria) Append(cri Base) Where {
 	return w
 }
 
+// End does nothing for Criteria same as Append empty
+func (c Criteria) End(q Base) Where {
+	w := Where{
+		children: make([]Base, 0),
+	}
+	w.children = append(w.children, c, String(""))
+	w.lsym = logicsymbol.End
+	return w
+}
+
 // Where concat children clauses with one of logic operators And, Or, Append
 type Where struct {
 	lsym     logicsymbol.LogicSymbol
@@ -198,10 +209,19 @@ func (w Where) Sql() (string, []interface{}) {
 	args = append(args, args0...)
 	w1, args1 := w.children[1].Sql()
 	args = append(args, args1...)
-	if w.lsym != logicsymbol.Append {
+	switch w.lsym {
+	case logicsymbol.And, logicsymbol.Or:
 		return fmt.Sprintf("(%s %s %s)", w0, w.lsym, w1), args
+	case logicsymbol.Append:
+		return fmt.Sprintf("(%s%s%s)", w0, w.lsym, w1), args
+	case logicsymbol.End:
+		fallthrough
+	default:
+		if stringutils.IsEmpty(w1) {
+			return fmt.Sprintf("%s", w0), args
+		}
+		return fmt.Sprintf("%s %s", w0, w1), args
 	}
-	return fmt.Sprintf("%s%s%s", w0, w.lsym, w1), args
 }
 
 // And concat another sql expression builder with And
@@ -231,6 +251,15 @@ func (w Where) Append(whe Base) Where {
 	}
 	parentW.children = append(parentW.children, w, whe)
 	parentW.lsym = logicsymbol.Append
+	return parentW
+}
+
+func (w Where) End(q Base) Where {
+	parentW := Where{
+		children: make([]Base, 0),
+	}
+	parentW.children = append(parentW.children, w, q)
+	parentW.lsym = logicsymbol.End
 	return parentW
 }
 

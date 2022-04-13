@@ -21,6 +21,13 @@ func TestToInt(t *testing.T) {
 			},
 			want: 21,
 		},
+		{
+			name: "",
+			args: args{
+				s: "not_int",
+			},
+			want: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -807,6 +814,42 @@ func TestToBoolOrDefault(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ToBoolOrDefault(tt.args.s, tt.args.d); got != tt.want {
 				t.Errorf("ToBoolOrDefault() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToIntOrDefault(t *testing.T) {
+	type args struct {
+		s string
+		d int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "",
+			args: args{
+				s: "not_int",
+				d: 10,
+			},
+			want: 10,
+		},
+		{
+			name: "",
+			args: args{
+				s: "5",
+				d: 10,
+			},
+			want: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToIntOrDefault(tt.args.s, tt.args.d); got != tt.want {
+				t.Errorf("ToIntOrDefault() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -32,6 +32,14 @@ func TestToIntSliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -69,6 +77,14 @@ func TestToInt8SliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -114,6 +130,14 @@ func TestToInt16SliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -151,6 +175,14 @@ func TestToInt32SliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -196,6 +228,14 @@ func TestToInt64SliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -233,6 +273,14 @@ func TestToUintSliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -278,6 +326,14 @@ func TestToUint8SliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -315,6 +371,14 @@ func TestToUint16SliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -360,6 +424,14 @@ func TestToUint32SliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -397,6 +469,14 @@ func TestToUint64SliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -442,6 +522,14 @@ func TestToFloat32SliceE(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -479,6 +567,14 @@ func TestToFloat64SliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"2", "3q", "4"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -528,6 +624,14 @@ func TestToBoolSliceE(t *testing.T) {
 			name: "",
 			args: args{
 				s: []string{"T", "fff"},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -647,6 +751,14 @@ func TestToRuneSliceSliceE(t *testing.T) {
 			want:    [][]rune{[]rune("test1")},
 			wantErr: false,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -679,6 +791,14 @@ func TestToByteSliceSliceE(t *testing.T) {
 			},
 			want:    [][]byte{[]byte("test1")},
 			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -713,6 +833,14 @@ func TestToInterfaceSliceE(t *testing.T) {
 			want:    []interface{}{"test1"},
 			wantErr: false,
 		},
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -723,6 +851,39 @@ func TestToInterfaceSliceE(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToInterfaceSliceE() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToErrorSliceE(t *testing.T) {
+	type args struct {
+		s []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []error
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				s: nil,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToErrorSliceE(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ToErrorSliceE() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToErrorSliceE() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
