@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mock
+package nacos
 
 import (
 	"github.com/wubin1989/nacos-sdk-go/model"
 	"github.com/wubin1989/nacos-sdk-go/vo"
 )
 
-//go:generate mockgen -destination ./mock_naming_client_interface.go -package mock -source=./naming_client_interface.go
+//go:generate mockgen -destination ./mock/mock_naming_client_interface.go -package mock -source=./naming_client_interface.go
 
 type INamingClient interface {
 

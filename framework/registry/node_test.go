@@ -1,6 +1,9 @@
 package registry
 
 import (
+	"github.com/apolloconfig/agollo/v4"
+	"github.com/apolloconfig/agollo/v4/agcache/memory"
+	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -12,9 +15,12 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	memmock "github.com/unionj-cloud/go-doudou/framework/memberlist/mock"
+	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
+	nmock "github.com/unionj-cloud/go-doudou/framework/registry/nacos/mock"
 	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
 	"github.com/wubin1989/nacos-sdk-go/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
+	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
 	"github.com/wubin1989/nacos-sdk-go/vo"
 	"os"
 	"reflect"
@@ -255,10 +261,114 @@ func TestNewNode_NacosConfigType(t *testing.T) {
 
 		err := configmgr.LoadFromNacos(config.GetNacosClientParam(), dataId, string(config.DefaultGddNacosConfigFormat), config.DefaultGddNacosConfigGroup)
 		So(err, ShouldBeNil)
-
-		err = NewNode()
-		So(err, ShouldBeNil)
+		So(NewNode(), ShouldBeNil)
 		defer Shutdown()
+	})
+}
+
+func TestNewNode_ApolloConfigType(t *testing.T) {
+	Convey("Should not have error", t, func() {
+		setup()
+		_ = config.GddConfigRemoteType.Write("apollo")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		configClient := mock.NewMockClient(ctrl)
+		factory := &memory.DefaultCacheFactory{}
+		cache := factory.Create()
+		cache.Set("gdd.retry.count", "3", 0)
+		cache.Set("gdd.weight", "5", 0)
+		configClient.
+			EXPECT().
+			GetConfigCache(config.DefaultGddApolloNamespace).
+			AnyTimes().
+			Return(cache)
+
+		configClient.
+			EXPECT().
+			AddChangeListener(gomock.Any()).
+			AnyTimes().
+			Return()
+
+		configmgr.StartWithConfig = func(loadAppConfig func() (*apolloConfig.AppConfig, error)) (agollo.Client, error) {
+			_, _ = loadAppConfig()
+			return configClient, nil
+		}
+
+		if configmgr.ApolloClient != nil {
+			configmgr.ApolloClient = configClient
+		}
+
+		apolloCluster := config.DefaultGddApolloCluster
+		apolloAddr := config.GddApolloAddr.Load()
+		apolloNamespace := config.DefaultGddApolloNamespace
+		apolloBackupPath := config.DefaultGddApolloBackupPath
+		c := &apolloConfig.AppConfig{
+			AppID:            config.GddServiceName.Load(),
+			Cluster:          apolloCluster,
+			IP:               apolloAddr,
+			NamespaceName:    apolloNamespace,
+			IsBackupConfig:   false,
+			BackupConfigPath: apolloBackupPath,
+			MustStart:        false,
+		}
+		So(func() {
+			configmgr.LoadFromApollo(c)
+		}, ShouldNotPanic)
+
+		So(NewNode(), ShouldBeNil)
+		defer Shutdown()
+	})
+}
+
+func TestNewNode_InvalidConfigType(t *testing.T) {
+	Convey("Should panic", t, func() {
+		setup()
+		_ = config.GddConfigRemoteType.Write("invalid")
+		defer Shutdown()
+		So(func() {
+			NewNode()
+		}, ShouldPanic)
+	})
+}
+
+func TestNewNode_Nacos(t *testing.T) {
+	Convey("Should return nil", t, func() {
+		setup()
+		_ = config.GddServiceDiscoveryMode.Write("nacos")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		defer Shutdown()
+
+		namingClient := nmock.NewMockINamingClient(ctrl)
+		namingClient.
+			EXPECT().
+			RegisterInstance(gomock.Any()).
+			AnyTimes().
+			Return(true, nil)
+
+		namingClient.
+			EXPECT().
+			DeregisterInstance(gomock.Any()).
+			AnyTimes().
+			Return(true, nil)
+
+		nacos.NewNamingClient = func(param vo.NacosClientParam) (iClient naming_client.INamingClient, err error) {
+			return namingClient, nil
+		}
+
+		if nacos.NamingClient == nil {
+			nacos.NamingClient = namingClient
+		}
+
+		So(NewNode(), ShouldBeNil)
+	})
+}
+
+func TestNewNode_InvalidServiceDiscoveryMode(t *testing.T) {
+	Convey("Should return nil", t, func() {
+		setup()
+		_ = config.GddServiceDiscoveryMode.Write("invalid")
+		So(NewNode(), ShouldBeNil)
 	})
 }
 
@@ -419,5 +529,26 @@ func Test_numNodes(t *testing.T) {
 	Convey("Should return 0", t, func() {
 		mlist = nil
 		So(numNodes(), ShouldEqual, 0)
+	})
+}
+
+func TestShutdown(t *testing.T) {
+	config.GddServiceDiscoveryMode.Write("invalid")
+	Shutdown()
+}
+
+func TestLeave(t *testing.T) {
+	Convey("Should leave", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mem := memmock.NewMockIMemberlist(ctrl)
+		mlist = mem
+		mem.
+			EXPECT().
+			Leave(10 * time.Second).
+			AnyTimes().
+			Return(nil)
+
+		Leave(10 * time.Second)
 	})
 }

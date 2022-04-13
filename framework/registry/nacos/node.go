@@ -14,10 +14,13 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/vo"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
 var NamingClient naming_client.INamingClient
+
+var GetPrivateIP = sockaddr.GetPrivateIP
 
 func getRegisterHost() string {
 	registerHost := config.DefaultGddNacosRegisterHost
@@ -26,7 +29,7 @@ func getRegisterHost() string {
 	}
 	if stringutils.IsEmpty(registerHost) {
 		var err error
-		registerHost, err = sockaddr.GetPrivateIP()
+		registerHost, err = GetPrivateIP()
 		if err != nil {
 			logger.Panic(fmt.Errorf("[go-doudou] failed to get interface addresses: %v", err))
 		}
@@ -58,12 +61,21 @@ func getServiceName() string {
 	return service
 }
 
-func NewNode(data ...map[string]interface{}) {
+var onceNacos sync.Once
+var NewNamingClient = clients.NewNamingClient
+
+func InitialiseNacosNamingClient() {
 	var err error
-	NamingClient, err = clients.NewNamingClient(config.GetNacosClientParam())
+	NamingClient, err = NewNamingClient(config.GetNacosClientParam())
 	if err != nil {
 		logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
 	}
+}
+
+func NewNode(data ...map[string]interface{}) {
+	onceNacos.Do(func() {
+		InitialiseNacosNamingClient()
+	})
 	registerHost := getRegisterHost()
 	httpPort := getPort()
 	service := getServiceName()

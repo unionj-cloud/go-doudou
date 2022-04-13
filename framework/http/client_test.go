@@ -9,10 +9,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/http/mock"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
+	nmock "github.com/unionj-cloud/go-doudou/framework/registry/nacos/mock"
 	"github.com/wubin1989/nacos-sdk-go/common/constant"
 	"github.com/wubin1989/nacos-sdk-go/model"
 	"github.com/wubin1989/nacos-sdk-go/vo"
@@ -111,7 +111,7 @@ func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	namingClient := mock.NewMockINamingClient(ctrl)
+	namingClient := nmock.NewMockINamingClient(ctrl)
 	namingClient.
 		EXPECT().
 		SelectInstances(vo.SelectInstancesParam{
@@ -135,7 +135,7 @@ func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	namingClient := mock.NewMockINamingClient(ctrl)
+	namingClient := nmock.NewMockINamingClient(ctrl)
 	namingClient.
 		EXPECT().
 		SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
