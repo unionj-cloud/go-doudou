@@ -133,7 +133,7 @@ func TestHandlePing(t *testing.T) {
 	go func() {
 		select {
 		case <-doneCh:
-		case <-time.After(2 * time.Second):
+		case <-time.After(120 * time.Second):
 			panic("timeout")
 		}
 	}()
