@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination ./mock/mock_transport.go -package mock -source=./transport.go
+
 // Packet is used to provide some metadata about incoming packets from peers
 // over a packet connection, as well as the packet payload.
 type Packet struct {
@@ -100,6 +102,12 @@ type NodeAwareTransport interface {
 
 type shimNodeAwareTransport struct {
 	Transport
+}
+
+func NewshimNodeAwareTransport(t Transport) *shimNodeAwareTransport {
+	return &shimNodeAwareTransport{
+		t,
+	}
 }
 
 var _ NodeAwareTransport = (*shimNodeAwareTransport)(nil)

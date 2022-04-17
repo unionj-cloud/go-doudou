@@ -17,6 +17,13 @@ type weightBroadcast struct {
 	msg  []byte
 }
 
+func NewWeightBroadcast(node string, msg []byte) *weightBroadcast {
+	return &weightBroadcast{
+		node,
+		msg,
+	}
+}
+
 func (b *weightBroadcast) Invalidates(other Broadcast) bool {
 	// Check if that broadcast is a weight type
 	mb, ok := other.(*weightBroadcast)

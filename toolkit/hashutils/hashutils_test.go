@@ -76,7 +76,7 @@ func TestUUIDByString(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				input: "http://219.142.101.111/gongkai/fdzdgknr/zfhcxjsbwj/202110/20211013_762458.html",
+				input: "http://www.qingdao.gov.cn/zwgk/xxgk/fgw/gkml/gwfg/bmgw/",
 			},
 			want: "bddcb874-43f2-5fee-aeab-b0a6c4e5103b",
 		},

@@ -171,6 +171,10 @@ type weight struct {
 	WeightAt int64
 }
 
+func NewWeight(incarnation uint32, node string, from string, wei int, weightAt int64) *weight {
+	return &weight{Incarnation: incarnation, Node: node, From: from, Weight: wei, WeightAt: weightAt}
+}
+
 // pushPullHeader is used to inform the
 // otherside how many states we are transferring
 type pushPullHeader struct {

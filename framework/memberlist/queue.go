@@ -7,6 +7,8 @@ import (
 	"github.com/google/btree"
 )
 
+//go:generate mockgen -destination ./mock/mock_queue.go -package mock -source=./queue.go
+
 // TransmitLimitedQueue is used to queue messages to broadcast to
 // the cluster (via gossip) but limits the number of transmits per
 // message. It also prioritizes messages with lower transmit counts
