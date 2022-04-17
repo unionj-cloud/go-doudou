@@ -78,7 +78,7 @@ func TestUUIDByString(t *testing.T) {
 			args: args{
 				input: "http://www.qingdao.gov.cn/zwgk/xxgk/fgw/gkml/gwfg/bmgw/",
 			},
-			want: "bddcb874-43f2-5fee-aeab-b0a6c4e5103b",
+			want: "f64e7a2c-7c3c-574b-8353-e10efee0efc5",
 		},
 	}
 	for _, tt := range tests {
