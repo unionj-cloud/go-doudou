@@ -353,6 +353,8 @@ func (c *Config) IPAllowed(ip net.IP) error {
 	return fmt.Errorf("%s is not allowed", ip)
 }
 
+var LookupIP = net.LookupIP
+
 // AddrAllowed return an error if access to memberlist is denied
 // addr can either be an ip address or a dns address
 func (c *Config) AddrAllowed(addr string) error {
@@ -361,30 +363,13 @@ func (c *Config) AddrAllowed(addr string) error {
 	}
 	ip := net.ParseIP(addr)
 	if ip == nil {
-		ips, err := net.LookupIP(addr)
+		ips, err := LookupIP(addr)
 		if err != nil || len(ips) == 0 {
 			return fmt.Errorf("%s is not allowed", addr)
 		}
 		ip = ips[0]
 	}
 	return c.IPAllowed(ip)
-}
-
-// DefaultLocalConfig works like DefaultConfig, however it returns a configuration
-// that is optimized for a local loopback environments. The default configuration is
-// still very conservative and errs on the side of caution.
-func DefaultLocalConfig() *Config {
-	conf := DefaultLANConfig()
-	conf.TCPTimeout = time.Second
-	conf.IndirectChecks = 1
-	conf.RetransmitMult = 2
-	conf.SuspicionMult = 3
-	conf.PushPullInterval = 15 * time.Second
-	conf.ProbeTimeout = 200 * time.Millisecond
-	conf.ProbeInterval = time.Second
-	conf.GossipInterval = 100 * time.Millisecond
-	conf.GossipToTheDeadTime = 15 * time.Second
-	return conf
 }
 
 // Returns whether or not encryption is enabled

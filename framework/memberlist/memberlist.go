@@ -778,3 +778,14 @@ func (m *Memberlist) getBroadcasts(overhead, limit int) [][]byte {
 	}
 	return toSend
 }
+
+// encodeWeightMsgAndBroadcast encodes a weight message and enqueues it for broadcast. Fails
+// silently if there is an encoding error.
+func (m *Memberlist) encodeWeightMsgAndBroadcast(node string, msg interface{}) {
+	buf, err := encode(weightMsg, msg)
+	if err != nil {
+		m.logger.Printf("[ERR] memberlist: Failed to encode message for weight message broadcast: %s", err)
+	} else {
+		m.broadcasts.QueueBroadcast(&weightBroadcast{node, buf.Bytes()})
+	}
+}

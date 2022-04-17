@@ -98,4 +98,24 @@ func TestParseCIDRs(t *testing.T) {
 	config.CIDRsAllowed = got
 	err := config.AddrAllowed("172.16.238.10")
 	require.Error(t, err)
+
+	LookupIP = func(host string) ([]net.IP, error) {
+		return []net.IP{
+			net.ParseIP("172.16.238.10"),
+		}, nil
+	}
+	defer func() {
+		LookupIP = net.LookupIP
+	}()
+	err = config.AddrAllowed("this is a dns")
+	require.Error(t, err)
+
+	LookupIP = func(host string) ([]net.IP, error) {
+		return nil, nil
+	}
+	err = config.AddrAllowed("this is a dns")
+	require.Error(t, err)
+
+	_, err = ParseCIDRs([]string{"this is a dns"})
+	require.Error(t, err)
 }
