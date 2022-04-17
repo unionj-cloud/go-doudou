@@ -150,6 +150,10 @@ type alive struct {
 	Vsn []uint8
 }
 
+func NewAlive(incarnation uint32, node string, addr string, port uint16, meta []byte, vsn []uint8) alive {
+	return alive{Incarnation: incarnation, Node: node, Addr: addr, Port: port, Meta: meta, Vsn: vsn}
+}
+
 // dead is broadcast when we confirm a node is dead
 // Overloaded for nodes leaving
 type dead struct {

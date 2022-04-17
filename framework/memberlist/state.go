@@ -69,6 +69,10 @@ type nodeState struct {
 	WeightAt    int64         // UTC timestamp which node weight calculated at
 }
 
+func NewNodeState(node Node, state NodeStateType) *nodeState {
+	return &nodeState{Node: node, State: state}
+}
+
 // Address returns the host:port form of a node's address, suitable for use
 // with a transport.
 func (n *nodeState) Address() string {

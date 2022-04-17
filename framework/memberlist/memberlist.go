@@ -79,6 +79,30 @@ type Memberlist struct {
 	logger *log.Logger
 }
 
+func (m *Memberlist) NodeMap() map[string]*nodeState {
+	return m.nodeMap
+}
+
+func (m *Memberlist) AdvertiseAddr() string {
+	return m.advertiseAddr
+}
+
+func (m *Memberlist) AdvertisePort() uint16 {
+	return m.advertisePort
+}
+
+func (m *Memberlist) Nodes() []*nodeState {
+	return m.nodes
+}
+
+func (m *Memberlist) SetNodes(nodes ...*nodeState) {
+	m.nodes = nodes
+}
+
+func (m *Memberlist) Config() *Config {
+	return m.config
+}
+
 // BuildVsnArray creates the array of Vsn
 func (conf *Config) BuildVsnArray() []uint8 {
 	return []uint8{
@@ -252,7 +276,7 @@ func (m *Memberlist) Join(existing []string) (int, error) {
 	numSuccess := 0
 	var errs error
 	for _, exist := range existing {
-		addrs, err := m.resolveAddr(exist)
+		addrs, err := m.ResolveAddr(exist)
 		if err != nil {
 			err = fmt.Errorf("Failed to resolve %s: %v", exist, err)
 			errs = multierror.Append(errs, err)
@@ -278,20 +302,48 @@ func (m *Memberlist) Join(existing []string) (int, error) {
 	return numSuccess, errs
 }
 
-// ipPort holds information about a node we want to try to join.
-type ipPort struct {
+// IpPort holds information about a node we want to try to join.
+type IpPort struct {
 	ip       string
 	port     uint16
 	nodeName string // optional
 }
 
-// tcpLookupIP is a helper to initiate a TCP-based DNS lookup for the given host.
+func (i *IpPort) SetIp(ip string) {
+	i.ip = ip
+}
+
+func (i *IpPort) SetPort(port uint16) {
+	i.port = port
+}
+
+func (i *IpPort) SetNodeName(nodeName string) {
+	i.nodeName = nodeName
+}
+
+func (i IpPort) Ip() string {
+	return i.ip
+}
+
+func (i IpPort) Port() uint16 {
+	return i.port
+}
+
+func (i IpPort) NodeName() string {
+	return i.nodeName
+}
+
+func NewIpPort(ip string, port uint16, nodeName string) IpPort {
+	return IpPort{ip: ip, port: port, nodeName: nodeName}
+}
+
+// TcpLookupIP is a helper to initiate a TCP-based DNS lookup for the given host.
 // The built-in Go resolver will do a UDP lookup first, and will only use TCP if
 // the response has the truncate bit set, which isn't common on DNS servers like
 // Consul's. By doing the TCP lookup directly, we get the best chance for the
 // largest list of hosts to join. Since joins are relatively rare events, it's ok
 // to do this rather expensive operation.
-func (m *Memberlist) tcpLookupIP(host string, defaultPort uint16, nodeName string) ([]ipPort, error) {
+func (m *Memberlist) TcpLookupIP(host string, defaultPort uint16, nodeName string) ([]IpPort, error) {
 	// Don't attempt any TCP lookups against non-fully qualified domain
 	// names, since those will likely come from the resolv.conf file.
 	if !strings.Contains(host, ".") {
@@ -329,13 +381,13 @@ func (m *Memberlist) tcpLookupIP(host string, defaultPort uint16, nodeName strin
 		}
 
 		// Handle any IPs we get back that we can attempt to join.
-		var ips []ipPort
+		var ips []IpPort
 		for _, r := range in.Answer {
 			switch rr := r.(type) {
 			case (*dns.A):
-				ips = append(ips, ipPort{ip: rr.A.String(), port: defaultPort, nodeName: nodeName})
+				ips = append(ips, IpPort{ip: rr.A.String(), port: defaultPort, nodeName: nodeName})
 			case (*dns.AAAA):
-				ips = append(ips, ipPort{ip: rr.AAAA.String(), port: defaultPort, nodeName: nodeName})
+				ips = append(ips, IpPort{ip: rr.AAAA.String(), port: defaultPort, nodeName: nodeName})
 			case (*dns.CNAME):
 				m.logger.Printf("[DEBUG] memberlist: Ignoring CNAME RR in TCP-first answer for '%s'", host)
 			}
@@ -346,9 +398,9 @@ func (m *Memberlist) tcpLookupIP(host string, defaultPort uint16, nodeName strin
 	return nil, nil
 }
 
-// resolveAddr is used to resolve the address into an address,
+// ResolveAddr is used to resolve the address into an address,
 // port, and error. If no port is given, use the default
-func (m *Memberlist) resolveAddr(hostStr string) ([]ipPort, error) {
+func (m *Memberlist) ResolveAddr(hostStr string) ([]IpPort, error) {
 	// First peel off any leading node name. This is optional.
 	nodeName := ""
 	if slashIdx := strings.Index(hostStr, "/"); slashIdx >= 0 {
@@ -374,8 +426,8 @@ func (m *Memberlist) resolveAddr(hostStr string) ([]ipPort, error) {
 	}
 	port := uint16(lport)
 
-	return []ipPort{
-		ipPort{ip: host, port: port, nodeName: nodeName},
+	return []IpPort{
+		{ip: host, port: port, nodeName: nodeName},
 	}, nil
 }
 

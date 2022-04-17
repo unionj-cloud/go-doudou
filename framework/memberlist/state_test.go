@@ -3,34 +3,34 @@ package memberlist
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
 
-func retry(t *testing.T, n int, w time.Duration, fn func(func(string, ...interface{}))) {
-	t.Helper()
-	for try := 1; try <= n; try++ {
-		failed := false
-		failFormat := ""
-		failArgs := []interface{}{}
-		failf := func(format string, args ...interface{}) {
-			failed = true
-			failFormat = format
-			failArgs = args
-		}
+var bindLock sync.Mutex
+var bindNum byte = 10
 
-		fn(failf)
+func getBindAddrNet(network byte) net.IP {
+	bindLock.Lock()
+	defer bindLock.Unlock()
 
-		if !failed {
-			return
-		}
-		if try == n {
-			t.Fatalf(failFormat, failArgs...)
-		}
-		time.Sleep(w)
-	}
+	//result := net.IPv4(127, 0, network, bindNum)
+	//bindNum++
+	//if bindNum > 255 {
+	//	bindNum = 10
+	//}
+
+	result := net.IPv4(127, 0, 0, 1)
+
+	return result
+}
+
+func getBindAddr() net.IP {
+	return getBindAddrNet(0)
 }
 
 func HostMemberlist(host string, t *testing.T, f func(*Config)) *Memberlist {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -687,6 +688,34 @@ func TestEncryptDecryptState(t *testing.T) {
 	if !reflect.DeepEqual(state, plain) {
 		t.Fatalf("Decrypt failed: %v", plain)
 	}
+}
+
+func testConfigNet(tb testing.TB, network byte) *Config {
+	tb.Helper()
+
+	config := DefaultLANConfig()
+	config.BindAddr = getBindAddrNet(network).String()
+	config.Name = config.BindAddr
+	config.BindPort = 0 // choose free port
+	config.RequireNodeNames = true
+	config.Logger = log.New(os.Stderr, config.Name, log.LstdFlags)
+	return config
+}
+
+func testConfig(tb testing.TB) *Config {
+	return testConfigNet(tb, 0)
+}
+
+func GetMemberlist(tb testing.TB, f func(c *Config)) *Memberlist {
+	c := testConfig(tb)
+	c.BindPort = 0
+	if f != nil {
+		f(c)
+	}
+
+	m, err := Create(c)
+	require.NoError(tb, err)
+	return m
 }
 
 func TestRawSendUdp_CRC(t *testing.T) {
