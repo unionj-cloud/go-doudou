@@ -12,10 +12,7 @@ type IMemberlist interface {
 	Ping(node string, addr net.Addr) (time.Duration, error)
 	LocalNode() *Node
 	UpdateNode(timeout time.Duration) error
-	SendTo(to net.Addr, msg []byte) error
 	SendToAddress(a Address, msg []byte) error
-	SendToUDP(to *Node, msg []byte) error
-	SendToTCP(to *Node, msg []byte) error
 	SendBestEffort(to *Node, msg []byte) error
 	SendReliable(to *Node, msg []byte) error
 	Members() []*Node

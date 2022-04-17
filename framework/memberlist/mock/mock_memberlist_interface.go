@@ -178,20 +178,6 @@ func (mr *MockIMemberlistMockRecorder) SendReliable(to, msg interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendReliable", reflect.TypeOf((*MockIMemberlist)(nil).SendReliable), to, msg)
 }
 
-// SendTo mocks base method.
-func (m *MockIMemberlist) SendTo(to net.Addr, msg []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendTo", to, msg)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendTo indicates an expected call of SendTo.
-func (mr *MockIMemberlistMockRecorder) SendTo(to, msg interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendTo", reflect.TypeOf((*MockIMemberlist)(nil).SendTo), to, msg)
-}
-
 // SendToAddress mocks base method.
 func (m *MockIMemberlist) SendToAddress(a memberlist.Address, msg []byte) error {
 	m.ctrl.T.Helper()
@@ -204,34 +190,6 @@ func (m *MockIMemberlist) SendToAddress(a memberlist.Address, msg []byte) error 
 func (mr *MockIMemberlistMockRecorder) SendToAddress(a, msg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendToAddress", reflect.TypeOf((*MockIMemberlist)(nil).SendToAddress), a, msg)
-}
-
-// SendToTCP mocks base method.
-func (m *MockIMemberlist) SendToTCP(to *memberlist.Node, msg []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendToTCP", to, msg)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendToTCP indicates an expected call of SendToTCP.
-func (mr *MockIMemberlistMockRecorder) SendToTCP(to, msg interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendToTCP", reflect.TypeOf((*MockIMemberlist)(nil).SendToTCP), to, msg)
-}
-
-// SendToUDP mocks base method.
-func (m *MockIMemberlist) SendToUDP(to *memberlist.Node, msg []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendToUDP", to, msg)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendToUDP indicates an expected call of SendToUDP.
-func (mr *MockIMemberlistMockRecorder) SendToUDP(to, msg interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendToUDP", reflect.TypeOf((*MockIMemberlist)(nil).SendToUDP), to, msg)
 }
 
 // Shutdown mocks base method.

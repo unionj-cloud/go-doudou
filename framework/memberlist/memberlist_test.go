@@ -2224,6 +2224,11 @@ func TestMemberlist_SendBestEffort(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// userMsgHeader is used to encapsulate a userMsg
+type userMsgHeader struct {
+	UserMsgLen int // Encodes the byte lengh of user state
+}
+
 func TestMemberlist_SendReliable(t *testing.T) {
 	node := &memberlist.Node{
 		Name: "testNode",
@@ -2232,12 +2237,26 @@ func TestMemberlist_SendReliable(t *testing.T) {
 	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	//bufConn := bytes.NewBuffer(nil)
+	//err := bufConn.WriteByte(byte(8))
+	//require.NoError(t, err)
+	//
+	//msg := []byte("test message")
+	//header := userMsgHeader{UserMsgLen: len(msg)}
+	//hd := codec.MsgpackHandle{}
+	//enc := codec.NewEncoder(bufConn, &hd)
+	//err = enc.Encode(&header)
+	//require.NoError(t, err)
+	//_, err = bufConn.Write(msg)
+	//require.NoError(t, err)
+
 	conn := memmock.NewMockConn(ctrl)
 	conn.
 		EXPECT().
 		Write(gomock.Any()).
 		AnyTimes().
-		Return(43, nil)
+		Return(26, nil)
 	conn.
 		EXPECT().
 		Close().
@@ -2273,6 +2292,7 @@ func TestMemberlist_SendReliable(t *testing.T) {
 
 	m := GetMemberlist(t, func(c *memberlist.Config) {
 		c.Transport = nat
+		c.EnableCompression = false
 	})
 	defer m.Shutdown()
 	err := m.SendReliable(node, []byte("test message"))
