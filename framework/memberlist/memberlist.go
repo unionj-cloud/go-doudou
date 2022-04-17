@@ -29,7 +29,6 @@ import (
 	"time"
 
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/miekg/dns"
 )
 
 var errNodeNamesAreRequired = errors.New("memberlist: node names are required by configuration but one was not provided")
@@ -112,9 +111,9 @@ func (conf *Config) BuildVsnArray() []uint8 {
 	}
 }
 
-// newMemberlist creates the network listeners.
+// NewMemberlist creates the network listeners.
 // Does not schedule execution of background maintenance.
-func newMemberlist(conf *Config) (*Memberlist, error) {
+func NewMemberlist(conf *Config) (*Memberlist, error) {
 	if conf.ProtocolVersion < ProtocolVersionMin {
 		return nil, fmt.Errorf("Protocol version '%d' too low. Must be in range: [%d, %d]",
 			conf.ProtocolVersion, ProtocolVersionMin, ProtocolVersionMax)
@@ -251,7 +250,7 @@ func newMemberlist(conf *Config) (*Memberlist, error) {
 // After creating a Memberlist, the configuration given should not be
 // modified by the user anymore.
 func Create(conf *Config) (*Memberlist, error) {
-	m, err := newMemberlist(conf)
+	m, err := NewMemberlist(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -335,67 +334,6 @@ func (i IpPort) NodeName() string {
 
 func NewIpPort(ip string, port uint16, nodeName string) IpPort {
 	return IpPort{ip: ip, port: port, nodeName: nodeName}
-}
-
-// TcpLookupIP is a helper to initiate a TCP-based DNS lookup for the given host.
-// The built-in Go resolver will do a UDP lookup first, and will only use TCP if
-// the response has the truncate bit set, which isn't common on DNS servers like
-// Consul's. By doing the TCP lookup directly, we get the best chance for the
-// largest list of hosts to join. Since joins are relatively rare events, it's ok
-// to do this rather expensive operation.
-func (m *Memberlist) TcpLookupIP(host string, defaultPort uint16, nodeName string) ([]IpPort, error) {
-	// Don't attempt any TCP lookups against non-fully qualified domain
-	// names, since those will likely come from the resolv.conf file.
-	if !strings.Contains(host, ".") {
-		return nil, nil
-	}
-
-	// Make sure the domain name is terminated with a dot (we know there's
-	// at least one character at this point).
-	dn := host
-	if dn[len(dn)-1] != '.' {
-		dn = dn + "."
-	}
-
-	// See if we can find a server to try.
-	cc, err := dns.ClientConfigFromFile(m.config.DNSConfigPath)
-	if err != nil {
-		return nil, err
-	}
-	if len(cc.Servers) > 0 {
-		// We support host:port in the DNS config, but need to add the
-		// default port if one is not supplied.
-		server := cc.Servers[0]
-		if !hasPort(server) {
-			server = net.JoinHostPort(server, cc.Port)
-		}
-
-		// Do the lookup.
-		c := new(dns.Client)
-		c.Net = "tcp"
-		msg := new(dns.Msg)
-		msg.SetQuestion(dn, dns.TypeANY)
-		in, _, err := c.Exchange(msg, server)
-		if err != nil {
-			return nil, err
-		}
-
-		// Handle any IPs we get back that we can attempt to join.
-		var ips []IpPort
-		for _, r := range in.Answer {
-			switch rr := r.(type) {
-			case (*dns.A):
-				ips = append(ips, IpPort{ip: rr.A.String(), port: defaultPort, nodeName: nodeName})
-			case (*dns.AAAA):
-				ips = append(ips, IpPort{ip: rr.AAAA.String(), port: defaultPort, nodeName: nodeName})
-			case (*dns.CNAME):
-				m.logger.Printf("[DEBUG] memberlist: Ignoring CNAME RR in TCP-first answer for '%s'", host)
-			}
-		}
-		return ips, nil
-	}
-
-	return nil, nil
 }
 
 // ResolveAddr is used to resolve the address into an address,
@@ -542,13 +480,6 @@ func (m *Memberlist) UpdateNode(timeout time.Duration) error {
 	return nil
 }
 
-// Deprecated: SendTo is deprecated in favor of SendBestEffort, which requires a node to
-// target. If you don't have a node then use SendToAddress.
-func (m *Memberlist) SendTo(to net.Addr, msg []byte) error {
-	a := Address{Addr: to.String(), Name: ""}
-	return m.SendToAddress(a, msg)
-}
-
 func (m *Memberlist) SendToAddress(a Address, msg []byte) error {
 	// Encode as a user message
 	buf := make([]byte, 1, len(msg)+1)
@@ -557,16 +488,6 @@ func (m *Memberlist) SendToAddress(a Address, msg []byte) error {
 
 	// Send the message
 	return m.rawSendMsgPacket(a, nil, buf)
-}
-
-// Deprecated: SendToUDP is deprecated in favor of SendBestEffort.
-func (m *Memberlist) SendToUDP(to *Node, msg []byte) error {
-	return m.SendBestEffort(to, msg)
-}
-
-// Deprecated: SendToTCP is deprecated in favor of SendReliable.
-func (m *Memberlist) SendToTCP(to *Node, msg []byte) error {
-	return m.SendReliable(to, msg)
 }
 
 // SendBestEffort uses the unreliable packet-oriented interface of the transport

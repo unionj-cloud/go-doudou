@@ -355,7 +355,7 @@ func GetMemberlist(tb testing.TB, f func(c *memberlist.Config)) *memberlist.Memb
 		f(c)
 	}
 
-	m, err := memberlist.Create(c)
+	m, err := memberlist.NewMemberlist(c)
 	require.NoError(tb, err)
 	return m
 }
@@ -2206,51 +2206,142 @@ func TestRetryer(t *testing.T) {
 	}
 }
 
-func TestMemberlist_tcpLookupIP(t *testing.T) {
-	m, err := memberlist.Create(memberlist.DefaultLANConfig())
+func TestMemberlist_LocalNode(t *testing.T) {
+	m, err := memberlist.Create(memberlist.DefaultWANConfig())
 	require.NoError(t, err)
 	defer m.Shutdown()
-	ips, err := m.TcpLookupIP("localhost", 7946, "testNode")
-	require.NoError(t, err)
-	fmt.Println(ips)
+	require.NotNil(t, m.LocalNode())
 }
 
-func TestMemberlist_tcpLookupIP2(t *testing.T) {
-	m, err := memberlist.Create(memberlist.DefaultLANConfig())
-	require.NoError(t, err)
+func TestMemberlist_SendBestEffort(t *testing.T) {
+	m := GetMemberlist(t, nil)
 	defer m.Shutdown()
+	err := m.SendBestEffort(&memberlist.Node{
+		Name: "testNode",
+		Addr: "127.0.0.1",
+		Port: 7946,
+	}, []byte("test message"))
+	require.NoError(t, err)
+}
 
+func TestMemberlist_SendReliable(t *testing.T) {
+	node := &memberlist.Node{
+		Name: "testNode",
+		Addr: "127.0.0.1",
+		Port: 7946,
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	dc := memmock.NewMockIDNSClient(ctrl)
-	msg := dns.Msg{
-		MsgHdr:   dns.MsgHdr{},
-		Compress: false,
-		Question: nil,
-		Answer: []dns.RR{
-			&dns.A{
-				Hdr: dns.RR_Header{},
-				A:   net.ParseIP("192.168.2.41"),
-			},
-			&dns.AAAA{
-				Hdr:  dns.RR_Header{},
-				AAAA: net.ParseIP("2001:db8:a0b:12f0::1"),
-			},
-			&dns.CNAME{
-				Hdr:    dns.RR_Header{},
-				Target: "",
-			},
-		},
-		Ns:    nil,
-		Extra: nil,
-	}
-	dc.
+	conn := memmock.NewMockConn(ctrl)
+	conn.
 		EXPECT().
-		Exchange(gomock.Any(), gomock.Any()).
+		Write(gomock.Any()).
 		AnyTimes().
-		Return(&msg, 10*time.Millisecond, nil)
+		Return(43, nil)
+	conn.
+		EXPECT().
+		Close().
+		AnyTimes().
+		Return(nil)
 
-	ips, err := m.TcpLookupIP("www.baidu.com", 7946, "testNode")
+	nat := memmock.NewMockNodeAwareTransport(ctrl)
+	nat.
+		EXPECT().
+		DialAddressTimeout(node.FullAddress(), gomock.Any()).
+		AnyTimes().
+		Return(conn, nil)
+	nat.
+		EXPECT().
+		FinalAdvertiseAddr(gomock.Any(), gomock.Any()).
+		AnyTimes().
+		Return("localhost", 7946, nil)
+	nat.
+		EXPECT().
+		PacketCh().
+		AnyTimes().
+		Return(make(chan *memberlist.Packet))
+	nat.
+		EXPECT().
+		StreamCh().
+		AnyTimes().
+		Return(make(<-chan net.Conn))
+	nat.
+		EXPECT().
+		Shutdown().
+		AnyTimes().
+		Return(nil)
+
+	m := GetMemberlist(t, func(c *memberlist.Config) {
+		c.Transport = nat
+	})
+	defer m.Shutdown()
+	err := m.SendReliable(node, []byte("test message"))
 	require.NoError(t, err)
-	fmt.Println(ips)
+}
+
+func TestMemberlist_SendReliable_Fail(t *testing.T) {
+	m := GetMemberlist(t, nil)
+	defer m.Shutdown()
+	err := m.SendReliable(&memberlist.Node{
+		Name: "testNode",
+		Addr: "127.0.0.1",
+		Port: 7946,
+	}, []byte("test message"))
+	require.Error(t, err)
+}
+
+func TestMemberlist_SendReliable_Fail2(t *testing.T) {
+	node := &memberlist.Node{
+		Name: "testNode",
+		Addr: "127.0.0.1",
+		Port: 7946,
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	conn := memmock.NewMockConn(ctrl)
+	conn.
+		EXPECT().
+		Write(gomock.Any()).
+		AnyTimes().
+		Return(12, nil)
+	conn.
+		EXPECT().
+		Close().
+		AnyTimes().
+		Return(nil)
+
+	nat := memmock.NewMockNodeAwareTransport(ctrl)
+	nat.
+		EXPECT().
+		DialAddressTimeout(node.FullAddress(), gomock.Any()).
+		AnyTimes().
+		Return(conn, nil)
+	nat.
+		EXPECT().
+		FinalAdvertiseAddr(gomock.Any(), gomock.Any()).
+		AnyTimes().
+		Return("localhost", 7946, nil)
+	nat.
+		EXPECT().
+		PacketCh().
+		AnyTimes().
+		Return(make(chan *memberlist.Packet))
+	nat.
+		EXPECT().
+		StreamCh().
+		AnyTimes().
+		Return(make(<-chan net.Conn))
+	nat.
+		EXPECT().
+		Shutdown().
+		AnyTimes().
+		Return(nil)
+
+	m := GetMemberlist(t, func(c *memberlist.Config) {
+		c.Transport = nat
+	})
+	defer m.Shutdown()
+
+	err := m.SendReliable(node, []byte("test message"))
+	require.Error(t, err)
 }
