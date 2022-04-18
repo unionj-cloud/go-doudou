@@ -1,0 +1,656 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "报告生成 API",
+    "description": "报告生成api服务",
+    "version": "1.4.8"
+  },
+  "servers": [
+    {
+      "url": "http://report.xicheng.c92358f369e164c2bbbdee14238b6e9a6.cn-beijing.alicontainer.com",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/text/extractFromUrl": {
+      "get": {
+        "tags": [
+          "text-controller"
+        ],
+        "description": "提取文本",
+        "operationId": "download",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "description": "文件地址",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clearFormat",
+            "in": "query",
+            "description": "是否清除格式，即替换连续空白字符为单一空格",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text/extractFromFile": {
+      "post": {
+        "tags": [
+          "text-controller"
+        ],
+        "description": "提取文本",
+        "operationId": "download_1",
+        "parameters": [
+          {
+            "name": "clearFormat",
+            "in": "query",
+            "description": "是否清除格式，即替换连续空白字符为单一空格",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultString"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Word2HtmlRequestPayload": {
+        "type": "object",
+        "properties": {
+          "downloadUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "ResultString": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "返回标记：成功标记=0，失败标记=1",
+            "format": "int32"
+          },
+          "msg": {
+            "type": "string",
+            "description": "返回信息"
+          },
+          "data": {
+            "type": "string",
+            "description": "数据"
+          }
+        }
+      },
+      "ResultListWordTemplateSubstitution": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "返回标记：成功标记=0，失败标记=1",
+            "format": "int32"
+          },
+          "msg": {
+            "type": "string",
+            "description": "返回信息"
+          },
+          "data": {
+            "type": "array",
+            "description": "数据",
+            "items": {
+              "$ref": "#/components/schemas/WordTemplateSubstitution"
+            }
+          }
+        }
+      },
+      "WordTemplateSubstitution": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "变量名",
+            "example": "var1"
+          },
+          "display": {
+            "type": "string",
+            "description": "完整变量字符串，用于前端展示",
+            "example": "{var1}"
+          },
+          "type": {
+            "type": "string",
+            "description": "类型",
+            "example": "MERGEFIELD",
+            "enum": [
+              "MERGEFIELD",
+              "IMAGE",
+              "CHART",
+              "TABLE",
+              "UNKNOWN"
+            ]
+          }
+        },
+        "description": "模板变量"
+      },
+      "ChartReportParagraph": {
+        "type": "object",
+        "description": "图表类型段落",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReportParagraph"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "chartXlsxTemplateUrl": {
+                "type": "string"
+              },
+              "reportChartType": {
+                "type": "string",
+                "enum": [
+                  "ZHUXINGTU",
+                  "ZHEXIANTU",
+                  "DUIJIZHEXIANTU",
+                  "BINGTU",
+                  "TIAOXINGTU",
+                  "SANDIANTU",
+                  "ZHEXIANZHUXINGTU",
+                  "DUIJIZHUXINGTU",
+                  "YUANHUANTU",
+                  "UNKNOWN"
+                ]
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              },
+              "style": {
+                "$ref": "#/components/schemas/ChartReportParagraphStyle"
+              }
+            }
+          }
+        ]
+      },
+      "ChartReportParagraphStyle": {
+        "type": "object",
+        "properties": {
+          "alignment": {
+            "type": "string",
+            "description": "居左，居中，居右",
+            "enum": [
+              "LEFT",
+              "CENTER",
+              "RIGHT"
+            ]
+          },
+          "width": {
+            "type": "number",
+            "description": "word里面的图表的宽，单位厘米",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "description": "word里面的图表的高，单位厘米",
+            "format": "double"
+          },
+          "foreColor": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "每个系列的前景色，图例的颜色，柱子的颜色，线条的颜色等"
+            },
+            "description": "每个系列的前景色，图例的颜色，柱子的颜色，线条的颜色等"
+          }
+        }
+      },
+      "ImageReportParagraph": {
+        "type": "object",
+        "description": "图片类型段落",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReportParagraph"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "style": {
+                "$ref": "#/components/schemas/ImageReportParagraphStyle"
+              }
+            }
+          }
+        ]
+      },
+      "ImageReportParagraphStyle": {
+        "type": "object",
+        "properties": {
+          "alignment": {
+            "type": "string",
+            "description": "居左，居中，居右",
+            "enum": [
+              "LEFT",
+              "CENTER",
+              "RIGHT"
+            ]
+          },
+          "width": {
+            "type": "number",
+            "format": "double"
+          },
+          "height": {
+            "type": "number",
+            "format": "double"
+          },
+          "separator": {
+            "type": "string"
+          }
+        }
+      },
+      "MergeFieldData": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ParagraphWrapper": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "报告段落类型",
+            "example": "TEXT",
+            "enum": [
+              "TEXT",
+              "CHART",
+              "CHART2",
+              "IMAGE",
+              "TABLE",
+              "TABLE2"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ChartReportParagraph"
+              },
+              {
+                "$ref": "#/components/schemas/ImageReportParagraph"
+              },
+              {
+                "$ref": "#/components/schemas/TableReportParagraph"
+              },
+              {
+                "$ref": "#/components/schemas/TextReportParagraph"
+              }
+            ]
+          }
+        },
+        "description": "报告段落包装类"
+      },
+      "ReportParagraph": {
+        "type": "object",
+        "properties": {
+          "bookmark": {
+            "type": "string"
+          }
+        },
+        "description": "报告段落内容"
+      },
+      "TableReportParagraph": {
+        "type": "object",
+        "description": "表格类型段落",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReportParagraph"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "hasHeader": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TextReportParagraph": {
+        "type": "object",
+        "description": "文本类型段落",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReportParagraph"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "style": {
+                "$ref": "#/components/schemas/TextReportParagraphStyle"
+              },
+              "content": {
+                "type": "string"
+              },
+              "fieldData": {
+                "$ref": "#/components/schemas/MergeFieldData"
+              },
+              "sentences": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TextReportParagraphSentence"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TextReportParagraphFont": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "type": "string",
+            "description": "字体"
+          },
+          "fontSize": {
+            "type": "number",
+            "description": "字号，默认16磅，即三号字体",
+            "format": "double"
+          },
+          "chineseFontSize": {
+            "type": "string",
+            "description": "中文字号，优先级高于fontSize",
+            "enum": [
+              "初号",
+              "小初",
+              "一号",
+              "小一",
+              "二号",
+              "小二",
+              "三号",
+              "小三",
+              "四号",
+              "小四",
+              "五号",
+              "小五",
+              "六号",
+              "小六",
+              "七号",
+              "八号"
+            ]
+          },
+          "fontColor": {
+            "type": "string",
+            "description": "字体颜色，只支持黑色，红色和黄色",
+            "enum": [
+              "BLACK",
+              "RED",
+              "YELLOW"
+            ]
+          },
+          "isBold": {
+            "type": "boolean",
+            "description": "是否加粗，默认false"
+          }
+        },
+        "description": "设置字体样式"
+      },
+      "TextReportParagraphSentence": {
+        "type": "object",
+        "properties": {
+          "font": {
+            "$ref": "#/components/schemas/TextReportParagraphFont"
+          },
+          "inline": {
+            "type": "boolean",
+            "description": "inline默认值为true，表示不换行"
+          },
+          "content": {
+            "type": "string",
+            "description": "文本"
+          }
+        },
+        "description": "文本类型句子短语"
+      },
+      "TextReportParagraphStyle": {
+        "type": "object",
+        "properties": {
+          "alignment": {
+            "type": "string",
+            "description": "居左，居中，居右",
+            "enum": [
+              "LEFT",
+              "CENTER",
+              "RIGHT"
+            ]
+          },
+          "font": {
+            "$ref": "#/components/schemas/TextReportParagraphFont"
+          },
+          "lineSpacing": {
+            "type": "number",
+            "description": "设置行距，单位磅，默认单倍行距，即12磅",
+            "format": "double"
+          },
+          "indent": {
+            "type": "number",
+            "description": "设置首行缩进，单位磅",
+            "format": "double"
+          },
+          "inline": {
+            "type": "boolean",
+            "description": "如果inline为true，表示不换行"
+          },
+          "clearOldStyle": {
+            "type": "boolean",
+            "description": "是否清除原有段落格式"
+          }
+        }
+      },
+      "ResultInteger": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "返回标记：成功标记=0，失败标记=1",
+            "format": "int32"
+          },
+          "msg": {
+            "type": "string",
+            "description": "返回信息"
+          },
+          "data": {
+            "type": "integer",
+            "description": "数据",
+            "format": "int32"
+          }
+        }
+      },
+      "ReportPage": {
+        "type": "object",
+        "properties": {
+          "orientationType": {
+            "type": "string",
+            "description": "页面是横向还是纵向",
+            "enum": [
+              "HORIZONTAL",
+              "VERTICAL"
+            ]
+          },
+          "paperSizeType": {
+            "type": "string",
+            "description": "页面纸张大小",
+            "enum": [
+              "A3",
+              "A4",
+              "A5",
+              "B4",
+              "B5"
+            ]
+          },
+          "topMargin": {
+            "type": "number",
+            "description": "页面上边距，单位厘米",
+            "format": "double"
+          },
+          "bottomMargin": {
+            "type": "number",
+            "description": "页面下边距，单位厘米",
+            "format": "double"
+          },
+          "leftMargin": {
+            "type": "number",
+            "description": "页面左边距，单位厘米",
+            "format": "double"
+          },
+          "rightMargin": {
+            "type": "number",
+            "description": "页面右边距，单位厘米",
+            "format": "double"
+          }
+        }
+      },
+      "RequestPayload": {
+        "type": "object",
+        "properties": {
+          "templateUrl": {
+            "type": "string"
+          },
+          "reportFileName": {
+            "type": "string"
+          },
+          "paragraphList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParagraphWrapper"
+            }
+          },
+          "reportPage": {
+            "$ref": "#/components/schemas/ReportPage"
+          },
+          "storageMode": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -492,17 +492,17 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 	content := operation.RequestBody.Content
 	if content.JSON != nil {
 		bodyJSON = schema2Field(content.JSON.Schema, "bodyJSON")
-		if !operation.RequestBody.Required {
+		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	} else if content.FormURL != nil {
 		bodyParams = schema2Field(content.FormURL.Schema, "bodyParams")
-		if !operation.RequestBody.Required {
+		if !operation.RequestBody.Required && bodyParams != nil {
 			bodyParams.Type = toOptional(bodyParams.Type)
 		}
 	} else if content.FormData != nil {
 		bodyParams, files = parseFormData(content.FormData)
-		if !operation.RequestBody.Required {
+		if !operation.RequestBody.Required && bodyParams != nil {
 			bodyParams.Type = toOptional(bodyParams.Type)
 		}
 	} else if content.Stream != nil {
@@ -516,12 +516,12 @@ func requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldM
 		files = append(files, f)
 	} else if content.TextPlain != nil {
 		bodyJSON = schema2Field(content.TextPlain.Schema, "bodyJSON")
-		if !operation.RequestBody.Required {
+		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	} else if content.Default != nil {
 		bodyJSON = schema2Field(content.Default.Schema, "bodyJSON")
-		if !operation.RequestBody.Required {
+		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = toOptional(bodyJSON.Type)
 		}
 	}

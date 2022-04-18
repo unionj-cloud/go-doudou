@@ -600,3 +600,24 @@ func Test_operation2Method(t *testing.T) {
 		})
 	}
 }
+
+func Test_genGoVo_api(t *testing.T) {
+	testdir := pathutils.Abs("../testdata")
+	api := loadAPI(path.Join(testdir, "api-docs.json"))
+	schemas = api.Components.Schemas
+	requestBodies = api.Components.RequestBodies
+	svcmap := make(map[string]map[string]v3.Path)
+	for endpoint, path := range api.Paths {
+		svcname := strings.Split(strings.Trim(endpoint, "/"), "/")[0]
+		if value, exists := svcmap[svcname]; exists {
+			value[endpoint] = path
+		} else {
+			svcmap[svcname] = make(map[string]v3.Path)
+			svcmap[svcname][endpoint] = path
+		}
+	}
+
+	for svcname, paths := range svcmap {
+		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
+	}
+}
