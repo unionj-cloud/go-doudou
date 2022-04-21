@@ -149,6 +149,13 @@ func (c Criteria) In(val interface{}) Criteria {
 	return c
 }
 
+// NotIn set not in operator and column value, val should be a slice type value
+func (c Criteria) NotIn(val interface{}) Criteria {
+	c.val = val
+	c.asym = arithsymbol.NotIn
+	return c
+}
+
 // Like set like operator and column value, val should be a slice type value
 func (c Criteria) Like(val interface{}) Criteria {
 	c.val = val

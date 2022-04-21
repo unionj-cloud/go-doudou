@@ -21,6 +21,7 @@ const (
 	// Not e.g. is not null
 	Not ArithSymbol = "is not"
 	// In contained by a slice
-	In   ArithSymbol = "in"
-	Like ArithSymbol = "like"
+	In    ArithSymbol = "in"
+	NotIn ArithSymbol = "not in"
+	Like  ArithSymbol = "like"
 )
