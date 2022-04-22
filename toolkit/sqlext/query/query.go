@@ -36,7 +36,7 @@ type Criteria struct {
 
 // Sql implement Base interface, return sql expression
 func (c Criteria) Sql() (string, []interface{}) {
-	if c.asym == arithsymbol.In {
+	if c.asym == arithsymbol.In || c.asym == arithsymbol.NotIn {
 		var args []interface{}
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("`%s` %s (", c.col, c.asym))

@@ -131,5 +131,5 @@ func ExampleEnd() {
 	//(((cc.`survey_id` = ? and cc.`year` = ?) and cc.`month` = ?) and cc.`stat_type` = ?) for update [abc 2021 10 2]
 	//cc.`name` like ? [%ba%]
 	//(`project_id` = ? and `delete_at` is null) order by user.`create_at` desc limit ?,? [1 0 1]
-	//(`delete_at` is null and `op_code` not in ?) [[1 2 3]]
+	//(`delete_at` is null and `op_code` not in (?,?,?)) [1 2 3]
 }
