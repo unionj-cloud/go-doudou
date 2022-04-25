@@ -280,7 +280,7 @@ func (receiver {{.DomainName}}DaoImpl) SelectMany(ctx context.Context, where ...
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, strings.Join(statements, " "), args...); err != nil {
+	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
 		return nil, errors.Wrap(err, "")
 	}
 	return {{.DomainName | ToLower}}s, nil
@@ -302,7 +302,7 @@ func (receiver {{.DomainName}}DaoImpl) CountMany(ctx context.Context, where ...q
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
 		return 0, errors.Wrap(err, "")
 	}
 	return total, nil
@@ -328,8 +328,7 @@ func (receiver {{.DomainName}}DaoImpl) PageMany(ctx context.Context, page query.
 	p, pargs := page.Sql()
 	statements = append(statements, p)
 	args = append(args, pargs...)
-	q := strings.Join(statements, " ")
-	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, q, args...); err != nil {
+	if err = receiver.db.SelectContext(ctx, &{{.DomainName | ToLower}}s, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "")
 	}
 	
@@ -344,7 +343,7 @@ func (receiver {{.DomainName}}DaoImpl) PageMany(ctx context.Context, page query.
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
 		return query.PageRet{}, errors.Wrap(err, "")
 	}
 

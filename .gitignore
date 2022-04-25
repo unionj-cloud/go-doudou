@@ -6,3 +6,4 @@ example/doudou/dao/
 gen
 cmd/testdata/testsvc/cmd/cmd
 coverage.out
+resources
