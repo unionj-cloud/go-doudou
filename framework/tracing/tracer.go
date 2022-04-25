@@ -36,7 +36,7 @@ func Init() (opentracing.Tracer, io.Closer) {
 	cfg.Reporter.LogSpans = true
 	_, err := cfg.FromEnv()
 	if err != nil {
-		logger.Panic(errors.Wrap(err, "cannot parse Jaeger env vars"))
+		logger.Panic(errors.Wrap(err, "[go-doudou] cannot parse Jaeger env vars"))
 	}
 	jaegerLogger := jaegerLoggerAdapter{logger: logger.Entry()}
 	metricsRoot := ddconfig.DefaultGddTracingMetricsRoot
@@ -54,7 +54,7 @@ func Init() (opentracing.Tracer, io.Closer) {
 		config.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
-		logger.Panic(errors.Wrap(err, "cannot initialize Jaeger Tracer"))
+		logger.Panic(errors.Wrap(err, "[go-doudou] cannot initialize Jaeger Tracer"))
 	}
 	return tracer, closer
 }

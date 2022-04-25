@@ -3,6 +3,7 @@ package templateutils
 import (
 	"bytes"
 	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -17,7 +18,7 @@ func String(tmplname, tmpl string, data interface{}) (string, error) {
 	)
 	tpl = template.Must(template.New(tmplname).Parse(tmpl))
 	if err = tpl.Execute(&sqlBuf, data); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.Execute")
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
@@ -31,7 +32,7 @@ func StringBlock(tmplname, tmpl string, block string, data interface{}) (string,
 	)
 	tpl = template.Must(template.New(tmplname).Parse(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.ExecuteTemplate")
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
@@ -55,7 +56,7 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	}
 	tpl = template.Must(tpl.Funcs(funcMap).ParseFiles(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.ExecuteTemplate")
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	return strings.TrimSpace(sqlBuf.String()), nil
 }
@@ -79,7 +80,7 @@ func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, 
 	}
 	tpl = template.Must(tpl.Funcs(funcMap).Parse(tmpl))
 	if err = tpl.ExecuteTemplate(&sqlBuf, block, data); err != nil {
-		return "", errors.Wrap(err, "error returned from calling tpl.ExecuteTemplate")
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	return strings.TrimSpace(sqlBuf.String()), nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -32,7 +33,7 @@ func RewriteJSONTag(file string, omitempty bool, convert func(old string) string
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
-		return "", errors.Wrap(err, "call ParseFile() error")
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	re := regexp.MustCompile(`json:"(.*?)"`)
 	astutil.Apply(root, func(cursor *astutil.Cursor) bool {

@@ -73,7 +73,7 @@ func join() error {
 	}
 	_, err := mlist.Join(s)
 	if err != nil {
-		return errors.Wrap(err, "Failed to join cluster")
+		return errors.Wrap(err, "[go-doudou] Failed to join cluster")
 	}
 	logger.Infof("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
 	return nil
@@ -290,11 +290,11 @@ func newNode(data ...map[string]interface{}) error {
 	mconf.Events = events
 	var err error
 	if mlist, err = createMemberlist(mconf); err != nil {
-		return errors.Wrap(err, "NewNode() error: Failed to create memberlist")
+		return errors.Wrap(err, "[go-doudou] Failed to create memberlist")
 	}
 	if err = join(); err != nil {
 		mlist.Shutdown()
-		return errors.Wrap(err, "NewNode() error: Node register failed")
+		return errors.Wrap(err, "[go-doudou] Node register failed")
 	}
 	local := mlist.LocalNode()
 	baseUrl, _ := BaseUrl(local)

@@ -16,6 +16,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/sortenum"
 	"github.com/unionj-cloud/go-doudou/test"
+	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/wrapper"
@@ -81,10 +82,10 @@ func AddColumn(ctx context.Context, db wrapper.Querier, col Column) error {
 func dropAddIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 	var err error
 	if err = dropIndex(ctx, db, idx); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	if err = addIndex(ctx, db, idx); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -96,11 +97,11 @@ func addIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 		err       error
 	)
 	if statement, err = idx.AddIndexSql(); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -112,11 +113,11 @@ func dropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 		err       error
 	)
 	if statement, err = idx.DropIndexSql(); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -125,10 +126,10 @@ func dropIndex(ctx context.Context, db wrapper.Querier, idx Index) error {
 func dropAddFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 	var err error
 	if err = dropFk(ctx, db, fk); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	if err = addFk(ctx, db, fk); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -140,11 +141,11 @@ func addFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 		err       error
 	)
 	if statement, err = fk.AddFkSql(); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -156,11 +157,11 @@ func dropFk(ctx context.Context, db wrapper.Querier, fk ForeignKey) error {
 		err       error
 	)
 	if statement, err = fk.DropFkSql(); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	fmt.Println(statement)
 	if _, err = db.ExecContext(ctx, statement); err != nil {
-		return errors.Wrap(err, "")
+		return errors.Wrap(err, caller.NewCaller().String())
 	}
 	return nil
 }
@@ -553,7 +554,7 @@ func Setup() (func(), *sqlx.DB, error) {
 	var conf config.DbConfig
 	err = envconfig.Process("db", &conf)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Error processing env")
+		return nil, nil, errors.Wrap(err, "[go-doudou] Error processing env")
 	}
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
 		conf.User,
@@ -566,7 +567,7 @@ func Setup() (func(), *sqlx.DB, error) {
 	var db *sqlx.DB
 	db, err = sqlx.Connect("mysql", conn)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "")
+		return nil, nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 	db.MapperFunc(strcase.ToSnake)
 	db = db.Unsafe()
