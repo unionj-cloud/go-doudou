@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/reflectutils"
 	"os"
 	"regexp"
@@ -20,7 +20,7 @@ type SqlLogger struct {
 }
 
 func (receiver *SqlLogger) Enable() bool {
-	return cast.ToBool(os.Getenv("GDD_SQL_LOG_ENABLE"))
+	return cast.ToBoolOrDefault(os.Getenv("GDD_SQL_LOG_ENABLE"), false)
 }
 
 func (receiver *SqlLogger) SetLogger(logger logrus.FieldLogger) {

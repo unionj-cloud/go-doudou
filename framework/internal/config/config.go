@@ -215,6 +215,9 @@ const (
 	GddApolloMuststart    envVariable = "GDD_APOLLO_MUSTSTART"
 	GddApolloSecret       envVariable = "GDD_APOLLO_SECRET"
 	GddApolloLogEnable    envVariable = "GDD_APOLLO_LOG_ENABLE"
+
+	// GddSqlLogEnable only for doc purpose
+	GddSqlLogEnable envVariable = "GDD_SQL_LOG_ENABLE"
 )
 
 // Load loads value from environment variable

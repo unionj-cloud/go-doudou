@@ -74,4 +74,7 @@ const (
 	DefaultGddApolloSecret       = ""
 	DefaultGddApolloMuststart    = false
 	DefaultGddApolloLogEnable    = false
+
+	// DefaultGddSqlLogEnable only for doc purpose
+	DefaultGddSqlLogEnable = false
 )
