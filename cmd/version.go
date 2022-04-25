@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/v42/github"
+	goversion "github.com/hashicorp/go-version"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
@@ -37,7 +38,9 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Installed version is %s\n", version)
 		latest := latestReleaseVer()
-		if latest != version {
+		currentVersion, _ := goversion.NewVersion(version)
+		latestVersion, _ := goversion.NewVersion(latest)
+		if currentVersion.LessThan(latestVersion) {
 			fmt.Printf("Latest release version is %s\n", latest)
 			_, result, err := Prompt.Run()
 			if err != nil {

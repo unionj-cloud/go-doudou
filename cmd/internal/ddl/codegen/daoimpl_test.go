@@ -86,6 +86,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"testdata/domain"
+	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/query"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/wrapper"
 	"github.com/unionj-cloud/go-doudou/toolkit/reflectutils"
@@ -93,10 +94,59 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/templateutils"
 	"strings"
 	"math"
+	"time"
 )
 
 type UserDaoImpl struct {
 	db wrapper.Querier
+}
+
+func (receiver UserDaoImpl) BeforeSaveHook(ctx context.Context, data interface{}) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) AfterSaveHook(ctx context.Context, data interface{}, lastInsertID int64, affected int64) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) BeforeUpdateManyHook(ctx context.Context, data interface{}, where query.Q) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) AfterUpdateManyHook(ctx context.Context, data interface{}, where query.Q, affected int64) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) BeforeDeleteManyHook(ctx context.Context, data interface{}, where query.Q) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) AfterDeleteManyHook(ctx context.Context, data interface{}, where query.Q, affected int64) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) BeforeReadManyHook(ctx context.Context, page *query.Page, where ...query.Q) {
+	// implement your business logic
+}
+
+func (receiver UserDaoImpl) DeleteManySoft(ctx context.Context, where query.Q) (int64, error) {
+	var (
+		err      error
+		result   sql.Result
+		w        string
+		args     []interface{}
+		affected int64
+	)
+	receiver.BeforeDeleteManyHook(ctx, nil, where)
+	w, args = where.Sql()
+	args = append([]interface{}{time.Now()}, args...)
+	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(fmt.Sprintf("update user set delete_at=? where %s;", w)), args...); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterDeleteManyHook(ctx, nil, where, affected)
+	}
+	return affected, err
 }
 
 func NewUserDao(querier wrapper.Querier) UserDao {
@@ -111,22 +161,27 @@ func (receiver UserDaoImpl) Insert(ctx context.Context, data interface{}) (int64
 		err          error
 		result       sql.Result
 		lastInsertID int64
+		affected     int64
 	)
+	receiver.BeforeSaveHook(ctx, data)
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "InsertUser", nil); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID > 0 {
 		if user, ok := data.(*domain.User); ok {
 			user.ID = int(lastInsertID)
 		}
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, lastInsertID, affected)
+	}
+	return affected, err
 }
 
 // Upsert With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row,
@@ -140,22 +195,27 @@ func (receiver UserDaoImpl) Upsert(ctx context.Context, data interface{}) (int64
 		err          error
 		result       sql.Result
 		lastInsertID int64
+		affected     int64
 	)
+	receiver.BeforeSaveHook(ctx, data)
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpsertUser", nil); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID > 0 {
 		if user, ok := data.(*domain.User); ok {
 			user.ID = int(lastInsertID)
 		}
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, lastInsertID, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) UpsertNoneZero(ctx context.Context, data interface{}) (int64, error) {
@@ -164,26 +224,31 @@ func (receiver UserDaoImpl) UpsertNoneZero(ctx context.Context, data interface{}
 		err          error
 		result       sql.Result
 		lastInsertID int64
+		affected     int64
 	)
+	receiver.BeforeSaveHook(ctx, data)
 	value := reflectutils.ValueOf(data).Interface()
 	if _, ok := value.(domain.User); !ok {
 		return 0, errors.New("underlying type of data should be domain.User")
 	}
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpsertUserNoneZero", data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID, err = result.LastInsertId(); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if lastInsertID > 0 {
 		if user, ok := data.(*domain.User); ok {
 			user.ID = int(lastInsertID)
 		}
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, lastInsertID, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) DeleteMany(ctx context.Context, where query.Q) (int64, error) {
@@ -192,12 +257,17 @@ func (receiver UserDaoImpl) DeleteMany(ctx context.Context, where query.Q) (int6
 		result sql.Result
 		w      string
 		args   []interface{}
+		affected int64
 	)
+	receiver.BeforeDeleteManyHook(ctx, nil, where)
 	w, args = where.Sql()
 	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(fmt.Sprintf("delete from user where %s;", w)), args...); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterDeleteManyHook(ctx, nil, where, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) Update(ctx context.Context, data interface{}) (int64, error) {
@@ -205,14 +275,19 @@ func (receiver UserDaoImpl) Update(ctx context.Context, data interface{}) (int64
 		statement string
 		err       error
 		result    sql.Result
+		affected  int64
 	)
+	receiver.BeforeSaveHook(ctx, data)
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUser", nil); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, 0, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) UpdateNoneZero(ctx context.Context, data interface{}) (int64, error) {
@@ -220,18 +295,23 @@ func (receiver UserDaoImpl) UpdateNoneZero(ctx context.Context, data interface{}
 		statement string
 		err       error
 		result    sql.Result
+		affected  int64
 	)
+	receiver.BeforeSaveHook(ctx, data)
 	value := reflectutils.ValueOf(data).Interface()
 	if _, ok := value.(domain.User); !ok {
 		return 0, errors.New("underlying type of data should be domain.User")
 	}
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUserNoneZero", data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, 0, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) UpdateMany(ctx context.Context, data interface{}, where query.Q) (int64, error) {
@@ -243,12 +323,14 @@ func (receiver UserDaoImpl) UpdateMany(ctx context.Context, data interface{}, wh
 		args      []interface{}
 		wargs     []interface{}
 		w         string
+		affected  int64
 	)
+	receiver.BeforeUpdateManyHook(ctx, data, where)
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUsers", nil); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if q, args, err = receiver.db.BindNamed(statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	w, wargs = where.Sql()
 	if stringutils.IsNotEmpty(w) {
@@ -256,9 +338,12 @@ func (receiver UserDaoImpl) UpdateMany(ctx context.Context, data interface{}, wh
 	}
 	args = append(args, wargs...)
 	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(q), args...); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterUpdateManyHook(ctx, data, where, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) UpdateManyNoneZero(ctx context.Context, data interface{}, where query.Q) (int64, error) {
@@ -270,16 +355,18 @@ func (receiver UserDaoImpl) UpdateManyNoneZero(ctx context.Context, data interfa
 		args      []interface{}
 		wargs     []interface{}
 		w         string
+		affected  int64
 	)
+	receiver.BeforeUpdateManyHook(ctx, data, where)
 	value := reflectutils.ValueOf(data).Interface()
 	if _, ok := value.(domain.User); !ok {
 		return 0, errors.New("underlying type of data should be domain.User")
 	}
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "UpdateUsersNoneZero", data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if q, args, err = receiver.db.BindNamed(statement, data); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	w, wargs = where.Sql()
 	if stringutils.IsNotEmpty(w) {
@@ -287,9 +374,12 @@ func (receiver UserDaoImpl) UpdateManyNoneZero(ctx context.Context, data interfa
 	}
 	args = append(args, wargs...)
 	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(q), args...); err != nil {
-		return 0, errors.Wrap(err, "")
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
-	return result.RowsAffected()
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterUpdateManyHook(ctx, data, where, affected)
+	}
+	return affected, err
 }
 
 func (receiver UserDaoImpl) Get(ctx context.Context, id interface{}) (interface{}, error) {
@@ -299,10 +389,10 @@ func (receiver UserDaoImpl) Get(ctx context.Context, id interface{}) (interface{
 		user      domain.User
 	)
 	if statement, err = templateutils.BlockMysql("userdao.sql", userdaosql, "GetUser", nil); err != nil {
-		return domain.User{}, errors.Wrap(err, "")
+		return domain.User{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if err = receiver.db.GetContext(ctx, &user, receiver.db.Rebind(statement), id); err != nil {
-		return domain.User{}, errors.Wrap(err, "")
+		return domain.User{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 	return user, nil
 }
@@ -314,6 +404,7 @@ func (receiver UserDaoImpl) SelectMany(ctx context.Context, where ...query.Q) (i
 		users     []domain.User
 		args       []interface{}
 	)
+	receiver.BeforeReadManyHook(ctx, nil, where...)
     statements = append(statements, "select * from user")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -323,8 +414,8 @@ func (receiver UserDaoImpl) SelectMany(ctx context.Context, where ...query.Q) (i
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.SelectContext(ctx, &users, strings.Join(statements, " "), args...); err != nil {
-		return nil, errors.Wrap(err, "")
+	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 	return users, nil
 }
@@ -336,6 +427,7 @@ func (receiver UserDaoImpl) CountMany(ctx context.Context, where ...query.Q) (in
 		total     int
 		args       []interface{}
 	)
+	receiver.BeforeReadManyHook(ctx, nil, where...)
 	statements = append(statements, "select count(1) from user")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -345,8 +437,8 @@ func (receiver UserDaoImpl) CountMany(ctx context.Context, where ...query.Q) (in
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
-		return 0, errors.Wrap(err, "")
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	return total, nil
 }
@@ -359,6 +451,7 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 		total     int
 		args       []interface{}
 	)
+	receiver.BeforeReadManyHook(ctx, &page, where...)
 	statements = append(statements, "select * from user")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -371,9 +464,8 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 	p, pargs := page.Sql()
 	statements = append(statements, p)
 	args = append(args, pargs...)
-	q := strings.Join(statements, " ")
-	if err = receiver.db.SelectContext(ctx, &users, q, args...); err != nil {
-		return query.PageRet{}, errors.Wrap(err, "")
+	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+		return query.PageRet{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 	
 	args = nil
@@ -387,8 +479,8 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, strings.Join(statements, " "), args...); err != nil {
-		return query.PageRet{}, errors.Wrap(err, "")
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+		return query.PageRet{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 
 	pageRet := query.NewPageRet(page)
