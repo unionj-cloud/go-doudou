@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func latestReleaseVer() string {
+func LatestReleaseVer() string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	release, _, err := github.NewClient(nil).Repositories.GetLatestRelease(ctx, "unionj-cloud", "go-doudou")
@@ -30,6 +30,7 @@ var Prompt ISelect = &promptui.Select{
 }
 
 var VersionSvc = svc.NewSvc
+var LatestReleaseVerFunc = LatestReleaseVer
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -37,7 +38,7 @@ var versionCmd = &cobra.Command{
 	Long:  `You can get information about latest release version besides version number of installed go-doudou`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Installed version is %s\n", version)
-		latest := latestReleaseVer()
+		latest := LatestReleaseVerFunc()
 		currentVersion, _ := goversion.NewVersion(version)
 		latestVersion, _ := goversion.NewVersion(latest)
 		if currentVersion.LessThan(latestVersion) {
