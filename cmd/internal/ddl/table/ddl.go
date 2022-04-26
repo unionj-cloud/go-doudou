@@ -370,13 +370,13 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 		root  *ast.File
 	)
 	if err = filepath.Walk(dir, astutils.Visit(&files)); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
 		if root, err = parser.ParseFile(fset, file, nil, parser.ParseComments); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		ast.Walk(sc, root)
 	}
@@ -387,22 +387,26 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 	}
 
 	if tx, err = db.BeginTxx(ctx, nil); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			if _err := tx.Rollback(); _err != nil {
 				err = errors.Wrap(_err, "")
 			}
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 	}()
+
+	if _, err = tx.ExecContext(ctx, `SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;`); err != nil {
+		panic(errors.Wrap(err, caller.NewCaller().String()))
+	}
 
 	for _, t := range tables {
 		if sliceutils.StringContains(existTables, t.Name) {
 			var columns []DbColumn
 			if err = tx.SelectContext(ctx, &columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 			var existColumnNames []interface{}
 			for _, dbCol := range columns {
@@ -413,11 +417,11 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 			for _, col := range t.Columns {
 				if existColSet.Contains(col.Name) {
 					if err = ChangeColumn(ctx, tx, col); err != nil {
-						panic(fmt.Sprintf("%+v", err))
+						panic(errors.Wrap(err, caller.NewCaller().String()))
 					}
 				} else {
 					if err = AddColumn(ctx, tx, col); err != nil {
-						panic(fmt.Sprintf("%+v", err))
+						panic(errors.Wrap(err, caller.NewCaller().String()))
 					}
 				}
 			}
@@ -426,9 +430,13 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 			updateFkFromStruct(ctx, tx, t, fks)
 		} else {
 			if err = CreateTable(ctx, tx, t); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		}
+	}
+
+	if _, err = tx.ExecContext(ctx, `SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;`); err != nil {
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	_ = tx.Commit()
 	return
