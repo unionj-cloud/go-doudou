@@ -174,7 +174,7 @@ func Table2struct(ctx context.Context, pre, schema string, existTables []string,
 		}
 		var dbIndice []DbIndex
 		if err = db.SelectContext(ctx, &dbIndice, fmt.Sprintf("SHOW INDEXES FROM %s", t)); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 
 		idxMap := make(map[string][]DbIndex)
@@ -194,7 +194,7 @@ func Table2struct(ctx context.Context, pre, schema string, existTables []string,
 
 		var columns []DbColumn
 		if err = db.SelectContext(ctx, &columns, fmt.Sprintf("SHOW FULL COLUMNS FROM %s", t)); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 
 		fks := foreignKeys(ctx, db, schema, t)
@@ -247,7 +247,7 @@ func foreignKeys(ctx context.Context, db wrapper.Querier, schema, t string) (fks
 		WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_SCHEMA = ? AND TABLE_NAME = ?
 	`
 	if err = db.SelectContext(ctx, &dbForeignKeys, db.Rebind(rawSql), schema, schema, t); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	for _, item := range dbForeignKeys {
 		var (
@@ -260,7 +260,7 @@ func foreignKeys(ctx context.Context, db wrapper.Querier, schema, t string) (fks
 			where CONSTRAINT_SCHEMA=? and TABLE_NAME=? and CONSTRAINT_NAME=?
 		`
 		if err = db.SelectContext(ctx, &dbActions, db.Rebind(rawSql), schema, t, item.ConstraintName); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		if len(dbActions) > 0 {
 			dbAction = dbActions[0]
@@ -370,13 +370,13 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 		root  *ast.File
 	)
 	if err = filepath.Walk(dir, astutils.Visit(&files)); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
 	for _, file := range files {
 		fset := token.NewFileSet()
 		if root, err = parser.ParseFile(fset, file, nil, parser.ParseComments); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		ast.Walk(sc, root)
 	}
@@ -387,22 +387,26 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 	}
 
 	if tx, err = db.BeginTxx(ctx, nil); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			if _err := tx.Rollback(); _err != nil {
 				err = errors.Wrap(_err, "")
 			}
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 	}()
+
+	if _, err = tx.ExecContext(ctx, `SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;`); err != nil {
+		panic(errors.Wrap(err, caller.NewCaller().String()))
+	}
 
 	for _, t := range tables {
 		if sliceutils.StringContains(existTables, t.Name) {
 			var columns []DbColumn
 			if err = tx.SelectContext(ctx, &columns, fmt.Sprintf("desc %s", t.Name)); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 			var existColumnNames []interface{}
 			for _, dbCol := range columns {
@@ -413,11 +417,11 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 			for _, col := range t.Columns {
 				if existColSet.Contains(col.Name) {
 					if err = ChangeColumn(ctx, tx, col); err != nil {
-						panic(fmt.Sprintf("%+v", err))
+						panic(errors.Wrap(err, caller.NewCaller().String()))
 					}
 				} else {
 					if err = AddColumn(ctx, tx, col); err != nil {
-						panic(fmt.Sprintf("%+v", err))
+						panic(errors.Wrap(err, caller.NewCaller().String()))
 					}
 				}
 			}
@@ -426,9 +430,13 @@ func Struct2Table(ctx context.Context, dir, pre string, existTables []string, db
 			updateFkFromStruct(ctx, tx, t, fks)
 		} else {
 			if err = CreateTable(ctx, tx, t); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		}
+	}
+
+	if _, err = tx.ExecContext(ctx, `SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;`); err != nil {
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	_ = tx.Commit()
 	return
@@ -449,11 +457,11 @@ func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Foreign
 				continue
 			}
 			if err := dropAddFk(ctx, tx, fk); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		} else {
 			if err := addFk(ctx, tx, fk); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		}
 	}
@@ -465,7 +473,7 @@ func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Foreign
 	for k, v := range fkMap {
 		if !sliceutils.StringContains(constraints, k) {
 			if err := dropFk(ctx, tx, v); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		}
 	}
@@ -474,7 +482,7 @@ func updateFkFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Foreign
 func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []ForeignKey) {
 	var dbIndexes []DbIndex
 	if err := tx.SelectContext(ctx, &dbIndexes, fmt.Sprintf("SHOW INDEXES FROM %s", t.Name)); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 
 	keyIndexMap := make(map[string][]DbIndex)
@@ -498,12 +506,12 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Fore
 			}
 			idx.Table = t.Name
 			if err := dropAddIndex(ctx, tx, idx); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		} else {
 			idx.Table = t.Name
 			if err := addIndex(ctx, tx, idx); err != nil {
-				panic(fmt.Sprintf("%+v", err))
+				panic(errors.Wrap(err, caller.NewCaller().String()))
 			}
 		}
 	}
@@ -528,7 +536,7 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Fore
 				idx := NewIndexFromDbIndexes(v)
 				idx.Table = t.Name
 				if err := dropIndex(ctx, tx, idx); err != nil {
-					panic(fmt.Sprintf("%+v", err))
+					panic(errors.Wrap(err, caller.NewCaller().String()))
 				}
 			}
 		}

@@ -3,7 +3,9 @@ package ddl
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +47,7 @@ func (d Ddl) Exec() {
 	conn += `&loc=Asia%2FShanghai&parseTime=True`
 	db, err = sqlx.Connect("mysql", conn)
 	if err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	defer db.Close()
 	db.MapperFunc(strcase.ToSnake)
@@ -53,7 +55,7 @@ func (d Ddl) Exec() {
 
 	var existTables []string
 	if err = db.Select(&existTables, "show tables"); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 
 	var tables []table.Table
@@ -68,7 +70,7 @@ func (d Ddl) Exec() {
 			dfile := filepath.Join(d.Dir, strings.ToLower(item.Meta.Name)+".go")
 			if _, err = os.Stat(dfile); os.IsNotExist(err) {
 				if err = codegen.GenDomainGo(d.Dir, item.Meta); err != nil {
-					panic(fmt.Sprintf("%+v", err))
+					panic(errors.Wrap(err, caller.NewCaller().String()))
 				}
 			} else {
 				logrus.Warnf("file %s already exists", dfile)
@@ -84,17 +86,17 @@ func (d Ddl) Exec() {
 func genDao(d Ddl, tables []table.Table) {
 	var err error
 	if err = codegen.GenBaseGo(d.Dir, d.Df); err != nil {
-		panic(fmt.Sprintf("%+v", err))
+		panic(errors.Wrap(err, caller.NewCaller().String()))
 	}
 	for _, t := range tables {
 		if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		if err = codegen.GenDaoImplGo(d.Dir, t, d.Df); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		if err = codegen.GenDaoSQL(d.Dir, t, d.Df); err != nil {
-			panic(fmt.Sprintf("%+v", err))
+			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 	}
 }
