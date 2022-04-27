@@ -1,17 +1,22 @@
 package logger
 
 import (
+	"context"
 	"fmt"
+	"github.com/ascarter/requestid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/reflectutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"os"
 	"regexp"
 	"strings"
 )
 
 type ISqlLogger interface {
-	Log(query string, args ...interface{})
+	Log(ctx context.Context, query string, args ...interface{})
 	Enable() bool
 }
 
@@ -31,7 +36,7 @@ func NewSqlLogger(logger logrus.StdLogger) ISqlLogger {
 	return &SqlLogger{logger: logger}
 }
 
-func (receiver *SqlLogger) Log(query string, args ...interface{}) {
+func (receiver *SqlLogger) Log(ctx context.Context, query string, args ...interface{}) {
 	if receiver.Enable() {
 		copiedArgs := make([]interface{}, len(args))
 		copy(copiedArgs, args)
@@ -51,6 +56,19 @@ func (receiver *SqlLogger) Log(query string, args ...interface{}) {
 				return strings.ReplaceAll(s, "'", "")
 			})
 		}
-		receiver.logger.Printf(str)
+		var sb strings.Builder
+		if reqId, ok := requestid.FromContext(ctx); ok && stringutils.IsNotEmpty(reqId) {
+			sb.WriteString(fmt.Sprintf("RequestID: %s\t", reqId))
+		}
+		span := opentracing.SpanFromContext(ctx)
+		if span != nil {
+			if jspan, ok := span.(*jaeger.Span); ok {
+				sb.WriteString(fmt.Sprintf("TraceID: %s\t", jspan.SpanContext().TraceID().String()))
+			} else {
+				sb.WriteString(fmt.Sprintf("TraceID: %s\t", span))
+			}
+		}
+		sb.WriteString(fmt.Sprintf("SQL: %s", str))
+		receiver.logger.Println(sb.String())
 	}
 }

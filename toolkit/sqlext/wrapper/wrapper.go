@@ -63,23 +63,23 @@ func (g *GddDB) NamedExecContext(ctx context.Context, query string, arg interfac
 	if q, args, err := g.DB.BindNamed(query, arg); err != nil {
 		return nil, errors.Wrap(err, caller.NewCaller().String())
 	} else {
-		g.logger.Log(q, args...)
+		g.logger.Log(ctx, q, args...)
 	}
 	return g.DB.NamedExecContext(ctx, query, arg)
 }
 
 func (g *GddDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.DB.ExecContext(ctx, query, args...)
 }
 
 func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.DB.GetContext(ctx, dest, query, args...)
 }
 
 func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.DB.SelectContext(ctx, dest, query, args...)
 }
 
@@ -102,22 +102,22 @@ func (g *GddTx) NamedExecContext(ctx context.Context, query string, arg interfac
 	if q, args, err := g.Tx.BindNamed(query, arg); err != nil {
 		return nil, errors.Wrap(err, caller.NewCaller().String())
 	} else {
-		g.logger.Log(q, args...)
+		g.logger.Log(ctx, q, args...)
 	}
 	return g.Tx.NamedExecContext(ctx, query, arg)
 }
 
 func (g *GddTx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.Tx.ExecContext(ctx, query, args...)
 }
 
 func (g *GddTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.Tx.GetContext(ctx, dest, query, args...)
 }
 
 func (g *GddTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(query, args...)
+	g.logger.Log(ctx, query, args...)
 	return g.Tx.SelectContext(ctx, dest, query, args...)
 }

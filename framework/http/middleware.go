@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/slok/goresilience"
 	"github.com/slok/goresilience/bulkhead"
+	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
@@ -240,6 +241,7 @@ func log(inner http.Handler) http.Handler {
 		var (
 			reqBodyCopy io.ReadCloser
 			err         error
+			traceId     string
 		)
 		if reqBodyCopy, r.Body, err = copyReqBody(r.Body); err != nil {
 			logger.Debug("call copyReqBody(r.Body) error: ", err)
@@ -252,6 +254,9 @@ func log(inner http.Handler) http.Handler {
 		start := time.Now()
 		rid, _ := requestid.FromContext(r.Context())
 		span := opentracing.SpanFromContext(r.Context())
+		if jspan, ok := span.(*jaeger.Span); ok {
+			traceId = jspan.SpanContext().TraceID().String()
+		}
 		respBody := getRespBody(rec)
 		reqQuery := r.URL.RawQuery
 		if unescape, err := url.QueryUnescape(reqQuery); err == nil {
@@ -276,12 +281,13 @@ func log(inner http.Handler) http.Handler {
 			"elapsedTime":       time.Since(start).String(),
 			"elapsed":           time.Since(start).Milliseconds(),
 			"span":              fmt.Sprint(span),
+			"traceId":           traceId,
 		}
-		var log string
-		if log, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
-			log = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: %s", err)
+		var reqLog string
+		if reqLog, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
+			reqLog = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: %s", err)
 		}
-		logger.WithFields(fields).Infoln(log)
+		logger.WithFields(fields).Infoln(reqLog)
 
 		header := rec.Result().Header
 		for k, v := range header {

@@ -1,15 +1,34 @@
-package logger
+package logger_test
 
 import (
+	"context"
+	"github.com/ascarter/requestid"
+	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/framework/tracing"
+	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/logger"
 	"log"
 	"os"
 	"testing"
 )
 
+func TestMain(m *testing.M) {
+	os.Setenv("GDD_SERVICE_NAME", "TestSqlLogger")
+	os.Setenv("GDD_SQL_LOG_ENABLE", "true")
+
+	tracer, closer := tracing.Init()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
+
+	m.Run()
+}
+
 func TestSqlLogger_Log(t *testing.T) {
 	type fields struct {
 		logger logrus.StdLogger
+		ctx    func() context.Context
 	}
 	type args struct {
 		query string
@@ -24,6 +43,9 @@ func TestSqlLogger_Log(t *testing.T) {
 			name: "",
 			fields: fields{
 				logger: log.New(os.Stderr, "", log.LstdFlags),
+				ctx: func() context.Context {
+					return requestid.NewContext(context.Background(), uuid.NewString())
+				},
 			},
 			args: args{
 				query: "select * from ddl_user where (`school` = 'Shanxi Univ.' and `delete_at` is null) order by `create_at` desc limit ?,?",
@@ -34,6 +56,10 @@ func TestSqlLogger_Log(t *testing.T) {
 			name: "",
 			fields: fields{
 				logger: log.New(os.Stderr, "", log.LstdFlags),
+				ctx: func() context.Context {
+					_, ctx := opentracing.StartSpanFromContext(requestid.NewContext(context.Background(), uuid.NewString()), "TestSqlLogger")
+					return ctx
+				},
 			},
 			args: args{
 				query: "select * from ddl_user where (`school` = 'Shanxi Univ.' and `delete_at` is null) order by `create_at` desc limit ?",
@@ -44,6 +70,9 @@ func TestSqlLogger_Log(t *testing.T) {
 			name: "",
 			fields: fields{
 				logger: log.New(os.Stderr, "", log.LstdFlags),
+				ctx: func() context.Context {
+					return opentracing.ContextWithSpan(context.Background(), mocktracer.New().StartSpan("TestSqlLogger"))
+				},
 			},
 			args: args{
 				query: "select * from ddl_user where (`school` = ? and `delete_at` is null) order by `create_at` desc",
@@ -53,10 +82,8 @@ func TestSqlLogger_Log(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			receiver := &SqlLogger{
-				logger: tt.fields.logger,
-			}
-			receiver.Log(tt.args.query, tt.args.args...)
+			receiver := logger.NewSqlLogger(tt.fields.logger)
+			receiver.Log(tt.fields.ctx(), tt.args.query, tt.args.args...)
 		})
 	}
 }
