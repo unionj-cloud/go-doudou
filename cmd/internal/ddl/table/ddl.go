@@ -9,13 +9,14 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/config"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/test"
 	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
@@ -28,6 +29,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // CreateTable create table from Table
@@ -549,7 +551,7 @@ func Setup() (func(), *sqlx.DB, error) {
 	var host string
 	var port int
 	var err error
-	terminateContainer, host, port, err = test.SetupMySQLContainer(logger, pathutils.Abs("../../../../test/sql"), "")
+	terminateContainer, host, port, err = setupMySQLContainer(logger, pathutils.Abs("../../../../test/sql"), "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to setup MySQL container")
 	}
@@ -580,4 +582,49 @@ func Setup() (func(), *sqlx.DB, error) {
 	db.MapperFunc(strcase.ToSnake)
 	db = db.Unsafe()
 	return terminateContainer, db, nil
+}
+
+func setupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (func(), string, int, error) {
+	logger.Info("setup MySQL Container")
+	ctx := context.Background()
+	if stringutils.IsEmpty(dbname) {
+		dbname = "test"
+	}
+	req := testcontainers.ContainerRequest{
+		Image:        "mysql:latest",
+		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+		Env: map[string]string{
+			"MYSQL_ROOT_PASSWORD": "1234",
+			"MYSQL_DATABASE":      dbname,
+		},
+		BindMounts: map[string]string{
+			initdb: "/docker-entrypoint-initdb.d",
+		},
+		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(60 * time.Second),
+	}
+
+	mysqlC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+
+	if err != nil {
+		logger.Errorf("error starting mysql container: %s", err)
+		panic(fmt.Sprintf("%v", err))
+	}
+
+	closeContainer := func() {
+		logger.Info("terminating container")
+		err := mysqlC.Terminate(ctx)
+		if err != nil {
+			logger.Errorf("error terminating mysql container: %s", err)
+			panic(fmt.Sprintf("%v", err))
+		}
+	}
+
+	host, _ := mysqlC.Host(ctx)
+	p, _ := mysqlC.MappedPort(ctx, "3306/tcp")
+	port := p.Int()
+
+	return closeContainer, host, port, nil
 }
