@@ -551,7 +551,7 @@ func Setup() (func(), *sqlx.DB, error) {
 	var host string
 	var port int
 	var err error
-	terminateContainer, host, port, err = setupMySQLContainer(logger, pathutils.Abs("../../../../test/sql"), "")
+	terminateContainer, host, port, err = setupMySQLContainer(logger, pathutils.Abs("../testdata/sql"), "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to setup MySQL container")
 	}
