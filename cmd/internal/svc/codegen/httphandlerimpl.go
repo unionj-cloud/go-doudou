@@ -209,8 +209,10 @@ var appendHttpHandlerImplTmpl = `
 		{{- if isOptional $p.Type }}
 		if _req.Body != nil {
 			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				if _err != io.EOF {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return				
+				}
 			}
 		}
 		{{- else }}
