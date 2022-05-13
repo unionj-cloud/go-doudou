@@ -112,7 +112,7 @@ func handleDefaultCase(ft string) *Schema {
 		if enumMeta, ok := Enums[title]; ok {
 			enumSchema := &Schema{
 				Type: StringT,
-				Enum: enumMeta.Values,
+				Enum: sliceutils.StringSlice2InterfaceSlice(enumMeta.Values),
 			}
 			if len(enumMeta.Values) > 0 {
 				enumSchema.Default = enumMeta.Values[0]

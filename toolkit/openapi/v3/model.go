@@ -213,7 +213,7 @@ type Schema struct {
 	MaxLength        int                `json:"maxLength,omitempty"`
 	MinLength        int                `json:"minLength,omitempty"`
 	Required         []string           `json:"required,omitempty"`
-	Enum             []string           `json:"enum,omitempty"`
+	Enum             []interface{}      `json:"enum,omitempty"`
 	AllOf            []*Schema          `json:"allOf,omitempty"`
 	OneOf            []*Schema          `json:"oneOf,omitempty"`
 	AnyOf            []*Schema          `json:"anyOf,omitempty"`

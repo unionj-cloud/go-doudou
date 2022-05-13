@@ -143,7 +143,7 @@ func TestSchemaOf(t *testing.T) {
 		}).Ref, ShouldEqual, "#/components/schemas/User")
 
 		Enums = map[string]astutils.EnumMeta{
-			"KeyboardLayout": astutils.EnumMeta{
+			"KeyboardLayout": {
 				Name: "KeyboardLayout",
 				Values: []string{
 					"UNKNOWN",
@@ -155,7 +155,7 @@ func TestSchemaOf(t *testing.T) {
 			Name:     "layout",
 			Type:     "KeyboardLayout",
 			IsExport: true,
-		}).Enum, ShouldResemble, []string{
+		}).Enum, ShouldResemble, []interface{}{
 			"UNKNOWN",
 			"QWERTZ",
 		})
@@ -213,7 +213,7 @@ func TestIsEnum(t *testing.T) {
 		}), ShouldBeFalse)
 
 		Enums = map[string]astutils.EnumMeta{
-			"KeyboardLayout": astutils.EnumMeta{
+			"KeyboardLayout": {
 				Name: "KeyboardLayout",
 				Values: []string{
 					"UNKNOWN",
