@@ -47,22 +47,6 @@ func (receiver *SqlLogger) Log(ctx context.Context, query string, args ...interf
 	receiver.LogWithErr(ctx, nil, nil, query, args...)
 }
 
-func traceId(ctx context.Context) strings.Builder {
-	var sb strings.Builder
-	if reqId, ok := requestid.FromContext(ctx); ok && stringutils.IsNotEmpty(reqId) {
-		sb.WriteString(fmt.Sprintf("RequestID: %s\t", reqId))
-	}
-	span := opentracing.SpanFromContext(ctx)
-	if span != nil {
-		if jspan, ok := span.(*jaeger.Span); ok {
-			sb.WriteString(fmt.Sprintf("TraceID: %s\t", jspan.SpanContext().TraceID().String()))
-		} else {
-			sb.WriteString(fmt.Sprintf("TraceID: %s\t", span))
-		}
-	}
-	return sb
-}
-
 func PopulatedSql(query string, args ...interface{}) string {
 	query = strings.Join(strings.Fields(query), " ")
 	copiedArgs := make([]interface{}, len(args))
@@ -90,7 +74,18 @@ func (receiver *SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool,
 	if !receiver.Enable() {
 		return
 	}
-	sb := traceId(ctx)
+	var sb strings.Builder
+	if reqId, ok := requestid.FromContext(ctx); ok && stringutils.IsNotEmpty(reqId) {
+		sb.WriteString(fmt.Sprintf("RequestID: %s\t", reqId))
+	}
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		if jspan, ok := span.(*jaeger.Span); ok {
+			sb.WriteString(fmt.Sprintf("TraceID: %s\t", jspan.SpanContext().TraceID().String()))
+		} else {
+			sb.WriteString(fmt.Sprintf("TraceID: %s\t", span))
+		}
+	}
 	sb.WriteString(fmt.Sprintf("SQL: %s", PopulatedSql(query, args...)))
 	if hit != nil {
 		sb.WriteString(fmt.Sprintf("\tHIT: %t", *hit))

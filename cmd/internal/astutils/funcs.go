@@ -338,5 +338,5 @@ func GetMod() string {
 // GetImportPath get import path of pkg from dir
 func GetImportPath(dir string) string {
 	wd, _ := os.Getwd()
-	return GetMod() + strings.TrimPrefix(dir, wd)
+	return GetMod() + strings.ReplaceAll(strings.TrimPrefix(dir, wd), `\`, `/`)
 }
