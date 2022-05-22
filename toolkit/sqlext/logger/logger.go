@@ -19,7 +19,7 @@ import (
 
 type ISqlLogger interface {
 	Log(ctx context.Context, query string, args ...interface{})
-	LogWithErr(ctx context.Context, err error, query string, args ...interface{})
+	LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{})
 	Enable() bool
 	logrus.StdLogger
 }
@@ -44,7 +44,7 @@ func (receiver *SqlLogger) Log(ctx context.Context, query string, args ...interf
 	if !receiver.Enable() {
 		return
 	}
-	receiver.LogWithErr(ctx, nil, query, args...)
+	receiver.LogWithErr(ctx, nil, nil, query, args...)
 }
 
 func traceId(ctx context.Context) strings.Builder {
@@ -64,6 +64,7 @@ func traceId(ctx context.Context) strings.Builder {
 }
 
 func PopulatedSql(query string, args ...interface{}) string {
+	query = strings.Join(strings.Fields(query), " ")
 	copiedArgs := make([]interface{}, len(args))
 	copy(copiedArgs, args)
 	for i, arg := range copiedArgs {
@@ -85,12 +86,15 @@ func PopulatedSql(query string, args ...interface{}) string {
 	return str
 }
 
-func (receiver *SqlLogger) LogWithErr(ctx context.Context, err error, query string, args ...interface{}) {
+func (receiver *SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{}) {
 	if !receiver.Enable() {
 		return
 	}
 	sb := traceId(ctx)
 	sb.WriteString(fmt.Sprintf("SQL: %s", PopulatedSql(query, args...)))
+	if hit != nil {
+		sb.WriteString(fmt.Sprintf("\tHIT: %t", *hit))
+	}
 	if err != nil {
 		sb.WriteString(fmt.Sprintf("\tERR: %s", errors.Wrap(err, caller.NewCaller().String())))
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/logger"
+	"time"
 )
 
 // DB wraps sqlx.Tx and sqlx.DB https://github.com/jmoiron/sqlx/issues/344#issuecomment-318372779
@@ -39,8 +40,9 @@ type Querier interface {
 // GddDB wraps sqlx.DB
 type GddDB struct {
 	*sqlx.DB
-	logger     logger.ISqlLogger
-	cacheStore *cache.Cache
+	logger      logger.ISqlLogger
+	cacheStore  *cache.Cache
+	redisKeyTTL time.Duration
 }
 
 type GddDBOption func(*GddDB)
@@ -57,10 +59,17 @@ func WithCache(store *cache.Cache) GddDBOption {
 	}
 }
 
+func WithRedisKeyTTL(ttl time.Duration) GddDBOption {
+	return func(g *GddDB) {
+		g.redisKeyTTL = ttl
+	}
+}
+
 func NewGddDB(db *sqlx.DB, options ...GddDBOption) DB {
 	g := &GddDB{
-		DB:     db,
-		logger: logger.NewSqlLogger(logrus.StandardLogger()),
+		DB:          db,
+		logger:      logger.NewSqlLogger(logrus.StandardLogger()),
+		redisKeyTTL: time.Hour,
 	}
 	for _, opt := range options {
 		opt(g)
@@ -68,37 +77,81 @@ func NewGddDB(db *sqlx.DB, options ...GddDBOption) DB {
 	return g
 }
 
-func (g *GddDB) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
-	if q, args, err := g.DB.BindNamed(query, arg); err != nil {
-		return nil, errors.Wrap(err, caller.NewCaller().String())
-	} else {
-		g.logger.Log(ctx, q, args...)
+func (g *GddDB) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
+	var (
+		q    string
+		args []interface{}
+	)
+	defer func() {
+		g.logger.LogWithErr(ctx, err, nil, q, args...)
+	}()
+	q, args, err = g.DB.BindNamed(query, arg)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	if err != nil {
+		return nil, err
 	}
-	return g.DB.NamedExecContext(ctx, query, arg)
+	ret, err = g.DB.NamedExecContext(ctx, query, arg)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
-func (g *GddDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	g.logger.Log(ctx, query, args...)
-	return g.DB.ExecContext(ctx, query, args...)
+func (g *GddDB) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
+	defer func() {
+		g.logger.LogWithErr(ctx, err, nil, query, args...)
+	}()
+	ret, err = g.DB.ExecContext(ctx, query, args...)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
-func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(ctx, query, args...)
-	return g.DB.GetContext(ctx, dest, query, args...)
+func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+	hit := true
+	defer func() {
+		g.logger.LogWithErr(ctx, err, &hit, query, args...)
+	}()
+	if g.cacheStore != nil {
+		err = g.cacheStore.Once(&cache.Item{
+			Key:   shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)),
+			Value: dest,
+			TTL:   g.redisKeyTTL,
+			Do: func(*cache.Item) (interface{}, error) {
+				hit = false
+				err = g.DB.GetContext(ctx, dest, query, args...)
+				err = errors.Wrap(err, caller.NewCaller().String())
+				return dest, err
+			},
+		})
+		return
+	}
+	hit = false
+	err = g.DB.GetContext(ctx, dest, query, args...)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
 func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+	hit := true
+	defer func() {
+		g.logger.LogWithErr(ctx, err, &hit, query, args...)
+	}()
 	if g.cacheStore != nil {
-		err = g.cacheStore.Get(ctx, shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)), dest)
-		err = errors.Wrap(err, caller.NewCaller().String())
-		g.logger.LogWithErr(ctx, err, query, args...)
-		if err == nil {
-			return nil
-		}
+		err = g.cacheStore.Once(&cache.Item{
+			Key:   shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)),
+			Value: dest,
+			TTL:   g.redisKeyTTL,
+			Do: func(*cache.Item) (interface{}, error) {
+				hit = false
+				err = g.DB.SelectContext(ctx, dest, query, args...)
+				err = errors.Wrap(err, caller.NewCaller().String())
+				return dest, err
+			},
+		})
+		return
 	}
+	hit = false
 	err = g.DB.SelectContext(ctx, dest, query, args...)
-	g.logger.LogWithErr(ctx, err, query, args...)
-	return err
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
 // BeginTxx begins a transaction
@@ -107,35 +160,90 @@ func (g *GddDB) BeginTxx(ctx context.Context, opts *sql.TxOptions) (Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &GddTx{tx, g.logger}, nil
+	return &GddTx{tx, g.logger, g.cacheStore, g.redisKeyTTL}, nil
 }
 
 // GddTx wraps sqlx.Tx
 type GddTx struct {
 	*sqlx.Tx
-	logger logger.ISqlLogger
+	logger      logger.ISqlLogger
+	cacheStore  *cache.Cache
+	redisKeyTTL time.Duration
 }
 
-func (g *GddTx) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
-	if q, args, err := g.Tx.BindNamed(query, arg); err != nil {
-		return nil, errors.Wrap(err, caller.NewCaller().String())
-	} else {
-		g.logger.Log(ctx, q, args...)
+func (g *GddTx) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
+	var (
+		q    string
+		args []interface{}
+	)
+	defer func() {
+		g.logger.LogWithErr(ctx, err, nil, q, args...)
+	}()
+	q, args, err = g.Tx.BindNamed(query, arg)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	if err != nil {
+		return nil, err
 	}
-	return g.Tx.NamedExecContext(ctx, query, arg)
+	ret, err = g.Tx.NamedExecContext(ctx, query, arg)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
-func (g *GddTx) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	g.logger.Log(ctx, query, args...)
-	return g.Tx.ExecContext(ctx, query, args...)
+func (g *GddTx) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
+	defer func() {
+		g.logger.LogWithErr(ctx, err, nil, query, args...)
+	}()
+	ret, err = g.Tx.ExecContext(ctx, query, args...)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
-func (g *GddTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(ctx, query, args...)
-	return g.Tx.GetContext(ctx, dest, query, args...)
+func (g *GddTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+	hit := true
+	defer func() {
+		g.logger.LogWithErr(ctx, err, &hit, query, args...)
+	}()
+	if g.cacheStore != nil {
+		err = g.cacheStore.Once(&cache.Item{
+			Key:   shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)),
+			Value: dest,
+			TTL:   g.redisKeyTTL,
+			Do: func(*cache.Item) (interface{}, error) {
+				hit = false
+				err = g.Tx.GetContext(ctx, dest, query, args...)
+				err = errors.Wrap(err, caller.NewCaller().String())
+				return dest, err
+			},
+		})
+		return
+	}
+	hit = false
+	err = g.Tx.GetContext(ctx, dest, query, args...)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
 
-func (g *GddTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(ctx, query, args...)
-	return g.Tx.SelectContext(ctx, dest, query, args...)
+func (g *GddTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+	hit := true
+	defer func() {
+		g.logger.LogWithErr(ctx, err, &hit, query, args...)
+	}()
+	if g.cacheStore != nil {
+		err = g.cacheStore.Once(&cache.Item{
+			Key:   shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)),
+			Value: dest,
+			TTL:   g.redisKeyTTL,
+			Do: func(*cache.Item) (interface{}, error) {
+				hit = false
+				err = g.Tx.SelectContext(ctx, dest, query, args...)
+				err = errors.Wrap(err, caller.NewCaller().String())
+				return dest, err
+			},
+		})
+		return
+	}
+	hit = false
+	err = g.Tx.SelectContext(ctx, dest, query, args...)
+	err = errors.Wrap(err, caller.NewCaller().String())
+	return
 }
