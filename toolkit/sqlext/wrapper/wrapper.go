@@ -3,7 +3,9 @@ package wrapper
 import (
 	"context"
 	"database/sql"
+	"github.com/go-redis/cache/v8"
 	"github.com/jmoiron/sqlx"
+	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/caller"
@@ -37,7 +39,8 @@ type Querier interface {
 // GddDB wraps sqlx.DB
 type GddDB struct {
 	*sqlx.DB
-	logger logger.ISqlLogger
+	logger     logger.ISqlLogger
+	cacheStore *cache.Cache
 }
 
 type GddDBOption func(*GddDB)
@@ -45,6 +48,12 @@ type GddDBOption func(*GddDB)
 func WithLogger(logger logger.ISqlLogger) GddDBOption {
 	return func(g *GddDB) {
 		g.logger = logger
+	}
+}
+
+func WithCache(store *cache.Cache) GddDBOption {
+	return func(g *GddDB) {
+		g.cacheStore = store
 	}
 }
 
@@ -78,9 +87,18 @@ func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, 
 	return g.DB.GetContext(ctx, dest, query, args...)
 }
 
-func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	g.logger.Log(ctx, query, args...)
-	return g.DB.SelectContext(ctx, dest, query, args...)
+func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+	if g.cacheStore != nil {
+		err = g.cacheStore.Get(ctx, shortuuid.NewWithNamespace(logger.PopulatedSql(query, args...)), dest)
+		err = errors.Wrap(err, caller.NewCaller().String())
+		g.logger.LogWithErr(ctx, err, query, args...)
+		if err == nil {
+			return nil
+		}
+	}
+	err = g.DB.SelectContext(ctx, dest, query, args...)
+	g.logger.LogWithErr(ctx, err, query, args...)
+	return err
 }
 
 // BeginTxx begins a transaction
