@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -43,6 +44,7 @@ func defaultFormatter() logrus.Formatter {
 		tf := new(logrus.TextFormatter)
 		tf.TimestampFormat = "2006-01-02 15:04:05"
 		tf.FullTimestamp = true
+		tf.ForceColors = true
 		formatter = tf
 	default:
 	}
@@ -56,6 +58,7 @@ func Init(opts ...LoggerOption) {
 	logger := logrus.StandardLogger()
 	logger.SetFormatter(defaultFormatter())
 	logger.SetLevel(logrus.Level(loglevel))
+	logrus.SetOutput(colorable.NewColorableStdout())
 
 	for _, opt := range opts {
 		opt(logger)
