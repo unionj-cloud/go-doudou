@@ -18,7 +18,7 @@
 
 # go-doudou
 
-> Gossip Protocol Decentralized Golang Microservice Framework
+> Lightweight Golang Microservice Framework
 
 - 💡 Starts from golang interface, no need to learn new IDL(interface definition language).
 - 🛠️ Built-in SWIM gossip protocol based service register and discovery mechanism to help you build a robust, scalable and decentralized service cluster.
@@ -27,7 +27,7 @@
 - 🔑 Built-in service governance support including remote configuration management, client-side load balancer, rate limiter, circuit breaker, bulkhead, timeout, retry and more.
 - 📦️ Supporting both monolith and microservice architectures gives you flexibility to design your system.
 
-Go-doudou（doudou pronounce /dəudəu/）is a gossip protocol and OpenAPI v3 spec based decentralized microservice framework. It supports monolith service application as well. Currently, it supports RESTful service only.  
+Go-doudou（doudou pronounce /dəudəu/）is OpenAPI v3 spec based lightweight microservice framework. It supports monolith service application as well. Currently, it supports RESTful service only.  
 
 Read the Docs [https://go-doudou.github.io](https://go-doudou.github.io) to Learn More.
 
