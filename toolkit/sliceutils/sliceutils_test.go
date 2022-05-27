@@ -230,6 +230,64 @@ func TestConvertAny2Interface(t *testing.T) {
 	}
 }
 
+// 此为 ConvertAny2Interface 的单元测试，同时也在演示要如何使用此函数
+// This is a unit test for ConvertAny2Interface, and also demonstrates how to use this function
+func TestConvertAny2InterfaceForExplainUsage(t *testing.T) {
+	// 说明 explain
+	// 在 go-dou-dou 社区中，有人提问，如何把 slice 传入有动态类型的函数？
+	// In the go-dou-dou community, there are people who ask questions, how to pass a slice to a function with dynamic parameter?
+	t.Run("To insert a dynamically sized slice as a variadic parameter.", func(t *testing.T) {
+		// dstFunc 函数是一个接受一个可变参数的函数
+		// dstFunc is an example of a function with a variadic parameter.
+		dstFunc := func(values ...interface{}) int {
+			return len(values)
+		}
+		// 先测试 dstFunc 的功能
+		// test dstFunc in the following
+		count := dstFunc(1, 2, 3)
+		if count != 3 {
+			t.Errorf("dstFunc() error, got = %d, want 3", count)
+			return
+		}
+		count = dstFunc(1, 2, 3, 4, 5)
+		if count != 5 {
+			t.Errorf("dstFunc() error, got = %d, want 5", count)
+			return
+		}
+		// 再测试 ConvertAny2Interface 的功能
+		// test ConvertAny2Interface in the following
+		input, err := ConvertAny2Interface([]int{1, 2, 3})
+		if err != nil {
+			t.Errorf("ConvertAny2Interface() error = %v", err)
+			return
+		}
+		// 错误的输入，因为没有加 ...
+		// wrong input, because there is no ...
+		count = dstFunc(input)
+		if count != 1 {
+			t.Errorf("dstFunc() error, got = %d, want 1", count)
+			return
+		}
+		// 正确的输入，因为加了 ...
+		// correct input, because there is ...
+		count = dstFunc(input...)
+		if count != 3 {
+			t.Errorf("dstFunc() error, got = %d, want 3", count)
+			return
+		}
+		input, err = ConvertAny2Interface([]int{1, 2, 3, 4, 5})
+		if err != nil {
+			t.Errorf("ConvertAny2Interface() error = %v", err)
+			return
+		}
+		count = dstFunc(input...)
+		if dstFunc(input...) != 5 {
+			t.Errorf("dstFunc() error, got = %d, want 5", count)
+			return
+		}
+	})
+}
+
 func TestStringSlice2InterfaceSlice(t *testing.T) {
 	type args struct {
 		strSlice []string
