@@ -57,6 +57,8 @@ const (
 	DefaultGddNacosLogLevel            = "info"
 	DefaultGddNacosServerAddr          = ""
 	DefaultGddNacosRegisterHost        = ""
+	DefaultGddNacosClusterName         = "DEFAULT"
+	DefaultGddNacosGroupName           = "DEFAULT_GROUP"
 
 	DefaultGddNacosConfigFormat = configmgr.DotenvConfigFormat
 	DefaultGddNacosConfigGroup  = "DEFAULT_GROUP"

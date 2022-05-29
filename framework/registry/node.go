@@ -527,7 +527,7 @@ func SvcName(node *memberlist.Node) string {
 	return mm.Meta.Service
 }
 
-func RegisterServiceProvider(sp IServiceProvider) {
+func RegisterServiceProvider(sp IMemberlistServiceProvider) {
 	if mlist == nil {
 		return
 	}

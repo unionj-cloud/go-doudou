@@ -202,6 +202,7 @@ func (srv *DefaultHttpSrv) Run() {
 				return false
 			},
 		})
+		gddRouter.Use(metrics)
 		gddRouter.Use(corsOpts.Handler)
 		gddRouter.Use(basicAuth())
 		srv.gddRoutes = append(srv.gddRoutes, onlinedoc.Routes()...)
@@ -224,6 +225,16 @@ func (srv *DefaultHttpSrv) Run() {
 			Path(item.Pattern).
 			Name(item.Name).
 			Handler(item.HandlerFunc)
+	}
+	srv.rootRouter.NotFoundHandler = srv.rootRouter.NewRoute().BuildOnly().HandlerFunc(http.NotFound).GetHandler()
+	srv.rootRouter.MethodNotAllowedHandler = srv.rootRouter.NewRoute().BuildOnly().HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("405 method not allowed"))
+	}).GetHandler()
+
+	for _, item := range srv.middlewares {
+		srv.rootRouter.NotFoundHandler = item.Middleware(srv.rootRouter.NotFoundHandler)
+		srv.rootRouter.MethodNotAllowedHandler = item.Middleware(srv.rootRouter.MethodNotAllowedHandler)
 	}
 
 	start := time.Now()

@@ -106,12 +106,14 @@ func NewNode(data ...map[string]interface{}) {
 	success, err := NamingClient.RegisterInstance(vo.RegisterInstanceParam{
 		Ip:          registerHost,
 		Port:        httpPort,
-		ServiceName: service,
 		Weight:      float64(weight),
 		Enable:      true,
 		Healthy:     true,
-		Ephemeral:   true,
 		Metadata:    metadata,
+		ClusterName: config.GddNacosClusterName.LoadOrDefault(config.DefaultGddNacosClusterName),
+		ServiceName: service,
+		GroupName:   config.GddNacosGroupName.LoadOrDefault(config.DefaultGddNacosGroupName),
+		Ephemeral:   true,
 	})
 	if err != nil {
 		logger.Panic(fmt.Sprintf("[go-doudou] failed to register to nacos server: %s", err))

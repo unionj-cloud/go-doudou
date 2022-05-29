@@ -59,15 +59,6 @@ type ServiceProvider struct {
 	server string
 }
 
-func (s *ServiceProvider) AddNode(node *memberlist.Node) {
-}
-
-func (s *ServiceProvider) RemoveNode(node *memberlist.Node) {
-}
-
-func (s *ServiceProvider) UpdateWeight(node *memberlist.Node) {
-}
-
 // SelectServer return service address from environment variable
 func (s *ServiceProvider) SelectServer() string {
 	return s.server
@@ -270,12 +261,6 @@ func NewSmoothWeightedRoundRobinProvider(name string) *SmoothWeightedRoundRobinP
 	return sp
 }
 
-type iNacosServiceProvider interface {
-	SetClusters(clusters []string)
-	SetGroupName(groupName string)
-	SetNamingClient(namingClient naming_client.INamingClient)
-}
-
 type nacosBase struct {
 	clusters    []string //optional,default:DEFAULT
 	serviceName string   //required
@@ -297,31 +282,22 @@ func (b *nacosBase) SetNamingClient(namingClient naming_client.INamingClient) {
 	b.namingClient = namingClient
 }
 
-func (b *nacosBase) AddNode(node *memberlist.Node) {
-}
-
-func (b *nacosBase) RemoveNode(node *memberlist.Node) {
-}
-
-func (b *nacosBase) UpdateWeight(node *memberlist.Node) {
-}
-
-type NacosProviderOption func(iNacosServiceProvider)
+type NacosProviderOption func(registry.INacosServiceProvider)
 
 func WithNacosClusters(clusters []string) NacosProviderOption {
-	return func(provider iNacosServiceProvider) {
+	return func(provider registry.INacosServiceProvider) {
 		provider.SetClusters(clusters)
 	}
 }
 
 func WithNacosGroupName(groupName string) NacosProviderOption {
-	return func(provider iNacosServiceProvider) {
+	return func(provider registry.INacosServiceProvider) {
 		provider.SetGroupName(groupName)
 	}
 }
 
 func WithNacosNamingClient(namingClient naming_client.INamingClient) NacosProviderOption {
-	return func(provider iNacosServiceProvider) {
+	return func(provider registry.INacosServiceProvider) {
 		provider.SetNamingClient(namingClient)
 	}
 }

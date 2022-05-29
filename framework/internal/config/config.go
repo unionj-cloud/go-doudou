@@ -199,6 +199,8 @@ const (
 	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
 	GddNacosServerAddr          envVariable = "GDD_NACOS_SERVER_ADDR"
 	GddNacosRegisterHost        envVariable = "GDD_NACOS_REGISTER_HOST"
+	GddNacosClusterName         envVariable = "GDD_NACOS_CLUSTER_NAME"
+	GddNacosGroupName           envVariable = "GDD_NACOS_GROUP_NAME"
 	// GddNacosConfigFormat has two options available: dotenv, yaml
 	GddNacosConfigFormat envVariable = "GDD_NACOS_CONFIG_FORMAT"
 	GddNacosConfigGroup  envVariable = "GDD_NACOS_CONFIG_GROUP"

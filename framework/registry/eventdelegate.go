@@ -5,7 +5,7 @@ import (
 )
 
 type eventDelegate struct {
-	ServiceProviders []IServiceProvider
+	ServiceProviders []IMemberlistServiceProvider
 }
 
 func (e *eventDelegate) NotifySuspectSateChange(node *memberlist.Node) {
