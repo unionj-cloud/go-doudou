@@ -149,13 +149,13 @@ func Test_eventDelegate_NotifyUpdate(t *testing.T) {
 
 func Test_eventDelegate_NotifySuspectSateChange(t *testing.T) {
 	type fields struct {
-		ServiceProviders []IServiceProvider
+		ServiceProviders []IMemberlistServiceProvider
 	}
 	type args struct {
 		node *memberlist.Node
 	}
 	sp := newMockServiceProvider("TEST")
-	providers := []IServiceProvider{
+	providers := []IMemberlistServiceProvider{
 		sp,
 	}
 	tests := []struct {
@@ -210,13 +210,13 @@ func Test_eventDelegate_NotifySuspectSateChange(t *testing.T) {
 
 func Test_eventDelegate_NotifyWeight(t *testing.T) {
 	type fields struct {
-		ServiceProviders []IServiceProvider
+		ServiceProviders []IMemberlistServiceProvider
 	}
 	type args struct {
 		node *memberlist.Node
 	}
 	sp := newMockServiceProvider("TEST")
-	providers := []IServiceProvider{
+	providers := []IMemberlistServiceProvider{
 		sp,
 	}
 	tests := []struct {
@@ -258,13 +258,13 @@ func Test_eventDelegate_NotifyWeight(t *testing.T) {
 
 func Test_eventDelegate_NotifyLeave1(t *testing.T) {
 	type fields struct {
-		ServiceProviders []IServiceProvider
+		ServiceProviders []IMemberlistServiceProvider
 	}
 	type args struct {
 		node *memberlist.Node
 	}
 	sp := newMockServiceProvider("TEST")
-	providers := []IServiceProvider{
+	providers := []IMemberlistServiceProvider{
 		sp,
 	}
 	tests := []struct {
@@ -306,13 +306,13 @@ func Test_eventDelegate_NotifyLeave1(t *testing.T) {
 
 func Test_eventDelegate_NotifyUpdate1(t *testing.T) {
 	type fields struct {
-		ServiceProviders []IServiceProvider
+		ServiceProviders []IMemberlistServiceProvider
 	}
 	type args struct {
 		node *memberlist.Node
 	}
 	sp := newMockServiceProvider("TEST")
-	providers := []IServiceProvider{
+	providers := []IMemberlistServiceProvider{
 		sp,
 	}
 	tests := []struct {
