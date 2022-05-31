@@ -385,3 +385,13 @@ func BulkHead(workers int, maxWaitTime time.Duration) func(inner http.Handler) h
 		})
 	}
 }
+
+func BodyMaxBytes(n int64) func(inner http.Handler) http.Handler {
+	return func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r2 := *r
+			r2.Body = http.MaxBytesReader(w, r.Body, n)
+			inner.ServeHTTP(w, &r2)
+		})
+	}
+}
