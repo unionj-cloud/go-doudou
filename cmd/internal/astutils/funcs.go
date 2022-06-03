@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"go/ast"
 	"go/format"
@@ -18,6 +19,48 @@ import (
 	"text/template"
 	"unicode"
 )
+
+func GetImportStatements(input []byte) []byte {
+	reg := regexp.MustCompile("(?s)import \\((.*?)\\)")
+	if !reg.Match(input) {
+		return nil
+	}
+	matches := reg.FindSubmatch(input)
+	return matches[1]
+}
+
+func AppendImportStatements(src []byte, appendImports []byte) []byte {
+	reg := regexp.MustCompile("(?s)import \\((.*?)\\)")
+	if !reg.Match(src) {
+		return src
+	}
+	matches := reg.FindSubmatch(src)
+	old := matches[1]
+	re := regexp.MustCompile(`[\r\n]+`)
+	splits := re.Split(string(old), -1)
+	oldmap := make(map[string]struct{})
+	for _, item := range splits {
+		oldmap[strings.TrimSpace(item)] = struct{}{}
+	}
+	splits = re.Split(string(appendImports), -1)
+	var newimps []string
+	for _, item := range splits {
+		key := strings.TrimSpace(item)
+		if _, ok := oldmap[key]; !ok {
+			newimps = append(newimps, "\t"+key)
+		}
+	}
+	if len(newimps) == 0 {
+		return src
+	}
+	appendImports = []byte(constants.LineBreak + strings.Join(newimps, constants.LineBreak) + constants.LineBreak)
+	return reg.ReplaceAllFunc(src, func(i []byte) []byte {
+		old = append([]byte("import ("), old...)
+		old = append(old, appendImports...)
+		old = append(old, []byte(")")...)
+		return old
+	})
+}
 
 // FixImport format source code and add missing import syntax automatically
 func FixImport(src []byte, file string) {

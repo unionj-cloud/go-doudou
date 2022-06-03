@@ -2,8 +2,10 @@ package astutils
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"go/ast"
@@ -346,4 +348,119 @@ func TestNewMethodMeta(t *testing.T) {
 	}
 	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
+}
+
+func TestGetImportStatements(t *testing.T) {
+	input := `import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+	{{.ServiceAlias}} "{{.ServicePackage}}"
+	"net/http"
+	"{{.VoPackage}}"
+	"github.com/pkg/errors"
+)`
+	ret := GetImportStatements([]byte(input))
+	fmt.Println(string(ret))
+}
+
+func TestAppendImportStatements(t *testing.T) {
+	input := `import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+
+	{{.ServiceAlias}} "{{.ServicePackage}}"
+	"net/http"
+	"{{.VoPackage}}"
+)
+
+type UsersvcHandlerImpl struct {
+	usersvc service.Usersvc
+}
+`
+	ret := AppendImportStatements([]byte(input), []byte(`
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
+`))
+
+	ret = AppendImportStatements(ret, []byte(`
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
+`))
+
+	ret = AppendImportStatements(ret, []byte(`
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
+`))
+
+	expected := `import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+
+	{{.ServiceAlias}} "{{.ServicePackage}}"
+	"net/http"
+	"{{.VoPackage}}"
+
+	"github.com/pkg/errors"
+)
+
+type UsersvcHandlerImpl struct {
+	usersvc service.Usersvc
+}
+`
+
+	fmt.Println(string(ret))
+	require.Equal(t, expected, string(ret))
+}
+
+func TestAppendImportStatements1(t *testing.T) {
+	input := `import ()`
+	ret := AppendImportStatements([]byte(input), []byte(`
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
+`))
+	expected := `import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
+)`
+
+	fmt.Println(string(ret))
+	require.Equal(t, expected, string(ret))
+}
+
+func TestAppendImportStatements2(t *testing.T) {
+	input := `import ()`
+	ret := AppendImportStatements([]byte(input), []byte(`
+
+`))
+	expected := input
+
+	fmt.Println(string(ret))
+	require.Equal(t, expected, string(ret))
 }

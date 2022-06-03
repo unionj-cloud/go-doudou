@@ -415,9 +415,7 @@ var appendHttpHandlerImplTmpl = `
 {{- end }}
 `
 
-var initHttpHandlerImplTmpl = `package httpsrv
-
-import (
+var importTmpl = `
 	"context"
 	"encoding/json"
 	"fmt"
@@ -429,7 +427,11 @@ import (
 	"net/http"
 	"{{.VoPackage}}"
 	"github.com/pkg/errors"
-)
+`
+
+var initHttpHandlerImplTmpl = `package httpsrv
+
+import ()
 
 type {{.Meta.Name}}HandlerImpl struct{
 	{{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}
@@ -462,6 +464,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		fi              os.FileInfo
 		tmpl            string
 		meta            astutils.InterfaceMeta
+		importBuf       bytes.Buffer
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
 	if err = os.MkdirAll(httpDir, os.ModePerm); err != nil {
@@ -485,7 +488,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		}
 		defer f.Close()
 		tmpl = appendHttpHandlerImplTmpl
-
 		unimplementedMethods(&meta, handlerimplfile)
 	} else {
 		if f, err = os.Create(handlerimplfile); err != nil {
@@ -536,13 +538,27 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	}); err != nil {
 		panic(err)
 	}
-
 	original, err := ioutil.ReadAll(f)
 	if err != nil {
 		panic(err)
 	}
 
 	original = append(original, buf.Bytes()...)
+	if tpl, err = template.New("himportimpl.go.tmpl").Parse(importTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&importBuf, struct {
+		ServicePackage string
+		ServiceAlias   string
+		VoPackage      string
+	}{
+		ServicePackage: modName,
+		ServiceAlias:   ic.Package.Name,
+		VoPackage:      modName + "/vo",
+	}); err != nil {
+		panic(err)
+	}
+	original = astutils.AppendImportStatements(original, importBuf.Bytes())
 	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }

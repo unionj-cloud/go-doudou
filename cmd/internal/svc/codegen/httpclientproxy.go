@@ -17,6 +17,24 @@ import (
 	"text/template"
 )
 
+var cpimportTmpl = `
+	"context"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
+	"github.com/slok/goresilience"
+	"github.com/go-resty/resty/v2"
+	"github.com/slok/goresilience/circuitbreaker"
+	rerrors "github.com/slok/goresilience/errors"
+	"github.com/slok/goresilience/metrics"
+	"github.com/slok/goresilience/retry"
+	"github.com/slok/goresilience/timeout"
+	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	"os"
+	"time"
+	"{{.VoPackage}}"
+`
+
 var appendTmpl = `
 {{- range $m := .Meta.Methods }}
 	func (receiver *{{$.SvcName}}ClientProxy) {{$m.Name}}(ctx context.Context, _headers map[string]string, {{- range $i, $p := $m.Params}}
@@ -67,23 +85,7 @@ var appendTmpl = `
 
 var baseTmpl = `package client
 
-import (
-	"context"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
-	"github.com/slok/goresilience"
-	"github.com/go-resty/resty/v2"
-	"github.com/slok/goresilience/circuitbreaker"
-	rerrors "github.com/slok/goresilience/errors"
-	"github.com/slok/goresilience/metrics"
-	"github.com/slok/goresilience/retry"
-	"github.com/slok/goresilience/timeout"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
-	"os"
-	"time"
-	"{{.VoPackage}}"
-)
+import ()
 
 type {{.SvcName}}ClientProxy struct {
 	client *{{.SvcName}}Client
@@ -183,6 +185,7 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		modf            *os.File
 		meta            astutils.InterfaceMeta
 		clientProxyTmpl string
+		importBuf       bytes.Buffer
 	)
 	clientDir = filepath.Join(dir, "client")
 	if err = os.MkdirAll(clientDir, os.ModePerm); err != nil {
@@ -250,5 +253,18 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, buf.Bytes()...)
+	if tpl, err = template.New("cpimportimpl.go.tmpl").Parse(cpimportTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&importBuf, struct {
+		ConfigPackage string
+		VoPackage     string
+	}{
+		VoPackage:     modName + "/vo",
+		ConfigPackage: modName + "/config",
+	}); err != nil {
+		panic(err)
+	}
+	original = astutils.AppendImportStatements(original, importBuf.Bytes())
 	astutils.FixImport(original, clientfile)
 }

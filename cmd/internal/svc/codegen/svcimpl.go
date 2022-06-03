@@ -17,6 +17,14 @@ import (
 	"text/template"
 )
 
+var svcimportTmpl = `
+	"context"
+	"{{.ConfigPackage}}"
+	"{{.VoPackage}}"
+	"github.com/jmoiron/sqlx"
+	"github.com/brianvoe/gofakeit/v6"
+`
+
 var appendPart = `{{- range $m := .Meta.Methods }}
 	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}({{- range $i, $p := $m.Params}}
     {{- if $i}},{{end}}
@@ -39,13 +47,7 @@ var appendPart = `{{- range $m := .Meta.Methods }}
 
 var svcimplTmpl = `package {{.SvcPackage}}
 
-import (
-	"context"
-	"{{.ConfigPackage}}"
-	"{{.VoPackage}}"
-	"github.com/jmoiron/sqlx"
-	"github.com/brianvoe/gofakeit/v6"
-)
+import ()
 
 type {{.Meta.Name}}Impl struct {
 	conf *config.Config
@@ -73,6 +75,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		buf         bytes.Buffer
 		meta        astutils.InterfaceMeta
 		tmpl        string
+		importBuf   bytes.Buffer
 	)
 	svcimplfile = filepath.Join(dir, "svcimpl.go")
 	err = copier.DeepCopy(ic.Interfaces[0], &meta)
@@ -149,6 +152,19 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, buf.Bytes()...)
+	if tpl, err = template.New("simportimpl.go.tmpl").Parse(svcimportTmpl); err != nil {
+		panic(err)
+	}
+	if err = tpl.Execute(&importBuf, struct {
+		ConfigPackage string
+		VoPackage     string
+	}{
+		VoPackage:     modName + "/vo",
+		ConfigPackage: modName + "/config",
+	}); err != nil {
+		panic(err)
+	}
+	original = astutils.AppendImportStatements(original, importBuf.Bytes())
 	//fmt.Println(string(original))
 	astutils.FixImport(original, svcimplfile)
 }

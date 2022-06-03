@@ -14,7 +14,7 @@ spec:
         app: usersvc
     spec:
       containers:
-      - image: wubin1989/go-doudou-usersvc:v20220522162049
+      - image: wubin1989/go-doudou-usersvc:v20220603150118
         imagePullPolicy: Always
         name: usersvc
         ports:
