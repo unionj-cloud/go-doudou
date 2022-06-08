@@ -129,35 +129,3 @@ func TestParseVoPanicWalk(t *testing.T) {
 		}, ShouldPanic)
 	})
 }
-
-func TestParseVoPanicStat1(t *testing.T) {
-	Convey("Test ParseVo should panic from Stat1", t, func() {
-		Stat = os.Stat
-		Walk = filepath.Walk
-		Stat = func(name string) (os.FileInfo, error) {
-			if filepath.Base(name) == "usersvc_openapi3.json" {
-				return nil, errors.New("mock Walk error")
-			}
-			return os.Stat(name)
-		}
-		So(func() {
-			ParseVo(testDir)
-		}, ShouldPanic)
-	})
-}
-
-func TestParseVoPanicStat2(t *testing.T) {
-	Convey("Test ParseVo should panic from Stat2", t, func() {
-		Stat = os.Stat
-		Walk = filepath.Walk
-		Stat = func(name string) (os.FileInfo, error) {
-			if filepath.Base(name) == "usersvc_openapi3.go" {
-				return nil, errors.New("mock Walk error")
-			}
-			return os.Stat(name)
-		}
-		So(func() {
-			ParseVo(testDir)
-		}, ShouldPanic)
-	})
-}

@@ -33,10 +33,12 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-// PostUserCreateWithList Creates list of users with given input array
-// Creates list of users with given input array
-func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers map[string]string,
-	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Password *string `json:"password,omitempty" url:"password"`
+		Username *string `json:"username,omitempty" url:"username"`
+	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -44,9 +46,10 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_req.SetBody(bodyJSON)
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
 
-	_resp, _err = _req.Post("/user/createWithList")
+	_resp, _err = _req.Get("/user/login")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -55,10 +58,7 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 		err = errors.New(_resp.String())
 		return
 	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
+	ret = _resp.String()
 	return
 }
 
@@ -92,12 +92,10 @@ func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[st
 	return
 }
 
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
-		Password *string `json:"password,omitempty" url:"password"`
-	}) (ret string, _resp *resty.Response, err error) {
+// PostUserCreateWithList Creates list of users with given input array
+// Creates list of users with given input array
+func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers map[string]string,
+	bodyJSON *[]User) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -105,10 +103,9 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[strin
 	if len(_headers) > 0 {
 		_req.SetHeaders(_headers)
 	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
+	_req.SetBody(bodyJSON)
 
-	_resp, _err = _req.Get("/user/login")
+	_resp, _err = _req.Post("/user/createWithList")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return
@@ -117,7 +114,10 @@ func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[strin
 		err = errors.New(_resp.String())
 		return
 	}
-	ret = _resp.String()
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
 	return
 }
 
