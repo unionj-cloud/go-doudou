@@ -378,34 +378,13 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 
 var Walk = filepath.Walk
 
-func ParseVo(dir string, ic astutils.InterfaceCollector) {
+func ParseVo(dir string) {
 	var (
 		err        error
-		svcname    string
-		docfile    string
-		gofile     string
-		fi         os.FileInfo
 		vos        []v3.Schema
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
 	)
-	svcname = ic.Interfaces[0].Name
-	docfile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.json")
-	fi, err = Stat(docfile)
-	if err != nil && !os.IsNotExist(err) {
-		panic(err)
-	}
-	if fi != nil {
-		logrus.Warningln("file " + docfile + " will be overwritten")
-	}
-	gofile = filepath.Join(dir, strings.ToLower(svcname)+"_openapi3.go")
-	fi, err = Stat(gofile)
-	if err != nil && !os.IsNotExist(err) {
-		panic(err)
-	}
-	if fi != nil {
-		logrus.Warningln("file " + gofile + " will be overwritten")
-	}
 	vodir := filepath.Join(dir, "vo")
 	var files []string
 	err = Walk(vodir, astutils.Visit(&files))

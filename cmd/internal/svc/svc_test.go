@@ -168,7 +168,7 @@ func Test_checkIc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}
@@ -194,7 +194,7 @@ func Test_checkIc2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}
@@ -220,7 +220,7 @@ func Test_checkIc1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}
@@ -246,7 +246,7 @@ func Test_checkIc_no_interface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}
@@ -272,7 +272,7 @@ func Test_checkIc_input_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}
@@ -298,7 +298,7 @@ func Test_checkIc_output_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(ic)
+				svc.ValidateRestApi(testDir, ic)
 			})
 		})
 	}

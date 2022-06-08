@@ -110,9 +110,8 @@ func Test_schemasOf(t *testing.T) {
 
 func TestParseVo(t *testing.T) {
 	Convey("Test ParseVo", t, func() {
-		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
 		So(func() {
-			ParseVo(testDir, ic)
+			ParseVo(testDir)
 		}, ShouldNotPanic)
 		So(len(v3helper.Schemas), ShouldNotBeZeroValue)
 	})
@@ -125,9 +124,8 @@ func TestParseVoPanicWalk(t *testing.T) {
 		Walk = func(root string, walkFn filepath.WalkFunc) error {
 			return errors.New("mock Walk error")
 		}
-		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
 		So(func() {
-			ParseVo(testDir, ic)
+			ParseVo(testDir)
 		}, ShouldPanic)
 	})
 }
@@ -142,9 +140,8 @@ func TestParseVoPanicStat1(t *testing.T) {
 			}
 			return os.Stat(name)
 		}
-		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
 		So(func() {
-			ParseVo(testDir, ic)
+			ParseVo(testDir)
 		}, ShouldPanic)
 	})
 }
@@ -159,9 +156,8 @@ func TestParseVoPanicStat2(t *testing.T) {
 			}
 			return os.Stat(name)
 		}
-		ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
 		So(func() {
-			ParseVo(testDir, ic)
+			ParseVo(testDir)
 		}, ShouldPanic)
 	})
 }

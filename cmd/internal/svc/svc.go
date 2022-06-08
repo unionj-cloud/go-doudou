@@ -110,10 +110,11 @@ func (receiver *Svc) GetDir() string {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
+	codegen.ParseVo(dir)
 	ValidateDataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	ValidateRestApi(ic)
+	ValidateRestApi(dir, ic)
 
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
@@ -128,7 +129,6 @@ func (receiver *Svc) Http() {
 	default:
 		caseconvertor = strcase.ToLowerCamel
 	}
-	codegen.ParseVo(dir, ic)
 	if receiver.Handler {
 		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty, caseconvertor)
 	} else {
@@ -151,9 +151,12 @@ func (receiver *Svc) Http() {
 // If there are v3.FileModel parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
 // Not support anonymous struct as parameter
-func ValidateRestApi(ic astutils.InterfaceCollector) {
+func ValidateRestApi(dir string, ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
+	}
+	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
+		codegen.ParseVo(dir)
 	}
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)
