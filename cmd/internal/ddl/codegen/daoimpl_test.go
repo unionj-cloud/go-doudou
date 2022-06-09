@@ -21,6 +21,12 @@ func TestGenDaoImplGo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		err := os.RemoveAll(filepath.Join(testDir, "dao"))
+		if err != nil {
+			panic(err)
+		}
+	}()
 	dir := testDir + "/domain"
 	var files []string
 	err = filepath.Walk(dir, astutils.Visit(&files))
@@ -49,36 +55,16 @@ func TestGenDaoImplGo(t *testing.T) {
 	for _, sm := range flattened {
 		tables = append(tables, table.NewTableFromStruct(sm, ""))
 	}
-	type args struct {
-		domainpath string
-		t          table.Table
-		folder     []string
+	if err := GenBaseGo(dir); (err != nil) != false {
+		t.FailNow()
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "",
-			args: args{
-				domainpath: dir,
-				t:          tables[0],
-				folder:     nil,
-			},
-			wantErr: false,
-		},
+	if err := GenDaoGo(dir, tables[0]); (err != nil) != false {
+		t.FailNow()
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := GenDaoGo(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
-				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if err := GenDaoImplGo(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
-				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			defer os.RemoveAll(filepath.Join(tt.args.domainpath, "../dao"))
-			expect := `package dao
+	if err := GenDaoImplGo(dir, tables[0]); (err != nil) != false {
+		t.FailNow()
+	}
+	expect := `package dao
 
 import (
 	"context"
@@ -497,18 +483,17 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 
 	return pageRet, nil
 }`
-			daofile := filepath.Join(dir, "../dao/userdaoimpl.go")
-			f, err := os.Open(daofile)
-			if err != nil {
-				t.Fatal(err)
-			}
-			content, err := ioutil.ReadAll(f)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if string(content) != expect {
-				t.Errorf("want %s, got %s\n", expect, string(content))
-			}
-		})
+	daofile := filepath.Join(dir, "../dao/userdaoimpl.go")
+	f, err := os.Open(daofile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != expect {
+		t.Errorf("want %s, got %s\n", expect, string(content))
 	}
 }

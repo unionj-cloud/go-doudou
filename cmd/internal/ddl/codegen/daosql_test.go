@@ -71,6 +71,7 @@ func TestGenDaoSql(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			defer f.Close()
 			content, err := ioutil.ReadAll(f)
 			if err != nil {
 				t.Fatal(err)
