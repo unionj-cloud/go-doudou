@@ -76,6 +76,15 @@ func C() Criteria {
 	return Criteria{}
 }
 
+func (c Criteria) ToWhere() Where {
+	w := Where{
+		children: make([]Base, 0),
+	}
+	w.children = append(w.children, c, String(""))
+	w.lsym = logicsymbol.End
+	return w
+}
+
 // Col set column name
 func (c Criteria) Col(col string) Criteria {
 	if strings.Contains(col, ".") {
@@ -211,6 +220,9 @@ type Where struct {
 
 // Sql implement Base interface, return string sql expression
 func (w Where) Sql() (string, []interface{}) {
+	if len(w.children) == 0 {
+		return "", nil
+	}
 	var args []interface{}
 	w0, args0 := w.children[0].Sql()
 	args = append(args, args0...)
@@ -218,14 +230,34 @@ func (w Where) Sql() (string, []interface{}) {
 	args = append(args, args1...)
 	switch w.lsym {
 	case logicsymbol.And, logicsymbol.Or:
-		return fmt.Sprintf("(%s %s %s)", w0, w.lsym, w1), args
+		if stringutils.IsNotEmpty(w0) && stringutils.IsNotEmpty(w1) {
+			return fmt.Sprintf("(%s %s %s)", w0, w.lsym, w1), args
+		} else {
+			if stringutils.IsNotEmpty(w0) {
+				return w0, args
+			} else if stringutils.IsNotEmpty(w1) {
+				return w1, args
+			} else {
+				return "", nil
+			}
+		}
 	case logicsymbol.Append:
-		return fmt.Sprintf("(%s%s%s)", w0, w.lsym, w1), args
+		if stringutils.IsNotEmpty(w0) && stringutils.IsNotEmpty(w1) {
+			return fmt.Sprintf("(%s%s%s)", w0, w.lsym, w1), args
+		} else {
+			if stringutils.IsNotEmpty(w0) {
+				return w0, args
+			} else if stringutils.IsNotEmpty(w1) {
+				return w1, args
+			} else {
+				return "", nil
+			}
+		}
 	case logicsymbol.End:
 		fallthrough
 	default:
 		if stringutils.IsEmpty(w1) {
-			return fmt.Sprintf("%s", w0), args
+			return w0, args
 		}
 		return fmt.Sprintf("%s %s", w0, w1), args
 	}
@@ -287,6 +319,21 @@ type Page struct {
 func P() Page {
 	return Page{
 		Orders: make([]Order, 0),
+	}
+}
+
+func NewPage(pageNo, pageSize int, orders ...Order) Page {
+	if pageNo <= 0 {
+		pageNo = 1
+	}
+	offset := 0
+	if pageSize > 0 {
+		offset = (pageNo - 1) * pageSize
+	}
+	return Page{
+		Offset: offset,
+		Size:   pageSize,
+		Orders: orders,
 	}
 }
 
