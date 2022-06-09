@@ -451,7 +451,7 @@ func (receiver {{.DomainName}}DaoImpl) PageMany(ctx context.Context, page query.
 			args = append(args, wargs...)
 		}
     }
-	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
+	sqlStr = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
 	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return query.PageRet{}, errors.Wrap(err, caller.NewCaller().String())
 	}
