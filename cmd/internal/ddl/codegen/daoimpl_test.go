@@ -77,7 +77,7 @@ func TestGenDaoImplGo(t *testing.T) {
 			if err := GenDaoImplGo(tt.args.domainpath, tt.args.t, tt.args.folder...); (err != nil) != tt.wantErr {
 				t.Errorf("GenDaoGo() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			defer os.RemoveAll(filepath.Join(dir, "../dao"))
+			defer os.RemoveAll(filepath.Join(tt.args.domainpath, "../dao"))
 			expect := `package dao
 
 import (
@@ -414,7 +414,8 @@ func (receiver UserDaoImpl) SelectMany(ctx context.Context, where ...query.Q) (i
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
+	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 	return users, nil
@@ -437,7 +438,8 @@ func (receiver UserDaoImpl) CountMany(ctx context.Context, where ...query.Q) (in
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	return total, nil
@@ -464,7 +466,8 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 	p, pargs := page.Sql()
 	statements = append(statements, p)
 	args = append(args, pargs...)
-	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
+	if err = receiver.db.SelectContext(ctx, &users, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return query.PageRet{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 	
@@ -479,7 +482,8 @@ func (receiver UserDaoImpl) PageMany(ctx context.Context, page query.Page, where
 			args = append(args, wargs...)
 		}
     }
-	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(strings.Join(statements, " ")), args...); err != nil {
+	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
+	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return query.PageRet{}, errors.Wrap(err, caller.NewCaller().String())
 	}
 
