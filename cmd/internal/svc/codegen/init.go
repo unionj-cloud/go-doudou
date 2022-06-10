@@ -105,7 +105,6 @@ const gitignoreTmpl = `# Binaries for programs and plugins
 *.dll
 *.so
 *.dylib
-*.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -126,8 +125,11 @@ ENV HOST_USER=$user
 
 WORKDIR /repo
 
+# all the steps are cached
 ADD go.mod .
 ADD go.sum .
+# if go.mod/go.sum not changed, this step is also cached
+RUN go mod download
 
 ADD . ./
 
@@ -242,6 +244,7 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 		if f, err = os.Open(modfile); err != nil {
 			panic(err)
 		}
+		defer f.Close()
 		reader := bufio.NewReader(f)
 		firstLine, _ = reader.ReadString('\n')
 		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))

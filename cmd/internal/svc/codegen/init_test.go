@@ -12,31 +12,9 @@ func TestInitProj(t *testing.T) {
 	dir := filepath.Join("testdata", "init")
 	os.MkdirAll(dir, os.ModePerm)
 	defer os.RemoveAll(dir)
-	type args struct {
-		dir     string
-		modName string
-		runner  executils.Runner
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "",
-			args: args{
-				dir:     filepath.Join("testdata", "init"),
-				modName: "testinit",
-				runner:  executils.CmdRunner{},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.NotPanics(t, func() {
-				InitProj(tt.args.dir, tt.args.modName, tt.args.runner)
-			})
-		})
-	}
+	assert.NotPanics(t, func() {
+		InitProj(dir, "testinit", executils.CmdRunner{})
+	})
 }
 
 func Test_getGoVersion(t *testing.T) {
