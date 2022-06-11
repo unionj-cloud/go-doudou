@@ -91,6 +91,10 @@ func NewNode(data ...map[string]interface{}) {
 			buildTime = t.Local().Format(constants.FORMAT8)
 		}
 	}
+	rr := config.DefaultGddRouteRootPath
+	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
+		rr = config.GddRouteRootPath.Load()
+	}
 	metadata := make(map[string]string)
 	metadata["registerAt"] = time.Now().Local().Format(constants.FORMAT8)
 	metadata["goVer"] = runtime.Version()
@@ -98,6 +102,7 @@ func NewNode(data ...map[string]interface{}) {
 	metadata["buildUser"] = buildinfo.BuildUser
 	metadata["buildTime"] = buildTime
 	metadata["weight"] = strconv.Itoa(weight)
+	metadata["rootPath"] = rr
 	for _, item := range data {
 		for k, v := range item {
 			metadata[k] = fmt.Sprint(v)
