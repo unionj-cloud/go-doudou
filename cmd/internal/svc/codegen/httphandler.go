@@ -32,7 +32,7 @@ func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
 	return []ddmodel.Route{
 		{{- range $m := .Meta.Methods }}
 		{
-			"{{$m.Name | routeName}}",
+			"{{$m.Name}}",
 			"{{$m.Name | httpMethod}}",
 			{{- if eq $.RoutePatternStrategy 1}}
 			"/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}",
@@ -43,6 +43,28 @@ func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
 		},
 		{{- end }}
 	}
+}
+
+
+var RouteAnnotationStore = ddmodel.AnnotationStore{
+	{{- range $m := .Meta.Methods }}
+	{{- if $m.Annotations }}
+	"{{$m.Name}}": {
+		{{- range $a := $m.Annotations }}
+		{
+			Name:   "{{ $a.Name }}",
+			{{- if $a.Params }}
+			Params: []string{
+				{{- range $p := $a.Params }}
+				"{{ $p }}",
+				{{- end }}
+			},
+			{{- end }}
+		},
+		{{- end }}
+	},
+	{{- end }}
+	{{- end }}
 }
 `
 
@@ -71,19 +93,6 @@ func noSplitPattern(method string) string {
 		}
 	}
 	return strings.ToLower(method)
-}
-
-func routeName(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(method)
-	splits := strings.Split(snake, "_")
-	head := strings.ToUpper(splits[0])
-	for _, m := range httpMethods {
-		if head == m {
-			return method[len(m):]
-		}
-	}
-	return method
 }
 
 func httpMethod(method string) string {
@@ -131,7 +140,6 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 
 	funcMap := make(map[string]interface{})
 	funcMap["httpMethod"] = httpMethod
-	funcMap["routeName"] = routeName
 	funcMap["pattern"] = pattern
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["lower"] = strings.ToLower

@@ -272,6 +272,33 @@ func ExprString(expr ast.Expr) string {
 	}
 }
 
+type Annotation struct {
+	Name   string
+	Params []string
+}
+
+var reAnno = regexp.MustCompile(`@(\S+?)\((.*?)\)`)
+
+func GetAnnotations(text string) []Annotation {
+	if !reAnno.MatchString(text) {
+		return nil
+	}
+	var annotations []Annotation
+	matches := reAnno.FindAllStringSubmatch(text, -1)
+	for _, item := range matches {
+		name := fmt.Sprintf(`@%s`, item[1])
+		var params []string
+		if stringutils.IsNotEmpty(item[2]) {
+			params = strings.Split(strings.TrimSpace(item[2]), ",")
+		}
+		annotations = append(annotations, Annotation{
+			Name:   name,
+			Params: params,
+		})
+	}
+	return annotations
+}
+
 // MethodMeta represents an api
 type MethodMeta struct {
 	// Recv method receiver
@@ -310,6 +337,8 @@ type MethodMeta struct {
 	// QueryParams not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, QueryParams is parameters in url as query string.
 	QueryParams *FieldMeta
+	// Annotations of the method
+	Annotations []Annotation
 }
 
 const methodTmpl = `func {{ if .Recv }}(receiver {{.Recv}}){{ end }} {{.Name}}({{- range $i, $p := .Params}}

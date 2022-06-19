@@ -63,9 +63,11 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 		mn := method.Names[0].Name
 
 		var mComments []string
+		var annotations []Annotation
 		if method.Doc != nil {
 			for _, comment := range method.Doc.List {
 				mComments = append(mComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+				annotations = append(annotations, GetAnnotations(comment.Text)...)
 			}
 		}
 
@@ -79,10 +81,11 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 			results = ic.field2Results(ft.Results.List)
 		}
 		methods = append(methods, MethodMeta{
-			Name:     mn,
-			Params:   params,
-			Results:  results,
-			Comments: mComments,
+			Name:        mn,
+			Params:      params,
+			Results:     results,
+			Comments:    mComments,
+			Annotations: annotations,
 		})
 	}
 	return methods

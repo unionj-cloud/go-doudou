@@ -50,45 +50,9 @@ func Test_pattern(t *testing.T) {
 	}
 }
 
-func Test_routeName(t *testing.T) {
-	type args struct {
-		method string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "1",
-			args: args{
-				method: "GetBooks",
-			},
-			want: "Books",
-		},
-		{
-			name: "2",
-			args: args{
-				method: "PageUsers",
-			},
-			want: "PageUsers",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := routeName(tt.args.method); got != tt.want {
-				t.Errorf("routeName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGenHttpHandler(t *testing.T) {
-	dir := testDir + "httphandler"
-	InitSvc(dir)
-	defer os.RemoveAll(dir)
-	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	GenHttpHandler(dir, ic, 1)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+	GenHttpHandler(testDir, ic, 1)
 	expect := `package httpsrv
 
 import (
@@ -97,22 +61,92 @@ import (
 	ddmodel "github.com/unionj-cloud/go-doudou/framework/http/model"
 )
 
-type TestdatahttphandlerHandler interface {
+type UsersvcHandler interface {
 	PageUsers(w http.ResponseWriter, r *http.Request)
+	GetUser(w http.ResponseWriter, r *http.Request)
+	SignUp(w http.ResponseWriter, r *http.Request)
+	UploadAvatar(w http.ResponseWriter, r *http.Request)
+	DownloadAvatar(w http.ResponseWriter, r *http.Request)
 }
 
-func Routes(handler TestdatahttphandlerHandler) []ddmodel.Route {
+func Routes(handler UsersvcHandler) []ddmodel.Route {
 	return []ddmodel.Route{
 		{
 			"PageUsers",
 			"POST",
-			"/testdatahttphandler/pageusers",
+			"/usersvc/pageusers",
 			handler.PageUsers,
+		},
+		{
+			"GetUser",
+			"GET",
+			"/usersvc/user",
+			handler.GetUser,
+		},
+		{
+			"SignUp",
+			"POST",
+			"/usersvc/signup",
+			handler.SignUp,
+		},
+		{
+			"UploadAvatar",
+			"POST",
+			"/usersvc/uploadavatar",
+			handler.UploadAvatar,
+		},
+		{
+			"DownloadAvatar",
+			"POST",
+			"/usersvc/downloadavatar",
+			handler.DownloadAvatar,
 		},
 	}
 }
+
+var RouteAnnotationStore = ddmodel.AnnotationStore{
+	"PageUsers": {
+		{
+			Name: "@role",
+			Params: []string{
+				"user",
+			},
+		},
+	},
+	"GetUser": {
+		{
+			Name: "@role",
+			Params: []string{
+				"admin",
+			},
+		},
+	},
+	"SignUp": {
+		{
+			Name: "@permission",
+			Params: []string{
+				"create",
+				"update",
+			},
+		},
+		{
+			Name: "@role",
+			Params: []string{
+				"admin",
+			},
+		},
+	},
+	"UploadAvatar": {
+		{
+			Name: "@role",
+			Params: []string{
+				"user",
+			},
+		},
+	},
+}
 `
-	file := filepath.Join(dir, "transport", "httpsrv", "handler.go")
+	file := filepath.Join(testDir, "transport", "httpsrv", "handler.go")
 	f, err := os.Open(file)
 	if err != nil {
 		t.Fatal(err)

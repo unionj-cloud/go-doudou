@@ -464,3 +464,10 @@ func TestAppendImportStatements2(t *testing.T) {
 	fmt.Println(string(ret))
 	require.Equal(t, expected, string(ret))
 }
+
+func ExampleGetAnnotations() {
+	ret := GetAnnotations(`// <b style="color: red">NEW</b> 删除数据接口（不删数据文件）@role(SUPER_ADMIN)@permission(create,update)这是几个注解@sss()`)
+	fmt.Println(ret)
+	// Output:
+	// [{@role [SUPER_ADMIN]} {@permission [create update]} {@sss []}]
+}

@@ -37,5 +37,6 @@ type Usersvc interface {
 	// comment5
 	DownloadAvatar(ctx context.Context, userId string, userAttrs ...int) (a, b string)
 
+	// @role(SUPER_ADMIN)
 	BulkSaveOrUpdate(context.Context, int) error
 }
