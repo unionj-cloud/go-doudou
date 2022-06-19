@@ -26,8 +26,12 @@ import (
 	"{{.VoPackage}}"
 )
 
+//go:generate go-doudou svc http --handler -c --doc
+
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
+	// You can also add annotations here like @role(admin) to add meta data to routes for 
+	// implementing your own middlewares
 	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
 }
 `
@@ -96,7 +100,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v1.1.7
+	github.com/unionj-cloud/go-doudou v1.1.8
 )`
 
 const gitignoreTmpl = `# Binaries for programs and plugins
@@ -117,9 +121,13 @@ const gitignoreTmpl = `# Binaries for programs and plugins
 
 const envTmpl = ``
 
-const dockerfileTmpl = `FROM golang:1.16.6-alpine AS builder
+const dockerignorefileTmpl = `**/*.local
+`
+
+const dockerfileTmpl = `FROM devopsworks/golang-upx:1.18 AS builder
 
 ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.cn,direct
 ARG user
 ENV HOST_USER=$user
 
@@ -132,14 +140,22 @@ ADD go.sum .
 RUN go mod download
 
 ADD . ./
+RUN go mod vendor
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk add --no-cache bash tzdata
+RUN export GDD_VER=$(go list -mod=vendor -m -f '{{ .Version }}' github.com/unionj-cloud/go-doudou) && \
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-s -w -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildUser=$HOST_USER' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildTime=$(date)' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.GddVer=$GDD_VER'" -mod vendor -o api cmd/main.go && \
+strip api && /usr/local/bin/upx api
 
+FROM alpine:3.14
+
+COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/Shanghai
 ENV TZ="Asia/Shanghai"
 
-RUN export GDD_VER=$(go list -mod=vendor -m -f '{{` + "`" + `{{ .Version }}` + "`" + `}}' github.com/unionj-cloud/go-doudou) && \
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildUser=$HOST_USER' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildTime=$(date)' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.GddVer=$GDD_VER'" -mod vendor -o api cmd/main.go
+WORKDIR /repo
+
+COPY --from=builder /repo/api ./
+
+COPY .env* ./
 
 ENTRYPOINT ["/repo/api"]
 `
@@ -277,6 +293,19 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 		_ = tpl.Execute(f, nil)
 	} else {
 		logrus.Warnf("file %s already exists", dockerfile)
+	}
+
+	dockerignorefile := filepath.Join(dir, ".dockerignore")
+	if _, err = os.Stat(dockerignorefile); os.IsNotExist(err) {
+		if f, err = os.Create(dockerignorefile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		tpl, _ = template.New("dockerignorefile.tmpl").Parse(dockerignorefileTmpl)
+		_ = tpl.Execute(f, nil)
+	} else {
+		logrus.Warnf("file %s already exists", dockerignorefile)
 	}
 }
 
