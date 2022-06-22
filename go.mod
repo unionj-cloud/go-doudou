@@ -66,6 +66,7 @@ require (
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/cache/v8 v8.4.3
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
@@ -74,7 +75,6 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
@@ -85,6 +85,5 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
-	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 )
