@@ -91,21 +91,6 @@ func main() {
 	}
 }
 
-func TestFixImportPanic(t *testing.T) {
-	code := `package main
-
-import (
-	"fmt"
-"encoding/json"
-)
-
-type UserVo
-`
-	assert.Panics(t, func() {
-		FixImport([]byte(code), "")
-	})
-}
-
 func TestMethodMeta_String(t *testing.T) {
 	type fields struct {
 		Recv     string
