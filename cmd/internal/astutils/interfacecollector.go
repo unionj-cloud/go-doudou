@@ -111,16 +111,26 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 				if cmts, exists := ic.cmap[cnode]; exists {
 					for _, comment := range cmts {
 						field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
+						field.Annotations = append(field.Annotations, GetAnnotations(comment.Text())...)
 					}
 				}
+				var validateTags []string
+				for _, item := range field.Annotations {
+					if item.Name == "@validate" {
+						validateTags = append(validateTags, item.Params...)
+					}
+				}
+				field.ValidateTag = strings.Join(validateTags, ",")
 				params = append(params, field)
 			}
 			continue
 		}
 		var pComments []string
+		var annotations []Annotation
 		if cmts, exists := ic.cmap[param]; exists {
 			for _, comment := range cmts {
 				pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
+				annotations = append(annotations, GetAnnotations(comment.Text())...)
 			}
 		}
 		var pn string
@@ -140,10 +150,18 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 				pn = _key
 			}
 		}
+		var validateTags []string
+		for _, item := range annotations {
+			if item.Name == "@validate" {
+				validateTags = append(validateTags, item.Params...)
+			}
+		}
 		params = append(params, FieldMeta{
-			Name:     pn,
-			Type:     pt,
-			Comments: pComments,
+			Name:        pn,
+			Type:        pt,
+			Comments:    pComments,
+			Annotations: annotations,
+			ValidateTag: strings.Join(validateTags, ","),
 		})
 	}
 	return params

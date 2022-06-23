@@ -15,6 +15,7 @@ type Usersvc interface {
 	// comment2
 	GetUser(ctx context.Context,
 		// 用户ID
+		// @validate(gt=0,lte=10)
 		userId,
 		// 测试
 		school,
@@ -29,7 +30,9 @@ type Usersvc interface {
 		msg error)
 
 	// comment3
-	SignUp(ctx context.Context, username string, password int, actived bool, score float64) (code int, data string, msg error)
+	SignUp(ctx context.Context,
+		// @validate(gt=0,lte=10)
+		username string, password int, actived bool, score float64) (code int, data string, msg error)
 
 	// comment4
 	UploadAvatar(context.Context, []*multipart.FileHeader, string) (int, string, error)

@@ -73,10 +73,12 @@ func FixImport(src []byte, file string) {
 		TabIndent: true,
 		Comments:  true,
 		Fragment:  true,
-	}); err != nil {
-		panic(err)
+	}); err == nil {
+		_ = ioutil.WriteFile(file, res, os.ModePerm)
+		return
 	}
-	_ = ioutil.WriteFile(file, res, os.ModePerm)
+	logrus.Error(err)
+	_ = ioutil.WriteFile(file, src, os.ModePerm)
 }
 
 // GetMethodMeta get method name then new MethodMeta struct from *ast.FuncDecl
@@ -209,6 +211,11 @@ type FieldMeta struct {
 	IsExport bool
 	// used in OpenAPI 3.0 spec as property name
 	DocName string
+	// Annotations of the field
+	Annotations []Annotation
+	// ValidateTag based on https://github.com/go-playground/validator
+	// please refer to its documentation https://pkg.go.dev/github.com/go-playground/validator/v10
+	ValidateTag string
 }
 
 // StructMeta wraps struct info

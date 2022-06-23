@@ -18,6 +18,7 @@ var Schemas = make(map[string]Schema)
 var Enums = make(map[string]astutils.EnumMeta)
 
 // SchemaNames schema names from components of OpenAPI3.0 json document
+// also struct names from vo package
 var SchemaNames []string
 
 // SchemaOf reference https://golang.org/pkg/builtin/
@@ -250,6 +251,11 @@ func IsBuiltin(field astutils.FieldMeta) bool {
 func IsEnum(field astutils.FieldMeta) bool {
 	pschema := SchemaOf(field)
 	return len(pschema.Enum) > 0 || (pschema.Type == ArrayT && len(pschema.Items.Enum) > 0)
+}
+
+// IsStruct check whether field is struct type
+func IsStruct(field astutils.FieldMeta) bool {
+	return stringutils.IsNotEmpty(SchemaOf(field).Ref)
 }
 
 // ElementType get element type string from slice

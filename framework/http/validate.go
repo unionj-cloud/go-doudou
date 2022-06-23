@@ -1,7 +1,7 @@
 package ddhttp
 
 import (
-	"fmt"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -9,36 +9,40 @@ import (
 )
 
 var validate = validator.New()
+var translator ut.Translator
 
 func GetValidate() *validator.Validate {
 	return validate
+}
+
+func GetTranslator() ut.Translator {
+	return translator
+}
+
+func SetTranslator(trans ut.Translator) {
+	translator = trans
 }
 
 func handleValidationErr(err error) error {
 	if err == nil {
 		return nil
 	}
-	var sb strings.Builder
-	for i, errItem := range err.(validator.ValidationErrors) {
-		sb.WriteString(fmt.Sprintf(`%d. `, i+1))
-		if stringutils.IsNotEmpty(errItem.Namespace()) {
-			sb.WriteString(fmt.Sprintf(`%s `, errItem.Namespace()))
-		}
-		sb.WriteString(fmt.Sprintf(`"%s" didn't satisfy the validation rule: "%s`, errItem.Value(), errItem.ActualTag()))
-		if stringutils.IsNotEmpty(errItem.Param()) {
-			sb.WriteString(fmt.Sprintf(`=%s"`, errItem.Param()))
-		} else {
-			sb.WriteString(`"`)
-		}
-		sb.WriteString("\n")
+	errs := err.(validator.ValidationErrors)
+	translations := errs.Translate(translator)
+	var errmsgs []string
+	for _, v := range translations {
+		errmsgs = append(errmsgs, v)
 	}
-	return errors.New(sb.String())
+	return errors.New(strings.Join(errmsgs, ", "))
 }
 
 func ValidateStruct(value interface{}) error {
 	return handleValidationErr(validate.Struct(value))
 }
 
-func ValidateVar(value interface{}, tag string) error {
+func ValidateVar(value interface{}, tag, param string) error {
+	if stringutils.IsNotEmpty(param) {
+		return errors.Wrap(handleValidationErr(validate.Var(value, tag)), param)
+	}
 	return handleValidationErr(validate.Var(value, tag))
 }

@@ -213,6 +213,18 @@ var appendHttpHandlerImplTmpl = `
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return				
 				}
+			} else {
+				{{- if isStruct $p }}
+				if _err := ddhttp.ValidateStruct({{$p.Name}}); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- else }}
+				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- end }}
 			}
 		}
 		{{- else }}
@@ -222,7 +234,19 @@ var appendHttpHandlerImplTmpl = `
 		} else {
 			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
 				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				return	
+			} else {
+				{{- if isStruct $p }}
+				if _err := ddhttp.ValidateStruct({{$p.Name}}); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- else }}
+				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return
+				}
+				{{- end }}
 			}
 		}
 		{{- end }}
@@ -251,8 +275,8 @@ var appendHttpHandlerImplTmpl = `
 				{{- end }}
 			}
 			{{- else if $p.Type | isSupport }}
-			if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
+			if casted, _err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			} else {
 				{{- if isOptional $p.Type }}
@@ -269,6 +293,10 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = _req.Form["{{$p.Name}}"]
 			{{- end }}
 			{{- end }}
+			if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
+				return
+			}
 		} else {
 			if _, exists := _req.Form["{{$p.Name}}[]"]; exists {
 				{{- if IsEnum $p }}
@@ -287,8 +315,8 @@ var appendHttpHandlerImplTmpl = `
 					{{- end }}
 				}
 				{{- else if $p.Type | isSupport }}
-				if casted, err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}[]"]); err != nil {
-					http.Error(_writer, err.Error(), http.StatusBadRequest)
+				if casted, _err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}[]"]); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				} else {
 					{{- if isOptional $p.Type }}
@@ -305,6 +333,10 @@ var appendHttpHandlerImplTmpl = `
 				{{$p.Name}} = _req.Form["{{$p.Name}}[]"]
 				{{- end }}
 				{{- end }}
+				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+					http.Error(_writer, _err.Error(), http.StatusBadRequest)
+					return
+				}
 			}{{- if not (isOptional $p.Type) }} else {
 				http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
 				return
@@ -325,8 +357,8 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 			{{ $p.Name }}.StringSetter(_req.FormValue("{{$p.Name}}"))
 			{{- else if $p.Type | isSupport }}
-			if casted, err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); err != nil {
-				http.Error(_writer, err.Error(), http.StatusBadRequest)
+			if casted, _err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			} else {
 				{{- if isOptional $p.Type }}
@@ -343,6 +375,10 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = _req.FormValue("{{$p.Name}}")
 			{{- end }}
 			{{- end }}
+			if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+				http.Error(_writer, _err.Error(), http.StatusBadRequest)
+				return
+			}
 		}{{- if not (isOptional $p.Type) }} else {
 			http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
 			return
@@ -510,6 +546,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["contains"] = strings.Contains
 	funcMap["isBuiltin"] = v3helper.IsBuiltin
+	funcMap["isStruct"] = v3helper.IsStruct
 	funcMap["isSupport"] = v3helper.IsSupport
 	funcMap["isOptional"] = v3helper.IsOptional
 	funcMap["castFunc"] = v3helper.CastFunc
@@ -559,7 +596,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		panic(err)
 	}
 	original = astutils.AppendImportStatements(original, importBuf.Bytes())
-	//fmt.Println(string(original))
 	astutils.FixImport(original, handlerimplfile)
 }
 
