@@ -146,6 +146,8 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 		goType += "string"
 	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.DecimalType))) {
 		goType += "decimal.Decimal"
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.LongtextType))) {
+		goType += "string"
 	} else {
 		panic(fmt.Sprintf("no available type %s", colType))
 	}
