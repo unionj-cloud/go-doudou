@@ -92,14 +92,14 @@ func IndexOfAny(target interface{}, anySlice interface{}) (int, error) {
 
 // IsEmpty assert src is an empty slice
 func IsEmpty(src interface{}) bool {
-	if slice, ok := takeSliceArg(src); ok {
+	if slice, ok := TakeSliceArg(src); ok {
 		return slice == nil || len(slice) == 0
 	}
 	panic("not slice")
 }
 
-// takeSliceArg https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
-func takeSliceArg(arg interface{}) (out []interface{}, ok bool) {
+// TakeSliceArg https://ahmet.im/blog/golang-take-slices-of-any-type-as-input-parameter/
+func TakeSliceArg(arg interface{}) (out []interface{}, ok bool) {
 	slice, success := takeArg(arg, reflect.Slice)
 	if !success {
 		ok = false

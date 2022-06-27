@@ -1,6 +1,7 @@
 package maputils
 
 import (
+	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"reflect"
 )
 
@@ -72,4 +73,73 @@ func createDeletedChange(oldValue interface{}) Change {
 		OldValue:   oldValue,
 		ChangeType: DELETED,
 	}
+}
+
+var (
+	MaxDepth = 32
+)
+
+// Merge recursively merges the src and dst maps. Key conflicts are resolved by
+// preferring src, or recursively descending, if both src and dst are maps.
+// borrow code from https://github.com/peterbourgon/mergemap
+func Merge(dst, src map[string]interface{}) map[string]interface{} {
+	return merge(dst, src, 0)
+}
+
+func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
+	if depth > MaxDepth {
+		panic("too deep!")
+	}
+	for key, srcVal := range src {
+		if dstVal, ok := dst[key]; ok {
+			srcMap, srcMapOk := mapify(srcVal)
+			dstMap, dstMapOk := mapify(dstVal)
+			if srcMapOk && dstMapOk {
+				srcVal = merge(dstMap, srcMap, depth+1)
+				goto REWRITE
+			}
+			srcSlice, srcSliceOk := sliceutils.TakeSliceArg(srcVal)
+			dstSlice, dstSliceOk := sliceutils.TakeSliceArg(dstVal)
+			if srcSliceOk && dstSliceOk {
+				merged := make([]interface{}, 0)
+				kv := make(map[interface{}]struct{})
+				for _, item := range dstSlice {
+					if !reflect.ValueOf(item).Type().Comparable() {
+						merged = append(merged, item)
+						continue
+					}
+					if _, exists := kv[item]; !exists {
+						merged = append(merged, item)
+						kv[item] = struct{}{}
+					}
+				}
+				for _, item := range srcSlice {
+					if !reflect.ValueOf(item).Type().Comparable() {
+						merged = append(merged, item)
+						continue
+					}
+					if _, exists := kv[item]; !exists {
+						merged = append(merged, item)
+						kv[item] = struct{}{}
+					}
+				}
+				srcVal = merged
+			}
+		}
+	REWRITE:
+		dst[key] = srcVal
+	}
+	return dst
+}
+
+func mapify(i interface{}) (map[string]interface{}, bool) {
+	value := reflect.ValueOf(i)
+	if value.Kind() == reflect.Map {
+		m := map[string]interface{}{}
+		for _, k := range value.MapKeys() {
+			m[k.String()] = value.MapIndex(k).Interface()
+		}
+		return m, true
+	}
+	return map[string]interface{}{}, false
 }
