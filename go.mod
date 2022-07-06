@@ -82,7 +82,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220322035024-78853a86edcd
+	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee

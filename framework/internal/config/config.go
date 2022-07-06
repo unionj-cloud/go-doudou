@@ -197,6 +197,7 @@ const (
 	GddNacosLogDir              envVariable = "GDD_NACOS_LOG_DIR"
 	GddNacosCacheDir            envVariable = "GDD_NACOS_CACHE_DIR"
 	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
+	GddNacosLogDiscard          envVariable = "GDD_NACOS_LOG_DISCARD"
 	GddNacosServerAddr          envVariable = "GDD_NACOS_SERVER_ADDR"
 	GddNacosRegisterHost        envVariable = "GDD_NACOS_REGISTER_HOST"
 	GddNacosClusterName         envVariable = "GDD_NACOS_CLUSTER_NAME"
@@ -299,6 +300,10 @@ func GetNacosClientParam() vo.NacosClientParam {
 	if stringutils.IsNotEmpty(GddNacosLogLevel.Load()) {
 		logLevel = GddNacosLogLevel.Load()
 	}
+	logDiscard := DefaultGddNacosLogDiscard
+	if stringutils.IsNotEmpty(GddNacosLogDiscard.Load()) {
+		logDiscard, _ = cast.ToBoolE(GddNacosLogDiscard.Load())
+	}
 	clientConfig := *constant.NewClientConfig(
 		constant.WithNamespaceId(namespaceId),
 		constant.WithTimeoutMs(uint64(timeoutMs)),
@@ -306,6 +311,7 @@ func GetNacosClientParam() vo.NacosClientParam {
 		constant.WithLogDir(logDir),
 		constant.WithCacheDir(cacheDir),
 		constant.WithLogLevel(logLevel),
+		constant.WithLogDiscard(logDiscard),
 	)
 	serverAddrStr := DefaultGddNacosServerAddr
 	if stringutils.IsNotEmpty(GddNacosServerAddr.Load()) {

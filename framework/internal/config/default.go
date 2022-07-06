@@ -55,6 +55,7 @@ const (
 	DefaultGddNacosLogDir              = "/tmp/nacos/log"
 	DefaultGddNacosCacheDir            = "/tmp/nacos/cache"
 	DefaultGddNacosLogLevel            = "info"
+	DefaultGddNacosLogDiscard          = false
 	DefaultGddNacosServerAddr          = ""
 	DefaultGddNacosRegisterHost        = ""
 	DefaultGddNacosClusterName         = "DEFAULT"
