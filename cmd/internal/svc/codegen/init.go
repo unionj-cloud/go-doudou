@@ -32,7 +32,7 @@ type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
 	// You can also add annotations here like @role(admin) to add meta data to routes for 
 	// implementing your own middlewares
-	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
+	PageUsers(ctx context.Context, query vo.PageQuery) (data vo.PageRet, err error)
 }
 `
 
