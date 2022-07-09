@@ -1,8 +1,10 @@
 package codegen
 
 import (
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/copier"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -82,33 +84,13 @@ func NewTestdatahandlerImpl12Handler(testdatahandlerImpl12 service.Testdatahandl
 func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
 	svcfile := testDir + "/svc.go"
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
-	defer os.RemoveAll(testDir + "/transport")
-	type args struct {
-		dir string
-		ic  astutils.InterfaceCollector
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "1",
-			args: args{
-				dir: testDir,
-				ic:  ic,
-			},
-		},
-		{
-			name: "2",
-			args: args{
-				dir: testDir,
-				ic:  ic,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true, strcase.ToLowerCamel)
-		})
-	}
+	GenHttpHandlerImplWithImpl(testDir, ic, true, strcase.ToLowerCamel)
+}
+
+func Test_unimplementedMethods(t *testing.T) {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
+	var meta astutils.InterfaceMeta
+	_ = copier.DeepCopy(ic.Interfaces[0], &meta)
+	unimplementedMethods(&meta, filepath.Join(testDir, "transport/httpsrv"))
+	fmt.Println(len(meta.Methods))
 }

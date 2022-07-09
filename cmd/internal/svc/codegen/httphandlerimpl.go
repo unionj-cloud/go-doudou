@@ -517,6 +517,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	if err != nil {
 		panic(err)
 	}
+	unimplementedMethods(&meta, httpDir)
 	if fi != nil {
 		logrus.Warningln("New content will be append to handlerimpl.go file")
 		if f, err = os.OpenFile(handlerimplfile, os.O_APPEND, os.ModePerm); err != nil {
@@ -524,7 +525,6 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 		}
 		defer f.Close()
 		tmpl = appendHttpHandlerImplTmpl
-		unimplementedMethods(&meta, handlerimplfile)
 	} else {
 		if f, err = os.Create(handlerimplfile); err != nil {
 			panic(err)
@@ -599,14 +599,20 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 	astutils.FixImport(original, handlerimplfile)
 }
 
-func unimplementedMethods(meta *astutils.InterfaceMeta, handlerimplfile string) {
-	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, handlerimplfile, nil, parser.ParseComments)
+func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string) {
+	var files []string
+	err := Walk(httpDir, astutils.Visit(&files))
 	if err != nil {
 		panic(err)
 	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
-	ast.Walk(sc, root)
+	for _, file := range files {
+		root, err := parser.ParseFile(token.NewFileSet(), file, nil, parser.ParseComments)
+		if err != nil {
+			panic(err)
+		}
+		ast.Walk(sc, root)
+	}
 	if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
 		var notimplemented []astutils.MethodMeta
 		for _, item := range meta.Methods {
@@ -619,7 +625,6 @@ func unimplementedMethods(meta *astutils.InterfaceMeta, handlerimplfile string) 
 
 		L:
 		}
-
 		meta.Methods = notimplemented
 	}
 }

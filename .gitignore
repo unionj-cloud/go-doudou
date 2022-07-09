@@ -7,3 +7,4 @@ gen
 cmd/testdata/testsvc/cmd/cmd
 coverage.out
 resources
+toolkit/lab
