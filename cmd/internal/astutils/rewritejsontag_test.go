@@ -7,9 +7,15 @@ import (
 	"testing"
 )
 
-func ExampleRewriteJSONTag() {
+func ExampleRewriteTag() {
 	file := pathutils.Abs("testdata/rewritejsontag.go")
-	result, err := RewriteJSONTag(file, true, strcase.ToLowerCamel)
+	config := RewriteTagConfig{
+		File:        file,
+		Omitempty:   true,
+		ConvertFunc: strcase.ToLowerCamel,
+		Form:        false,
+	}
+	result, err := RewriteTag(config)
 	if err != nil {
 		panic(err)
 	}
@@ -109,4 +115,34 @@ func Test_extractJsonPropName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleRewriteTagForm() {
+	file := pathutils.Abs("testdata/rewritejsontag.go")
+	config := RewriteTagConfig{
+		File:        file,
+		Omitempty:   true,
+		ConvertFunc: strcase.ToLowerCamel,
+		Form:        true,
+	}
+	result, err := RewriteTag(config)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
+	// Output:
+	//package main
+	//
+	//type base struct {
+	//	Index string `json:"index,omitempty" form:"index,omitempty"`
+	//	Type  string `json:"type,omitempty" form:"type,omitempty"`
+	//}
+	//
+	//type struct1 struct {
+	//	base
+	//	Name       string `json:"name,omitempty" form:"name,omitempty"`
+	//	StructType int    `json:"structType,omitempty" dd:"awesomtag" form:"structType,omitempty"`
+	//	Format     string `dd:"anothertag" json:"format,omitempty" form:"format,omitempty"`
+	//	Pos        int    `json:"pos,omitempty" form:"pos,omitempty"`
+	//}
 }

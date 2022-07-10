@@ -27,7 +27,10 @@ func handleValidationErr(err error) error {
 	if err == nil {
 		return nil
 	}
-	errs := err.(validator.ValidationErrors)
+	errs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		return err
+	}
 	translations := errs.Translate(translator)
 	var errmsgs []string
 	for _, v := range translations {

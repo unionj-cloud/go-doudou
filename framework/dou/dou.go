@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
+	"github.com/go-playground/form/v4"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/iancoleman/strcase"
@@ -23,6 +24,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"io"
+	"mime"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,12 +41,10 @@ var rootRouter *mux.Router
 var gddRoutes []model.Route
 var bizRoutes []model.Route
 var middlewares []mux.MiddlewareFunc
-var typeRegistry map[string]reflect.Type
+var decoder *form.Decoder
 
-func RegisterTypes(instances []interface{}) {
-	for _, v := range instances {
-		typeRegistry[fmt.Sprintf("%T", v)] = reflect.TypeOf(v)
-	}
+func RegisterCustomTypeFunc(fn form.DecodeCustomTypeFunc, types ...interface{}) {
+	decoder.RegisterCustomTypeFunc(fn, types...)
 }
 
 func init() {
@@ -73,12 +74,17 @@ func init() {
 	case "rest":
 		middlewares = append(middlewares, rest)
 	}
-	typeRegistry = make(map[string]reflect.Type)
+	decoder = form.NewDecoder()
 }
 
 func pattern(method string) string {
+	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "."))
 	splits := strings.Split(snake, "_")
+	head := strings.ToUpper(splits[0])
+	if sliceutils.StringContains(httpMethods, head) {
+		splits = splits[1:]
+	}
 	clean := sliceutils.StringFilter(splits, func(item string) bool {
 		return stringutils.IsNotEmpty(item)
 	})
@@ -108,18 +114,60 @@ func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
 			continue
 		}
 		bodyType = inType
+		if bodyType.Kind() != reflect.Struct {
+			if !(bodyType.Kind() == reflect.Ptr && bodyType.Elem().Kind() == reflect.Struct) {
+				panic("only support struct type or pointer of struct type as method input parameter")
+			}
+		}
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		var httpMethod HttpMethod
+		httpMethod.StringSetter(r.Method)
 		outValues := make([]reflect.Value, 0)
 		if bodyType != nil {
-			pqPtr := reflect.New(typeRegistry[bodyType.String()])
-			if err := json.NewDecoder(r.Body).Decode(pqPtr.Interface()); err != nil {
+			ct := r.Header.Get("Content-Type")
+			if ct == "" {
+				ct = "application/octet-stream"
+			}
+			ct, _, err := mime.ParseMediaType(ct)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if err := ddhttp.ValidateStruct(pqPtr.Interface()); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+			pqPtr := reflect.New(bodyType)
+			if pqPtr.Elem().Kind() == reflect.Ptr && ct != "application/json" {
+				http.Error(w, "only accept application/json", http.StatusBadRequest)
 				return
+			}
+			if httpMethod == POST || httpMethod == PUT {
+				if ct == "application/json" {
+					if err = json.NewDecoder(r.Body).Decode(pqPtr.Interface()); err != nil {
+						if err != io.EOF {
+							http.Error(w, err.Error(), http.StatusBadRequest)
+							return
+						}
+						err = nil
+					} else {
+						goto VALIDATE
+					}
+				}
+			}
+			if pqPtr.Elem().Kind() == reflect.Struct {
+				if err = r.ParseForm(); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				if err = decoder.Decode(pqPtr.Interface(), r.Form); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+			}
+		VALIDATE:
+			if pqPtr.Elem().Kind() == reflect.Struct || (pqPtr.Elem().Kind() == reflect.Ptr && !pqPtr.Elem().IsNil()) {
+				if err = ddhttp.ValidateStruct(pqPtr.Elem().Interface()); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
 			}
 			outValues = method.Func.Call([]reflect.Value{svc, reflect.ValueOf(r.Context()), pqPtr.Elem()})
 		} else {

@@ -28,14 +28,32 @@ func extractJsonPropName(tag string) string {
 	return ""
 }
 
-// RewriteJSONTag overwrites json tag by convert function and return formatted source code
-func RewriteJSONTag(file string, omitempty bool, convert func(old string) string) (string, error) {
+func extractFormPropName(tag string) string {
+	re := regexp.MustCompile(`form:"(.*?)"`)
+	if re.MatchString(tag) {
+		subs := re.FindAllStringSubmatch(tag, -1)
+		return strings.TrimSpace(strings.Split(subs[0][1], ",")[0])
+	}
+	return ""
+}
+
+type RewriteTagConfig struct {
+	File        string
+	Omitempty   bool
+	ConvertFunc func(old string) string
+	Form        bool
+}
+
+// RewriteTag overwrites json tag by convert function and return formatted source code
+func RewriteTag(config RewriteTagConfig) (string, error) {
+	file, convert, omitempty, form := config.File, config.ConvertFunc, config.Omitempty, config.Form
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
 		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	re := regexp.MustCompile(`json:"(.*?)"`)
+	reForm := regexp.MustCompile(`form:"(.*?)"`)
 	astutil.Apply(root, func(cursor *astutil.Cursor) bool {
 		return true
 	}, func(cursor *astutil.Cursor) bool {
@@ -51,27 +69,55 @@ func RewriteJSONTag(file string, omitempty bool, convert func(old string) string
 			if !isExport(fname) {
 				continue
 			}
-			tag := convert(field.Names[0].Name)
+			tagValue := convert(field.Names[0].Name)
+			jsonTagValue := tagValue
 			if omitempty {
-				tag += ",omitempty"
+				jsonTagValue += ",omitempty"
 			}
-			tag = fmt.Sprintf(`json:"%s"`, tag)
+			jsonTag := fmt.Sprintf(`json:"%s"`, jsonTagValue)
+
+			formTagValue := tagValue
+			if omitempty {
+				formTagValue += ",omitempty"
+			}
+			formTag := fmt.Sprintf(`form:"%s"`, formTagValue)
+
 			if field.Tag != nil {
 				if re.MatchString(field.Tag.Value) {
 					if extractJsonPropName(field.Tag.Value) != "-" {
-						field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, tag)
+						field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, jsonTag)
 					}
 				} else {
 					lastindex := strings.LastIndex(field.Tag.Value, "`")
 					if lastindex < 0 {
 						panic(errors.New("call LastIndex() error"))
 					}
-					field.Tag.Value = field.Tag.Value[:lastindex] + fmt.Sprintf(" %s`", tag)
+					field.Tag.Value = field.Tag.Value[:lastindex] + fmt.Sprintf(" %s`", jsonTag)
+				}
+				if form {
+					if reForm.MatchString(field.Tag.Value) {
+						if extractFormPropName(field.Tag.Value) != "-" {
+							field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, formTag)
+						}
+					} else {
+						lastindex := strings.LastIndex(field.Tag.Value, "`")
+						if lastindex < 0 {
+							panic(errors.New("call LastIndex() error"))
+						}
+						field.Tag.Value = field.Tag.Value[:lastindex] + fmt.Sprintf(" %s`", formTag)
+					}
 				}
 			} else {
-				field.Tag = &ast.BasicLit{
-					Kind:  token.STRING,
-					Value: fmt.Sprintf("`%s`", tag),
+				if form {
+					field.Tag = &ast.BasicLit{
+						Kind:  token.STRING,
+						Value: fmt.Sprintf("`%s %s`", jsonTag, formTag),
+					}
+				} else {
+					field.Tag = &ast.BasicLit{
+						Kind:  token.STRING,
+						Value: fmt.Sprintf("`%s`", jsonTag),
+					}
 				}
 			}
 		}

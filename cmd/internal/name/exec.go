@@ -12,6 +12,7 @@ type Name struct {
 	File      string
 	Strategy  string
 	Omitempty bool
+	Form      bool
 }
 
 const (
@@ -36,7 +37,12 @@ func (receiver Name) Exec() {
 		panic(errors.New(`unknown strategy. currently only support "lowerCamel" and "snake"`))
 	}
 
-	newcode, err := astutils.RewriteJSONTag(receiver.File, receiver.Omitempty, convert)
+	newcode, err := astutils.RewriteTag(astutils.RewriteTagConfig{
+		File:        receiver.File,
+		Omitempty:   receiver.Omitempty,
+		ConvertFunc: convert,
+		Form:        receiver.Form,
+	})
 	if err != nil {
 		panic(err)
 	}

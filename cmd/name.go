@@ -8,6 +8,7 @@ import (
 var file string
 var strategy string
 var omitempty bool
+var form bool
 
 // nameCmd updates json tag of struct fields
 var nameCmd = &cobra.Command{
@@ -15,7 +16,7 @@ var nameCmd = &cobra.Command{
 	Short: "bulk add or update json tag of struct fields",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		n := name.Name{file, strategy, omitempty}
+		n := name.Name{file, strategy, omitempty, form}
 		n.Exec()
 	},
 }
@@ -34,4 +35,5 @@ func init() {
 	nameCmd.Flags().StringVarP(&file, "file", "f", "", "absolute path of vo file")
 	nameCmd.Flags().StringVarP(&strategy, "strategy", "s", "lowerCamel", `name of strategy, currently only support "lowerCamel" and "snake"`)
 	nameCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, "whether omit empty value or not")
+	nameCmd.Flags().BoolVar(&form, "form", false, "whether need form tag for https://github.com/go-playground/form")
 }
