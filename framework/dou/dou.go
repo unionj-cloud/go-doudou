@@ -22,6 +22,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/toolkit/reflectutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"io"
@@ -42,6 +43,7 @@ var gddRoutes []model.Route
 var bizRoutes []model.Route
 var middlewares []mux.MiddlewareFunc
 var decoder *form.Decoder
+var fileType reflect.Type
 
 func RegisterCustomTypeFunc(fn form.DecodeCustomTypeFunc, types ...interface{}) {
 	decoder.RegisterCustomTypeFunc(fn, types...)
@@ -75,6 +77,7 @@ func init() {
 		middlewares = append(middlewares, rest)
 	}
 	decoder = form.NewDecoder()
+	fileType = reflect.TypeOf((*os.File)(nil))
 }
 
 func pattern(method string) string {
@@ -106,18 +109,78 @@ func buildRoutes(service interface{}) []model.Route {
 	return routes
 }
 
-func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
-	var bodyType reflect.Type
-	for i := 1; i < method.Type.NumIn(); i++ {
-		inType := method.Type.In(i)
-		if inType.String() == "context.Context" {
-			continue
-		}
-		bodyType = inType
-		if bodyType.Kind() != reflect.Struct {
-			if !(bodyType.Kind() == reflect.Ptr && bodyType.Elem().Kind() == reflect.Struct) {
-				panic("only support struct type or pointer of struct type as method input parameter")
+func handleDownload(w http.ResponseWriter, respValue reflect.Value, fileFieldIndex int) {
+	out := respValue.Field(fileFieldIndex).Interface().(*os.File)
+	if out == nil {
+		http.Error(w, "no file returned", http.StatusInternalServerError)
+		return
+	}
+	defer out.Close()
+	fi, err := out.Stat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Disposition", "attachment; filename="+fi.Name())
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+
+	dispositionValue := respValue.FieldByName("Disposition")
+	if dispositionValue.IsValid() && !dispositionValue.IsZero() {
+		vov := reflectutils.ValueOfValue(dispositionValue)
+		if vov.IsValid() && !vov.IsZero() {
+			disposition, ok := vov.Interface().(string)
+			if ok && stringutils.IsNotEmpty(disposition) {
+				w.Header().Set("Content-Disposition", disposition)
 			}
+		}
+	}
+	typeValue := respValue.FieldByName("Type")
+	if typeValue.IsValid() && !typeValue.IsZero() {
+		vov := reflectutils.ValueOfValue(typeValue)
+		if vov.IsValid() && !vov.IsZero() {
+			contentType, ok := vov.Interface().(string)
+			if ok && stringutils.IsNotEmpty(contentType) {
+				w.Header().Set("Content-Type", contentType)
+			}
+		}
+	}
+	lengthValue := respValue.FieldByName("Length")
+	if lengthValue.IsValid() && !lengthValue.IsZero() {
+		vov := reflectutils.ValueOfValue(lengthValue)
+		if vov.IsValid() && !vov.IsZero() {
+			length, ok := vov.Interface().(string)
+			if ok && stringutils.IsNotEmpty(length) {
+				w.Header().Set("Content-Length", length)
+			}
+		}
+	}
+	io.Copy(w, out)
+}
+
+func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
+	if method.Type.NumIn() <= 1 {
+		panic("service method must have context.Context as the first input parameter")
+	}
+	if method.Type.NumIn() > 3 {
+		panic("only support up to 2 input parameters including context.Context")
+	}
+	var bodyType reflect.Type
+	inType := method.Type.In(1)
+	ctxInterface := reflect.TypeOf((*context.Context)(nil)).Elem()
+	if !inType.Implements(ctxInterface) {
+		panic("service method must have context.Context as the first input parameter")
+	}
+	if method.Type.NumIn() > 2 {
+		inType = method.Type.In(2)
+		if inType.Kind() == reflect.Ptr && inType.Elem().Kind() == reflect.Struct {
+			// pointer of struct
+			bodyType = inType
+		} else if inType.Kind() == reflect.Struct {
+			// struct
+			bodyType = inType
+		} else {
+			panic("only support struct type, pointer of struct type as the second input parameter")
 		}
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -136,19 +199,51 @@ func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
 			}
 			pqPtr := reflect.New(bodyType)
 			if pqPtr.Elem().Kind() == reflect.Ptr && ct != "application/json" {
-				http.Error(w, "only accept application/json", http.StatusBadRequest)
+				http.Error(w, "incorrect Content-Type header value, only accept application/json", http.StatusBadRequest)
 				return
 			}
 			if httpMethod == POST || httpMethod == PUT {
-				if ct == "application/json" {
+				switch ct {
+				case "multipart/form-data":
+					// TODO add maxMemory config
+					if err = r.ParseMultipartForm(32 << 20); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+						return
+					}
+					err = decoder.Decode(pqPtr.Interface(), r.MultipartForm.Value)
+					for i := 0; i < bodyType.NumField(); i++ {
+						field := bodyType.Field(i)
+						fieldType := field.Type
+						fieldName := field.Name
+						formTag := field.Tag.Get("form")
+						var formFieldName string
+						if stringutils.IsNotEmpty(formTag) {
+							formFieldName = strings.Split(formTag, ",")[0]
+							if formFieldName == "-" {
+								formFieldName = ""
+							}
+						}
+						if stringutils.IsEmpty(formFieldName) {
+							formFieldName = strcase.ToLowerCamel(fieldName)
+						}
+						if fileHeaders, exists := r.MultipartForm.File[formFieldName]; exists {
+							if len(fileHeaders) > 0 {
+								if reflect.TypeOf(fileHeaders).AssignableTo(fieldType) {
+									pqPtr.Field(i).Set(reflect.ValueOf(fileHeaders))
+								} else if reflect.TypeOf(fileHeaders[0]).AssignableTo(fieldType) {
+									pqPtr.Field(i).Set(reflect.ValueOf(fileHeaders[0]))
+								}
+							}
+						}
+					}
+					goto VALIDATE
+				case "application/json":
 					if err = json.NewDecoder(r.Body).Decode(pqPtr.Interface()); err != nil {
 						if err != io.EOF {
 							http.Error(w, err.Error(), http.StatusBadRequest)
 							return
 						}
 						err = nil
-					} else {
-						goto VALIDATE
 					}
 				}
 			}
@@ -175,31 +270,56 @@ func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
 		}
 		copyOutValues := make([]reflect.Value, 0)
 		for _, item := range outValues {
-			err, ok := item.Interface().(error)
-			if !ok {
-				copyOutValues = append(copyOutValues, item)
-				continue
-			}
-			if err != nil {
-				if errors.Is(err, context.Canceled) {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-				} else if _err, ok := err.(*ddhttp.BizError); ok {
-					http.Error(w, _err.Error(), _err.StatusCode)
-				} else {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
+			switch out := item.Interface().(type) {
+			case error:
+				if out != nil {
+					if errors.Is(out, context.Canceled) {
+						http.Error(w, out.Error(), http.StatusBadRequest)
+					} else if _err, ok := out.(*ddhttp.BizError); ok {
+						http.Error(w, _err.Error(), _err.StatusCode)
+					} else {
+						http.Error(w, out.Error(), http.StatusInternalServerError)
+					}
+					return
 				}
-				return
+			default:
+				copyOutValues = append(copyOutValues, item)
 			}
 		}
 		var resp interface{}
 		if len(copyOutValues) > 0 {
-			resp = copyOutValues[0].Interface()
+			outValue := copyOutValues[0]
+			respType := reflect.TypeOf(outValue)
+			if respType.Kind() == reflect.Ptr {
+				respType = respType.Elem()
+			}
+			var fileFieldIndex *int
+			for i := 0; i < respType.NumField(); i++ {
+				field := respType.Field(i)
+				if field.Type.AssignableTo(fileType) {
+					fileFieldIndex = &i
+					break
+				}
+			}
+			respValue := reflectutils.ValueOfValue(outValue)
+			if fileFieldIndex != nil {
+				if respValue.IsValid() && !respValue.IsZero() {
+					handleDownload(w, respValue, *fileFieldIndex)
+				} else {
+					http.Error(w, "empty response", http.StatusInternalServerError)
+				}
+				return
+			}
+			if respValue.IsValid() {
+				resp = respValue.Interface()
+			} else {
+				resp = reflect.New(respType).Elem()
+			}
 		} else {
 			resp = make(map[string]interface{})
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 	}
 }
