@@ -44,6 +44,7 @@ var bizRoutes []model.Route
 var middlewares []mux.MiddlewareFunc
 var decoder *form.Decoder
 var fileType reflect.Type
+var errorType reflect.Type
 
 func RegisterCustomTypeFunc(fn form.DecodeCustomTypeFunc, types ...interface{}) {
 	decoder.RegisterCustomTypeFunc(fn, types...)
@@ -78,6 +79,7 @@ func init() {
 	}
 	decoder = form.NewDecoder()
 	fileType = reflect.TypeOf((*os.File)(nil))
+	errorType = reflect.TypeOf((*error)(nil)).Elem()
 }
 
 func pattern(method string) string {
@@ -181,6 +183,26 @@ func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
 			bodyType = inType
 		} else {
 			panic("only support struct type, pointer of struct type as the second input parameter")
+		}
+	}
+	if method.Type.NumOut() > 2 {
+		panic("only support up to 2 output parameters including error")
+	}
+	outTypes := make([]reflect.Type, 0)
+	for i := 0; i < method.Type.NumOut(); i++ {
+		outType := method.Type.Out(i)
+		if outType.Implements(errorType) {
+			continue
+		}
+		outTypes = append(outTypes, outType)
+	}
+	if len(outTypes) > 0 {
+		ot := outTypes[0]
+		if ot.Kind() == reflect.Ptr {
+			ot = ot.Elem()
+		}
+		if ot.Kind() != reflect.Struct {
+			panic("only support struct type, pointer of struct type and error as output parameter")
 		}
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
