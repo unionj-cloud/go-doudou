@@ -221,7 +221,7 @@ func buildHandler(method reflect.Method, svc reflect.Value) http.HandlerFunc {
 			}
 			pqPtr := reflect.New(bodyType)
 			if pqPtr.Elem().Kind() == reflect.Ptr && ct != "application/json" {
-				http.Error(w, "incorrect Content-Type header value, only accept application/json", http.StatusBadRequest)
+				http.Error(w, fmt.Sprintf("incorrect Content-Type header %s, only accept application/json", ct), http.StatusBadRequest)
 				return
 			}
 			if httpMethod == POST || httpMethod == PUT {
