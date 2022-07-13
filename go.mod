@@ -82,6 +82,7 @@ require (
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
