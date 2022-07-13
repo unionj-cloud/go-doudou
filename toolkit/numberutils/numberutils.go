@@ -8,6 +8,7 @@ import (
 type Percentage struct {
 	Value   int
 	Percent float64
+	Data    interface{}
 }
 
 type decimalPercentage struct {
