@@ -1,14 +1,16 @@
 package numberutils
 
 import (
+	"fmt"
 	"github.com/shopspring/decimal"
 	"sort"
 )
 
 type Percentage struct {
-	Value   int
-	Percent float64
-	Data    interface{}
+	Value            int
+	Percent          float64
+	PercentFormatted string
+	Data             interface{}
 }
 
 type decimalPercentage struct {
@@ -53,5 +55,6 @@ func LargestRemainder(percentages []Percentage, places int32) {
 	}
 	for _, item := range decimalPercentages {
 		item.Percentage.Percent, _ = item.Percent.Float64()
+		item.Percentage.PercentFormatted = fmt.Sprintf("%."+fmt.Sprint(places)+"f%%", item.Percentage.Percent)
 	}
 }

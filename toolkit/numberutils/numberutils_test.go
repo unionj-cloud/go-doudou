@@ -21,8 +21,8 @@ func TestLargestRemainder(t *testing.T) {
 			Data:  "c",
 		},
 	}
-	numberutils.LargestRemainder(input, 0)
+	numberutils.LargestRemainder(input, 3)
 	for _, item := range input {
-		fmt.Printf("%v\t%v\t%v\n", item.Data, item.Value, item.Percent)
+		fmt.Printf("%v\t%v\t%v\t%s\n", item.Data, item.Value, item.Percent, item.PercentFormatted)
 	}
 }
