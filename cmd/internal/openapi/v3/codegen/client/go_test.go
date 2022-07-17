@@ -1,7 +1,7 @@
 package client
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"

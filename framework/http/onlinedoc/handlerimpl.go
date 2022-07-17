@@ -2,7 +2,7 @@ package onlinedoc
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"net/http"
 	"text/template"

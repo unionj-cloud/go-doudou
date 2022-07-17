@@ -2,7 +2,7 @@ package httpsrv
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"mime/multipart"
 	"net/http"
 	service "testdata"

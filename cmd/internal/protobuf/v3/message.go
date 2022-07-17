@@ -1,7 +1,7 @@
 package v3
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"

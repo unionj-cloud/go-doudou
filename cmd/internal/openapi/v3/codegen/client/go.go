@@ -2,7 +2,7 @@ package client
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/iancoleman/strcase"
@@ -42,7 +42,7 @@ var httptmpl = `package {{.Pkg}}
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"

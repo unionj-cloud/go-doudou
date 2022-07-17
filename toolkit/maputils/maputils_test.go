@@ -2,7 +2,7 @@ package maputils_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
 	"reflect"
 	"testing"

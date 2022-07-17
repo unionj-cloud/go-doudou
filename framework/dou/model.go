@@ -1,6 +1,6 @@
 package dou
 
-import "encoding/json"
+import "github.com/goccy/go-json"
 
 type HttpMethod int
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/subtle"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"

@@ -1,7 +1,7 @@
 package httpsrv
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"

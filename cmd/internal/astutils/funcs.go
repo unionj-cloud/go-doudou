@@ -3,7 +3,7 @@ package astutils
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
