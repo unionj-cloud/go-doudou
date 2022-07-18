@@ -3,6 +3,7 @@ package ddhttp
 import (
 	"context"
 	"fmt"
+	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/handlers"
@@ -216,6 +217,16 @@ func (srv *DefaultHttpSrv) Run() {
 				Name(item.Name).
 				Handler(item.HandlerFunc)
 		}
+		gddRouter.
+			Methods(http.MethodGet).
+			Path("/statsviz/ws").
+			Name("GetStatsvizWs").
+			HandlerFunc(statsviz.Ws)
+		gddRouter.
+			Methods(http.MethodGet).
+			PathPrefix("/statsviz/").
+			Name("GetStatsviz").
+			Handler(statsviz.IndexAtRoot(gddPathPrefix + "statsviz/"))
 	}
 	srv.middlewares = append(srv.middlewares, recovery)
 	srv.Use(srv.middlewares...)
