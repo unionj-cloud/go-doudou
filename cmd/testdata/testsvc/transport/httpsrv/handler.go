@@ -20,3 +20,5 @@ func Routes(handler TestsvcHandler) []ddmodel.Route {
 		},
 	}
 }
+
+var RouteAnnotationStore = ddmodel.AnnotationStore{}

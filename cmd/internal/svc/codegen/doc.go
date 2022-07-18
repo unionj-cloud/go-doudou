@@ -2,8 +2,8 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/goccy/go-json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
@@ -376,8 +376,6 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	astutils.FixImport([]byte(source), gofile)
 }
 
-var Walk = filepath.Walk
-
 func ParseVo(dir string) {
 	var (
 		err        error
@@ -387,7 +385,7 @@ func ParseVo(dir string) {
 	)
 	vodir := filepath.Join(dir, "vo")
 	var files []string
-	err = Walk(vodir, astutils.Visit(&files))
+	err = filepath.Walk(vodir, astutils.Visit(&files))
 	if err != nil {
 		panic(err)
 	}

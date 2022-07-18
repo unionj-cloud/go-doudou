@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
@@ -114,18 +113,5 @@ func TestParseVo(t *testing.T) {
 			ParseVo(testDir)
 		}, ShouldNotPanic)
 		So(len(v3helper.Schemas), ShouldNotBeZeroValue)
-	})
-}
-
-func TestParseVoPanicWalk(t *testing.T) {
-	Convey("Test ParseVo should panic from Walk", t, func() {
-		Stat = os.Stat
-		Walk = filepath.Walk
-		Walk = func(root string, walkFn filepath.WalkFunc) error {
-			return errors.New("mock Walk error")
-		}
-		So(func() {
-			ParseVo(testDir)
-		}, ShouldPanic)
 	})
 }

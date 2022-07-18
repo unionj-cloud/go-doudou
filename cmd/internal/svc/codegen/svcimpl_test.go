@@ -28,13 +28,12 @@ type TestdatasvcimplImpl struct {
 	conf *config.Config
 }
 
-func (receiver *TestdatasvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error) {
+func (receiver *TestdatasvcimplImpl) PageUsers(ctx context.Context, query vo.PageQuery) (data vo.PageRet, err error) {
 	var _result struct {
-		Code int
 		Data vo.PageRet
 	}
 	_ = gofakeit.Struct(&_result)
-	return _result.Code, _result.Data, nil
+	return _result.Data, nil
 }
 
 func NewTestdatasvcimpl(conf *config.Config) Testdatasvcimpl {
@@ -48,6 +47,7 @@ func NewTestdatasvcimpl(conf *config.Config) Testdatasvcimpl {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		t.Fatal(err)
