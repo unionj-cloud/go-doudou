@@ -133,3 +133,17 @@ func ExampleEnd() {
 	//(`project_id` = ? and `delete_at` is null) order by user.`create_at` desc limit ?,? [1 0 1]
 	//(`delete_at` is null and `op_code` not in (?,?,?)) [1 2 3]
 }
+
+func TestWhereAppend2(t *testing.T) {
+	var where Q
+	where = C().Col("left_number").Gt(0).Or(C().Col("left_number").Lt(0))
+	where = where.And(C().Col("name").Ne("感谢参与"))
+	where = where.And(C().Col("delete_at").IsNull())
+	page := P().Order(Order{
+		Col:  "order",
+		Sort: sortenum.Desc,
+	}).Limit(0, 10)
+	where = where.Append(page)
+	str, _ := where.Sql()
+	require.Equal(t, "(((`left_number` > ? or `left_number` < ?) and `name` != ?) and `delete_at` is null) order by `order` desc limit ?,?", str)
+}

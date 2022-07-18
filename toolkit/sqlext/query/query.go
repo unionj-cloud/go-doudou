@@ -289,7 +289,11 @@ func (w Where) Append(whe Base) Where {
 		children: make([]Base, 0),
 	}
 	parentW.children = append(parentW.children, w, whe)
-	parentW.lsym = logicsymbol.Append
+	if _, ok := whe.(Page); ok {
+		parentW.lsym = logicsymbol.End
+	} else {
+		parentW.lsym = logicsymbol.Append
+	}
 	return parentW
 }
 
