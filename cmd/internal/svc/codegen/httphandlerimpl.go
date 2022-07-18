@@ -601,7 +601,7 @@ func GenHttpHandlerImplWithImpl(dir string, ic astutils.InterfaceCollector, omit
 
 func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string) {
 	var files []string
-	err := Walk(httpDir, astutils.Visit(&files))
+	err := filepath.Walk(httpDir, astutils.Visit(&files))
 	if err != nil {
 		panic(err)
 	}
