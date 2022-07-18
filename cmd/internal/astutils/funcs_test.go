@@ -50,8 +50,9 @@ fmt.Println(string(b))
 	expect := `package main
 
 import (
-	"github.com/goccy/go-json"
 	"fmt"
+
+	"github.com/goccy/go-json"
 )
 
 type UserVo struct {

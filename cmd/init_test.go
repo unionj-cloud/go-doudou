@@ -29,7 +29,7 @@ type Initcmd interface {
 	// You can define your service methods as your need. Below is an example.
 	// You can also add annotations here like @role(admin) to add meta data to routes for 
 	// implementing your own middlewares
-	PageUsers(ctx context.Context, query vo.PageQuery) (code int, data vo.PageRet, err error)
+	PageUsers(ctx context.Context, query vo.PageQuery) (data vo.PageRet, err error)
 }
 `
 	svcfile := filepath.Join(dir, "svc.go")
@@ -37,6 +37,7 @@ type Initcmd interface {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		t.Fatal(err)
