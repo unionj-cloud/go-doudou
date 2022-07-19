@@ -80,4 +80,6 @@ const (
 
 	// DefaultGddSqlLogEnable only for doc purpose
 	DefaultGddSqlLogEnable = false
+
+	DefaultGddStatsFreq = "1s"
 )

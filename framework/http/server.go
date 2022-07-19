@@ -217,11 +217,17 @@ func (srv *DefaultHttpSrv) Run() {
 				Name(item.Name).
 				Handler(item.HandlerFunc)
 		}
+		freq, err := time.ParseDuration(config.GddStatsFreq.Load())
+		if err != nil {
+			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddStatsFreq),
+				config.GddStatsFreq.Load(), err.Error(), config.DefaultGddStatsFreq)
+			freq, _ = time.ParseDuration(config.DefaultGddStatsFreq)
+		}
 		gddRouter.
 			Methods(http.MethodGet).
 			Path("/statsviz/ws").
 			Name("GetStatsvizWs").
-			HandlerFunc(statsviz.Ws)
+			HandlerFunc(statsviz.NewWsHandler(freq))
 		gddRouter.
 			Methods(http.MethodGet).
 			PathPrefix("/statsviz/").

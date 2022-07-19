@@ -221,6 +221,8 @@ const (
 
 	// GddSqlLogEnable only for doc purpose
 	GddSqlLogEnable envVariable = "GDD_SQL_LOG_ENABLE"
+
+	GddStatsFreq envVariable = "GDD_STATS_FREQ"
 )
 
 // Load loads value from environment variable
