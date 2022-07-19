@@ -2,13 +2,14 @@ package client
 
 import (
 	"bytes"
-	"github.com/goccy/go-json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/goccy/go-json"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/copier"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -31,7 +32,7 @@ type {{$k | toCamel}} struct {
 	// required
 	{{ $pk | toCamel}} {{$pv | toGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
 	{{- else }}
-	{{ $pk | toCamel}} {{$pv | toGoType | toOptional }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
+	{{ $pk | toCamel}} {{$pv | toOptionalGoType }} ` + "`" + `json:"{{$pk}}{{if $.Omit}},omitempty{{end}}" url:"{{$pk}}"` + "`" + `
 	{{- end }}
 {{- end }}
 }
@@ -652,7 +653,16 @@ func parameter2Field(param v3.Parameter) astutils.FieldMeta {
 //	ArrayT   Type = "array"
 func toGoType(schema *v3.Schema) string {
 	if stringutils.IsNotEmpty(schema.Ref) {
-		return clean(strings.TrimPrefix(schema.Ref, "#/components/schemas/"))
+		refName := strings.TrimPrefix(schema.Ref, "#/components/schemas/")
+		if realSchema, exists := schemas[refName]; exists {
+			if realSchema.Type == v3.ObjectT && realSchema.AdditionalProperties != nil {
+				result := additionalProperties2Map(realSchema.AdditionalProperties)
+				if stringutils.IsNotEmpty(result) {
+					return result
+				}
+			}
+		}
+		return toCamel(clean(refName))
 	}
 	switch schema.Type {
 	case v3.IntegerT:
@@ -665,6 +675,41 @@ func toGoType(schema *v3.Schema) string {
 		return number2Go(schema)
 	case v3.ObjectT:
 		return object2Struct(schema)
+	case v3.ArrayT:
+		return "[]" + toGoType(schema.Items)
+	default:
+		return "interface{}"
+	}
+}
+
+func toOptionalGoType(schema *v3.Schema) string {
+	if stringutils.IsNotEmpty(schema.Ref) {
+		refName := strings.TrimPrefix(schema.Ref, "#/components/schemas/")
+		if realSchema, exists := schemas[refName]; exists {
+			if realSchema.Type == v3.ObjectT && realSchema.AdditionalProperties != nil {
+				result := additionalProperties2Map(realSchema.AdditionalProperties)
+				if stringutils.IsNotEmpty(result) {
+					return result
+				}
+			}
+		}
+		return "*" + toCamel(clean(refName))
+	}
+	switch schema.Type {
+	case v3.IntegerT:
+		return integer2Go(schema)
+	case v3.StringT:
+		return string2Go(schema)
+	case v3.BooleanT:
+		return "bool"
+	case v3.NumberT:
+		return number2Go(schema)
+	case v3.ObjectT:
+		result := object2Struct(schema)
+		if strings.HasPrefix(result, "struct {") {
+			return "*" + result
+		}
+		return result
 	case v3.ArrayT:
 		return "[]" + toGoType(schema.Items)
 	default:
@@ -712,16 +757,27 @@ func integer2Go(schema *v3.Schema) string {
 	}
 }
 
+func additionalProperties2Map(additionalProperties interface{}) string {
+	if additionalProperties == nil {
+		return ""
+	}
+	if value, ok := additionalProperties.(map[string]interface{}); ok {
+		var additionalSchema v3.Schema
+		copier.DeepCopy(value, &additionalSchema)
+		return "map[string]" + toGoType(&additionalSchema)
+	}
+	return ""
+}
+
 func object2Struct(schema *v3.Schema) string {
-	if stringutils.IsNotEmpty(schema.Title) {
-		if _, exists := schemas[schema.Title]; exists {
-			return schema.Title
+	if schema.AdditionalProperties != nil {
+		result := additionalProperties2Map(schema.AdditionalProperties)
+		if stringutils.IsNotEmpty(result) {
+			return result
 		}
 	}
-	if schema.AdditionalProperties != nil {
-		if ap, ok := schema.AdditionalProperties.(*v3.Schema); ok {
-			return "map[string]" + toGoType(ap)
-		}
+	if len(schema.Properties) == 0 {
+		return "interface{}"
 	}
 	b := new(strings.Builder)
 	b.WriteString("struct {\n")
@@ -781,8 +837,15 @@ func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
 	funcMap["toCamel"] = toCamel
 	funcMap["toGoType"] = toGoType
 	funcMap["toComment"] = toComment
-	funcMap["toOptional"] = toOptional
+	funcMap["toOptionalGoType"] = toOptionalGoType
 	funcMap["stringContains"] = sliceutils.StringContains
+	filterMap := make(map[string]v3.Schema)
+	for k, v := range schemas {
+		result := additionalProperties2Map(v.AdditionalProperties)
+		if stringutils.IsEmpty(result) {
+			filterMap[k] = v
+		}
+	}
 	tpl, _ := template.New("vo.go.tmpl").Funcs(funcMap).Parse(votmpl)
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
@@ -790,7 +853,7 @@ func genGoVo(schemas map[string]v3.Schema, output, pkg string) {
 		Omit    bool
 		Pkg     string
 	}{
-		Schemas: schemas,
+		Schemas: filterMap,
 		Omit:    omitempty,
 		Pkg:     pkg,
 	})

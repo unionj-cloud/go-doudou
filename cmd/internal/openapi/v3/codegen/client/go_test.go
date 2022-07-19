@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/goccy/go-json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
@@ -620,4 +620,10 @@ func Test_genGoVo_api(t *testing.T) {
 	for svcname, paths := range svcmap {
 		genGoHTTP(paths, svcname, filepath.Join(testdir, "test"), "", "test")
 	}
+}
+
+func Test_genGoVoJava(t *testing.T) {
+	testdir := pathutils.Abs("../testdata")
+	api := loadAPI(path.Join(testdir, "wjluck-openapi3.json"))
+	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
