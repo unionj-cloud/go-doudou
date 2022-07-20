@@ -1,116 +1,166 @@
 package test
 
-import (
-	"time"
-
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
-)
-
-type Address struct {
-	City *string `json:"city,omitempty" url:"city"`
-
-	State *string `json:"state,omitempty" url:"state"`
-
-	Street *string `json:"street,omitempty" url:"street"`
-
-	Zip *string `json:"zip,omitempty" url:"zip"`
+// ChartReportParagraph 图表类型段落
+type ChartReportParagraph struct {
 }
 
-type ApiResponse struct {
-	Code *int `json:"code,omitempty" url:"code"`
-
-	Message *string `json:"message,omitempty" url:"message"`
-
-	Type *string `json:"type,omitempty" url:"type"`
+type ChartReportParagraphStyle struct {
+	// 居左，居中，居右
+	Alignment string `json:"alignment" url:"alignment"`
+	// 每个系列的前景色，图例的颜色，柱子的颜色，线条的颜色等
+	ForeColor map[string]string `json:"foreColor" url:"foreColor"`
+	// word里面的图表的高，单位厘米
+	Height float64 `json:"height" url:"height"`
+	// word里面的图表的宽，单位厘米
+	Width float64 `json:"width" url:"width"`
 }
 
-type Category struct {
-	Id *int64 `json:"id,omitempty" url:"id"`
-
-	Name *string `json:"name,omitempty" url:"name"`
+// ImageReportParagraph 图片类型段落
+type ImageReportParagraph struct {
 }
 
-type Customer struct {
-	Address *[]Address `json:"address,omitempty" url:"address"`
+type ImageReportParagraphStyle struct {
+	// 居左，居中，居右
+	Alignment string `json:"alignment" url:"alignment"`
 
-	Id *int64 `json:"id,omitempty" url:"id"`
+	Height float64 `json:"height" url:"height"`
 
-	Username *string `json:"username,omitempty" url:"username"`
+	Separator string `json:"separator" url:"separator"`
+
+	Width float64 `json:"width" url:"width"`
 }
 
-type Order struct {
-	Complete *bool `json:"complete,omitempty" url:"complete"`
-	// 客户信息结构体
-	// 用于描述客户相关的信息
-	Customer *struct {
-		// 用户ID
-		Id *int64 `json:"id,omitempty" url:"id"`
-		// 用户名
-		Username *string `json:"username,omitempty" url:"username"`
-		// 用户地址
-		// 例如：北京海淀区xxx街道
-		// 某某小区
-		Address *[]Address `json:"address,omitempty" url:"address"`
-	} `json:"customer,omitempty" url:"customer"`
+type MergeFieldData struct {
+	Fields []string `json:"fields" url:"fields"`
 
-	Id *int64 `json:"id,omitempty" url:"id"`
+	Values []interface{} `json:"values" url:"values"`
+}
 
+// ParagraphWrapper 报告段落包装类
+type ParagraphWrapper struct {
+	// 报告段落类型
 	// required
-	PetId int64 `json:"petId,omitempty" url:"petId"`
+	Type string `json:"type" url:"type"`
 
-	Quantity *int `json:"quantity,omitempty" url:"quantity"`
-
-	// required
-	ShipDate time.Time `json:"shipDate,omitempty" url:"shipDate"`
-	// Order Status
-	Status *string `json:"status,omitempty" url:"status"`
+	Value interface{} `json:"value" url:"value"`
 }
 
-type Pet struct {
-	Category *Category `json:"category,omitempty" url:"category"`
-
-	Id *int64 `json:"id,omitempty" url:"id"`
-
-	// required
-	Name string `json:"name,omitempty" url:"name"`
-
-	// required
-	PhotoUrls []string `json:"photoUrls,omitempty" url:"photoUrls"`
-	// pet status in the store
-	// this is another line for test use
-	Status *string `json:"status,omitempty" url:"status"`
-
-	Tags *[]Tag `json:"tags,omitempty" url:"tags"`
+type ReportPage struct {
+	// 页面下边距，单位厘米
+	BottomMargin float64 `json:"bottomMargin" url:"bottomMargin"`
+	// 页面左边距，单位厘米
+	LeftMargin float64 `json:"leftMargin" url:"leftMargin"`
+	// 页面是横向还是纵向
+	OrientationType string `json:"orientationType" url:"orientationType"`
+	// 页面纸张大小
+	PaperSizeType string `json:"paperSizeType" url:"paperSizeType"`
+	// 页面右边距，单位厘米
+	RightMargin float64 `json:"rightMargin" url:"rightMargin"`
+	// 页面上边距，单位厘米
+	TopMargin float64 `json:"topMargin" url:"topMargin"`
 }
 
-type Tag struct {
-	Id *int64 `json:"id,omitempty" url:"id"`
-
-	Name *string `json:"name,omitempty" url:"name"`
+// ReportParagraph 报告段落内容
+type ReportParagraph struct {
+	Bookmark string `json:"bookmark" url:"bookmark"`
 }
 
-type User struct {
-	Additional1 *struct {
-	} `json:"additional1,omitempty" url:"additional1"`
+type RequestPayload struct {
+	ParagraphList []ParagraphWrapper `json:"paragraphList" url:"paragraphList"`
 
-	Additional2 *struct {
-	} `json:"additional2,omitempty" url:"additional2"`
+	ReportFileName string `json:"reportFileName" url:"reportFileName"`
 
-	Avatar *v3.FileModel `json:"avatar,omitempty" url:"avatar"`
+	ReportPage *ReportPage `json:"reportPage" url:"reportPage"`
 
-	Email *string `json:"email,omitempty" url:"email"`
+	StorageMode string `json:"storageMode" url:"storageMode"`
 
-	FirstName *string `json:"firstName,omitempty" url:"firstName"`
+	TemplateUrl string `json:"templateUrl" url:"templateUrl"`
+}
 
-	Id *int64 `json:"id,omitempty" url:"id"`
+type ResultInteger struct {
+	// 返回标记：成功标记=0，失败标记=1
+	Code int `json:"code" url:"code"`
+	// 数据
+	Data int `json:"data" url:"data"`
+	// 返回信息
+	Msg string `json:"msg" url:"msg"`
+}
 
-	LastName *string `json:"lastName,omitempty" url:"lastName"`
+type ResultListWordTemplateSubstitution struct {
+	// 返回标记：成功标记=0，失败标记=1
+	Code int `json:"code" url:"code"`
+	// 数据
+	Data []WordTemplateSubstitution `json:"data" url:"data"`
+	// 返回信息
+	Msg string `json:"msg" url:"msg"`
+}
 
-	Password *string `json:"password,omitempty" url:"password"`
+type ResultString struct {
+	// 返回标记：成功标记=0，失败标记=1
+	Code int `json:"code" url:"code"`
+	// 数据
+	Data string `json:"data" url:"data"`
+	// 返回信息
+	Msg string `json:"msg" url:"msg"`
+}
 
-	Phone *string `json:"phone,omitempty" url:"phone"`
-	// User Status
-	UserStatus *int `json:"userStatus,omitempty" url:"userStatus"`
+// TableReportParagraph 表格类型段落
+type TableReportParagraph struct {
+}
 
-	Username *string `json:"username,omitempty" url:"username"`
+// TextReportParagraph 文本类型段落
+type TextReportParagraph struct {
+}
+
+// TextReportParagraphFont 设置字体样式
+type TextReportParagraphFont struct {
+	// 中文字号，优先级高于fontSize
+	ChineseFontSize string `json:"chineseFontSize" url:"chineseFontSize"`
+	// 字体颜色，只支持黑色，红色和黄色
+	FontColor string `json:"fontColor" url:"fontColor"`
+	// 字体
+	FontFamily string `json:"fontFamily" url:"fontFamily"`
+	// 字号，默认16磅，即三号字体
+	FontSize float64 `json:"fontSize" url:"fontSize"`
+	// 是否加粗，默认false
+	IsBold bool `json:"isBold" url:"isBold"`
+}
+
+// TextReportParagraphSentence 文本类型句子短语
+type TextReportParagraphSentence struct {
+	// 文本
+	Content string `json:"content" url:"content"`
+
+	Font *TextReportParagraphFont `json:"font" url:"font"`
+	// inline默认值为true，表示不换行
+	Inline bool `json:"inline" url:"inline"`
+}
+
+type TextReportParagraphStyle struct {
+	// 居左，居中，居右
+	Alignment string `json:"alignment" url:"alignment"`
+	// 是否清除原有段落格式
+	ClearOldStyle bool `json:"clearOldStyle" url:"clearOldStyle"`
+
+	Font *TextReportParagraphFont `json:"font" url:"font"`
+	// 设置首行缩进，单位磅
+	Indent float64 `json:"indent" url:"indent"`
+	// 如果inline为true，表示不换行
+	Inline bool `json:"inline" url:"inline"`
+	// 设置行距，单位磅，默认单倍行距，即12磅
+	LineSpacing float64 `json:"lineSpacing" url:"lineSpacing"`
+}
+
+type Word2HtmlRequestPayload struct {
+	DownloadUrl string `json:"downloadUrl" url:"downloadUrl"`
+}
+
+// WordTemplateSubstitution 模板变量
+type WordTemplateSubstitution struct {
+	// 完整变量字符串，用于前端展示
+	Display string `json:"display" url:"display"`
+	// 变量名
+	Name string `json:"name" url:"name"`
+	// 类型
+	Type string `json:"type" url:"type"`
 }

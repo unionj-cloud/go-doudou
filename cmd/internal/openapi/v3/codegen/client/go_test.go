@@ -624,6 +624,6 @@ func Test_genGoVo_api(t *testing.T) {
 
 func Test_genGoVoJava(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "wjluck-openapi3.json"))
+	api := loadAPI(path.Join(testdir, "api-docs.json"))
 	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
