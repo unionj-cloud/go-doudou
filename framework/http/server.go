@@ -223,6 +223,18 @@ func (srv *DefaultHttpSrv) Run() {
 				config.GddStatsFreq.Load(), err.Error(), config.DefaultGddStatsFreq)
 			freq, _ = time.ParseDuration(config.DefaultGddStatsFreq)
 		}
+		srv.gddRoutes = append(srv.gddRoutes, []model.Route{
+			{
+				Name:    "GetStatsvizWs",
+				Method:  "GET",
+				Pattern: gddPathPrefix + "statsviz/ws",
+			},
+			{
+				Name:    "GetStatsviz",
+				Method:  "GET",
+				Pattern: gddPathPrefix + "statsviz/",
+			},
+		}...)
 		gddRouter.
 			Methods(http.MethodGet).
 			Path("/statsviz/ws").
