@@ -17,20 +17,20 @@ import (
 	"path/filepath"
 )
 
-func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) error {
+func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) (string, error) {
 	by, err := io.ReadAll(input)
 	if err != nil {
-		return errors.Wrap(err, caller.NewCaller().String())
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	imgConf, imgType, err := image.DecodeConfig(bytes.NewReader(by))
 	if err != nil {
-		return errors.Wrap(err, caller.NewCaller().String())
+		return "", errors.Wrap(err, caller.NewCaller().String())
 	}
 	switch imgType {
 	case "jpeg":
 		img, err := jpeg.Decode(bytes.NewReader(by))
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		m := resize.Resize(uint(float64(imgConf.Width)*multiplier), 0, img, resize.Lanczos3)
 		if stringutils.IsEmpty(filepath.Ext(output)) {
@@ -38,14 +38,14 @@ func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) e
 		}
 		out, err := os.Create(output)
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		defer out.Close()
 		jpeg.Encode(out, m, nil)
 	case "png":
 		img, err := png.Decode(bytes.NewReader(by))
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		m := resize.Resize(uint(float64(imgConf.Width)*multiplier), 0, img, resize.Lanczos3)
 		if stringutils.IsEmpty(filepath.Ext(output)) {
@@ -53,14 +53,14 @@ func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) e
 		}
 		out, err := os.Create(output)
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		defer out.Close()
 		png.Encode(out, m)
 	case "gif":
 		img, err := gif.DecodeAll(bytes.NewReader(by))
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		if multiplier != 1 {
 			for i, item := range img.Image {
@@ -76,10 +76,10 @@ func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) e
 		}
 		out, err := os.Create(output)
 		if err != nil {
-			return errors.Wrap(err, caller.NewCaller().String())
+			return "", errors.Wrap(err, caller.NewCaller().String())
 		}
 		defer out.Close()
 		gif.EncodeAll(out, img)
 	}
-	return nil
+	return output, nil
 }

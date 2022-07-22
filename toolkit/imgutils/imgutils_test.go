@@ -15,7 +15,7 @@ func TestResizeKeepAspectRatioPng(t *testing.T) {
 		panic(err)
 	}
 	defer file.Close()
-	err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result"))
+	_, err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result"))
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +27,7 @@ func TestResizeKeepAspectRatioJpeg(t *testing.T) {
 		panic(err)
 	}
 	defer file.Close()
-	err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result.jpg"))
+	_, err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result.jpg"))
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func TestResizeKeepAspectRatioGif1(t *testing.T) {
 		panic(err)
 	}
 	defer file.Close()
-	err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "rgb_result"))
+	_, err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "rgb_result"))
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func TestResizeKeepAspectRatioGif2(t *testing.T) {
 		panic(err)
 	}
 	defer file.Close()
-	err = imgutils.ResizeKeepAspectRatio(file, 1, filepath.Join(testDir, "test_result"))
+	_, err = imgutils.ResizeKeepAspectRatio(file, 1, filepath.Join(testDir, "test_result"))
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +63,7 @@ func TestResizeKeepAspectRatioGif3(t *testing.T) {
 		panic(err)
 	}
 	defer file.Close()
-	err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result"))
+	_, err = imgutils.ResizeKeepAspectRatio(file, 0.5, filepath.Join(testDir, "test_result"))
 	if err != nil {
 		panic(err)
 	}
