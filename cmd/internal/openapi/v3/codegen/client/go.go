@@ -697,13 +697,13 @@ func toOptionalGoType(schema *v3.Schema) string {
 	}
 	switch schema.Type {
 	case v3.IntegerT:
-		return integer2Go(schema)
+		return "*" + integer2Go(schema)
 	case v3.StringT:
-		return string2Go(schema)
+		return "*" + string2Go(schema)
 	case v3.BooleanT:
-		return "bool"
+		return "*bool"
 	case v3.NumberT:
-		return number2Go(schema)
+		return "*" + number2Go(schema)
 	case v3.ObjectT:
 		result := object2Struct(schema)
 		if strings.HasPrefix(result, "struct {") {
