@@ -83,10 +83,15 @@ var (
 // preferring src, or recursively descending, if both src and dst are maps.
 // borrow code from https://github.com/peterbourgon/mergemap
 func Merge(dst, src map[string]interface{}) map[string]interface{} {
-	return merge(dst, src, 0)
+	return merge(dst, src, 0, false)
 }
 
-func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
+func MergeOverwriteSlice(dst, src map[string]interface{}) map[string]interface{} {
+	return merge(dst, src, 0, true)
+}
+
+// overwrite means overwrite slice value
+func merge(dst, src map[string]interface{}, depth int, overwrite bool) map[string]interface{} {
 	if depth > MaxDepth {
 		panic("too deep!")
 	}
@@ -95,7 +100,10 @@ func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
 			srcMap, srcMapOk := mapify(srcVal)
 			dstMap, dstMapOk := mapify(dstVal)
 			if srcMapOk && dstMapOk {
-				srcVal = merge(dstMap, srcMap, depth+1)
+				srcVal = merge(dstMap, srcMap, depth+1, overwrite)
+				goto REWRITE
+			}
+			if overwrite {
 				goto REWRITE
 			}
 			srcSlice, srcSliceOk := sliceutils.TakeSliceArg(srcVal)
