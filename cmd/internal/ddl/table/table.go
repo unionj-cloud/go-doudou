@@ -117,6 +117,8 @@ func toColumnType(goType string) columnenum.ColumnType {
 		return columnenum.DatetimeType
 	case "decimal.Decimal":
 		return "decimal(6,2)"
+	case "types.JSONText":
+		return columnenum.JSONType
 	}
 	panic(fmt.Sprintf("no available type %s", goType))
 }
@@ -148,6 +150,8 @@ func toGoType(colType columnenum.ColumnType, nullable bool) string {
 		goType += "decimal.Decimal"
 	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.LongtextType))) {
 		goType += "string"
+	} else if stringutils.HasPrefixI(string(colType), strings.ToLower(string(columnenum.JSONType))) {
+		goType += "types.JSONText"
 	} else {
 		panic(fmt.Sprintf("no available type %s", colType))
 	}
