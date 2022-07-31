@@ -3,13 +3,12 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/version"
 )
-
-const version = "v1.1.9"
 
 // rootCmd is the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: version,
+	Version: version.Release,
 	Use:     "go-doudou",
 	Short:   "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
 	Long: `go-doudou works like a scaffolding tool but more than that. 

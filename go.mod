@@ -85,9 +85,12 @@ require (
 	github.com/mattn/go-colorable v0.1.12
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/rbretecher/go-postman-collection v0.8.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
+	github.com/steinfletcher/apitest v1.5.12 // indirect
+	github.com/steinfletcher/apitest-jsonpath v1.7.1 // indirect
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect

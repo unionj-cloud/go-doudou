@@ -82,6 +82,11 @@ type Svc struct {
 
 	// ImagePrefix is image name prefix string used for building and pushing docker image
 	ImagePrefix string
+
+	// PostmanCollectionPath is postman collection v2.1 compatible file disk path
+	PostmanCollectionPath string
+	// DotenvPath dotenv format config file disk path only for integration testing purpose
+	DotenvPath string
 }
 
 func ValidateDataType(dir string) {
@@ -335,6 +340,12 @@ func (receiver *Svc) GenClient() {
 		panic("openapi 3.0 spec json file path is empty")
 	}
 	client.GenGoClient(receiver.dir, docpath, receiver.Omitempty, receiver.Env, receiver.ClientPkg)
+}
+
+// GenIntegrationTestingCode generates integration testing code from postman collection v2.1 compatible file
+func (receiver *Svc) GenIntegrationTestingCode() {
+	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
+	codegen.GenHttpIntegrationTesting(receiver.dir, ic, receiver.PostmanCollectionPath, receiver.DotenvPath)
 }
 
 func (receiver *Svc) DoRun() {

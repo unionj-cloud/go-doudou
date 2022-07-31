@@ -1,0 +1,283 @@
+{
+	"info": {
+		"_postman_id": "b28926a8-ace1-437e-9d82-ab61b390d1c1",
+		"name": "TestCode",
+		"description": "测试集成测试代码生成",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "/user/1234",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/1234?userId=2863467",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"1234"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "2863467"
+								},
+								{
+									"key": "ipAddr",
+									"value": "consequat in minim culpa",
+									"disabled": true
+								}
+							]
+						},
+						"description": "测试集成测试代码生成"
+					},
+					"response": [
+						{
+							"name": "测试1",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/user/1234?userId=2621936",
+									"host": [
+										"{{baseUrl}}"
+									],
+                                    "path": [
+                                      "user",
+                                      "1234"
+                                    ],
+									"query": [
+										{
+											"key": "userId",
+											"value": "2621936"
+										},
+										{
+											"key": "ipAddr",
+											"value": "consequat in minim culpa",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=UTF-8"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 30 Jul 2022 15:38:32 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "54"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"prizePool\": [\n            1,\n            1,\n            36,\n            1,\n            1,\n            11,\n            1,\n            23\n        ],\n        \"prize\": 1\n    }\n}"
+						},
+						{
+							"name": "测试2",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/user/1234?userId=2863467",
+									"host": [
+										"{{baseUrl}}"
+									],
+                                    "path": [
+                                      "user",
+                                      "1234"
+                                    ],
+									"query": [
+										{
+											"key": "userId",
+											"value": "2863467"
+										},
+										{
+											"key": "ipAddr",
+											"value": "consequat in minim culpa",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=UTF-8"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 30 Jul 2022 15:40:55 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "71"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"prizePool\": [\n            1,\n            1,\n            62,\n            1,\n            65,\n            63,\n            1,\n            61\n        ],\n        \"prize\": 65\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "/algo/percent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data\": [\n        {\n            \"value\": 10,\n            \"key\": \"a\"\n        },\n        {\n            \"value\": 12,\n            \"key\": \"b\"\n        },\n        {\n            \"value\": 7,\n            \"key\": \"c\"\n        }\n    ],\n    \"places\": 0\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/algo/percent",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"algo",
+						"percent"
+					]
+				},
+				"description": "测试集成测试代码生成"
+			},
+			"response": [
+				{
+					"name": "/algo/percent",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": [\n        {\n            \"value\": 10,\n            \"key\": \"a\"\n        },\n        {\n            \"value\": 12,\n            \"key\": \"b\"\n        },\n        {\n            \"value\": 7,\n            \"key\": \"c\"\n        }\n    ],\n    \"places\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/algo/percent",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"algo",
+								"percent"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=UTF-8"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 31 Jul 2022 13:48:00 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "193"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"data\": [\n        {\n            \"value\": 10,\n            \"key\": \"a\",\n            \"percent\": 34,\n            \"percentFormatted\": \"34%\"\n        },\n        {\n            \"value\": 12,\n            \"key\": \"b\",\n            \"percent\": 42,\n            \"percentFormatted\": \"42%\"\n        },\n        {\n            \"value\": 7,\n            \"key\": \"c\",\n            \"percent\": 24,\n            \"percentFormatted\": \"24%\"\n        }\n    ]\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:11000",
+			"type": "string",
+			"disabled": true
+		}
+	]
+}

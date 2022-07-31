@@ -3,8 +3,8 @@ package astutils
 import (
 	"bufio"
 	"bytes"
-	"github.com/goccy/go-json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -225,6 +225,8 @@ type StructMeta struct {
 	Comments []string
 	Methods  []MethodMeta
 	IsExport bool
+	// go-doudou version
+	Version string
 }
 
 // EnumMeta wraps struct info

@@ -8,6 +8,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/version"
 	"os"
 	"time"
 )
@@ -37,9 +38,9 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of go-doudou",
 	Long:  `You can get information about latest release version besides version number of installed go-doudou`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Installed version is %s\n", version)
+		fmt.Printf("Installed version is %s\n", version.Release)
 		latest := LatestReleaseVerFunc()
-		currentVersion, _ := goversion.NewVersion(version)
+		currentVersion, _ := goversion.NewVersion(version.Release)
 		latestVersion, _ := goversion.NewVersion(latest)
 		if currentVersion.LessThan(latestVersion) {
 			fmt.Printf("Latest release version is %s\n", latest)
