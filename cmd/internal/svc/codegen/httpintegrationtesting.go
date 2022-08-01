@@ -126,7 +126,7 @@ func TestMain(m *testing.M) {
 ` + appendIntegrationTestingTmpl
 
 func toEndpoint(input []string) string {
-	return strings.Join(input, "/")
+	return "/" + strings.Join(input, "/")
 }
 
 func toString(input postman.Method) string {
