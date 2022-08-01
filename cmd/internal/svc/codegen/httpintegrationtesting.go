@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"github.com/rbretecher/go-postman-collection"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
@@ -21,10 +20,11 @@ import (
 
 var appendIntegrationTestingTmpl = `
 {{- range $response := .Responses }}
+
 func Test_{{$response.Name}}(t *testing.T) {
 	apitest.New("{{$response.Name}}").
 		Handler(router).
-		{{$response.OriginalRequest.Method | toCamel}}({{ $response.OriginalRequest.URL.Path | toEndpoint }}).
+		{{$response.OriginalRequest.Method | toString | capital}}("{{ $response.OriginalRequest.URL.Path | toEndpoint }}").
 {{- range $header := $response.OriginalRequest.Header }}
 {{- if not $header.Disabled }}
 		Header("{{$header.Key}}", "{{$header.Value}}").
@@ -32,7 +32,9 @@ func Test_{{$response.Name}}(t *testing.T) {
 {{- end }}
 {{- if $response.OriginalRequest.URL.Query }}
 {{- range $query := $response.OriginalRequest.URL.Query }}
+{{- if not (index $query "disabled") }}
 		Query("{{index $query "key"}}", "{{index $query "value"}}").
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if $response.OriginalRequest.Body }}
@@ -62,8 +64,8 @@ func Test_{{$response.Name}}(t *testing.T) {
 {{- end }}
 		Status({{$response.Code}}).
 		End()
-{{- end }}
 }
+{{- end }}
 `
 
 var integrationTestingImportTmpl = `
@@ -121,10 +123,18 @@ func TestMain(m *testing.M) {
 	}
 	m.Run()
 }
-`
+` + appendIntegrationTestingTmpl
 
 func toEndpoint(input []string) string {
 	return strings.Join(input, "/")
+}
+
+func toString(input postman.Method) string {
+	return string(input)
+}
+
+func capital(input string) string {
+	return strings.Title(strings.ToLower(input))
 }
 
 func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postmanCollectionPath, dotenvPath string) {
@@ -149,6 +159,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		panic(err)
 	}
 	testFile = filepath.Join(integrationTestDir, "integration_test.go")
+	responses = notGenerated(integrationTestDir, postmanCollectionPath)
 	fi, _ = os.Stat(testFile)
 	if fi != nil {
 		logrus.Warningln("New content will be append to integration_test.go file")
@@ -164,7 +175,6 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		defer f.Close()
 		tmpl = initIntegrationTestingTmpl
 	}
-	responses = notGenerated(integrationTestDir, postmanCollectionPath)
 	modfile = filepath.Join(dir, "go.mod")
 	if modf, err = os.Open(modfile); err != nil {
 		panic(err)
@@ -175,10 +185,14 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 
 	funcMap := make(map[string]interface{})
 	funcMap["toEndpoint"] = toEndpoint
-	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["toString"] = toString
+	funcMap["capital"] = capital
 	if tpl, err = template.New("integration_test.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
+	absDotenv, _ := filepath.Abs(dotenvPath)
+	absDir, _ := filepath.Abs(integrationTestDir)
+	relDotenv, _ := filepath.Rel(absDir, absDotenv)
 	if err = tpl.Execute(&buf, struct {
 		ServicePackage string
 		ServiceAlias   string
@@ -190,7 +204,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
 		Version:        version.Release,
-		DotenvPath:     dotenvPath,
+		DotenvPath:     relDotenv,
 		SvcName:        ic.Interfaces[0].Name,
 		Responses:      responses,
 	}); err != nil {
