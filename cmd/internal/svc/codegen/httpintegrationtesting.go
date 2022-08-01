@@ -21,7 +21,8 @@ import (
 
 var appendIntegrationTestingTmpl = `
 {{- range $response := .Responses }}
-	apitest.New().
+func Test_{{$response.Name}}(t *testing.T) {
+	apitest.New("{{$response.Name}}").
 		Handler(router).
 		{{$response.OriginalRequest.Method | toCamel}}({{ $response.OriginalRequest.URL.Path | toEndpoint }}).
 {{- range $header := $response.OriginalRequest.Header }}
@@ -62,6 +63,7 @@ var appendIntegrationTestingTmpl = `
 		Status({{$response.Code}}).
 		End()
 {{- end }}
+}
 `
 
 var integrationTestingImportTmpl = `
