@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/goccy/go-json"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"

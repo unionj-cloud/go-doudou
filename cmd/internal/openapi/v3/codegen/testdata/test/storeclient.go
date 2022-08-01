@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/goccy/go-json"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -65,8 +65,7 @@ func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers 
 
 // GetStoreInventory Returns pet inventories by status
 // Returns a map of status codes to quantities
-func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map[string]string) (ret struct {
-}, _resp *resty.Response, err error) {
+func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map[string]string) (ret map[string]int, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()

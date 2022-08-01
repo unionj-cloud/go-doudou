@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/goccy/go-json"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -31,35 +31,6 @@ func (receiver *UserClient) SetProvider(provider registry.IServiceProvider) {
 
 func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
-}
-
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Password *string `json:"password,omitempty" url:"password"`
-		Username *string `json:"username,omitempty" url:"username"`
-	}) (ret string, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err = _req.Get("/user/login")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	ret = _resp.String()
-	return
 }
 
 // GetUserUsername Get user by user name
@@ -118,6 +89,35 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 		err = errors.Wrap(_err, "")
 		return
 	}
+	return
+}
+
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Username *string `json:"username,omitempty" url:"username"`
+		Password *string `json:"password,omitempty" url:"password"`
+	}) (ret string, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err = _req.Get("/user/login")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	ret = _resp.String()
 	return
 }
 
