@@ -24,9 +24,35 @@ var appendIntegrationTestingTmpl = `
 	apitest.New().
 		Handler(router).
 		{{$response.OriginalRequest.Method | toCamel}}({{ $response.OriginalRequest.URL.Path | toEndpoint }}).
+{{- range $header := $response.OriginalRequest.Header }}
+{{- if not $header.Disabled }}
+		Header("{{$header.Key}}", "{{$header.Value}}").
+{{- end }}
+{{- end }}
 {{- if $response.OriginalRequest.URL.Query }}
 {{- range $query := $response.OriginalRequest.URL.Query }}
-		Query("{{index $query key}}", "{{index $query value}}").
+		Query("{{index $query "key"}}", "{{index $query "value"}}").
+{{- end }}
+{{- end }}
+{{- if $response.OriginalRequest.Body }}
+{{- if eq $response.OriginalRequest.Body.Mode "raw" }}
+		JSON(` + "`" + `{{$response.OriginalRequest.Body.Raw}}` + "`" + `).
+{{- else if eq $response.OriginalRequest.Body.Mode "urlencoded" }}
+{{- range $query := $response.OriginalRequest.Body.URLEncoded }}
+{{- if not (index $query "disabled") }}
+		FormData("{{index $query "key"}}", "{{index $query "value"}}").
+{{- end }}
+{{- end }}
+{{- else if eq $response.OriginalRequest.Body.Mode "formdata" }}
+{{- range $query := $response.OriginalRequest.Body.FormData }}
+{{- if not (index $query "disabled") }}
+{{- if eq (index $query "type") "file" }}
+		MultipartFile("{{index $query "key"}}", "{{index $query "src"}}").
+{{- else }}
+		MultipartFormData("{{index $query "key"}}", "{{index $query "value"}}").
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 		Expect(t).
@@ -233,7 +259,11 @@ func flattenResponses(items []*postman.Items) []*postman.Response {
 		if len(item.Items) > 0 {
 			result = append(result, flattenResponses(item.Items)...)
 		} else {
-			result = append(result, item.Responses...)
+			for _, resp := range item.Responses {
+				if resp.Name != "Untitled Example" && resp.Name != "response" {
+					result = append(result, resp)
+				}
+			}
 		}
 	}
 	return result

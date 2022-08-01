@@ -10,7 +10,7 @@ var dotenvPath string
 
 // testCmd generates http client code
 var testCmd = &cobra.Command{
-	Use:   "client",
+	Use:   "test",
 	Short: "generates integration testing code from postman collection v2.1 compatible file",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
