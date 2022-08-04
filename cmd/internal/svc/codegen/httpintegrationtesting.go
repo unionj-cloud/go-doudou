@@ -21,7 +21,7 @@ import (
 var appendIntegrationTestingTmpl = `
 {{- range $response := .Responses }}
 
-func Test_{{$response.Name}}(t *testing.T) {
+func Test_{{$response.Name | cleanName}}(t *testing.T) {
 	apitest.New("{{$response.Name}}").
 		Handler(router).
 		{{$response.OriginalRequest.Method | toString | capital}}("{{ $response.OriginalRequest.URL.Path | toEndpoint }}").
@@ -187,6 +187,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 	funcMap["toEndpoint"] = toEndpoint
 	funcMap["toString"] = toString
 	funcMap["capital"] = capital
+	funcMap["cleanName"] = cleanName
 	if tpl, err = template.New("integration_test.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
