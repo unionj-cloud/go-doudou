@@ -12,6 +12,7 @@ type BizError struct {
 	StatusCode int
 	ErrCode    int
 	ErrMsg     string
+	Cause      error
 }
 
 type BizErrorOption func(bizError *BizError)
@@ -25,6 +26,12 @@ func WithStatusCode(statusCode int) BizErrorOption {
 func WithErrCode(errCode int) BizErrorOption {
 	return func(bizError *BizError) {
 		bizError.ErrCode = errCode
+	}
+}
+
+func WithCause(cause error) BizErrorOption {
+	return func(bizError *BizError) {
+		bizError.Cause = cause
 	}
 }
 
