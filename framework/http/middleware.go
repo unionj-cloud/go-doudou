@@ -336,10 +336,9 @@ func basicAuth() func(inner http.Handler) http.Handler {
 func recovery(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			var respErr string
-			statusCode := http.StatusInternalServerError
 			if e := recover(); e != nil {
-				respErr = fmt.Sprintf("%v", e)
+				statusCode := http.StatusInternalServerError
+				respErr := fmt.Sprintf("%v", e)
 				if err, ok := e.(error); ok {
 					if errors.Is(err, context.Canceled) {
 						statusCode = http.StatusBadRequest
@@ -355,8 +354,8 @@ func recovery(inner http.Handler) http.Handler {
 					}
 				}
 				logger.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
+				http.Error(w, respErr, statusCode)
 			}
-			http.Error(w, respErr, statusCode)
 		}()
 		inner.ServeHTTP(w, r)
 	})
