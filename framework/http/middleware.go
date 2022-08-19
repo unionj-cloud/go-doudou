@@ -341,6 +341,11 @@ func recovery(inner http.Handler) http.Handler {
 				if err, ok := e.(error); ok {
 					if errors.Is(err, context.Canceled) {
 						statusCode = http.StatusBadRequest
+					} else {
+						var bizErr BizError
+						if errors.As(err, &bizErr) {
+							statusCode = bizErr.StatusCode
+						}
 					}
 				}
 				logger.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))

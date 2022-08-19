@@ -29,13 +29,13 @@ func WithErrCode(errCode int) BizErrorOption {
 }
 
 // NewBizError is factory function for creating an instance of BizError struct
-func NewBizError(err error, opts ...BizErrorOption) *BizError {
-	bz := &BizError{
+func NewBizError(err error, opts ...BizErrorOption) BizError {
+	bz := BizError{
 		StatusCode: 500,
 		ErrMsg:     err.Error(),
 	}
 	for _, fn := range opts {
-		fn(bz)
+		fn(&bz)
 	}
 	return bz
 }
