@@ -1,6 +1,6 @@
 package vo
 
-import "github.com/goccy/go-json"
+import "encoding/json"
 
 //go:generate go-doudou name --file $GOFILE -o
 

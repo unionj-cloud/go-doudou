@@ -22,7 +22,7 @@ func TestFixImport(t *testing.T) {
 
 import (
 	"fmt"
-"github.com/goccy/go-json"
+"encoding/json"
 )
 
 type UserVo struct {
@@ -52,7 +52,7 @@ fmt.Println(string(b))
 import (
 	"fmt"
 
-	"github.com/goccy/go-json"
+	"encoding/json"
 )
 
 type UserVo struct {
@@ -339,7 +339,7 @@ func TestNewMethodMeta(t *testing.T) {
 func TestGetImportStatements(t *testing.T) {
 	input := `import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
@@ -357,7 +357,7 @@ func TestGetImportStatements(t *testing.T) {
 func TestAppendImportStatements(t *testing.T) {
 	input := `import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -376,28 +376,28 @@ type UsersvcHandlerImpl struct {
 `
 	ret := AppendImportStatements([]byte(input), []byte(`
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 `))
 
 	ret = AppendImportStatements(ret, []byte(`
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 `))
 
 	ret = AppendImportStatements(ret, []byte(`
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 `))
 
 	expected := `import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -425,13 +425,13 @@ func TestAppendImportStatements1(t *testing.T) {
 	input := `import ()`
 	ret := AppendImportStatements([]byte(input), []byte(`
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 `))
 	expected := `import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 )`

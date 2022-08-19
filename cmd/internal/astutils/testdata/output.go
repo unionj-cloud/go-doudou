@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/goccy/go-json"
+	"encoding/json"
 )
 
 type UserVo struct {

@@ -460,7 +460,7 @@ var appendHttpHandlerImplTmpl = `
 
 var importTmpl = `
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"

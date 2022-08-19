@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"testing"
 )

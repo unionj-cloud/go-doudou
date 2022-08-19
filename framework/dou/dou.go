@@ -2,7 +2,7 @@ package dou
 
 import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"

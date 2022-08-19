@@ -1,6 +1,6 @@
 package vo
 
-import "github.com/goccy/go-json"
+import "encoding/json"
 
 //go:generate go-doudou name --file $GOFILE -o
 
@@ -59,5 +59,5 @@ func (k KeyboardLayout) MarshalJSON() ([]byte, error) {
 
 type Keyboard struct {
 	Layout  KeyboardLayout `json:"layout,omitempty"`
-	Backlit bool            `json:"backlit,omitempty"`
+	Backlit bool           `json:"backlit,omitempty"`
 }

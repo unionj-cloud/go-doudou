@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -34,8 +34,8 @@ func (receiver *PageClient) SetClient(client *resty.Client) {
 
 // PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
 func (receiver *PageClient) PostPageUsers(ctx context.Context, _headers map[string]string,
-	// comments above input and output struct type parameters in vo package will display on online document
-	// not comments here
+// comments above input and output struct type parameters in vo package will display on online document
+// not comments here
 	bodyJSON PageQuery) (ret PageUsersResp, _resp *resty.Response, err error) {
 	var _err error
 
@@ -64,8 +64,8 @@ func (receiver *PageClient) PostPageUsers(ctx context.Context, _headers map[stri
 
 // PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
 func (receiver *PageClient) PostPageUsers2(ctx context.Context, _headers map[string]string,
-	// comments above input and output struct type parameters in vo package will display on online document
-	// not comments here
+// comments above input and output struct type parameters in vo package will display on online document
+// not comments here
 	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
 	var _err error
 
