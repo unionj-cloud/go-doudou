@@ -1,7 +1,6 @@
 package astutils
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -87,9 +86,7 @@ func main() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, []byte(expect)) {
-		t.Error("somewhat bad happen")
-	}
+	assert.Equal(t, []byte(expect), got)
 }
 
 func TestMethodMeta_String(t *testing.T) {

@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/cmd"
 	"io/ioutil"
 	"os"
@@ -97,7 +98,5 @@ func NewTestsvcHandler(testsvc service.Testsvc) TestsvcHandler {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(content) != expect {
-		t.Errorf("want %s, got %s\n", expect, string(content))
-	}
+	assert.Equal(t, expect, string(content))
 }
