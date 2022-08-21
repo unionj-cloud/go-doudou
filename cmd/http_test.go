@@ -25,7 +25,7 @@ import (
 	service "testsvc"
 	"testsvc/vo"
 
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"github.com/pkg/errors"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
 )

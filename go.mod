@@ -62,7 +62,6 @@ require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Microsoft/hcsshim v0.8.17 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
-	github.com/anthonynsimon/bild v0.13.0 // indirect
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
 	github.com/containerd/containerd v1.5.2 // indirect
@@ -73,7 +72,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/cache/v8 v8.4.3
-	github.com/goccy/go-json v0.9.10
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -85,12 +83,10 @@ require (
 	github.com/mattn/go-colorable v0.1.12
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/rbretecher/go-postman-collection v0.8.0 // indirect
+	github.com/rbretecher/go-postman-collection v0.8.0
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/steinfletcher/apitest v1.5.12 // indirect
-	github.com/steinfletcher/apitest-jsonpath v1.7.1 // indirect
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect

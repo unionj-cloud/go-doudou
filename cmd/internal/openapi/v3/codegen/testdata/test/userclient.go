@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -35,8 +35,8 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 
 // GetUserUsername Get user by user name
 func (receiver *UserClient) GetUserUsername(ctx context.Context, _headers map[string]string,
-	// The name that needs to be fetched. Use user1 for testing.
-	// required
+// The name that needs to be fetched. Use user1 for testing.
+// required
 	username string) (ret User, _resp *resty.Response, err error) {
 	var _err error
 
@@ -95,9 +95,9 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 // GetUserLogin Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
-		Password *string `json:"password,omitempty" url:"password"`
-	}) (ret string, _resp *resty.Response, err error) {
+	Username *string `json:"username,omitempty" url:"username"`
+	Password *string `json:"password,omitempty" url:"password"`
+}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()

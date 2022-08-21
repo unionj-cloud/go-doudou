@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -39,9 +39,9 @@ func (receiver *UploadClient) SetClient(client *resty.Client) {
 // remember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic
 func (receiver *UploadClient) PostUploadAvatar(ctx context.Context, _headers map[string]string,
 	bodyParams struct {
-		// required
-		Ps string `json:"ps,omitempty" url:"ps"`
-	},
+	// required
+	Ps string `json:"ps,omitempty" url:"ps"`
+},
 	pf []v3.FileModel) (ret UploadAvatarResp, _resp *resty.Response, err error) {
 	var _err error
 
@@ -80,9 +80,9 @@ func (receiver *UploadClient) PostUploadAvatar(ctx context.Context, _headers map
 // remember to close the readers by Close method of v3.FileModel if you don't need them anymore when you finished your own business logic
 func (receiver *UploadClient) PostUploadAvatar2(ctx context.Context, _headers map[string]string,
 	bodyParams struct {
-		// required
-		Ps string `json:"ps,omitempty" url:"ps"`
-	},
+	// required
+	Ps string `json:"ps,omitempty" url:"ps"`
+},
 	pf2 *v3.FileModel,
 	pf3 *v3.FileModel,
 	pf []v3.FileModel) (ret UploadAvatar2Resp, _resp *resty.Response, err error) {

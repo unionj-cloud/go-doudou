@@ -1,7 +1,7 @@
 package v3
 
 import (
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/copier"
 	. "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"

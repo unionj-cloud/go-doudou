@@ -2,7 +2,7 @@ package table
 
 import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"

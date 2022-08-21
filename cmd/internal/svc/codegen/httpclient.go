@@ -23,7 +23,7 @@ package client
 
 import (
 	"context"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/toolkit/fileutils"

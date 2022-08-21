@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -35,8 +35,8 @@ func (receiver *StoreClient) SetClient(client *resty.Client) {
 // GetStoreOrderOrderId Find purchase order by ID
 // For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions
 func (receiver *StoreClient) GetStoreOrderOrderId(ctx context.Context, _headers map[string]string,
-	// ID of order that needs to be fetched
-	// required
+// ID of order that needs to be fetched
+// required
 	orderId int64) (ret Order, _resp *resty.Response, err error) {
 	var _err error
 

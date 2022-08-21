@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/subtle"
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"fmt"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"
@@ -338,13 +338,23 @@ func recovery(inner http.Handler) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				statusCode := http.StatusInternalServerError
+				respErr := fmt.Sprintf("%v", e)
 				if err, ok := e.(error); ok {
 					if errors.Is(err, context.Canceled) {
 						statusCode = http.StatusBadRequest
+					} else {
+						var bizErr BizError
+						if errors.As(err, &bizErr) {
+							statusCode = bizErr.StatusCode
+							if bizErr.Cause != nil {
+								e = bizErr.Cause
+							}
+							respErr = bizErr.Error()
+						}
 					}
 				}
 				logger.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
-				http.Error(w, fmt.Sprintf("%v", e), statusCode)
+				http.Error(w, respErr, statusCode)
 			}
 		}()
 		inner.ServeHTTP(w, r)

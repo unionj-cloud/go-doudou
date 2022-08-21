@@ -2,8 +2,8 @@ package codegen
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/goccy/go-json"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"

@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"testsvc/vo"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"

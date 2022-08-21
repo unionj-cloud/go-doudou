@@ -66,7 +66,7 @@ func ExampleCriteria() {
 func TestCriteriaAppend(t *testing.T) {
 	sqlStatement := C().Col("name").Eq("wubin").Or(C().Col("school").Eq("havard")).
 		And(C().Col("age").Eq(18)).
-		Or(C().Col("score").Gte(90).And(C().Col("height").Gt(160).End(String("anything")).And(C().Col("height").Lte(170).
+		Or(C().Col("score").Gte(90).And(C().Col("height").Gt(160).And(C().Col("height").Lte(170).
 			Append(String("and favourite = 'Go'")))))
 	str, _ := sqlStatement.Sql()
 	require.Equal(t, "(((`name` = ? or `school` = ?) and `age` = ?) or (`score` >= ? and (`height` > ? and (`height` <= ? and favourite = 'Go'))))", str)

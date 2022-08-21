@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"encoding/json"
 	"github.com/go-resty/resty/v2"
-	"github.com/goccy/go-json"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -37,8 +37,8 @@ func (receiver *PetClient) SetClient(client *resty.Client) {
 // GetPetPetId Find pet by ID
 // Returns a single pet
 func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
-	// ID of pet to return
-	// required
+// ID of pet to return
+// required
 	petId int64) (ret Pet, _resp *resty.Response, err error) {
 	var _err error
 
@@ -68,10 +68,10 @@ func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]
 // PostPetPetIdUploadImage uploads an image
 func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		AdditionalMetadata *string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
-	},
-	// ID of pet to update
-	// required
+	AdditionalMetadata *string `json:"additionalMetadata,omitempty" url:"additionalMetadata"`
+},
+// ID of pet to update
+// required
 	petId int64,
 	file *v3.FileModel) (ret ApiResponse, _resp *resty.Response, err error) {
 	var _err error
@@ -108,8 +108,8 @@ func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers
 // Multiple status values can be provided with comma separated strings
 func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Status *string `json:"status,omitempty" url:"status"`
-	}) (ret []Pet, _resp *resty.Response, err error) {
+	Status *string `json:"status,omitempty" url:"status"`
+}) (ret []Pet, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
@@ -140,8 +140,8 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[
 // Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
 func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Tags *[]string `json:"tags,omitempty" url:"tags"`
-	}) (ret []Pet, _resp *resty.Response, err error) {
+	Tags *[]string `json:"tags,omitempty" url:"tags"`
+}) (ret []Pet, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()

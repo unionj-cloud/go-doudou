@@ -1,8 +1,8 @@
 package astutils
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
 	"go/ast"

@@ -12,6 +12,7 @@ type BizError struct {
 	StatusCode int
 	ErrCode    int
 	ErrMsg     string
+	Cause      error
 }
 
 type BizErrorOption func(bizError *BizError)
@@ -28,14 +29,20 @@ func WithErrCode(errCode int) BizErrorOption {
 	}
 }
 
+func WithCause(cause error) BizErrorOption {
+	return func(bizError *BizError) {
+		bizError.Cause = cause
+	}
+}
+
 // NewBizError is factory function for creating an instance of BizError struct
-func NewBizError(err error, opts ...BizErrorOption) *BizError {
-	bz := &BizError{
+func NewBizError(err error, opts ...BizErrorOption) BizError {
+	bz := BizError{
 		StatusCode: 500,
 		ErrMsg:     err.Error(),
 	}
 	for _, fn := range opts {
-		fn(bz)
+		fn(&bz)
 	}
 	return bz
 }

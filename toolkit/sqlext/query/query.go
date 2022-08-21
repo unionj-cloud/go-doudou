@@ -207,7 +207,7 @@ func (c Criteria) End(q Base) Where {
 	w := Where{
 		children: make([]Base, 0),
 	}
-	w.children = append(w.children, c, String(""))
+	w.children = append(w.children, c, q)
 	w.lsym = logicsymbol.End
 	return w
 }

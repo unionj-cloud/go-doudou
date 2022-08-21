@@ -1,6 +1,6 @@
 package main
 
-import "github.com/goccy/go-json"
+import "encoding/json"
 
 //go:generate go-doudou name --file $GOFILE -o
 
@@ -12,7 +12,7 @@ const (
 
 	AZERTY int64 = 400
 	QWERTY
-	ddd          = "abc"
+	ddd = "abc"
 )
 
 func (k *KeyboardLayout) StringSetter(value string) {
