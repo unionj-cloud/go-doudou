@@ -121,6 +121,14 @@ func (receiver {{.DomainName}}DaoImpl) Insert(ctx context.Context, data interfac
 			{{- else }}
 			{{.DomainName | ToLower}}.{{.PkField.Name}} = {{.PkField.Type}}(lastInsertID)
 			{{- end }}
+		} else if {{.DomainName | ToLower}}s, ok := data.([]*domain.{{.DomainName}}); ok {
+			for i, item :=range {{.DomainName | ToLower}}s {
+				{{- if eq .PkField.Type "int64"}}
+				item.{{.PkField.Name}} = lastInsertID + i
+				{{- else }}
+				item.{{.PkField.Name}} = {{.PkField.Type}}(lastInsertID) + i
+				{{- end }}
+			}
 		}
 	}
 	{{- end }}
@@ -132,6 +140,34 @@ func (receiver {{.DomainName}}DaoImpl) Insert(ctx context.Context, data interfac
 		{{- end }}
 	}
 	return affected, err
+}
+
+func (receiver {{.DomainName}}DaoImpl) InsertIgnore(ctx context.Context, data interface{}) (int64, error) {
+	var (
+		statement    string
+		err          error
+		result       sql.Result
+		affected     int64
+	)
+	receiver.BeforeSaveHook(ctx, data)
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "InsertIgnore{{.DomainName}}", nil); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if result, err = receiver.db.NamedExecContext(ctx, statement, data); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, 0, affected)
+	}
+	return affected, err
+}
+
+func (receiver {{.DomainName}}DaoImpl) BulkInsert(ctx context.Context, data interface{}) (int64, error) {
+	return receiver.Insert(ctx, data)
+}
+
+func (receiver {{.DomainName}}DaoImpl) BulkInsertIgnore(ctx context.Context, data interface{}) (int64, error) {
+	return receiver.InsertIgnore(ctx, data)
 }
 
 // Upsert With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row,
@@ -176,6 +212,70 @@ func (receiver {{.DomainName}}DaoImpl) Upsert(ctx context.Context, data interfac
 		{{- else }}
 		receiver.AfterSaveHook(ctx, data, 0, affected)
 		{{- end }}
+	}
+	return affected, err
+}
+
+func (receiver {{.DomainName}}DaoImpl) BulkUpsert(ctx context.Context, data interface{}) (int64, error) {
+	var (
+		statement    string
+		updateClause string
+		err          error
+		result       sql.Result
+		affected     int64
+		args      []interface{}
+	)
+	receiver.BeforeSaveHook(ctx, data)
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Insert{{.DomainName}}", nil); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	statement, args, err = receiver.db.BindNamed(statement, data)
+	if err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if updateClause, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "UpdateClause{{.DomainName}}", nil); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	statement += "\n" + updateClause
+	if result, err = receiver.db.ExecContext(ctx, statement, args...); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, 0, affected)
+	}
+	return affected, err
+}
+
+func (receiver {{.DomainName}}DaoImpl) BulkUpsertSelect(ctx context.Context, data interface{}, columns []string) (int64, error) {
+	var (
+		statement    string
+		updateClause string
+		err          error
+		result       sql.Result
+		affected     int64
+		args      []interface{}
+	)
+	receiver.BeforeSaveHook(ctx, data)
+	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Insert{{.DomainName}}", nil); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	statement, args, err = receiver.db.BindNamed(statement, data)
+	if err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if updateClause, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "UpdateClauseSelect{{.DomainName}}", struct {
+		Columns []string
+	}{
+		Columns: columns,
+	}); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	statement += "\n" + updateClause
+	if result, err = receiver.db.ExecContext(ctx, statement, args...); err != nil {
+		return 0, errors.Wrap(err, caller.NewCaller().String())
+	}
+	if affected, err = result.RowsAffected(); err == nil {
+		receiver.AfterSaveHook(ctx, data, 0, affected)
 	}
 	return affected, err
 }

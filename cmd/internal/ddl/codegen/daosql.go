@@ -102,6 +102,36 @@ SET
 UPDATE ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 SET
     {{` + "`" + `{{` + "`" + `}}Eval "NoneZeroSet" . | TrimSuffix ","{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
+
+{{` + "`" + `{{` + "`" + `}}define "InsertIgnore{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+INSERT IGNORE INTO ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+` + "`" + `{{$co.Name}}` + "`" + `
+{{- end }})
+VALUES ({{- range $i, $co := .InsertColumns}}
+	   {{- if $i}},{{end}}
+	   :{{$co.Name}}
+	   {{- end }})
+{{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
+
+{{` + "`" + `{{` + "`" + `}}define "UpdateClause{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+ON DUPLICATE KEY
+UPDATE
+		{{- range $i, $co := .UpdateColumns}}
+		{{- if $i}},{{end}}
+		` + "`" + `{{$co.Name}}` + "`" + `=VALUES({{$co.Name}})
+		{{- end }}
+{{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
+
+{{` + "`" + `{{` + "`" + `}}define "UpdateClauseSelect{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+ON DUPLICATE KEY
+UPDATE
+		{{` + "`" + `{{` + "`" + `}}- range $i, $co := .Columns{{` + "`" + `}}` + "`" + `}}
+		{{` + "`" + `{{` + "`" + `}}- if $i{{` + "`" + `}}` + "`" + `}},{{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
+		` + "`" + `{{` + "`" + `{{` + "`" + `}}$co{{` + "`" + `}}` + "`" + `}}` + "`" + `=VALUES({{` + "`" + `{{` + "`" + `}}$co{{` + "`" + `}}` + "`" + `}})
+		{{` + "`" + `{{` + "`" + `}}- end {{` + "`" + `}}` + "`" + `}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}`
 
 // GenDaoSQL generates sql statements used by dao layer

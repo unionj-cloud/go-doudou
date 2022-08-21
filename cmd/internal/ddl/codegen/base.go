@@ -20,9 +20,20 @@ import (
 )
 
 type Base interface {
+	// Insert can be used as BulkInsert if you pass slice to data parameter
 	Insert(ctx context.Context, data interface{}) (int64, error)
+	// InsertIgnore can be used as BulkInsertIgnore if you pass slice to data parameter, returns affected and error
+	InsertIgnore(ctx context.Context, data interface{}) (int64, error)
+	// BulkInsert is alias for Insert
+	BulkInsert(ctx context.Context, data interface{}) (int64, error)
+	// BulkInsertIgnore is alias for InsertIgnore
+	BulkInsertIgnore(ctx context.Context, data interface{}) (int64, error)
 	Upsert(ctx context.Context, data interface{}) (int64, error)
 	UpsertNoneZero(ctx context.Context, data interface{}) (int64, error)
+	// BulkUpsert can accept slice type as data parameter only
+	BulkUpsert(ctx context.Context, data interface{}) (int64, error)
+	// BulkUpsertSelect can accept slice type as data parameter only, and only update columns value
+	BulkUpsertSelect(ctx context.Context, data interface{}, columns []string) (int64, error)
 	Update(ctx context.Context, data interface{}) (int64, error)
 	UpdateNoneZero(ctx context.Context, data interface{}) (int64, error)
 	BeforeSaveHook(ctx context.Context, data interface{})
