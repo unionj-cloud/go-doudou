@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 )
 
 type UserVo struct {

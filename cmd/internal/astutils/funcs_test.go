@@ -20,8 +20,8 @@ func TestFixImport(t *testing.T) {
 	code := `package main
 
 import (
+	"encoding/json"
 	"fmt"
-"encoding/json"
 )
 
 type UserVo struct {
@@ -49,9 +49,8 @@ fmt.Println(string(b))
 	expect := `package main
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 )
 
 type UserVo struct {
@@ -86,7 +85,7 @@ func main() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, []byte(expect), got)
+	assert.Equal(t, expect, string(got))
 }
 
 func TestMethodMeta_String(t *testing.T) {

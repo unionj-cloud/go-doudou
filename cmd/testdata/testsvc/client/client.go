@@ -6,12 +6,12 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"testsvc/vo"
 
-	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"

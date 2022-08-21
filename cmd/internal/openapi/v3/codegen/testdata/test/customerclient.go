@@ -2,10 +2,10 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	_querystring "github.com/google/go-querystring/query"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -34,9 +34,9 @@ func (receiver *CustomerClient) SetClient(client *resty.Client) {
 }
 func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context, _headers map[string]string,
 	queryParams struct {
-	// required
-	Token string `json:"token,omitempty" url:"token"`
-}) (ret bool, _resp *resty.Response, err error) {
+		// required
+		Token string `json:"token,omitempty" url:"token"`
+	}) (ret bool, _resp *resty.Response, err error) {
 	var _err error
 
 	_req := receiver.client.R()
