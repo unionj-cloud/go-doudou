@@ -20,6 +20,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"path"
@@ -245,6 +246,13 @@ func (srv *DefaultHttpSrv) Run() {
 			PathPrefix("/statsviz/").
 			Name("GetStatsviz").
 			Handler(statsviz.IndexAtRoot(gddPathPrefix + "statsviz/"))
+		debugRouter := srv.rootRouter.PathPrefix("/debug/").Subrouter().StrictSlash(true)
+		debugRouter.Use(basicAuth())
+		debugRouter.Methods(http.MethodGet).Path("/pprof/cmdline").Name("GetDebugIndex").HandlerFunc(pprof.Cmdline)
+		debugRouter.Methods(http.MethodGet).Path("/pprof/profile").Name("GetDebugIndex").HandlerFunc(pprof.Profile)
+		debugRouter.Methods(http.MethodGet).Path("/pprof/symbol").Name("GetDebugIndex").HandlerFunc(pprof.Symbol)
+		debugRouter.Methods(http.MethodGet).Path("/pprof/trace").Name("GetDebugIndex").HandlerFunc(pprof.Trace)
+		debugRouter.Methods(http.MethodGet).PathPrefix("/pprof/").Name("GetDebugIndex").HandlerFunc(pprof.Index)
 	}
 	srv.middlewares = append(srv.middlewares, recovery)
 	srv.Use(srv.middlewares...)
