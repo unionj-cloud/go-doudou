@@ -3,6 +3,7 @@ package ddhttp
 import (
 	"context"
 	"fmt"
+	"github.com/NYTimes/gziphandler"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
@@ -58,7 +59,7 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		metrics,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		srv.middlewares = append(srv.middlewares, handlers.CompressHandler)
+		srv.middlewares = append(srv.middlewares, gziphandler.GzipHandler)
 	}
 	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
 		srv.middlewares = append(srv.middlewares, log)

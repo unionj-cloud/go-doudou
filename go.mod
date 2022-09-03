@@ -45,7 +45,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/btree v1.0.1
 	github.com/google/go-github/v42 v42.0.0
-	github.com/gorilla/handlers v0.0.0-20150720190736-60c7bfde3e33
+	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-msgpack v1.1.5
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-sockaddr v1.0.2
@@ -61,6 +61,7 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Microsoft/hcsshim v0.8.17 // indirect
+	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
