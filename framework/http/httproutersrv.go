@@ -44,6 +44,9 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
 		rr = config.GddRouteRootPath.Load()
 	}
+	if stringutils.IsEmpty(rr) {
+		rr = "/"
+	}
 	rootRouter := httprouter.New()
 	srv := &HttpRouterSrv{
 		Router:     rootRouter.NewGroup(rr),

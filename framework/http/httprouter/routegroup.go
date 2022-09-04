@@ -1,6 +1,7 @@
 package httprouter
 
 import (
+	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"net/http"
 )
 
@@ -9,9 +10,20 @@ type RouteGroup struct {
 	p string
 }
 
+func validatePath(path string) {
+	if stringutils.IsEmpty(path) {
+		panic("path should not be empty")
+	}
+	if path[0] != '/' {
+		panic("path must start with a '/'")
+	}
+}
+
 func newRouteGroup(r *Router, path string) *RouteGroup {
+	validatePath(path)
+
 	//Strip traling / (if present) as all added sub paths must start with a /
-	if len(path) > 0 && path[len(path)-1] == '/' {
+	if path[len(path)-1] == '/' {
 		path = path[:len(path)-1]
 	}
 	return &RouteGroup{r: r, p: path}
@@ -56,8 +68,6 @@ func (r *RouteGroup) DELETE(path string, handle Handle) {
 }
 
 func (r *RouteGroup) subPath(path string) string {
-	if path[0] != '/' {
-		panic("path must start with a '/'")
-	}
+	validatePath(path)
 	return r.p + path
 }
