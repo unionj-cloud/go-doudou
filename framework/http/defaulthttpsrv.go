@@ -30,14 +30,18 @@ import (
 	"time"
 )
 
-// DefaultHttpSrv wraps gorilla mux router
-type DefaultHttpSrv struct {
-	*mux.Router
-	rootRouter  *mux.Router
+type common struct {
 	gddRoutes   []model.Route
 	debugRoutes []model.Route
 	bizRoutes   []model.Route
-	middlewares []mux.MiddlewareFunc
+	Middlewares []mux.MiddlewareFunc
+}
+
+// DefaultHttpSrv wraps gorilla mux router
+type DefaultHttpSrv struct {
+	*mux.Router
+	rootRouter *mux.Router
+	common
 }
 
 const gddPathPrefix = "/go-doudou/"
@@ -54,24 +58,24 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		Router:     rootRouter.PathPrefix(rr).Subrouter().StrictSlash(true),
 		rootRouter: rootRouter,
 	}
-	srv.middlewares = append(srv.middlewares,
+	srv.Middlewares = append(srv.Middlewares,
 		tracing,
 		metrics,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		srv.middlewares = append(srv.middlewares, gziphandler.GzipHandler)
+		srv.Middlewares = append(srv.Middlewares, gziphandler.GzipHandler)
 	}
 	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
-		srv.middlewares = append(srv.middlewares, log)
+		srv.Middlewares = append(srv.Middlewares, log)
 	}
-	srv.middlewares = append(srv.middlewares,
+	srv.Middlewares = append(srv.Middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
 	)
 	appType := config.GddAppType.LoadOrDefault(config.DefaultGddAppType)
 	switch strings.TrimSpace(appType) {
 	case "rest":
-		srv.middlewares = append(srv.middlewares, rest)
+		srv.Middlewares = append(srv.Middlewares, rest)
 	}
 	return srv
 }
@@ -117,7 +121,7 @@ func (srv *DefaultHttpSrv) printRoutes() {
 // AddMiddleware adds middlewares to the end of chain
 func (srv *DefaultHttpSrv) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
 	for _, item := range mwf {
-		srv.middlewares = append(srv.middlewares, item)
+		srv.Middlewares = append(srv.Middlewares, item)
 	}
 }
 
@@ -127,7 +131,7 @@ func (srv *DefaultHttpSrv) PreMiddleware(mwf ...func(http.Handler) http.Handler)
 	for _, item := range mwf {
 		middlewares = append(middlewares, item)
 	}
-	srv.middlewares = append(middlewares, srv.middlewares...)
+	srv.Middlewares = append(middlewares, srv.Middlewares...)
 }
 
 func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
@@ -184,7 +188,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 func (srv *DefaultHttpSrv) Run() {
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
-		srv.middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.middlewares...)
+		srv.Middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.Middlewares...)
 		gddRouter := srv.rootRouter.PathPrefix(gddPathPrefix).Subrouter().StrictSlash(true)
 		corsOpts := cors.New(cors.Options{
 			AllowedMethods: []string{
@@ -277,7 +281,7 @@ func (srv *DefaultHttpSrv) Run() {
 				Pattern: debugPathPrefix + "pprof/",
 			},
 		}...)
-		debugRouter := srv.rootRouter.PathPrefix("/debug/").Subrouter().StrictSlash(true)
+		debugRouter := srv.rootRouter.PathPrefix(debugPathPrefix).Subrouter().StrictSlash(true)
 		debugRouter.Use(basicAuth())
 		debugRouter.Methods(http.MethodGet).Path("/pprof/cmdline").Name("GetDebugPprofCmdline").HandlerFunc(pprof.Cmdline)
 		debugRouter.Methods(http.MethodGet).Path("/pprof/profile").Name("GetDebugPprofProfile").HandlerFunc(pprof.Profile)
@@ -285,8 +289,8 @@ func (srv *DefaultHttpSrv) Run() {
 		debugRouter.Methods(http.MethodGet).Path("/pprof/trace").Name("GetDebugPprofTrace").HandlerFunc(pprof.Trace)
 		debugRouter.Methods(http.MethodGet).PathPrefix("/pprof/").Name("GetDebugPprofIndex").HandlerFunc(pprof.Index)
 	}
-	srv.middlewares = append(srv.middlewares, recovery)
-	srv.Use(srv.middlewares...)
+	srv.Middlewares = append(srv.Middlewares, recovery)
+	srv.Use(srv.Middlewares...)
 	for _, item := range srv.bizRoutes {
 		srv.
 			Methods(item.Method, http.MethodOptions).
@@ -300,7 +304,7 @@ func (srv *DefaultHttpSrv) Run() {
 		w.Write([]byte("405 method not allowed"))
 	}).GetHandler()
 
-	for _, item := range srv.middlewares {
+	for _, item := range srv.Middlewares {
 		srv.rootRouter.NotFoundHandler = item.Middleware(srv.rootRouter.NotFoundHandler)
 		srv.rootRouter.MethodNotAllowedHandler = item.Middleware(srv.rootRouter.MethodNotAllowedHandler)
 	}
