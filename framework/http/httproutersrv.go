@@ -215,21 +215,31 @@ func (srv *HttpRouterSrv) Run() {
 				config.GddStatsFreq.Load(), err.Error(), config.DefaultGddStatsFreq)
 			freq, _ = time.ParseDuration(config.DefaultGddStatsFreq)
 		}
+		_ = freq
 		srv.gddRoutes = append(srv.gddRoutes, []model.Route{
 			{
-				Name:        "GetStatsvizWs",
-				Method:      http.MethodGet,
-				Pattern:     gddPathPrefix + "statsviz/ws",
-				HandlerFunc: statsviz.NewWsHandler(freq),
+				Name:    "GetStatsvizWs",
+				Method:  http.MethodGet,
+				Pattern: gddPathPrefix + "statsviz/ws",
 			},
 			{
-				Name:        "GetStatsviz",
-				Method:      http.MethodGet,
-				Pattern:     gddPathPrefix + "statsviz/*all",
-				HandlerFunc: statsviz.IndexAtRoot(gddPathPrefix + "statsviz/"),
+				Name:    "GetStatsviz",
+				Method:  http.MethodGet,
+				Pattern: gddPathPrefix + "statsviz/*filepath",
+				HandlerFunc: func(writer http.ResponseWriter, request *http.Request) {
+					params := httprouter.ParamsFromContext(request.Context())
+					if params.ByName("filepath") == "/ws" {
+						statsviz.Ws(writer, request)
+						return
+					}
+					statsviz.IndexAtRoot(gddPathPrefix+"statsviz/").ServeHTTP(writer, request)
+				},
 			},
 		}...)
 		for _, item := range srv.gddRoutes {
+			if item.HandlerFunc == nil {
+				continue
+			}
 			h := http.Handler(item.HandlerFunc)
 			for i := len(gddMiddlewares) - 1; i >= 0; i-- {
 				h = gddMiddlewares[i].Middleware(h)
@@ -238,39 +248,59 @@ func (srv *HttpRouterSrv) Run() {
 		}
 		srv.debugRoutes = append(srv.debugRoutes, []model.Route{
 			{
-				Name:        "GetDebugPprofCmdline",
-				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/cmdline",
-				HandlerFunc: pprof.Cmdline,
+				Name:    "GetDebugPprofCmdline",
+				Method:  http.MethodGet,
+				Pattern: debugPathPrefix + "pprof/cmdline",
 			},
 			{
-				Name:        "GetDebugPprofProfile",
-				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/profile",
-				HandlerFunc: pprof.Profile,
+				Name:    "GetDebugPprofProfile",
+				Method:  http.MethodGet,
+				Pattern: debugPathPrefix + "pprof/profile",
 			},
 			{
-				Name:        "GetDebugPprofSymbol",
-				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/symbol",
-				HandlerFunc: pprof.Symbol,
+				Name:    "GetDebugPprofSymbol",
+				Method:  http.MethodGet,
+				Pattern: debugPathPrefix + "pprof/symbol",
 			},
 			{
-				Name:        "GetDebugPprofTrace",
-				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/trace",
-				HandlerFunc: pprof.Trace,
+				Name:    "GetDebugPprofTrace",
+				Method:  http.MethodGet,
+				Pattern: debugPathPrefix + "pprof/trace",
 			},
 			{
-				Name:        "GetDebugPprofIndex",
-				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/*all",
-				HandlerFunc: pprof.Index,
+				Name:    "GetDebugPprofIndex",
+				Method:  http.MethodGet,
+				Pattern: debugPathPrefix + "pprof/*filepath",
+				HandlerFunc: func(writer http.ResponseWriter, request *http.Request) {
+					params := httprouter.ParamsFromContext(request.Context())
+					switch params.ByName("filepath") {
+					case "/cmdline":
+						pprof.Cmdline(writer, request)
+						return
+					case "/profile":
+						pprof.Profile(writer, request)
+						return
+					case "/symbol":
+						pprof.Symbol(writer, request)
+						return
+					case "/trace":
+						pprof.Trace(writer, request)
+						return
+					}
+					pprof.Index(writer, request)
+				},
 			},
 		}...)
 		debugRouter := srv.rootRouter.NewGroup(strings.TrimSuffix(debugPathPrefix, "/"))
 		for _, item := range srv.debugRoutes {
-			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), basicAuthMiddle.Middleware(http.Handler(item.HandlerFunc)), item.Name)
+			if item.HandlerFunc == nil {
+				continue
+			}
+			h := http.Handler(item.HandlerFunc)
+			for i := len(gddMiddlewares) - 1; i >= 0; i-- {
+				h = gddMiddlewares[i].Middleware(h)
+			}
+			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), h, item.Name)
 		}
 	}
 	srv.Middlewares = append(srv.Middlewares, recovery)
