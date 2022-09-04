@@ -51,7 +51,7 @@ func TestRouter(t *testing.T) {
 	routed := false
 	router.Handle(http.MethodGet, "/user/:name", func(w http.ResponseWriter, r *http.Request, ps Params) {
 		routed = true
-		want := Params{Param{"name", "gopher"}}
+		want := Params{Param{"name", "gopher"}, Param{"$matchedRoutePath", "/user/:name"}}
 		if !reflect.DeepEqual(ps, want) {
 			t.Fatalf("wrong wildcard values: want %v, got %v", want, ps)
 		}
@@ -568,7 +568,7 @@ func TestRouterLookup(t *testing.T) {
 func TestRouterParamsFromContext(t *testing.T) {
 	routed := false
 
-	wantParams := Params{Param{"name", "gopher"}}
+	wantParams := Params{Param{"name", "gopher"}, Param{"$matchedRoutePath", "/user/:name"}}
 	handlerFunc := func(_ http.ResponseWriter, req *http.Request) {
 		// get params from request context
 		params := ParamsFromContext(req.Context())
@@ -581,6 +581,7 @@ func TestRouterParamsFromContext(t *testing.T) {
 	}
 
 	var nilParams Params
+	nilParams = Params{Param{"$matchedRoutePath", "/user"}}
 	handlerFuncNil := func(_ http.ResponseWriter, req *http.Request) {
 		// get params from request context
 		params := ParamsFromContext(req.Context())
