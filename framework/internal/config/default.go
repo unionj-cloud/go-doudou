@@ -23,7 +23,7 @@ const (
 	DefaultGddManage             = true
 	DefaultGddManageUser         = "admin"
 	DefaultGddManagePass         = "admin"
-	DefaultGddTracingMetricsRoot = FrameworkName
+	DefaultGddTracingMetricsRoot = "tracing"
 	DefaultGddWeight             = 1
 
 	// Default configs for memberlist component

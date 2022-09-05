@@ -26,24 +26,16 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-var totalRequests = prometheus.NewCounterVec(
+var countRequests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Number of get requests.",
+		Name: "go_doudou_http_request_count",
+		Help: "Number of http requests.",
 	},
-	[]string{"path", "method"},
-)
-
-var responseStatus = prometheus.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "response_status",
-		Help: "Status of HTTP response",
-	},
-	[]string{"status"},
+	[]string{"path", "method", "status"},
 )
 
 var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "http_response_time_seconds",
+	Name: "go_doudou_http_response_time_seconds",
 	Help: "Duration of HTTP requests.",
 }, []string{"path", "method"})
 
@@ -59,15 +51,13 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 
 		statusCode := rw.statusCode
 
-		responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
-		totalRequests.WithLabelValues(path, method).Inc()
+		countRequests.WithLabelValues(path, method, strconv.Itoa(statusCode)).Inc()
 
 		timer.ObserveDuration()
 	})
 }
 
 func init() {
-	prometheus.Register(totalRequests)
-	prometheus.Register(responseStatus)
+	prometheus.Register(countRequests)
 	prometheus.Register(httpDuration)
 }

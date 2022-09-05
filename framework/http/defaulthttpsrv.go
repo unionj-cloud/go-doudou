@@ -319,6 +319,8 @@ func (srv *DefaultHttpSrv) Run() {
 			},
 		}...)
 		debugRouter := srv.rootRouter.PathPrefix(debugPathPrefix).Subrouter().StrictSlash(true)
+		debugRouter.Use(metrics)
+		debugRouter.Use(corsOpts.Handler)
 		debugRouter.Use(basicAuth())
 		debugRouter.Methods(http.MethodGet).Path("/pprof/cmdline").Name("GetDebugPprofCmdline").HandlerFunc(pprof.Cmdline)
 		debugRouter.Methods(http.MethodGet).Path("/pprof/profile").Name("GetDebugPprofProfile").HandlerFunc(pprof.Profile)
