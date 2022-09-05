@@ -57,7 +57,11 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 		metrics,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		srv.Middlewares = append(srv.Middlewares, gziphandler.GzipHandler)
+		gzipMiddleware, err := gziphandler.GzipHandlerWithOpts(gziphandler.ContentTypes(contentTypeShouldbeGzip))
+		if err != nil {
+			panic(err)
+		}
+		srv.Middlewares = append(srv.Middlewares, gzipMiddleware)
 	}
 	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
 		srv.Middlewares = append(srv.Middlewares, log)
@@ -183,7 +187,7 @@ func (srv *HttpRouterSrv) Run() {
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
 		srv.Middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.Middlewares...)
-		gddRouter := srv.rootRouter.NewGroup(strings.TrimSuffix(gddPathPrefix, "/"))
+		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
 		corsOpts := cors.New(cors.Options{
 			AllowedMethods: []string{
 				http.MethodGet,
@@ -294,7 +298,7 @@ func (srv *HttpRouterSrv) Run() {
 				},
 			},
 		}...)
-		debugRouter := srv.rootRouter.NewGroup(strings.TrimSuffix(debugPathPrefix, "/"))
+		debugRouter := srv.rootRouter.NewGroup(debugPathPrefix)
 		for _, item := range srv.debugRoutes {
 			if item.HandlerFunc == nil {
 				continue

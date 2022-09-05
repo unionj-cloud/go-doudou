@@ -47,6 +47,39 @@ type DefaultHttpSrv struct {
 const gddPathPrefix = "/go-doudou/"
 const debugPathPrefix = "/debug/"
 
+var contentTypeShouldbeGzip []string
+
+func init() {
+	contentTypeShouldbeGzip = []string{
+		"text/html",
+		"text/css",
+		"text/plain",
+		"text/xml",
+		"text/x-component",
+		"text/javascript",
+		"application/x-javascript",
+		"application/javascript",
+		"application/json",
+		"application/manifest+json",
+		"application/vnd.api+json",
+		"application/xml",
+		"application/xhtml+xml",
+		"application/rss+xml",
+		"application/atom+xml",
+		"application/vnd.ms-fontobject",
+		"application/x-font-ttf",
+		"application/x-font-opentype",
+		"application/x-font-truetype",
+		"image/svg+xml",
+		"image/x-icon",
+		"image/vnd.microsoft.icon",
+		"font/ttf",
+		"font/eot",
+		"font/otf",
+		"font/opentype",
+	}
+}
+
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rr := config.DefaultGddRouteRootPath
@@ -63,7 +96,11 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		metrics,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		srv.Middlewares = append(srv.Middlewares, gziphandler.GzipHandler)
+		gzipMiddleware, err := gziphandler.GzipHandlerWithOpts(gziphandler.ContentTypes(contentTypeShouldbeGzip))
+		if err != nil {
+			panic(err)
+		}
+		srv.Middlewares = append(srv.Middlewares, gzipMiddleware)
 	}
 	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
 		srv.Middlewares = append(srv.Middlewares, log)
