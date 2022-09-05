@@ -2,7 +2,7 @@ package config
 
 import "github.com/unionj-cloud/go-doudou/framework/configmgr"
 
-const FrameworkName = "Go-doudou"
+const FrameworkName = "go-doudou"
 
 const (
 	// Default configs for framework component

@@ -11,26 +11,21 @@ import (
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"io"
 )
 
 // Init returns an instance of Jaeger Tracer.
 func Init() (opentracing.Tracer, io.Closer) {
-	service := ddconfig.DefaultGddServiceName
-	if stringutils.IsNotEmpty(ddconfig.GddServiceName.Load()) {
-		service = ddconfig.GddServiceName.Load()
-	}
 	cfg := &config.Configuration{
 		Sampler:  &config.SamplerConfig{},
 		Reporter: &config.ReporterConfig{},
 	}
-	if registry.LocalNode() != nil {
-		cfg.ServiceName = fmt.Sprintf("%s:%s", service, registry.LocalNode().Name)
-	} else {
-		cfg.ServiceName = service
+	service := ddconfig.DefaultGddServiceName
+	if stringutils.IsNotEmpty(ddconfig.GddServiceName.Load()) {
+		service = ddconfig.GddServiceName.Load()
 	}
+	cfg.ServiceName = service
 	cfg.Sampler.Type = "const"
 	cfg.Sampler.Param = 1
 	cfg.Reporter.LogSpans = true
@@ -43,11 +38,7 @@ func Init() (opentracing.Tracer, io.Closer) {
 	if stringutils.IsNotEmpty(ddconfig.GddTracingMetricsRoot.Load()) {
 		metricsRoot = ddconfig.GddTracingMetricsRoot.Load()
 	}
-	metricsFactory := jprom.New().Namespace(metrics.NSOptions{Name: metricsRoot, Tags: nil}).
-		Namespace(metrics.NSOptions{Name: service, Tags: nil})
-	if registry.LocalNode() != nil {
-		metricsFactory = metricsFactory.Namespace(metrics.NSOptions{Name: registry.LocalNode().Name, Tags: nil})
-	}
+	metricsFactory := jprom.New().Namespace(metrics.NSOptions{Name: metricsRoot, Tags: nil})
 	tracer, closer, err := cfg.NewTracer(
 		config.Logger(jaegerLogger),
 		config.Metrics(metricsFactory),
