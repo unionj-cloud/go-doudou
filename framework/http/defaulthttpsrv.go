@@ -3,12 +3,12 @@ package ddhttp
 import (
 	"context"
 	"fmt"
-	"github.com/NYTimes/gziphandler"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
 	configui "github.com/unionj-cloud/go-doudou/framework/http/config"
@@ -80,6 +80,13 @@ func init() {
 	}
 }
 
+// mux.MiddlewareFunc is alias for func(http.Handler) http.Handler
+func toMiddlewareFunc(m func(http.Handler) http.HandlerFunc) mux.MiddlewareFunc {
+	return func(handler http.Handler) http.Handler {
+		return m(handler)
+	}
+}
+
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rr := config.DefaultGddRouteRootPath
@@ -96,11 +103,11 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 		metrics,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		gzipMiddleware, err := gziphandler.GzipHandlerWithOpts(gziphandler.ContentTypes(contentTypeShouldbeGzip))
+		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
 		if err != nil {
 			panic(err)
 		}
-		srv.Middlewares = append(srv.Middlewares, gzipMiddleware)
+		srv.Middlewares = append(srv.Middlewares, toMiddlewareFunc(gzipMiddleware))
 	}
 	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
 		srv.Middlewares = append(srv.Middlewares, log)

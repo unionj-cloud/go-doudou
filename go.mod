@@ -61,7 +61,6 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/Microsoft/hcsshim v0.8.17 // indirect
-	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
@@ -80,6 +79,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
+	github.com/klauspost/compress v1.15.9
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect

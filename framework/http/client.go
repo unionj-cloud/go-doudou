@@ -3,6 +3,7 @@ package ddhttp
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/klauspost/compress/gzhttp"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
@@ -80,7 +81,7 @@ func NewClient() *resty.Client {
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 	}
-	client.SetTransport(&nethttp.Transport{
+	client.SetTransport(gzhttp.Transport(&nethttp.Transport{
 		RoundTripper: &http.Transport{
 			Proxy:                 http.ProxyFromEnvironment,
 			DialContext:           dialer.DialContext,
@@ -92,7 +93,7 @@ func NewClient() *resty.Client {
 			MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
 			MaxConnsPerHost:       100,
 		},
-	})
+	}))
 	retryCnt := config.DefaultGddRetryCount
 	if cnt, err := cast.ToIntE(config.GddRetryCount.Load()); err == nil {
 		retryCnt = cnt
