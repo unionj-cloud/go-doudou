@@ -350,9 +350,9 @@ func (srv *DefaultHttpSrv) Run() {
 		w.Write([]byte("405 method not allowed"))
 	}).GetHandler()
 
-	for _, item := range srv.Middlewares {
-		srv.rootRouter.NotFoundHandler = item.Middleware(srv.rootRouter.NotFoundHandler)
-		srv.rootRouter.MethodNotAllowedHandler = item.Middleware(srv.rootRouter.MethodNotAllowedHandler)
+	for i := len(srv.Middlewares) - 1; i >= 0; i-- {
+		srv.rootRouter.NotFoundHandler = srv.Middlewares[i].Middleware(srv.rootRouter.NotFoundHandler)
+		srv.rootRouter.MethodNotAllowedHandler = srv.Middlewares[i].Middleware(srv.rootRouter.MethodNotAllowedHandler)
 	}
 
 	start := time.Now()
