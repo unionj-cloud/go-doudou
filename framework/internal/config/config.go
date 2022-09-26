@@ -13,6 +13,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
 	"github.com/wubin1989/nacos-sdk-go/common/constant"
 	"github.com/wubin1989/nacos-sdk-go/vo"
+	_ "go.uber.org/automaxprocs"
 	"net"
 	"net/url"
 	"os"
