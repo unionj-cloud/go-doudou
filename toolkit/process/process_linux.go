@@ -310,7 +310,7 @@ func (p *Process) TimesWithContext(ctx context.Context) (*cpu.TimesStat, error) 
 }
 
 func (p *Process) times1() (cpu.TimesStat, error) {
-	_, _, cpuTimes, _, _, _, _, err := p.fillFromStatWithContext()
+	_, _, cpuTimes, _, _, _, _, err := p.fillFromStatWithContext(ctx)
 	if err != nil {
 		return cpu.TimesStat{}, err
 	}
