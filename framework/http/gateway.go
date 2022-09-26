@@ -116,6 +116,9 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 		arc, _ := lru.NewARC(128)
 		proxyConfig.ProviderStore = arc
 	}
+	if proxyConfig.Transport == nil {
+		proxyConfig.Transport = http.DefaultTransport
+	}
 	return func(inner http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if isWebSocket(r) || r.Header.Get(HeaderAccept) == "text/event-stream" {
@@ -195,7 +198,7 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 				Name: serviceName,
 				URL:  parsed,
 			}
-			proxyHTTP(tgt, w, proxyConfig).ServeHTTP(w, r)
+			proxyHTTP(tgt, proxyConfig).ServeHTTP(w, r)
 		})
 	}
 }
@@ -212,7 +215,7 @@ func singleJoiningSlash(a, b string) string {
 	return a + b
 }
 
-func proxyHTTP(tgt *ProxyTarget, w http.ResponseWriter, config ProxyConfig) http.Handler {
+func proxyHTTP(tgt *ProxyTarget, config ProxyConfig) http.Handler {
 	target := tgt.URL
 	targetQuery := target.RawQuery
 	director := func(req *http.Request) {
@@ -232,7 +235,7 @@ func proxyHTTP(tgt *ProxyTarget, w http.ResponseWriter, config ProxyConfig) http
 		}
 	}
 	proxy := &httputil.ReverseProxy{Director: director}
-	proxy.ErrorHandler = func(resp http.ResponseWriter, req *http.Request, err error) {
+	proxy.ErrorHandler = func(w http.ResponseWriter, req *http.Request, err error) {
 		desc := target.String()
 		if tgt.Name != "" {
 			desc = fmt.Sprintf("%s(%s)", tgt.Name, tgt.URL.String())
