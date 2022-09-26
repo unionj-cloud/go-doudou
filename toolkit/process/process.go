@@ -196,13 +196,13 @@ func NewCurrentProcess() *Process {
 	p := &Process{
 		Pid: int32(os.Getpid()),
 	}
-	k, err := p.getKProc()
+	createTime, err := p.createTimeWithContext(context.Background())
 	if err != nil {
 		logger.Error(err)
 		p.Err = err
 		return p
 	}
-	p.createTime = k.Proc.P_starttime.Sec*1000 + int64(k.Proc.P_starttime.Usec)/1000
+	p.createTime = createTime
 	return p
 }
 

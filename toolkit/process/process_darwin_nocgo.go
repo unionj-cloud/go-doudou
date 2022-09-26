@@ -100,7 +100,7 @@ func (p *Process) TimesWithContext(ctx context.Context) (*cpu.TimesStat, error) 
 }
 
 func (p *Process) times1() (cpu.TimesStat, error) {
-	r, err := callPsWithContext(ctx, "utime,stime", p.Pid, false, false)
+	r, err := callPsWithContext(context.Background(), "utime,stime", p.Pid, false, false)
 	if err != nil {
 		return cpu.TimesStat{}, err
 	}
