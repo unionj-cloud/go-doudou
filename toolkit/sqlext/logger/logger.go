@@ -47,6 +47,12 @@ func (receiver *SqlLogger) Log(ctx context.Context, query string, args ...interf
 	receiver.LogWithErr(ctx, nil, nil, query, args...)
 }
 
+var limitre *regexp.Regexp
+
+func init() {
+	limitre = regexp.MustCompile(`limit '\d+'(,'\d+')?`)
+}
+
 func PopulatedSql(query string, args ...interface{}) string {
 	query = strings.Join(strings.Fields(query), " ")
 	copiedArgs := make([]interface{}, len(args))
@@ -61,9 +67,8 @@ func PopulatedSql(query string, args ...interface{}) string {
 		}
 	}
 	str := strings.ReplaceAll(fmt.Sprintf(strings.ReplaceAll(query, "?", "'%v'"), copiedArgs...), "'<nil>'", "null")
-	re := regexp.MustCompile(`limit '\d+'(,'\d+')?`)
-	if re.MatchString(str) {
-		str = re.ReplaceAllStringFunc(str, func(s string) string {
+	if limitre.MatchString(str) {
+		str = limitre.ReplaceAllStringFunc(str, func(s string) string {
 			return strings.ReplaceAll(s, "'", "")
 		})
 	}
