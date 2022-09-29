@@ -401,10 +401,11 @@ func NewNode(data ...map[string]interface{}) error {
 	for mode, _ := range getModemap() {
 		switch mode {
 		case "nacos":
-			nacos.NewNode(data...)
+			if err := nacos.NewNode(data...); err != nil {
+				return err
+			}
 		case "memberlist":
-			err := newNode(data...)
-			if err != nil {
+			if err := newNode(data...); err != nil {
 				return err
 			}
 		default:

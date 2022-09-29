@@ -3,6 +3,7 @@ package nacos
 import (
 	"fmt"
 	"github.com/hashicorp/go-sockaddr"
+	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
@@ -72,7 +73,7 @@ func InitialiseNacosNamingClient() {
 	}
 }
 
-func NewNode(data ...map[string]interface{}) {
+func NewNode(data ...map[string]interface{}) error {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
@@ -121,11 +122,12 @@ func NewNode(data ...map[string]interface{}) {
 		Ephemeral:   true,
 	})
 	if err != nil {
-		logger.Panic(fmt.Sprintf("[go-doudou] failed to register to nacos server: %s", err))
+		return errors.Errorf("[go-doudou] failed to register to nacos server: %s", err)
 	}
 	if success {
 		logger.Info("[go-doudou] registered to nacos server successfully")
 	}
+	return nil
 }
 
 func Shutdown() {
