@@ -49,7 +49,7 @@ func StringBlockMysql(tmpl string, block string, data interface{}) (string, erro
 	funcMap = make(map[string]interface{})
 	funcMap["FormatTime"] = formatTime
 	funcMap["BoolToInt"] = boolToInt
-	funcMap["Eval"] = eval(tpl)
+	funcMap["Eval"] = Eval(tpl)
 	funcMap["TrimSuffix"] = trimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
 		return t == nil
@@ -73,7 +73,7 @@ func BlockMysql(tmplname, tmpl string, block string, data interface{}) (string, 
 	funcMap = make(map[string]interface{})
 	funcMap["FormatTime"] = formatTime
 	funcMap["BoolToInt"] = boolToInt
-	funcMap["Eval"] = eval(tpl)
+	funcMap["Eval"] = Eval(tpl)
 	funcMap["TrimSuffix"] = trimSuffix
 	funcMap["isNil"] = func(t interface{}) bool {
 		return t == nil

@@ -34,7 +34,9 @@ func getSchemaNames(vofile string) []string {
 	structs := sc.DocFlatEmbed()
 	var ret []string
 	for _, item := range structs {
-		ret = append(ret, item.Name)
+		if item.IsExport {
+			ret = append(ret, item.Name)
+		}
 	}
 	return ret
 }

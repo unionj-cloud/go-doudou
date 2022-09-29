@@ -478,3 +478,18 @@ func (receiver *Svc) Upgrade(version string) {
 		panic(err)
 	}
 }
+
+func (receiver *Svc) Grpc() {
+	dir := receiver.dir
+	ValidateDataType(dir)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
+	ValidateRestApi(dir, ic)
+
+	codegen.GenConfig(dir)
+	codegen.GenDb(dir)
+	codegen.GenMain(dir, ic)
+	codegen.GenSvcImpl(dir, ic)
+
+	codegen.ParseVoGrpc(dir)
+	codegen.GenGrpcProto(dir, ic)
+}

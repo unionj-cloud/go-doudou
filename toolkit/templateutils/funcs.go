@@ -19,7 +19,7 @@ func boolToInt(b bool) int {
 	return 0
 }
 
-func eval(t *template.Template) func(string, interface{}) (string, error) {
+func Eval(t *template.Template) func(string, interface{}) (string, error) {
 	return func(name string, v interface{}) (string, error) {
 		var buf bytes.Buffer
 		err := t.ExecuteTemplate(&buf, name, v)

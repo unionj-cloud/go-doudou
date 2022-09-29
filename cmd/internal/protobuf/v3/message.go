@@ -3,24 +3,90 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"regexp"
 	"strings"
 	"unicode"
 )
 
+var _ ProtobufType = (*Enum)(nil)
+var _ ProtobufType = (*Message)(nil)
+
+type ProtobufType interface {
+	GetName() string
+	String() string
+	Inner() bool
+}
+
 var MessageStore = make(map[string]*Message)
 
-var EnumStore = make(map[string]*Message)
+var EnumStore = make(map[string]*Enum)
 
-var importStore = make(map[string]struct{})
+var ImportStore = make(map[string]struct{})
+
+var MessageNames []string
+
+type EnumField struct {
+	Name   string
+	Number int
+}
+
+func NewEnumField(field string, index int) *EnumField {
+	return &EnumField{
+		Name:   strings.ToUpper(strcase.ToSnake(field)),
+		Number: index,
+	}
+}
+
+type Enum struct {
+	Name   string
+	Fields []*EnumField
+}
+
+func (e *Enum) Inner() bool {
+	return false
+}
+
+func (e *Enum) String() string {
+	return e.Name
+}
+
+func (e *Enum) GetName() string {
+	return e.Name
+}
+
+func NewEnum(enumMeta astutils.EnumMeta) *Enum {
+	var fields []*EnumField
+	for i, field := range enumMeta.Values {
+		fields = append(fields, NewEnumField(field, i))
+	}
+	return &Enum{
+		Name:   strcase.ToCamel(enumMeta.Name),
+		Fields: fields,
+	}
+}
 
 // Message represents protobuf message definition
 type Message struct {
-	Name     string
-	Fields   []*Field
-	Comments []string
+	Name       string
+	Fields     []*Field
+	Comments   []string
+	IsInner    bool
+	IsScalar   bool
+	IsMap      bool
+	IsRepeated bool
+	IsTopLevel bool
+}
+
+func (m *Message) Inner() bool {
+	return m.IsInner
+}
+
+func (m *Message) GetName() string {
+	return m.Name
 }
 
 func (m *Message) String() string {
@@ -34,25 +100,30 @@ func NewMessage(structmeta astutils.StructMeta) *Message {
 		fields = append(fields, NewField(field, i+1))
 	}
 	return &Message{
-		Name:     structmeta.Name,
-		Fields:   fields,
-		Comments: structmeta.Comments,
+		Name:       strcase.ToCamel(structmeta.Name),
+		Fields:     fields,
+		Comments:   structmeta.Comments,
+		IsTopLevel: true,
 	}
 }
 
 // Field represents protobuf message field definition
 type Field struct {
 	Name     string
-	Type     *Message
+	Type     ProtobufType
 	Number   int
 	Comments []string
 	JsonName string
 }
 
 func NewField(field astutils.FieldMeta, index int) *Field {
+	t := MessageOf(field.Type)
+	if t.Inner() {
+		t.(*Message).Name = strcase.ToCamel(field.Name)
+	}
 	return &Field{
-		Name:     field.Name,
-		Type:     MessageOf(field.Type),
+		Name:     strcase.ToSnake(field.Name),
+		Type:     t,
 		Number:   index,
 		Comments: field.Comments,
 		JsonName: field.DocName,
@@ -61,38 +132,50 @@ func NewField(field astutils.FieldMeta, index int) *Field {
 
 var (
 	Double = &Message{
-		Name: "double",
+		Name:     "double",
+		IsScalar: true,
 	}
 	Float = &Message{
-		Name: "float",
+		Name:     "float",
+		IsScalar: true,
 	}
 	Int32 = &Message{
-		Name: "int32",
+		Name:     "int32",
+		IsScalar: true,
 	}
 	Int64 = &Message{
-		Name: "int64",
+		Name:     "int64",
+		IsScalar: true,
 	}
 	Uint32 = &Message{
-		Name: "uint32",
+		Name:     "uint32",
+		IsScalar: true,
 	}
 	Uint64 = &Message{
-		Name: "uint64",
+		Name:     "uint64",
+		IsScalar: true,
 	}
 	Bool = &Message{
-		Name: "bool",
+		Name:     "bool",
+		IsScalar: true,
 	}
 	String = &Message{
-		Name: "string",
+		Name:     "string",
+		IsScalar: true,
 	}
 	Bytes = &Message{
-		Name: "bytes",
+		Name:     "bytes",
+		IsScalar: true,
 	}
 	Any = &Message{
 		Name: "google.protobuf.Any",
 	}
+	Empty = &Message{
+		Name: "google.protobuf.Empty",
+	}
 )
 
-func MessageOf(ft string) *Message {
+func MessageOf(ft string) ProtobufType {
 	if astutils.IsVarargs(ft) {
 		ft = astutils.ToSlice(ft)
 	}
@@ -121,7 +204,13 @@ func MessageOf(ft string) *Message {
 	}
 }
 
-func handleDefaultCase(ft string) *Message {
+var anonystructre *regexp.Regexp
+
+func init() {
+	anonystructre = regexp.MustCompile(`anonystruct«(.*)»`)
+}
+
+func handleDefaultCase(ft string) ProtobufType {
 	if strings.HasPrefix(ft, "map[") {
 		elem := ft[strings.Index(ft, "]")+1:]
 		key := ft[4:strings.Index(ft, "]")]
@@ -130,29 +219,32 @@ func handleDefaultCase(ft string) *Message {
 			panic("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
 		elemMessage := MessageOf(elem)
-		if strings.HasPrefix(elemMessage.Name, "map<") {
+		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
 		return &Message{
-			Name: fmt.Sprintf("map<%s, %s>", keyMessage, elemMessage),
+			Name:  fmt.Sprintf("map<%s, %s>", keyMessage, elemMessage),
+			IsMap: true,
 		}
 	}
 	if strings.HasPrefix(ft, "[") {
 		elem := ft[strings.Index(ft, "]")+1:]
 		elemMessage := MessageOf(elem)
-		if strings.HasPrefix(elemMessage.Name, "map<") {
+		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
 		return &Message{
-			Name: fmt.Sprintf("repeated %s", elemMessage),
+			Name:       fmt.Sprintf("repeated %s", elemMessage),
+			IsRepeated: true,
 		}
 	}
-	re := regexp.MustCompile(`anonystruct«(.*)»`)
-	if re.MatchString(ft) {
-		result := re.FindStringSubmatch(ft)
+	if anonystructre.MatchString(ft) {
+		result := anonystructre.FindStringSubmatch(ft)
 		var structmeta astutils.StructMeta
 		json.Unmarshal([]byte(result[1]), &structmeta)
 		message := NewMessage(structmeta)
+		message.IsInner = true
+		message.IsTopLevel = false
 		return message
 	}
 	var title string
@@ -162,14 +254,19 @@ func handleDefaultCase(ft string) *Message {
 	if stringutils.IsEmpty(title) {
 		title = ft[strings.LastIndex(ft, ".")+1:]
 	}
-	if stringutils.IsNotEmpty(title) || unicode.IsUpper(rune(title[0])) {
-		if m, ok := MessageStore[title]; ok {
-			return m
+	if stringutils.IsNotEmpty(title) {
+		if unicode.IsUpper(rune(title[0])) {
+			if sliceutils.StringContains(MessageNames, title) {
+				return &Message{
+					Name:       strcase.ToCamel(title),
+					IsTopLevel: true,
+				}
+			}
 		}
-		if m, ok := EnumStore[title]; ok {
-			return m
+		if e, ok := EnumStore[title]; ok {
+			return e
 		}
 	}
-	importStore["google/protobuf/any.proto"] = struct{}{}
+	ImportStore["google/protobuf/any.proto"] = struct{}{}
 	return Any
 }
