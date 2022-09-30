@@ -12,6 +12,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -53,10 +54,19 @@ message {{.Name}} {
   {{- if $f.Comments }}
   {{ toComment $f.Comments }}
   {{- end }}
-  {{$f.Type}} {{$f.Name}} = {{$f.Number}} [json_name="{{$f.JsonName}}"];
+  {{$f.Type}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
   {{- end }}
 }
 {{- end}}
+
+service {{.Name}} {
+  {{- range $r := .Rpcs }}
+  {{- if $r.Comments }}
+  {{ toComment $r.Comments }}
+  {{- end }}
+  rpc {{$r.Name}}({{$r.Request}}) returns ({{$r.Response}});
+  {{- end}}
+}
 `
 
 func toComment(comments []string) string {
@@ -110,17 +120,28 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) {
 
 	service := v3.NewService(svcname, modName+"/transport/grpc")
 	service.Comments = ic.Interfaces[0].Comments
+	for _, method := range ic.Interfaces[0].Methods {
+		service.Rpcs = append(service.Rpcs, v3.NewRpc(method))
+	}
+	sort.SliceStable(service.Rpcs, func(i, j int) bool {
+		return service.Rpcs[i].Name < service.Rpcs[j].Name
+	})
 	for k := range v3.ImportStore {
 		service.Imports = append(service.Imports, k)
 	}
+	sort.Strings(service.Imports)
 	for _, v := range v3.MessageStore {
 		service.Messages = append(service.Messages, v)
 	}
+	sort.SliceStable(service.Messages, func(i, j int) bool {
+		return service.Messages[i].Name < service.Messages[j].Name
+	})
 	for _, v := range v3.EnumStore {
 		service.Enums = append(service.Enums, v)
 	}
-	service.Rpcs = nil // TODO
-
+	sort.SliceStable(service.Enums, func(i, j int) bool {
+		return service.Enums[i].Name < service.Enums[j].Name
+	})
 	tpl = template.New("proto.tmpl")
 	funcMap := make(map[string]interface{})
 	funcMap["toComment"] = toComment
@@ -133,7 +154,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) {
 	}
 }
 
-func messagesOf(vofile string) []*v3.Message {
+func messagesOf(vofile string) []v3.Message {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
 	if err != nil {
@@ -142,7 +163,7 @@ func messagesOf(vofile string) []*v3.Message {
 	sc := astutils.NewStructCollector(ExprStringP)
 	ast.Walk(sc, root)
 	structs := sc.DocFlatEmbed()
-	var ret []*v3.Message
+	var ret []v3.Message
 	for _, item := range structs {
 		ret = append(ret, v3.NewMessage(item))
 	}
@@ -152,7 +173,7 @@ func messagesOf(vofile string) []*v3.Message {
 func ParseVoGrpc(dir string) {
 	var (
 		err        error
-		messages   []*v3.Message
+		messages   []v3.Message
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
 	)

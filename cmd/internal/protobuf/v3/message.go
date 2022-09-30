@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"reflect"
 	"regexp"
 	"strings"
 	"unicode"
@@ -21,9 +22,9 @@ type ProtobufType interface {
 	Inner() bool
 }
 
-var MessageStore = make(map[string]*Message)
+var MessageStore = make(map[string]Message)
 
-var EnumStore = make(map[string]*Enum)
+var EnumStore = make(map[string]Enum)
 
 var ImportStore = make(map[string]struct{})
 
@@ -34,8 +35,8 @@ type EnumField struct {
 	Number int
 }
 
-func NewEnumField(field string, index int) *EnumField {
-	return &EnumField{
+func newEnumField(field string, index int) EnumField {
+	return EnumField{
 		Name:   strings.ToUpper(strcase.ToSnake(field)),
 		Number: index,
 	}
@@ -43,27 +44,27 @@ func NewEnumField(field string, index int) *EnumField {
 
 type Enum struct {
 	Name   string
-	Fields []*EnumField
+	Fields []EnumField
 }
 
-func (e *Enum) Inner() bool {
+func (e Enum) Inner() bool {
 	return false
 }
 
-func (e *Enum) String() string {
+func (e Enum) String() string {
 	return e.Name
 }
 
-func (e *Enum) GetName() string {
+func (e Enum) GetName() string {
 	return e.Name
 }
 
-func NewEnum(enumMeta astutils.EnumMeta) *Enum {
-	var fields []*EnumField
+func NewEnum(enumMeta astutils.EnumMeta) Enum {
+	var fields []EnumField
 	for i, field := range enumMeta.Values {
-		fields = append(fields, NewEnumField(field, i))
+		fields = append(fields, newEnumField(field, i))
 	}
-	return &Enum{
+	return Enum{
 		Name:   strcase.ToCamel(enumMeta.Name),
 		Fields: fields,
 	}
@@ -72,7 +73,7 @@ func NewEnum(enumMeta astutils.EnumMeta) *Enum {
 // Message represents protobuf message definition
 type Message struct {
 	Name       string
-	Fields     []*Field
+	Fields     []Field
 	Comments   []string
 	IsInner    bool
 	IsScalar   bool
@@ -81,25 +82,25 @@ type Message struct {
 	IsTopLevel bool
 }
 
-func (m *Message) Inner() bool {
+func (m Message) Inner() bool {
 	return m.IsInner
 }
 
-func (m *Message) GetName() string {
+func (m Message) GetName() string {
 	return m.Name
 }
 
-func (m *Message) String() string {
+func (m Message) String() string {
 	return m.Name
 }
 
 // NewMessage returns message instance from astutils.StructMeta
-func NewMessage(structmeta astutils.StructMeta) *Message {
-	var fields []*Field
+func NewMessage(structmeta astutils.StructMeta) Message {
+	var fields []Field
 	for i, field := range structmeta.Fields {
-		fields = append(fields, NewField(field, i+1))
+		fields = append(fields, newField(field, i+1))
 	}
-	return &Message{
+	return Message{
 		Name:       strcase.ToCamel(structmeta.Name),
 		Fields:     fields,
 		Comments:   structmeta.Comments,
@@ -116,61 +117,67 @@ type Field struct {
 	JsonName string
 }
 
-func NewField(field astutils.FieldMeta, index int) *Field {
+func newField(field astutils.FieldMeta, index int) Field {
 	t := MessageOf(field.Type)
 	if t.Inner() {
-		t.(*Message).Name = strcase.ToCamel(field.Name)
+		message := t.(Message)
+		message.Name = strcase.ToCamel(field.Name)
+		t = message
 	}
-	return &Field{
+	jsonName := field.DocName
+	if stringutils.IsEmpty(jsonName) {
+		jsonName = strcase.ToLowerCamel(field.Name)
+	}
+	return Field{
 		Name:     strcase.ToSnake(field.Name),
 		Type:     t,
 		Number:   index,
 		Comments: field.Comments,
-		JsonName: field.DocName,
+		JsonName: jsonName,
 	}
 }
 
 var (
-	Double = &Message{
+	Double = Message{
 		Name:     "double",
 		IsScalar: true,
 	}
-	Float = &Message{
+	Float = Message{
 		Name:     "float",
 		IsScalar: true,
 	}
-	Int32 = &Message{
+	Int32 = Message{
 		Name:     "int32",
 		IsScalar: true,
 	}
-	Int64 = &Message{
+	Int64 = Message{
 		Name:     "int64",
 		IsScalar: true,
 	}
-	Uint32 = &Message{
+	Uint32 = Message{
 		Name:     "uint32",
 		IsScalar: true,
 	}
-	Uint64 = &Message{
+	Uint64 = Message{
 		Name:     "uint64",
 		IsScalar: true,
 	}
-	Bool = &Message{
+	Bool = Message{
 		Name:     "bool",
 		IsScalar: true,
 	}
-	String = &Message{
+	String = Message{
 		Name:     "string",
 		IsScalar: true,
 	}
-	Bytes = &Message{
+	Bytes = Message{
 		Name:     "bytes",
 		IsScalar: true,
 	}
-	Any = &Message{
+	Any = Message{
 		Name: "google.protobuf.Any",
 	}
-	Empty = &Message{
+	Empty = Message{
 		Name: "google.protobuf.Empty",
 	}
 )
@@ -215,14 +222,14 @@ func handleDefaultCase(ft string) ProtobufType {
 		elem := ft[strings.Index(ft, "]")+1:]
 		key := ft[4:strings.Index(ft, "]")]
 		keyMessage := MessageOf(key)
-		if keyMessage == Float || keyMessage == Double || keyMessage == Bytes {
+		if reflect.DeepEqual(keyMessage, Float) || reflect.DeepEqual(keyMessage, Double) || reflect.DeepEqual(keyMessage, Bytes) {
 			panic("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
 		elemMessage := MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
-		return &Message{
+		return Message{
 			Name:  fmt.Sprintf("map<%s, %s>", keyMessage, elemMessage),
 			IsMap: true,
 		}
@@ -233,7 +240,7 @@ func handleDefaultCase(ft string) ProtobufType {
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
-		return &Message{
+		return Message{
 			Name:       fmt.Sprintf("repeated %s", elemMessage),
 			IsRepeated: true,
 		}
@@ -257,7 +264,7 @@ func handleDefaultCase(ft string) ProtobufType {
 	if stringutils.IsNotEmpty(title) {
 		if unicode.IsUpper(rune(title[0])) {
 			if sliceutils.StringContains(MessageNames, title) {
-				return &Message{
+				return Message{
 					Name:       strcase.ToCamel(title),
 					IsTopLevel: true,
 				}
