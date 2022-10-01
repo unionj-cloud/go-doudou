@@ -33,7 +33,7 @@ type Service struct {
 
 func NewService(name, goPackage string) Service {
 	return Service{
-		Name:      strcase.ToCamel(name),
+		Name:      strcase.ToCamel(name) + "Rpc",
 		Package:   strcase.ToSnake(name),
 		GoPackage: goPackage,
 		Syntax:    Syntax,
@@ -50,7 +50,7 @@ type Rpc struct {
 }
 
 func NewRpc(method astutils.MethodMeta) Rpc {
-	rpcName := strcase.ToCamel(method.Name)
+	rpcName := strcase.ToCamel(method.Name) + "Rpc"
 	rpcRequest := newRequest(rpcName, method.Params)
 	if reflect.DeepEqual(rpcRequest, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
@@ -101,6 +101,12 @@ func newRequest(rpcName string, params []astutils.FieldMeta) Message {
 func newResponse(rpcName string, params []astutils.FieldMeta) Message {
 	if len(params) == 0 {
 		return Empty
+	}
+	if len(params) == 1 && params[0].Type == "error" {
+		return Empty
+	}
+	if params[len(params)-1].Type == "error" {
+		params = params[:len(params)-1]
 	}
 	if len(params) == 1 {
 		if m, ok := MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
