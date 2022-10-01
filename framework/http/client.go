@@ -91,7 +91,7 @@ func NewClient() *resty.Client {
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 			MaxIdleConnsPerHost:   runtime.GOMAXPROCS(0) + 1,
-			MaxConnsPerHost:       100,
+			MaxConnsPerHost:       10000,
 		},
 	}))
 	retryCnt := config.DefaultGddRetryCount
