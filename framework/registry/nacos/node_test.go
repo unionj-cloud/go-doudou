@@ -103,55 +103,6 @@ func TestNewNode2(t *testing.T) {
 	})
 }
 
-func TestNewNodePanic(t *testing.T) {
-	Convey("Should panic as service name not set", t, func() {
-		setup()
-		_ = config.GddServiceName.Write("")
-
-		So(func() {
-			nacos.NewNode()
-		}, ShouldPanic)
-	})
-}
-
-func TestNewNodePanic2(t *testing.T) {
-	Convey("Should panic as register failed", t, func() {
-		setup()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		namingClient := mock.NewMockINamingClient(ctrl)
-		namingClient.
-			EXPECT().
-			RegisterInstance(gomock.Any()).
-			AnyTimes().
-			Return(false, errors.New("test error"))
-
-		nacos.NewNamingClient = func(param vo.NacosClientParam) (iClient naming_client.INamingClient, err error) {
-			return namingClient, nil
-		}
-
-		if nacos.NamingClient == nil {
-			nacos.NamingClient = namingClient
-		}
-
-		So(func() {
-			nacos.NewNode()
-		}, ShouldPanic)
-	})
-}
-
-func TestInitialiseNacosNamingClient(t *testing.T) {
-	Convey("Should panic as service name not set", t, func() {
-		nacos.NewNamingClient = func(param vo.NacosClientParam) (iClient naming_client.INamingClient, err error) {
-			return nil, errors.New("test error")
-		}
-		So(func() {
-			nacos.InitialiseNacosNamingClient()
-		}, ShouldPanic)
-	})
-}
-
 func TestShutdownFail(t *testing.T) {
 	Convey("Should fail", t, func() {
 		setup()
@@ -231,35 +182,5 @@ func TestShutdownFail2(t *testing.T) {
 
 		nacos.Shutdown()
 		So(nacos.NamingClient, ShouldBeNil)
-	})
-}
-
-func TestNewNodePanic3(t *testing.T) {
-	Convey("Should panic as fail to get private ip", t, func() {
-		setup()
-		_ = config.GddNacosRegisterHost.Write("")
-		nacos.GetPrivateIP = func() (string, error) {
-			return "", errors.New("mock test error")
-		}
-		So(func() {
-			nacos.NewNode(map[string]interface{}{
-				"foo": "bar",
-			})
-		}, ShouldPanic)
-	})
-}
-
-func TestNewNodePanic4(t *testing.T) {
-	Convey("Should panic as register host is empty", t, func() {
-		setup()
-		_ = config.GddNacosRegisterHost.Write("")
-		nacos.GetPrivateIP = func() (string, error) {
-			return "", nil
-		}
-		So(func() {
-			nacos.NewNode(map[string]interface{}{
-				"foo": "bar",
-			})
-		}, ShouldPanic)
 	})
 }
