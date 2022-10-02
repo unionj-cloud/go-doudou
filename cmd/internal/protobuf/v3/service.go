@@ -66,14 +66,18 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
 	if !strings.HasPrefix(rpcRequest.Name, "stream ") {
-		MessageStore[rpcRequest.Name] = rpcRequest
+		if _, ok := MessageStore[rpcRequest.Name]; !ok {
+			MessageStore[rpcRequest.Name] = rpcRequest
+		}
 	}
 	rpcResponse := newResponse(rpcName, method.Results)
 	if reflect.DeepEqual(rpcResponse, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
 	if !strings.HasPrefix(rpcResponse.Name, "stream ") {
-		MessageStore[rpcResponse.Name] = rpcResponse
+		if _, ok := MessageStore[rpcResponse.Name]; !ok {
+			MessageStore[rpcResponse.Name] = rpcResponse
+		}
 	}
 	var st StreamType
 	if strings.HasPrefix(rpcRequest.Name, "stream ") && strings.HasPrefix(rpcResponse.Name, "stream ") {

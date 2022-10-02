@@ -11,7 +11,7 @@ var grpcCmd = &cobra.Command{
 	Short: "generate grpc service",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var s svc.Svc
+		s := svc.NewSvc("")
 		s.Grpc()
 	},
 }

@@ -65,7 +65,7 @@ type {{.Meta.Name}}Impl struct {
 
 func New{{.Meta.Name}}(conf *config.Config) *{{.Meta.Name}}Impl {
 	return &{{.Meta.Name}}Impl{
-		conf,
+		conf: conf,
 	}
 }
 `
@@ -85,19 +85,19 @@ var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
     }
     {{- end }}
     {{- if eq $m.StreamType 1 }}
-	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(server pb.{{.GrpcSvc.Name}}_{{$m.Name}}Server) error {
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(server pb.{{$.GrpcSvc.Name}}_{{$m.Name}}Server) error {
 		//TODO implement me
 		panic("implement me")
 	}
     {{- end }}
     {{- if eq $m.StreamType 2 }}
-	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(server pb.{{.GrpcSvc.Name}}_{{$m.Name}}Server) error {
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(server pb.{{$.GrpcSvc.Name}}_{{$m.Name}}Server) error {
 		//TODO implement me
 		panic("implement me")
 	}
     {{- end }}
     {{- if eq $m.StreamType 3 }}
-	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(request *pb.{{$m.Request}}, server pb.{{.GrpcSvc.Name}}_{{$m.Name}}Server) error {
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(request *pb.{{$m.Request}}, server pb.{{$.GrpcSvc.Name}}_{{$m.Name}}Server) error {
 		//TODO implement me
 		panic("implement me")
 	}
@@ -139,7 +139,7 @@ type {{.Meta.Name}}Impl struct {
 
 func New{{.Meta.Name}}(conf *config.Config) *{{.Meta.Name}}Impl {
 	return &{{.Meta.Name}}Impl{
-		conf,
+		conf: conf,
 	}
 }
 `
@@ -249,6 +249,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	original = astutils.AppendImportStatements(original, importBuf.Bytes())
+	original = astutils.RestRelatedModify(original, meta.Name)
 	//fmt.Println(string(original))
 	astutils.FixImport(original, svcimplfile)
 }
@@ -305,7 +306,7 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 			var notimplemented []v3.Rpc
 			for _, item := range grpcSvc.Rpcs {
 				for _, implemented := range implementations {
-					if item.Name == implemented.Name+"Rpc" {
+					if item.Name == implemented.Name {
 						goto L
 					}
 				}

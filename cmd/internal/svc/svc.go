@@ -45,6 +45,7 @@ type ISvc interface {
 	DoWatch()
 	Run(watch bool)
 	Upgrade(version string)
+	Grpc()
 }
 
 // Svc wraps all config properties for commands
@@ -488,10 +489,17 @@ func (receiver *Svc) Grpc() {
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
 	codegen.GenMain(dir, ic)
-	codegen.GenSvcImpl(dir, ic)
 
 	codegen.ParseVoGrpc(dir)
-	grpcSvc := codegen.GenGrpcProto(dir, ic)
-	grpcSvc = grpcSvc
+	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic)
+	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
+	if err := receiver.runner.Run("protoc", "--proto_path=.",
+		"--go_out=.",
+		"--go_opt=paths=source_relative",
+		"--go-grpc_out=.",
+		"--go-grpc_opt=paths=source_relative",
+		protoFile); err != nil {
+		panic(err)
+	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
 }

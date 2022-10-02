@@ -453,3 +453,23 @@ func ExampleGetAnnotations() {
 	// Output:
 	// [{@role [SUPER_ADMIN]} {@permission [create update]} {@sss []}]
 }
+
+func TestGrpcRelatedModify(t *testing.T) {
+	input := `
+var _ Helloworld = (*HelloworldImpl)(nil)
+
+type HelloworldImpl struct {
+	conf *config.Config
+}
+
+func (receiver *HelloworldImpl) Greeting(ctx context.Context, greeting string) (data string, err error) {
+	var _result struct {
+		Data string
+	}
+	_ = gofakeit.Struct(&_result)
+	return _result.Data, nil
+}
+`
+	ret := GrpcRelatedModify([]byte(input), "Helloworld", "HelloworldRpc")
+	fmt.Println(string(ret))
+}

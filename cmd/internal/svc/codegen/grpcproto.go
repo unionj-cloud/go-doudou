@@ -80,11 +80,10 @@ func toComment(comments []string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func GenGrpcProto(dir string, ic astutils.InterfaceCollector) v3.Service {
+func GenGrpcProto(dir string, ic astutils.InterfaceCollector) (service v3.Service, protoFile string) {
 	var (
 		err       error
 		svcname   string
-		protoFile string
 		fi        os.FileInfo
 		tpl       *template.Template
 		f         *os.File
@@ -118,7 +117,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) v3.Service {
 	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-	service := v3.NewService(svcname, modName+"/transport/grpc")
+	service = v3.NewService(svcname, modName+"/transport/grpc")
 	service.Comments = ic.Interfaces[0].Comments
 	for _, method := range ic.Interfaces[0].Methods {
 		service.Rpcs = append(service.Rpcs, v3.NewRpc(method))
@@ -149,7 +148,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) v3.Service {
 	if err = tpl.Execute(f, service); err != nil {
 		panic(err)
 	}
-	return service
+	return
 }
 
 func messagesOf(vofile string) []v3.Message {

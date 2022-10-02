@@ -63,21 +63,33 @@ func AppendImportStatements(src []byte, appendImports []byte) []byte {
 }
 
 func GrpcRelatedModify(src []byte, metaName string, grpcSvcName string) []byte {
-	reg := regexp.MustCompile("type " + metaName + "Impl struct \\{")
+	expr := fmt.Sprintf(`type %sImpl struct {`, metaName)
+	reg := regexp.MustCompile(expr)
 	unimpl := fmt.Sprintf("pb.Unimplemented%sServer", grpcSvcName)
 	if !strings.Contains(string(src), unimpl) {
 		appendUnimpl := []byte(constants.LineBreak + unimpl + constants.LineBreak)
 		src = reg.ReplaceAllFunc(src, func(i []byte) []byte {
-			i = append(i, appendUnimpl...)
-			return i
+			return append([]byte(expr), appendUnimpl...)
 		})
 	}
 	var_pb := fmt.Sprintf("var _ pb.%sServer = (*%sImpl)(nil)", grpcSvcName, metaName)
 	if !strings.Contains(string(src), var_pb) {
 		appendVarPb := []byte(constants.LineBreak + var_pb + constants.LineBreak)
-		return reg.ReplaceAllFunc(src, func(i []byte) []byte {
-			i = append(appendVarPb, i...)
-			return i
+		src = reg.ReplaceAllFunc(src, func(i []byte) []byte {
+			return append(appendVarPb, []byte(expr)...)
+		})
+	}
+	return src
+}
+
+func RestRelatedModify(src []byte, metaName string) []byte {
+	expr := fmt.Sprintf(`type %sImpl struct {`, metaName)
+	reg := regexp.MustCompile(expr)
+	var_ := fmt.Sprintf("var _ %s = (*%sImpl)(nil)", metaName, metaName)
+	if !strings.Contains(string(src), var_) {
+		appendVarPb := []byte(constants.LineBreak + var_ + constants.LineBreak)
+		src = reg.ReplaceAllFunc(src, func(i []byte) []byte {
+			return append(appendVarPb, []byte(expr)...)
 		})
 	}
 	return src
