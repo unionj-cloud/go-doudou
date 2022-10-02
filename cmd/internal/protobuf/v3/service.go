@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/version"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -42,11 +43,20 @@ func NewService(name, goPackage string) Service {
 	}
 }
 
+type StreamType int
+
+const (
+	biStream = iota + 1
+	clientStream
+	serverStream
+)
+
 type Rpc struct {
-	Name     string
-	Request  Message
-	Response Message
-	Comments []string
+	Name       string
+	Request    Message
+	Response   Message
+	Comments   []string
+	StreamType StreamType
 }
 
 func NewRpc(method astutils.MethodMeta) Rpc {
@@ -55,17 +65,30 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 	if reflect.DeepEqual(rpcRequest, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
-	MessageStore[rpcRequest.Name] = rpcRequest
+	if !strings.HasPrefix(rpcRequest.Name, "stream ") {
+		MessageStore[rpcRequest.Name] = rpcRequest
+	}
 	rpcResponse := newResponse(rpcName, method.Results)
 	if reflect.DeepEqual(rpcResponse, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
-	MessageStore[rpcResponse.Name] = rpcResponse
+	if !strings.HasPrefix(rpcResponse.Name, "stream ") {
+		MessageStore[rpcResponse.Name] = rpcResponse
+	}
+	var st StreamType
+	if strings.HasPrefix(rpcRequest.Name, "stream ") && strings.HasPrefix(rpcResponse.Name, "stream ") {
+		st = biStream
+	} else if strings.HasPrefix(rpcRequest.Name, "stream ") {
+		st = clientStream
+	} else if strings.HasPrefix(rpcResponse.Name, "stream ") {
+		st = serverStream
+	}
 	return Rpc{
-		Name:     rpcName,
-		Request:  rpcRequest,
-		Response: rpcResponse,
-		Comments: method.Comments,
+		Name:       rpcName,
+		Request:    rpcRequest,
+		Response:   rpcResponse,
+		Comments:   method.Comments,
+		StreamType: st,
 	}
 }
 
@@ -81,7 +104,7 @@ func newRequest(rpcName string, params []astutils.FieldMeta) Message {
 	}
 	if len(params) == 1 {
 		if m, ok := MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
-			if params[0].Name == "stream" {
+			if strings.HasPrefix(params[0].Name, "stream") {
 				m.Name = "stream " + m.Name
 			}
 			return m
@@ -110,7 +133,7 @@ func newResponse(rpcName string, params []astutils.FieldMeta) Message {
 	}
 	if len(params) == 1 {
 		if m, ok := MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
-			if params[0].Name == "stream" {
+			if strings.HasPrefix(params[0].Name, "stream") {
 				m.Name = "stream " + m.Name
 			}
 			return m

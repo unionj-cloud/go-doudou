@@ -62,6 +62,27 @@ func AppendImportStatements(src []byte, appendImports []byte) []byte {
 	})
 }
 
+func GrpcRelatedModify(src []byte, metaName string, grpcSvcName string) []byte {
+	reg := regexp.MustCompile("type " + metaName + "Impl struct \\{")
+	unimpl := fmt.Sprintf("pb.Unimplemented%sServer", grpcSvcName)
+	if !strings.Contains(string(src), unimpl) {
+		appendUnimpl := []byte(constants.LineBreak + unimpl + constants.LineBreak)
+		src = reg.ReplaceAllFunc(src, func(i []byte) []byte {
+			i = append(i, appendUnimpl...)
+			return i
+		})
+	}
+	var_pb := fmt.Sprintf("var _ pb.%sServer = (*%sImpl)(nil)", grpcSvcName, metaName)
+	if !strings.Contains(string(src), var_pb) {
+		appendVarPb := []byte(constants.LineBreak + var_pb + constants.LineBreak)
+		return reg.ReplaceAllFunc(src, func(i []byte) []byte {
+			i = append(appendVarPb, i...)
+			return i
+		})
+	}
+	return src
+}
+
 // FixImport format source code and add missing import syntax automatically
 func FixImport(src []byte, file string) {
 	var (

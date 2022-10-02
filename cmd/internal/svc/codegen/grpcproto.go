@@ -80,7 +80,7 @@ func toComment(comments []string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func GenGrpcProto(dir string, ic astutils.InterfaceCollector) {
+func GenGrpcProto(dir string, ic astutils.InterfaceCollector) v3.Service {
 	var (
 		err       error
 		svcname   string
@@ -123,9 +123,6 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) {
 	for _, method := range ic.Interfaces[0].Methods {
 		service.Rpcs = append(service.Rpcs, v3.NewRpc(method))
 	}
-	sort.SliceStable(service.Rpcs, func(i, j int) bool {
-		return service.Rpcs[i].Name < service.Rpcs[j].Name
-	})
 	for k := range v3.ImportStore {
 		service.Imports = append(service.Imports, k)
 	}
@@ -152,6 +149,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) {
 	if err = tpl.Execute(f, service); err != nil {
 		panic(err)
 	}
+	return service
 }
 
 func messagesOf(vofile string) []v3.Message {

@@ -491,5 +491,7 @@ func (receiver *Svc) Grpc() {
 	codegen.GenSvcImpl(dir, ic)
 
 	codegen.ParseVoGrpc(dir)
-	codegen.GenGrpcProto(dir, ic)
+	grpcSvc := codegen.GenGrpcProto(dir, ic)
+	grpcSvc = grpcSvc
+	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
 }
