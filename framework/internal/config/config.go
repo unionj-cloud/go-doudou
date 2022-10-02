@@ -123,6 +123,8 @@ const (
 	GddHost envVariable = "GDD_HOST"
 	// GddPort sets bind port for http server
 	GddPort envVariable = "GDD_PORT"
+	// GddGrpcPort sets bind port for grpc server
+	GddGrpcPort envVariable = "GDD_GRPC_PORT"
 	// GddManage if true, it will add built-in apis with /go-doudou path prefix for online api document and service status monitor etc.
 	GddManage envVariable = "GDD_MANAGE_ENABLE"
 	// GddManageUser manage api endpoint http basic auth user

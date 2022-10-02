@@ -19,6 +19,7 @@ const (
 	DefaultGddRouteRootPath      = ""
 	DefaultGddHost               = ""
 	DefaultGddPort               = 6060
+	DefaultGddGrpcPort           = 50051
 	DefaultGddRetryCount         = 0
 	DefaultGddManage             = true
 	DefaultGddManageUser         = "admin"

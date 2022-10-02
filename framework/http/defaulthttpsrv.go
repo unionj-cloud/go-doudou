@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
-	"github.com/common-nighthawk/go-figure"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/klauspost/compress/gzhttp"
@@ -16,6 +15,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/framework/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
+	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
@@ -29,6 +29,12 @@ import (
 	"strings"
 	"time"
 )
+
+var startAt time.Time
+
+func init() {
+	startAt = time.Now()
+}
 
 type common struct {
 	gddRoutes   []model.Route
@@ -219,9 +225,10 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		logger.Infof("Http server is listening on %s\n", httpServer.Addr)
+		logger.Infof("Http server is listening at %v", httpServer.Addr)
+		logger.Infof("Http server started in %s", time.Since(startAt))
 		if err := httpServer.ListenAndServe(); err != nil {
-			logger.Println(err)
+			logger.Error(err)
 		}
 	}()
 
@@ -230,6 +237,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
+	banner.Print()
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
 		srv.Middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.Middlewares...)
@@ -349,37 +357,20 @@ func (srv *DefaultHttpSrv) Run() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("405 method not allowed"))
 	}).GetHandler()
-
 	for i := len(srv.Middlewares) - 1; i >= 0; i-- {
 		srv.rootRouter.NotFoundHandler = srv.Middlewares[i].Middleware(srv.rootRouter.NotFoundHandler)
 		srv.rootRouter.MethodNotAllowedHandler = srv.Middlewares[i].Middleware(srv.rootRouter.MethodNotAllowedHandler)
 	}
-
-	start := time.Now()
-	banner := config.DefaultGddBanner
-	if b, err := cast.ToBoolE(config.GddBanner.Load()); err == nil {
-		banner = b
-	}
-	if banner {
-		bannerText := config.DefaultGddBannerText
-		if stringutils.IsNotEmpty(config.GddBannerText.Load()) {
-			bannerText = config.GddBannerText.Load()
-		}
-		figure.NewColorFigure(bannerText, "doom", "green", true).Print()
-	}
-
 	srv.printRoutes()
 	httpServer := srv.newHttpServer()
 	defer func() {
-		logger.Infoln("http server is shutting down...")
-
-		// Create a deadline to wait for.
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
 			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
 				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
 			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
 		}
+		logger.Infof("Http server is gracefully shutting down in %s", grace)
 
 		ctx, cancel := context.WithTimeout(context.Background(), grace)
 		defer cancel()
@@ -387,8 +378,6 @@ func (srv *DefaultHttpSrv) Run() {
 		// until the timeout deadline.
 		httpServer.Shutdown(ctx)
 	}()
-
-	logger.Infof("Started in %s\n", time.Since(start))
 
 	c := make(chan os.Signal, 1)
 	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)

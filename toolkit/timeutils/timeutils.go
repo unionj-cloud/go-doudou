@@ -1,6 +1,7 @@
 package timeutils
 
 import (
+	"context"
 	"github.com/hyperjumptech/jiffy"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
@@ -22,4 +23,17 @@ func Parse(t string, defaultDur time.Duration) (time.Duration, error) {
 		dur = defaultDur
 	}
 	return dur, err
+}
+
+func CallWithCtx(ctx context.Context, fn func() struct{}) error {
+	result := make(chan struct{}, 1)
+	go func() {
+		result <- fn()
+	}()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-result:
+		return nil
+	}
 }

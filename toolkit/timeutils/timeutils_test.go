@@ -1,6 +1,8 @@
 package timeutils
 
 import (
+	"context"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -47,4 +49,19 @@ func TestParse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCallWithCtx(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := CallWithCtx(ctx, func() struct{} {
+		time.Sleep(2 * time.Second)
+		fmt.Println("Job Done")
+		return struct{}{}
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("OK")
 }
