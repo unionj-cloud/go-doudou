@@ -102,13 +102,7 @@ func metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
 		logger.Info().
-			Str("remoteAddr", r.Method).
-			Str("requestUri", r.URL.RequestURI()).
-			Str("requestUrl", r.URL.String()).
-			Int("statusCode", m.Code).
-			Int64("written", m.Written).
-			Str("duration", m.Duration.String()).
-			Msgf("%s\t%s\t%s\t%d\t%d\t%s\n", r.RemoteAddr,
+			Msgf("%s\t%s\t%s\t%d\t%d\t%s", r.RemoteAddr,
 				r.Method,
 				r.URL,
 				m.Code,
@@ -245,10 +239,10 @@ func log(inner http.Handler) http.Handler {
 		}
 
 		rec := httptest.NewRecorder()
-		inner.ServeHTTP(rec, r)
-
-		reqBody := getReqBody(reqBodyCopy, r)
 		start := time.Now()
+		inner.ServeHTTP(rec, r)
+		elapsed := time.Since(start)
+		reqBody := getReqBody(reqBodyCopy, r)
 		rid, _ := requestid.FromContext(r.Context())
 		span := opentracing.SpanFromContext(r.Context())
 		if jspan, ok := span.(*jaeger.Span); ok {
@@ -262,7 +256,6 @@ func log(inner http.Handler) http.Handler {
 		fields := map[string]interface{}{
 			"remoteAddr":        r.RemoteAddr,
 			"httpMethod":        r.Method,
-			"requestUri":        r.URL.RequestURI(),
 			"requestUrl":        r.URL.String(),
 			"proto":             r.Proto,
 			"host":              r.Host,
@@ -275,9 +268,9 @@ func log(inner http.Handler) http.Handler {
 			"statusCode":        rec.Result().StatusCode,
 			"respHeader":        rec.Result().Header,
 			"respContentLength": rec.Body.Len(),
-			"elapsedTime":       time.Since(start).String(),
-			"elapsed":           time.Since(start).Milliseconds(),
-			"span":              fmt.Sprint(span),
+			"elapsedTime":       elapsed.String(),
+			"elapsed":           elapsed.Milliseconds(),
+			"span":              span,
 			"traceId":           traceId,
 		}
 		var reqLog string

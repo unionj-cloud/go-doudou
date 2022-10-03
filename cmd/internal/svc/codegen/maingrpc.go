@@ -20,6 +20,16 @@ var mainTmplGrpc = `/**
 package main
 
 import (
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpczerolog "github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"google.golang.org/grpc"
 	ddgrpc "github.com/unionj-cloud/go-doudou/framework/grpc"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
     "{{.ConfigPackage}}"
@@ -29,7 +39,24 @@ import (
 func main() {
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
-	grpcServer := ddgrpc.NewGrpcServer()
+	grpcServer := ddgrpc.NewGrpcServer(
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_ctxtags.StreamServerInterceptor(),
+			grpc_opentracing.StreamServerInterceptor(),
+			grpc_prometheus.StreamServerInterceptor,
+			tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+			logging.StreamServerInterceptor(grpczerolog.InterceptorLogger(zlogger.Logger)),
+			grpc_recovery.StreamServerInterceptor(),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_opentracing.UnaryServerInterceptor(),
+			grpc_prometheus.UnaryServerInterceptor,
+			tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+			logging.UnaryServerInterceptor(grpczerolog.InterceptorLogger(zlogger.Logger)),
+			grpc_recovery.UnaryServerInterceptor(),
+		)),
+	)
 	pb.Register{{.GrpcSvcName}}Server(grpcServer, svc)
 	grpcServer.Run()
 }

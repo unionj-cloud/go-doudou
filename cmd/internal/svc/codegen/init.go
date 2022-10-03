@@ -109,7 +109,14 @@ require (
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/rs/zerolog v1.28.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
+	github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2 v2.0.0-rc.2
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2
+	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+	github.com/prometheus/client_golang v1.11.0
+	google.golang.org/grpc v1.38.0
+	google.golang.org/protobuf v1.26.0
 	github.com/unionj-cloud/go-doudou ` + version.Release + `
 )`
 

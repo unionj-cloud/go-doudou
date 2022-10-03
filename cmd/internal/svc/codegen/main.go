@@ -28,7 +28,7 @@ func main() {
 	conf := config.LoadFromEnv()
     svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
-	srv := ddhttp.NewDefaultHttpSrv()
+	srv := ddhttp.NewHttpRouterSrv()
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }
