@@ -27,7 +27,7 @@
 - 🔑 内建服务治理模块，支持远程配置管理、客户端负载均衡、熔断限流、隔仓、超时重试等等
 - 📦️ 同时支持单体架构和微服务架构，可以自由设计你的系统
 
-Go-doudou（doudou发音"兜兜"）是一个基于OpenAPI v3接口描述规范的轻量级微服务开发框架。它同时支持开发单体架构的应用。目前，仅支持RESTful接口。
+Go-doudou（doudou发音"兜兜"）是一个基于OpenAPI v3 (for REST)和Protobuf v3 (for grpc)的轻量级微服务开发框架。它同时支持开发单体架构的应用。
 
 请阅读文档 [https://go-doudou.github.io/zh/](https://go-doudou.github.io/zh/) 了解更多。
 

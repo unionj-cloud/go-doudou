@@ -27,7 +27,7 @@
 - 🔑 Built-in service governance support including remote configuration management, client-side load balancer, rate limiter, circuit breaker, bulkhead, timeout, retry and more.
 - 📦️ Supporting both monolith and microservice architectures gives you flexibility to design your system.
 
-Go-doudou（doudou pronounce /dəudəu/）is OpenAPI v3 spec based lightweight microservice framework. It supports monolith service application as well. Currently, it supports RESTful service only.  
+Go-doudou（doudou pronounce /dəudəu/）is OpenAPI 3.0 (for REST) spec and Protobuf v3 (for grpc) based lightweight microservice framework. It supports monolith service application as well.  
 
 Read the Docs [https://go-doudou.github.io](https://go-doudou.github.io) to Learn More.
 
