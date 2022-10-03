@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"bufio"
+	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	v3 "github.com/unionj-cloud/go-doudou/cmd/internal/protobuf/v3"
@@ -23,7 +24,6 @@ import (
 	{{.ServiceAlias}} "{{.ServicePackage}}"
     "{{.ConfigPackage}}"
 	pb "{{.PbPackage}}"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -48,6 +48,8 @@ func GenMainGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Service)
 		cmdDir    string
 		svcName   string
 		alias     string
+		sqlBuf    bytes.Buffer
+		source    string
 	)
 	cmdDir = filepath.Join(dir, "cmd")
 	if err = MkdirAll(cmdDir, os.ModePerm); err != nil {
@@ -74,7 +76,7 @@ func GenMainGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Service)
 		if tpl, err = template.New("main.go.tmpl").Parse(mainTmplGrpc); err != nil {
 			panic(err)
 		}
-		if err = tpl.Execute(f, struct {
+		if err = tpl.Execute(&sqlBuf, struct {
 			ServicePackage string
 			ConfigPackage  string
 			PbPackage      string
@@ -93,6 +95,8 @@ func GenMainGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Service)
 		}); err != nil {
 			panic(err)
 		}
+		source = strings.TrimSpace(sqlBuf.String())
+		astutils.FixImport([]byte(source), mainfile)
 	} else {
 		logrus.Warnf("file %s already exists", mainfile)
 	}

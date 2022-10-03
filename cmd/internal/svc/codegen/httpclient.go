@@ -416,7 +416,6 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	}); err != nil {
 		panic(err)
 	}
-
 	source = strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), clientfile)
 }
