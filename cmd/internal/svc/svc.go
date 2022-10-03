@@ -488,7 +488,6 @@ func (receiver *Svc) Grpc() {
 
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
-	codegen.GenMain(dir, ic)
 
 	codegen.ParseVoGrpc(dir)
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic)
@@ -502,4 +501,5 @@ func (receiver *Svc) Grpc() {
 		panic(err)
 	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
+	codegen.GenMainGrpc(dir, ic, grpcSvc)
 }

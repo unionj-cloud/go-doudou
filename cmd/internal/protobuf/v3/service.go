@@ -34,7 +34,7 @@ type Service struct {
 
 func NewService(name, goPackage string) Service {
 	return Service{
-		Name:      strcase.ToCamel(name) + "Rpc",
+		Name:      strcase.ToCamel(name) + "Service",
 		Package:   strcase.ToSnake(name),
 		GoPackage: goPackage,
 		Syntax:    Syntax,

@@ -32,6 +32,7 @@ import (
 )
 
 //go:generate go-doudou svc http --handler -c --doc
+//go:generate go-doudou svc grpc
 
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
