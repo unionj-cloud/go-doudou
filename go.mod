@@ -89,6 +89,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20220216144756-c35f1ee13d7c
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.8.0
+	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2

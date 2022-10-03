@@ -8,16 +8,15 @@ import (
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/logutils"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -68,14 +67,14 @@ func join() error {
 	}
 	s := seeds(seed)
 	if len(s) == 0 {
-		logger.Warnln("No seed found")
+		logger.Warn().Msg("No seed found")
 		return nil
 	}
 	_, err := mlist.Join(s)
 	if err != nil {
 		return errors.Wrap(err, "[go-doudou] Failed to join cluster")
 	}
-	logger.Infof("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
+	logger.Info().Msgf("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
 	return nil
 }
 
@@ -109,7 +108,7 @@ func newMeta(node *memberlist.Node) (mergedMeta, error) {
 		r := bytes.NewReader(node.Meta)
 		dec := codec.NewDecoder(r, &codec.MsgpackHandle{})
 		if err := dec.Decode(&mm); err != nil {
-			logger.Panic(errors.Wrap(err, "[go-doudou] parse node meta data error"))
+			logger.Panic().Err(errors.Wrap(err, "[go-doudou] parse node meta data error")).Msg("")
 		}
 	}
 	return mm, nil
@@ -121,7 +120,7 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(cidrs) {
 		var err error
 		if cfg.CIDRsAllowed, err = memberlist.ParseCIDRs(strings.Split(cidrs, ",")); err != nil {
-			logger.Errorf("call ParseCIDRs error: %s\n", err.Error())
+			logger.Error().Msgf("call ParseCIDRs error: %s\n", err.Error())
 		}
 	}
 	setGddMemIndirectChecks(cfg)
@@ -142,7 +141,7 @@ func newConf() *memberlist.Config {
 	if disable {
 		lf.Writer = ioutil.Discard
 	} else {
-		lf.Writer = logrus.StandardLogger().Writer()
+		lf.Writer = logger.Logger
 	}
 	cfg.LogOutput = lf
 	setGddMemDeadTimeout(cfg)
@@ -298,7 +297,7 @@ func newNode(data ...map[string]interface{}) error {
 	}
 	local := mlist.LocalNode()
 	baseUrl, _ := BaseUrl(local)
-	logger.Infof("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
+	logger.Info().Msgf("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
 		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
 	registerConfigListener(mconf)
 	return nil
@@ -409,7 +408,7 @@ func NewNode(data ...map[string]interface{}) error {
 				return err
 			}
 		default:
-			logger.Warn(fmt.Sprintf("[go-doudou] unknown service discovery mode: %s", mode))
+			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
 	}
 	return nil
@@ -419,7 +418,7 @@ func shutdown() {
 	if mlist != nil {
 		_ = mlist.Shutdown()
 		mlist = nil
-		logger.Info("memberlist shutdown")
+		logger.Info().Msg("memberlist shutdown")
 	}
 }
 
@@ -432,7 +431,7 @@ func Shutdown() {
 		case "memberlist":
 			shutdown()
 		default:
-			logger.Warn(fmt.Sprintf("[go-doudou] unknown service discovery mode: %s", mode))
+			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
 	}
 }
@@ -441,7 +440,7 @@ func Shutdown() {
 func Leave(timeout time.Duration) {
 	if mlist != nil {
 		_ = mlist.Leave(timeout)
-		logger.Info("local node left the cluster")
+		logger.Info().Msg("local node left the cluster")
 	}
 }
 
@@ -522,7 +521,7 @@ func SvcName(node *memberlist.Node) string {
 		err error
 	)
 	if mm, err = newMeta(node); err != nil {
-		logger.Errorln(fmt.Sprintf("%+v", err))
+		logger.Error().Err(err).Msg("")
 		return ""
 	}
 	return mm.Meta.Service

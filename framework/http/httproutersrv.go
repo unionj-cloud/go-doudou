@@ -18,7 +18,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"net/http"
@@ -84,7 +84,7 @@ func (srv *HttpRouterSrv) AddRoute(route ...model.Route) {
 }
 
 func (srv *HttpRouterSrv) printRoutes() {
-	logger.Infoln("================ Registered Routes ================")
+	logger.Info().Msg("================ Registered Routes ================")
 	var data [][]string
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
@@ -111,9 +111,9 @@ func (srv *HttpRouterSrv) printRoutes() {
 	table.Render() // Send output
 	rows := strings.Split(strings.TrimSpace(tableString.String()), "\n")
 	for _, row := range rows {
-		logger.Infoln(row)
+		logger.Info().Msg(row)
 	}
-	logger.Infoln("===================================================")
+	logger.Info().Msg("===================================================")
 }
 
 // AddMiddleware adds middlewares to the end of chain
@@ -135,21 +135,21 @@ func (srv *HttpRouterSrv) PreMiddleware(mwf ...func(http.Handler) http.Handler) 
 func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
-		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
+		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
 			config.GddWriteTimeout.Load(), err.Error(), config.DefaultGddWriteTimeout)
 		write, _ = time.ParseDuration(config.DefaultGddWriteTimeout)
 	}
 
 	read, err := time.ParseDuration(config.GddReadTimeout.Load())
 	if err != nil {
-		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
+		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
 			config.GddReadTimeout.Load(), err.Error(), config.DefaultGddReadTimeout)
 		read, _ = time.ParseDuration(config.DefaultGddReadTimeout)
 	}
 
 	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
 	if err != nil {
-		logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
+		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
 			config.GddIdleTimeout.Load(), err.Error(), config.DefaultGddIdleTimeout)
 		idle, _ = time.ParseDuration(config.DefaultGddIdleTimeout)
 	}
@@ -173,10 +173,10 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		logger.Infof("Http server is listening at %v", httpServer.Addr)
-		logger.Infof("Http server started in %s", time.Since(startAt))
+		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
+		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 		if err := httpServer.ListenAndServe(); err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 		}
 	}()
 
@@ -220,7 +220,7 @@ func (srv *HttpRouterSrv) Run() {
 		srv.gddRoutes = append(srv.gddRoutes, configui.Routes()...)
 		freq, err := time.ParseDuration(config.GddStatsFreq.Load())
 		if err != nil {
-			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddStatsFreq),
+			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddStatsFreq),
 				config.GddStatsFreq.Load(), err.Error(), config.DefaultGddStatsFreq)
 			freq, _ = time.ParseDuration(config.DefaultGddStatsFreq)
 		}
@@ -334,11 +334,11 @@ func (srv *HttpRouterSrv) Run() {
 	defer func() {
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
-			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
+			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
 				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
 			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
 		}
-		logger.Infof("Http server is gracefully shutting down in %s", grace)
+		logger.Info().Msgf("Http server is gracefully shutting down in %s", grace)
 
 		ctx, cancel := context.WithTimeout(context.Background(), grace)
 		defer cancel()

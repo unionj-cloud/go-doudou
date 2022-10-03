@@ -3,10 +3,10 @@ package codegen
 import (
 	"bufio"
 	"bytes"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/toolkit/copier"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/version"
 	"go/ast"
 	"go/parser"
@@ -22,7 +22,8 @@ var cpimportTmpl = `
 	"context"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/slok/goresilience"
 	"github.com/go-resty/resty/v2"
 	"github.com/slok/goresilience/circuitbreaker"
@@ -71,7 +72,7 @@ var appendTmpl = `
 		}); _err != nil {
 			// you can implement your fallback logic here
 			if errors.Is(_err, rerrors.ErrCircuitOpen) {
-				receiver.logger.Error(_err)
+				receiver.logger.Error().Err(_err).Msg("")
 			}
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
@@ -94,7 +95,7 @@ import ()
 
 type {{.SvcName}}ClientProxy struct {
 	client *{{.SvcName}}Client
-	logger *logrus.Logger
+	logger zerolog.Logger
 	runner goresilience.Runner
 }
 
@@ -108,7 +109,7 @@ func WithRunner(runner goresilience.Runner) ProxyOption {
 	}
 }
 
-func WithLogger(logger *logrus.Logger) ProxyOption {
+func WithLogger(logger zerolog.Logger) ProxyOption {
 	return func(proxy *{{.SvcName}}ClientProxy) {
 		proxy.logger = logger
 	}
@@ -117,7 +118,7 @@ func WithLogger(logger *logrus.Logger) ProxyOption {
 func New{{.SvcName}}ClientProxy(client *{{.SvcName}}Client, opts ...ProxyOption) *{{.SvcName}}ClientProxy {
 	cp := &{{.SvcName}}ClientProxy{
 		client: client,
-		logger: logrus.StandardLogger(),
+		logger: zlogger.Logger,
 	}
 
 	for _, opt := range opts {
@@ -207,7 +208,7 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("New content will be append to clientproxy.go file")
+		zlogger.Warn().Msg("New content will be append to clientproxy.go file")
 		if f, err = os.OpenFile(clientfile, os.O_APPEND, os.ModePerm); err != nil {
 			panic(err)
 		}

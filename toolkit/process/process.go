@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"os"
 	"runtime"
 	"sort"
@@ -198,7 +198,7 @@ func NewCurrentProcess() *Process {
 	}
 	createTime, err := p.createTimeWithContext(context.Background())
 	if err != nil {
-		logger.Error(err)
+		logger.Error().Err(err).Msg("")
 		p.Err = err
 		return p
 	}

@@ -6,7 +6,6 @@ import (
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
@@ -16,94 +15,6 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/vo"
 	"testing"
 )
-
-func TestLogLevel_Decode(t *testing.T) {
-	var ll1, ll2, ll3, ll4, ll5, ll6, ll7 config.LogLevel
-	type args struct {
-		value string
-	}
-	tests := []struct {
-		name    string
-		ll      *config.LogLevel
-		args    args
-		wantErr bool
-		want    logrus.Level
-	}{
-		{
-			name: "1",
-			ll:   &ll1,
-			args: args{
-				value: "panic",
-			},
-			wantErr: false,
-			want:    logrus.PanicLevel,
-		},
-		{
-			name: "2",
-			ll:   &ll2,
-			args: args{
-				value: "debug",
-			},
-			wantErr: false,
-			want:    logrus.DebugLevel,
-		},
-		{
-			name: "3",
-			ll:   &ll3,
-			args: args{
-				value: "error",
-			},
-			wantErr: false,
-			want:    logrus.ErrorLevel,
-		},
-		{
-			name: "4",
-			ll:   &ll4,
-			args: args{
-				value: "fatal",
-			},
-			wantErr: false,
-			want:    logrus.FatalLevel,
-		},
-		{
-			name: "5",
-			ll:   &ll5,
-			args: args{
-				value: "info",
-			},
-			wantErr: false,
-			want:    logrus.InfoLevel,
-		},
-		{
-			name: "6",
-			ll:   &ll6,
-			args: args{
-				value: "warn",
-			},
-			wantErr: false,
-			want:    logrus.WarnLevel,
-		},
-		{
-			name: "7",
-			ll:   &ll7,
-			args: args{
-				value: "trace",
-			},
-			wantErr: false,
-			want:    logrus.TraceLevel,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.ll.Decode(tt.args.value); (err != nil) != tt.wantErr {
-				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if logrus.Level(*tt.ll) != tt.want {
-				t.Errorf("Decode() want %v, got %v", tt.want, logrus.Level(*tt.ll))
-			}
-		})
-	}
-}
 
 func Test_envVariable_String(t *testing.T) {
 	Convey("Should be on", t, func() {

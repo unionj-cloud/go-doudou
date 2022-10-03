@@ -6,7 +6,7 @@ package prometheus
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/toolkit/load"
 	"github.com/unionj-cloud/go-doudou/toolkit/process"
 	"net/http"
@@ -114,7 +114,7 @@ func init() {
 		}
 		ts, err := p.Times1()
 		if err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 			return 0
 		}
 		return ts.System
@@ -131,7 +131,7 @@ func init() {
 		}
 		ts, err := p.Times1()
 		if err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 			return 0
 		}
 		return ts.User
@@ -148,7 +148,7 @@ func init() {
 		}
 		start, err := p.CreateTime()
 		if err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 			return float64(time.Unix(0, 0).UnixMilli())
 		}
 		return float64(start)
@@ -165,7 +165,7 @@ func init() {
 		}
 		start, err := p.CreateTime()
 		if err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 			return float64(time.Since(time.Unix(0, 0).Local()).Milliseconds())
 		}
 		return float64(time.Since(time.UnixMilli(start).Local()).Milliseconds())
@@ -178,7 +178,7 @@ func init() {
 	}, func() float64 {
 		as, err := load.Avg1()
 		if err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 			return 0
 		}
 		return as.Load1

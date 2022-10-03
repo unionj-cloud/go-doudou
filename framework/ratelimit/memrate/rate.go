@@ -8,8 +8,8 @@ package memrate
 import (
 	"context"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"math"
 	"sync"
 	"time"
@@ -475,7 +475,7 @@ func (lim *Limiter) AllowCtx(ctx context.Context) bool {
 	select {
 	case <-ctx.Done():
 		if ctx.Err() != nil {
-			logger.Error(ctx.Err())
+			logger.Error().Err(ctx.Err()).Msg("")
 		}
 		return false
 	default:

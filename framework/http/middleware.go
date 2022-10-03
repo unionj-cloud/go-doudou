@@ -12,14 +12,13 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/slok/goresilience"
 	"github.com/slok/goresilience/bulkhead"
 	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -90,7 +89,7 @@ func InitialiseRemoteConfigListener() {
 	case config.ApolloConfigType:
 		configmgr.ApolloClient.AddChangeListener(listener)
 	default:
-		logrus.Warnf("[go-doudou] from ddhttp pkg: unknown config type: %s\n", configType)
+		logger.Warn().Msgf("[go-doudou] from ddhttp pkg: unknown config type: %s\n", configType)
 	}
 }
 
@@ -102,21 +101,19 @@ func init() {
 func metrics(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(inner, w, r)
-		logger.WithFields(logrus.Fields{
-			"remoteAddr": r.RemoteAddr,
-			"httpMethod": r.Method,
-			"requestUri": r.URL.RequestURI(),
-			"requestUrl": r.URL.String(),
-			"statusCode": m.Code,
-			"written":    m.Written,
-			"duration":   m.Duration.String(),
-		}).Info(fmt.Sprintf("%s\t%s\t%s\t%d\t%d\t%s\n",
-			r.RemoteAddr,
-			r.Method,
-			r.URL,
-			m.Code,
-			m.Written,
-			m.Duration.String()))
+		logger.Info().
+			Str("remoteAddr", r.Method).
+			Str("requestUri", r.URL.RequestURI()).
+			Str("requestUrl", r.URL.String()).
+			Int("statusCode", m.Code).
+			Int64("written", m.Written).
+			Str("duration", m.Duration.String()).
+			Msgf("%s\t%s\t%s\t%d\t%d\t%s\n", r.RemoteAddr,
+				r.Method,
+				r.URL,
+				m.Code,
+				m.Written,
+				m.Duration.String())
 	})
 }
 
@@ -173,7 +170,7 @@ func getReqBody(cp io.ReadCloser, r *http.Request) string {
 					reqBody = unescape
 				}
 			} else {
-				logger.Debug("call r.ParseMultipartForm(32 << 20) error: ", err)
+				logger.Error().Err(err).Msg("call r.ParseMultipartForm(32 << 20) error")
 			}
 		} else if strings.Contains(contentType, "application/json") {
 			data := make(map[string]interface{})
@@ -181,7 +178,7 @@ func getReqBody(cp io.ReadCloser, r *http.Request) string {
 				b, _ := json.MarshalIndent(data, "", "    ")
 				reqBody = string(b)
 			} else {
-				logger.Debug("call json.NewDecoder(reqBodyCopy).Decode(&data) error: ", err)
+				logger.Error().Err(err).Msg("call json.NewDecoder(reqBodyCopy).Decode(&data) error")
 			}
 		} else {
 			var buf bytes.Buffer
@@ -198,7 +195,7 @@ func getReqBody(cp io.ReadCloser, r *http.Request) string {
 					}
 				}
 			} else {
-				logger.Debug("call buf.ReadFrom(reqBodyCopy) error: ", err)
+				logger.Error().Err(err).Msg("call buf.ReadFrom(reqBodyCopy) error")
 			}
 		}
 	}
@@ -218,10 +215,10 @@ func getRespBody(rec *httptest.ResponseRecorder) string {
 				b, _ := json.MarshalIndent(data, "", "    ")
 				respBody = string(b)
 			} else {
-				logger.Debug("call json.NewDecoder(rec.Body).Decode(&data) error: ", err)
+				logger.Error().Err(err).Msg("call json.NewDecoder(rec.Body).Decode(&data) error")
 			}
 		} else {
-			logger.Debug("call respBodyCopy.ReadFrom(rec.Body) error: ", err)
+			logger.Error().Err(err).Msg("call respBodyCopy.ReadFrom(rec.Body) error")
 		}
 		rec.Body = respBodyCopy
 	} else {
@@ -244,7 +241,7 @@ func log(inner http.Handler) http.Handler {
 			traceId     string
 		)
 		if reqBodyCopy, r.Body, err = copyReqBody(r.Body); err != nil {
-			logger.Debug("call copyReqBody(r.Body) error: ", err)
+			logger.Error().Err(err).Msg("call copyReqBody(r.Body) error")
 		}
 
 		rec := httptest.NewRecorder()
@@ -262,7 +259,7 @@ func log(inner http.Handler) http.Handler {
 		if unescape, err := url.QueryUnescape(reqQuery); err == nil {
 			reqQuery = unescape
 		}
-		fields := logrus.Fields{
+		fields := map[string]interface{}{
 			"remoteAddr":        r.RemoteAddr,
 			"httpMethod":        r.Method,
 			"requestUri":        r.URL.RequestURI(),
@@ -287,8 +284,7 @@ func log(inner http.Handler) http.Handler {
 		if reqLog, err = jsonMarshalIndent(fields, "", "    ", true); err != nil {
 			reqLog = fmt.Sprintf("call jsonMarshalIndent(fields, \"\", \"    \", true) error: %s", err)
 		}
-		logger.WithFields(fields).Infoln(reqLog)
-
+		logger.Info().Fields(fields).Msg(reqLog)
 		header := rec.Result().Header
 		for k, v := range header {
 			w.Header()[k] = v
@@ -353,7 +349,7 @@ func recovery(inner http.Handler) http.Handler {
 						}
 					}
 				}
-				logger.Errorf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
+				logger.Error().Msgf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
 				http.Error(w, respErr, statusCode)
 			}
 		}()

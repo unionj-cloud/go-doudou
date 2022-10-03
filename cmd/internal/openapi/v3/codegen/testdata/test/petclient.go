@@ -124,6 +124,37 @@ func (receiver *PetClient) GetPetFindByTags(ctx context.Context, _headers map[st
 	return
 }
 
+// GetPetPetId Find pet by ID
+// Returns a single pet
+func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
+	// ID of pet to return
+	// required
+	petId int64) (ret Pet, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
+
+	_resp, _err = _req.Get("/pet/{petId}")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
 // PostPetPetIdUploadImage uploads an image
 func (receiver *PetClient) PostPetPetIdUploadImage(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
@@ -180,37 +211,6 @@ func (receiver *PetClient) GetPetFindByStatus(ctx context.Context, _headers map[
 	_req.SetQueryParamsFromValues(_queryParams)
 
 	_resp, _err = _req.Get("/pet/findByStatus")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
-}
-
-// GetPetPetId Find pet by ID
-// Returns a single pet
-func (receiver *PetClient) GetPetPetId(ctx context.Context, _headers map[string]string,
-	// ID of pet to return
-	// required
-	petId int64) (ret Pet, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_req.SetPathParam("petId", fmt.Sprintf("%v", petId))
-
-	_resp, _err = _req.Get("/pet/{petId}")
 	if _err != nil {
 		err = errors.Wrap(_err, "")
 		return

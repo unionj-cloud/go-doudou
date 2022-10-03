@@ -6,45 +6,49 @@ import (
 	"github.com/ascarter/requestid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/reflectutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"os"
 	"regexp"
 	"strings"
 )
 
-type ISqlLogger interface {
-	Log(ctx context.Context, query string, args ...interface{})
-	LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{})
-	Enable() bool
-	logrus.StdLogger
-}
-
 type SqlLogger struct {
-	logrus.StdLogger
+	Logger zerolog.Logger
 }
 
-func (receiver *SqlLogger) Enable() bool {
+func (receiver SqlLogger) Enable() bool {
 	return cast.ToBoolOrDefault(os.Getenv("GDD_SQL_LOG_ENABLE"), false)
 }
 
-func (receiver *SqlLogger) SetLogger(logger logrus.FieldLogger) {
-	receiver.StdLogger = logger
-}
-
-func NewSqlLogger(logger logrus.StdLogger) ISqlLogger {
-	return &SqlLogger{StdLogger: logger}
-}
-
-func (receiver *SqlLogger) Log(ctx context.Context, query string, args ...interface{}) {
+func (receiver SqlLogger) Log(ctx context.Context, query string, args ...interface{}) {
 	if !receiver.Enable() {
 		return
 	}
 	receiver.LogWithErr(ctx, nil, nil, query, args...)
+}
+
+type SqlLoggerOption func(logger *SqlLogger)
+
+func WithLogger(logger zerolog.Logger) SqlLoggerOption {
+	return func(sqlLogger *SqlLogger) {
+		sqlLogger.Logger = logger
+	}
+}
+
+func NewSqlLogger(opts ...SqlLoggerOption) SqlLogger {
+	sqlLogger := SqlLogger{
+		Logger: zlogger.Logger,
+	}
+	for _, item := range opts {
+		item(&sqlLogger)
+	}
+	return sqlLogger
 }
 
 var limitre *regexp.Regexp
@@ -75,7 +79,7 @@ func PopulatedSql(query string, args ...interface{}) string {
 	return str
 }
 
-func (receiver *SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{}) {
+func (receiver SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{}) {
 	if !receiver.Enable() {
 		return
 	}
@@ -98,5 +102,5 @@ func (receiver *SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool,
 	if err != nil {
 		sb.WriteString(fmt.Sprintf("\tERR: %s", errors.Wrap(err, caller.NewCaller().String())))
 	}
-	receiver.Println(sb.String())
+	receiver.Logger.Info().Msgf(sb.String())
 }

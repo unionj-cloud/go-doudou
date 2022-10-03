@@ -6,9 +6,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/timeutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
@@ -35,7 +35,7 @@ func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 }
 
 func (srv *GrpcServer) printServices() {
-	logger.Infoln("================ Registered Services ================")
+	logger.Info().Msg("================ Registered Services ================")
 	data := [][]string{}
 	for k, v := range srv.GetServiceInfo() {
 		for i, method := range v.Methods {
@@ -56,9 +56,9 @@ func (srv *GrpcServer) printServices() {
 	table.Render() // Send output
 	rows := strings.Split(strings.TrimSpace(tableString.String()), "\n")
 	for _, row := range rows {
-		logger.Infoln(row)
+		logger.Info().Msg(row)
 	}
-	logger.Infoln("===================================================")
+	logger.Info().Msg("===================================================")
 }
 
 // Run runs grpc server
@@ -70,26 +70,26 @@ func (srv *GrpcServer) Run() {
 	}
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		logger.Panicf("failed to listen: %v", err)
+		logger.Panic().Msgf("failed to listen: %v", err)
 	}
 	reflection.Register(srv)
 	srv.printServices()
 	go func() {
-		logger.Infof("Grpc server is listening at %v", lis.Addr())
-		logger.Infof("Grpc server started in %s", time.Since(startAt))
+		logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
+		logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
 		if err := srv.Serve(lis); err != nil {
-			logger.Errorf("failed to serve: %v", err)
+			logger.Error().Msgf("failed to serve: %v", err)
 		}
 	}()
 
 	defer func() {
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
-			logger.Debugf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
+			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
 				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
 			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
 		}
-		logger.Infof("Grpc server is gracefully shutting down in %s", grace)
+		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", grace)
 
 		ctx, cancel := context.WithTimeout(context.Background(), grace)
 		defer cancel()
@@ -97,7 +97,7 @@ func (srv *GrpcServer) Run() {
 			srv.GracefulStop()
 			return struct{}{}
 		}); err != nil {
-			logger.Error(err)
+			logger.Error().Err(err).Msg("")
 		}
 	}()
 

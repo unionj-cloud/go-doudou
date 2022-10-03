@@ -2,7 +2,7 @@ package redisrate
 
 import (
 	"context"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
 	"strconv"
 	"time"
@@ -32,7 +32,7 @@ type GcraLimiter struct {
 func (gl *GcraLimiter) AllowCtx(ctx context.Context) bool {
 	allow, err := gl.AllowECtx(ctx)
 	if err != nil {
-		logger.Error(err)
+		logger.Error().Err(err).Msg("")
 		return false
 	}
 	return allow
@@ -41,7 +41,7 @@ func (gl *GcraLimiter) AllowCtx(ctx context.Context) bool {
 func (gl *GcraLimiter) Allow() bool {
 	allow, err := gl.AllowE()
 	if err != nil {
-		logger.Error(err)
+		logger.Error().Err(err).Msg("")
 		return false
 	}
 	return allow

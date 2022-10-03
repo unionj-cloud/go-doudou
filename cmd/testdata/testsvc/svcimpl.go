@@ -6,6 +6,8 @@ import (
 	"testsvc/vo"
 )
 
+var _ Testsvc = (*TestsvcImpl)(nil)
+
 type TestsvcImpl struct {
 	conf *config.Config
 }

@@ -2,8 +2,8 @@ package memrate
 
 import (
 	"context"
+	"fmt"
 	lru "github.com/hashicorp/golang-lru"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
 	"reflect"
@@ -121,7 +121,7 @@ func TestNewMemoryStore(t *testing.T) {
 				opts: []MemoryStoreOption{
 					WithMaxKeys(100),
 					WithOnEvicted(func(key interface{}, value interface{}) {
-						log.Println(key, value)
+						fmt.Println(key, value)
 					}),
 				},
 			},

@@ -11,6 +11,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/common/constant"
 	"github.com/wubin1989/nacos-sdk-go/vo"
 	_ "go.uber.org/automaxprocs"
@@ -80,9 +81,14 @@ func LoadConfigFromRemote() {
 	}
 }
 
+func CheckDev() bool {
+	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
+}
+
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
+	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), GddServiceName.Load(), CheckDev())
 }
 
 type envVariable string
@@ -101,7 +107,7 @@ const (
 	GddBanner envVariable = "GDD_BANNER"
 	// GddBannerText sets text content of banner
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
-	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, please reference logrus.ParseLevel
+	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, please reference logger.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
 	// GddLogFormat text or json
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"
@@ -249,33 +255,6 @@ func (receiver envVariable) String() string {
 // Write sets the environment variable to value
 func (receiver envVariable) Write(value string) error {
 	return os.Setenv(string(receiver), value)
-}
-
-// LogLevel alias for logrus.Level
-type LogLevel logrus.Level
-
-// Decode decodes value to LogLevel
-func (ll *LogLevel) Decode(value string) error {
-	//if stringutils.IsEmpty(value) {
-	//	value = DefaultGddLogLevel
-	//}
-	switch value {
-	case "panic":
-		*ll = LogLevel(logrus.PanicLevel)
-	case "fatal":
-		*ll = LogLevel(logrus.FatalLevel)
-	case "error":
-		*ll = LogLevel(logrus.ErrorLevel)
-	case "warn":
-		*ll = LogLevel(logrus.WarnLevel)
-	case "debug":
-		*ll = LogLevel(logrus.DebugLevel)
-	case "trace":
-		*ll = LogLevel(logrus.TraceLevel)
-	default:
-		*ll = LogLevel(logrus.InfoLevel)
-	}
-	return nil
 }
 
 func GetNacosClientParam() vo.NacosClientParam {

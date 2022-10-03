@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/rbretecher/go-postman-collection"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/version"
 	"go/ast"
 	"go/parser"
@@ -71,7 +71,8 @@ func Test_{{$response.Name | cleanName}}(t *testing.T) {
 var integrationTestingImportTmpl = `
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/steinfletcher/apitest"
 	jsonpath "github.com/steinfletcher/apitest-jsonpath"
 	"net/http"
@@ -106,9 +107,9 @@ func TestMain(m *testing.M) {
 			return
 		}
 		if err := conn.Close(); err == nil {
-			logrus.Infoln("Database connection is closed")
+			zlogger.Info().Msg("Database connection is closed")
 		} else {
-			logrus.Warnln("Failed to close database connection")
+			zlogger.Warn().Msg("Failed to close database connection")
 		}
 	}()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf, conn)
@@ -162,7 +163,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 	responses = notGenerated(integrationTestDir, postmanCollectionPath)
 	fi, _ = os.Stat(testFile)
 	if fi != nil {
-		logrus.Warningln("New content will be append to integration_test.go file")
+		zlogger.Warn().Msg("New content will be append to integration_test.go file")
 		if f, err = os.OpenFile(testFile, os.O_APPEND, os.ModePerm); err != nil {
 			panic(err)
 		}

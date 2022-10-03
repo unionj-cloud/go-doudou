@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
@@ -22,6 +22,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/wrapper"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -546,12 +547,11 @@ func updateIndexFromStruct(ctx context.Context, tx *sqlx.Tx, t Table, fks []Fore
 }
 
 func Setup() (func(), *sqlx.DB, error) {
-	logger := logrus.New()
 	var terminateContainer func() // variable to store function to terminate container
 	var host string
 	var port int
 	var err error
-	terminateContainer, host, port, err = setupMySQLContainer(logger, pathutils.Abs("../testdata/sql"), "")
+	terminateContainer, host, port, err = setupMySQLContainer(zlogger.Logger, pathutils.Abs("../testdata/sql"), "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to setup MySQL container")
 	}
@@ -584,8 +584,8 @@ func Setup() (func(), *sqlx.DB, error) {
 	return terminateContainer, db, nil
 }
 
-func setupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (func(), string, int, error) {
-	logger.Info("setup MySQL Container")
+func setupMySQLContainer(logger zerolog.Logger, initdb string, dbname string) (func(), string, int, error) {
+	logger.Info().Msg("setup MySQL Container")
 	ctx := context.Background()
 	if stringutils.IsEmpty(dbname) {
 		dbname = "test"
@@ -609,15 +609,15 @@ func setupMySQLContainer(logger *logrus.Logger, initdb string, dbname string) (f
 	})
 
 	if err != nil {
-		logger.Errorf("error starting mysql container: %s", err)
+		logger.Error().Msgf("error starting mysql container: %s", err)
 		panic(fmt.Sprintf("%v", err))
 	}
 
 	closeContainer := func() {
-		logger.Info("terminating container")
+		logger.Info().Msg("terminating container")
 		err := mysqlC.Terminate(ctx)
 		if err != nil {
-			logger.Errorf("error terminating mysql container: %s", err)
+			logger.Error().Msgf("error terminating mysql container: %s", err)
 			panic(fmt.Sprintf("%v", err))
 		}
 	}

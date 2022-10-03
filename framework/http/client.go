@@ -6,11 +6,11 @@ import (
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
 	"github.com/wubin1989/nacos-sdk-go/model"
 	"github.com/wubin1989/nacos-sdk-go/vo"
@@ -141,12 +141,12 @@ func (m *base) AddNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes, s)
 		m.nodeMap[node.Name] = s
-		logger.Infof("[go-doudou] add node %s to load balancer, supplying %s service", node.Name, svcName)
+		logger.Info().Msgf("[go-doudou] add node %s to load balancer, supplying %s service", node.Name, svcName)
 	} else {
 		old := *s
 		s.baseUrl = baseUrl
 		s.weight = weight
-		logger.Infof("[go-doudou] node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, *s)
+		logger.Info().Msgf("[go-doudou] node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, *s)
 	}
 }
 
@@ -164,7 +164,7 @@ func (m *base) UpdateWeight(node *memberlist.Node) {
 	if s, exists := m.nodeMap[node.Name]; exists {
 		old := *s
 		s.weight = node.Weight
-		logger.Infof("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
+		logger.Info().Msgf("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
 	}
 }
 
@@ -188,7 +188,7 @@ func (m *base) RemoveNode(node *memberlist.Node) {
 		}
 		m.nodes = append(m.nodes[:idx], m.nodes[idx+1:]...)
 		delete(m.nodeMap, node.Name)
-		logger.Infof("[go-doudou] remove node %s from load balancer, supplying %s service", node.Name, svcName)
+		logger.Info().Msgf("[go-doudou] remove node %s from load balancer, supplying %s service", node.Name, svcName)
 	}
 }
 
@@ -328,7 +328,7 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
 	if n.namingClient == nil {
-		logger.Error("[go-doudou] nacos discovery client has not been initialized")
+		logger.Error().Msg("[go-doudou] nacos discovery client has not been initialized")
 		return ""
 	}
 	instances, err := n.namingClient.SelectInstances(vo.SelectInstancesParam{
@@ -338,7 +338,7 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 		HealthyOnly: true,
 	})
 	if err != nil {
-		logger.Error(fmt.Sprintf("[go-doudou] error:%s", err))
+		logger.Error().Err(err).Msg("[go-doudou] error")
 		return ""
 	}
 	sort.Sort(instance(instances))
@@ -372,7 +372,7 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
 	if n.namingClient == nil {
-		logger.Error("[go-doudou] nacos discovery client has not been initialized")
+		logger.Error().Msg("[go-doudou] nacos discovery client has not been initialized")
 		return ""
 	}
 	instance, err := n.namingClient.SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
@@ -381,7 +381,7 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 		GroupName:   n.groupName,
 	})
 	if err != nil {
-		logger.Error(fmt.Sprintf("[go-doudou] failed to select one healthy instance:%s", err))
+		logger.Error().Err(err).Msg("[go-doudou] failed to select one healthy instance")
 		return ""
 	}
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])

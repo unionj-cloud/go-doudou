@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/clients"
 	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
 	"github.com/wubin1989/nacos-sdk-go/vo"
@@ -32,10 +32,10 @@ func getRegisterHost() string {
 		var err error
 		registerHost, err = GetPrivateIP()
 		if err != nil {
-			logger.Panic(fmt.Errorf("[go-doudou] failed to get interface addresses: %v", err))
+			logger.Panic().Err(err).Msg("[go-doudou] failed to get interface addresses")
 		}
 		if stringutils.IsEmpty(registerHost) {
-			logger.Panic(fmt.Errorf("[go-doudou] no private IP address found, and explicit IP not provided"))
+			logger.Panic().Msg("[go-doudou] no private IP address found, and explicit IP not provided")
 		}
 	}
 	return registerHost
@@ -57,7 +57,7 @@ func getServiceName() string {
 		service = config.GddServiceName.Load()
 	}
 	if stringutils.IsEmpty(service) {
-		logger.Panic(fmt.Sprintf("[go-doudou] no value for environment variable %s found", config.GddServiceName))
+		logger.Panic().Msgf("[go-doudou] no value for environment variable %s found", config.GddServiceName)
 	}
 	return service
 }
@@ -69,7 +69,7 @@ func InitialiseNacosNamingClient() {
 	var err error
 	NamingClient, err = NewNamingClient(config.GetNacosClientParam())
 	if err != nil {
-		logger.Panic(fmt.Errorf("[go-doudou] failed to create nacos discovery client: %v", err))
+		logger.Panic().Err(err).Msg("[go-doudou] failed to create nacos discovery client")
 	}
 }
 
@@ -125,7 +125,7 @@ func NewNode(data ...map[string]interface{}) error {
 		return errors.Errorf("[go-doudou] failed to register to nacos server: %s", err)
 	}
 	if success {
-		logger.Info("[go-doudou] registered to nacos server successfully")
+		logger.Info().Msg("[go-doudou] registered to nacos server successfully")
 	}
 	return nil
 }
@@ -143,13 +143,13 @@ func Shutdown() {
 		})
 		NamingClient = nil
 		if err != nil {
-			logger.Error(fmt.Sprintf("[go-doudou] failed to deregister from nacos server: %s", err))
+			logger.Error().Err(err).Msg("[go-doudou] failed to deregister from nacos server")
 			return
 		}
 		if !success {
-			logger.Error("[go-doudou] failed to deregister from nacos server")
+			logger.Error().Msg("[go-doudou] failed to deregister from nacos server")
 			return
 		}
-		logger.Info("[go-doudou] deregistered from nacos server successfully")
+		logger.Info().Msg("[go-doudou] deregistered from nacos server successfully")
 	}
 }

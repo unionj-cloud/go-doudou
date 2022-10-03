@@ -1,16 +1,15 @@
 package tracing
 
 import (
-	"fmt"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	ddconfig "github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/logger"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"io"
 )
@@ -31,9 +30,9 @@ func Init() (opentracing.Tracer, io.Closer) {
 	cfg.Reporter.LogSpans = true
 	_, err := cfg.FromEnv()
 	if err != nil {
-		logger.Panic(errors.Wrap(err, "[go-doudou] cannot parse Jaeger env vars"))
+		logger.Panic().Err(errors.Wrap(err, "[go-doudou] cannot parse Jaeger env vars")).Msg("")
 	}
-	jaegerLogger := jaegerLoggerAdapter{logger: logger.Entry()}
+	jaegerLogger := jaegerLoggerAdapter{logger: logger.Logger}
 	metricsRoot := ddconfig.DefaultGddTracingMetricsRoot
 	if stringutils.IsNotEmpty(ddconfig.GddTracingMetricsRoot.Load()) {
 		metricsRoot = ddconfig.GddTracingMetricsRoot.Load()
@@ -45,23 +44,23 @@ func Init() (opentracing.Tracer, io.Closer) {
 		config.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
-		logger.Panic(errors.Wrap(err, "[go-doudou] cannot initialize Jaeger Tracer"))
+		logger.Panic().Err(errors.Wrap(err, "[go-doudou] cannot initialize Jaeger Tracer")).Msg("")
 	}
 	return tracer, closer
 }
 
 type jaegerLoggerAdapter struct {
-	logger *logrus.Entry
+	logger zerolog.Logger
 }
 
 func (l jaegerLoggerAdapter) Error(msg string) {
-	l.logger.Error(msg)
+	l.logger.Error().Msg(msg)
 }
 
 func (l jaegerLoggerAdapter) Infof(msg string, args ...interface{}) {
-	l.logger.Info(fmt.Sprintf(msg, args...))
+	l.logger.Info().Msgf(msg, args...)
 }
 
 func (l jaegerLoggerAdapter) Debugf(msg string, args ...interface{}) {
-	l.logger.Debug(fmt.Sprintf(msg, args...))
+	l.logger.Debug().Msgf(msg, args...)
 }

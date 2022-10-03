@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
 	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
 	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/clients"
 	"github.com/wubin1989/nacos-sdk-go/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
@@ -150,20 +150,20 @@ func (m *NacosConfigMgr) CallbackOnChange(namespace, group, dataId, data, old st
 	switch m.format {
 	case YamlConfigFormat:
 		if newData, err = yaml.LoadReaderAsMap(StringReader(data)); err != nil {
-			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			logger.Error().Err(err).Msg("[go-doudou] error from nacos config listener")
 			return
 		}
 		if oldData, err = yaml.LoadReaderAsMap(StringReader(old)); err != nil {
-			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			logger.Error().Err(err).Msg("[go-doudou] error from nacos config listener")
 			return
 		}
 	case DotenvConfigFormat:
 		if newData, err = dotenv.LoadAsMap(StringReader(data)); err != nil {
-			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			logger.Error().Err(err).Msg("[go-doudou] error from nacos config listener")
 			return
 		}
 		if oldData, err = dotenv.LoadAsMap(StringReader(old)); err != nil {
-			logrus.Error(errors.Wrap(err, "[go-doudou] error from nacos config listener"))
+			logger.Error().Err(err).Msg("[go-doudou] error from nacos config listener")
 			return
 		}
 	}
@@ -201,7 +201,7 @@ func (m *NacosConfigMgr) onChange(dataId, group, namespace string, changes map[s
 func (m *NacosConfigMgr) AddChangeListener(param NacosConfigListenerParam) {
 	key := util.GetConfigCacheKey(param.DataId, m.group, m.namespaceId)
 	if _, ok := m.listeners.Get(key); ok {
-		logrus.Warnf("[go-doudou] you have already add a config change listener for dataId: %s, you cannot override it", param.DataId)
+		logger.Warn().Msgf("[go-doudou] you have already add a config change listener for dataId: %s, you cannot override it", param.DataId)
 		return
 	}
 	m.listeners.Set(key, param)

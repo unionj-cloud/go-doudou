@@ -7,7 +7,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/logger"
 	"time"
@@ -40,14 +39,14 @@ type Querier interface {
 // GddDB wraps sqlx.DB
 type GddDB struct {
 	*sqlx.DB
-	logger      logger.ISqlLogger
+	logger      logger.SqlLogger
 	cacheStore  *cache.Cache
 	redisKeyTTL time.Duration
 }
 
 type GddDBOption func(*GddDB)
 
-func WithLogger(logger logger.ISqlLogger) GddDBOption {
+func WithLogger(logger logger.SqlLogger) GddDBOption {
 	return func(g *GddDB) {
 		g.logger = logger
 	}
@@ -68,7 +67,7 @@ func WithRedisKeyTTL(ttl time.Duration) GddDBOption {
 func NewGddDB(db *sqlx.DB, options ...GddDBOption) DB {
 	g := &GddDB{
 		DB:          db,
-		logger:      logger.NewSqlLogger(logrus.StandardLogger()),
+		logger:      logger.NewSqlLogger(),
 		redisKeyTTL: time.Hour,
 	}
 	for _, opt := range options {
@@ -166,7 +165,7 @@ func (g *GddDB) BeginTxx(ctx context.Context, opts *sql.TxOptions) (Tx, error) {
 // GddTx wraps sqlx.Tx
 type GddTx struct {
 	*sqlx.Tx
-	logger      logger.ISqlLogger
+	logger      logger.SqlLogger
 	cacheStore  *cache.Cache
 	redisKeyTTL time.Duration
 }
