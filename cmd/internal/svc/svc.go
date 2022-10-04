@@ -260,14 +260,10 @@ func NewSvc(dir string, opts ...SvcOption) ISvc {
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
 func (receiver *Svc) Push(repo string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
-	err := receiver.runner.Run("go", "mod", "vendor")
-	if err != nil {
-		panic(err)
-	}
-
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	imageName := fmt.Sprintf("%s%s", receiver.ImagePrefix, svcname)
 	loginUser, _ := user.Current()
+	var err error
 	if loginUser != nil {
 		err = receiver.runner.Run("docker", "build", "--build-arg", fmt.Sprintf("user=%s", loginUser.Username), "-t", imageName, ".")
 		if err != nil {
