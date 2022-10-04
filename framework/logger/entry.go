@@ -26,10 +26,10 @@ func CheckDev() bool {
 
 func New() *logrus.Entry {
 	hostname, _ := os.Hostname()
-	var buildTime string
+	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
-			buildTime = t.Local().Format(constants.FORMAT)
+			buildTime = t.Local().Format(constants.FORMAT8)
 		}
 	}
 	if CheckDev() {

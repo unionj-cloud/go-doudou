@@ -6,9 +6,11 @@ package prometheus
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/toolkit/load"
 	"github.com/unionj-cloud/go-doudou/toolkit/process"
+	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -73,6 +75,12 @@ func init() {
 	}
 	prometheus.Register(countRequests)
 	prometheus.Register(httpDuration)
+	buildTime := buildinfo.BuildTime
+	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
+		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
+			buildTime = t.Local().Format(constants.FORMAT8)
+		}
+	}
 	appInfo := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "go_doudou_app_info",
 		Help: "Information about the go-doudou app",
@@ -80,7 +88,7 @@ func init() {
 			"goVer":     runtime.Version(),
 			"gddVer":    buildinfo.GddVer,
 			"buildUser": buildinfo.BuildUser,
-			"buildTime": buildinfo.BuildTime,
+			"buildTime": buildTime,
 		},
 	})
 	appInfo.Set(1)

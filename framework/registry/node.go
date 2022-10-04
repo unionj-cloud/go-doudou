@@ -240,7 +240,7 @@ func newNode(data ...map[string]interface{}) error {
 		}
 	}
 	now := time.Now()
-	var buildTime string
+	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
 			buildTime = t.Local().Format(constants.FORMAT8)

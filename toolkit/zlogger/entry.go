@@ -25,10 +25,10 @@ func InitEntry(levelStr, service string, isDev bool) {
 	}
 	level, _ := zerolog.ParseLevel(levelStr)
 	hostname, _ := os.Hostname()
-	var buildTime string
+	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
-			buildTime = t.Local().Format(constants.FORMAT)
+			buildTime = t.Local().Format(constants.FORMAT8)
 		}
 	}
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack

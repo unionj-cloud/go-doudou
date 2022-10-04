@@ -68,7 +68,6 @@ require (
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-playground/form/v4 v4.2.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/cache/v8 v8.4.3
@@ -84,12 +83,13 @@ require (
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c
 	github.com/mattn/go-colorable v0.1.12
+	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20220216144756-c35f1ee13d7c
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.8.0
-	github.com/rs/zerolog v1.28.0 // indirect
+	github.com/rs/zerolog v1.28.0
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
