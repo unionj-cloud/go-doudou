@@ -18,9 +18,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -132,6 +132,11 @@ func (srv *HttpRouterSrv) PreMiddleware(mwf ...func(http.Handler) http.Handler) 
 	srv.Middlewares = append(middlewares, srv.Middlewares...)
 }
 
+// RootRouter returns pointer type of httprouter.Router for directly putting into http.ListenAndServe as http.Handler implementation
+func (srv *HttpRouterSrv) RootRouter() *httprouter.Router {
+	return srv.rootRouter
+}
+
 func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
 	if err != nil {
@@ -168,7 +173,7 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 		WriteTimeout: write,
 		ReadTimeout:  read,
 		IdleTimeout:  idle,
-		Handler:      srv.rootRouter, // Pass our instance of gorilla/mux in.
+		Handler:      srv.rootRouter, // Pass our instance of httprouter.Router in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
