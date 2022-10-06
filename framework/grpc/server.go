@@ -35,6 +35,9 @@ func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 }
 
 func (srv *GrpcServer) printServices() {
+	if !config.CheckDev() {
+		return
+	}
 	logger.Info().Msg("================ Registered Services ================")
 	data := [][]string{}
 	for k, v := range srv.GetServiceInfo() {

@@ -12,6 +12,9 @@ var once sync.Once
 
 func Print() {
 	once.Do(func() {
+		if !config.CheckDev() {
+			return
+		}
 		banner := config.DefaultGddBanner
 		if b, err := cast.ToBoolE(config.GddBanner.Load()); err == nil {
 			banner = b

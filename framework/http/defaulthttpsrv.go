@@ -136,7 +136,10 @@ func (srv *DefaultHttpSrv) AddRoute(route ...model.Route) {
 	srv.bizRoutes = append(srv.bizRoutes, route...)
 }
 
-func (srv *DefaultHttpSrv) printRoutes() {
+func (srv *common) printRoutes() {
+	if !config.CheckDev() {
+		return
+	}
 	logger.Info().Msg("================ Registered Routes ================")
 	data := [][]string{}
 	rr := config.DefaultGddRouteRootPath

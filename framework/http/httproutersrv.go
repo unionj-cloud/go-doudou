@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/klauspost/compress/gzhttp"
-	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
 	configui "github.com/unionj-cloud/go-doudou/framework/http/config"
 	"github.com/unionj-cloud/go-doudou/framework/http/httprouter"
@@ -26,7 +25,6 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -82,39 +80,6 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 // AddRoute adds routes to router
 func (srv *HttpRouterSrv) AddRoute(route ...model.Route) {
 	srv.bizRoutes = append(srv.bizRoutes, route...)
-}
-
-func (srv *HttpRouterSrv) printRoutes() {
-	logger.Info().Msg("================ Registered Routes ================")
-	var data [][]string
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
-	var all []model.Route
-	all = append(all, srv.bizRoutes...)
-	all = append(all, srv.gddRoutes...)
-	all = append(all, srv.debugRoutes...)
-	for _, r := range all {
-		if strings.HasPrefix(r.Pattern, gddPathPrefix) || strings.HasPrefix(r.Pattern, debugPathPrefix) {
-			data = append(data, []string{r.Name, r.Method, r.Pattern})
-		} else {
-			data = append(data, []string{r.Name, r.Method, path.Clean(rr + r.Pattern)})
-		}
-	}
-
-	tableString := &strings.Builder{}
-	table := tablewriter.NewWriter(tableString)
-	table.SetHeader([]string{"Name", "Method", "Pattern"})
-	for _, v := range data {
-		table.Append(v)
-	}
-	table.Render() // Send output
-	rows := strings.Split(strings.TrimSpace(tableString.String()), "\n")
-	for _, row := range rows {
-		logger.Info().Msg(row)
-	}
-	logger.Info().Msg("===================================================")
 }
 
 // AddMiddleware adds middlewares to the end of chain
