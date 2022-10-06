@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	preforkChildFlag = "-prefork-child"
+	preforkChildFlag = "-gdd-prefork-child"
 	defaultNetwork   = "tcp4"
 )
 
