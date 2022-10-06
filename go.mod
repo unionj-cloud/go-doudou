@@ -79,7 +79,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
-	github.com/klauspost/compress v1.15.9
+	github.com/klauspost/compress v1.15.11
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c
 	github.com/mattn/go-colorable v0.1.12
@@ -93,6 +93,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
+	github.com/valyala/fasthttp v1.40.0
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2
 	go.opencensus.io v0.23.0 // indirect

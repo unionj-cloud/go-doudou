@@ -14,6 +14,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/httprouter"
 	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
+	"github.com/unionj-cloud/go-doudou/framework/http/prefork"
 	"github.com/unionj-cloud/go-doudou/framework/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
@@ -180,8 +181,15 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 	go func() {
 		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
 		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
-		if err := httpServer.ListenAndServe(); err != nil {
-			logger.Error().Err(err).Msg("")
+		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
+			preforkServer := prefork.New(httpServer, &logger.Logger)
+			if err := preforkServer.ListenAndServe(); err != nil {
+				logger.Error().Err(err).Msg("")
+			}
+		} else {
+			if err := httpServer.ListenAndServe(); err != nil {
+				logger.Error().Err(err).Msg("")
+			}
 		}
 	}()
 

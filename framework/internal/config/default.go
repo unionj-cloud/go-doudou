@@ -20,6 +20,7 @@ const (
 	DefaultGddHost               = ""
 	DefaultGddPort               = 6060
 	DefaultGddGrpcPort           = 50051
+	DefaultGddPreforkEnable      = false
 	DefaultGddRetryCount         = 0
 	DefaultGddManage             = true
 	DefaultGddManageUser         = "admin"
