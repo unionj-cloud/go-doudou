@@ -1,7 +1,6 @@
 package prefork
 
 import (
-	"errors"
 	"flag"
 	"log"
 	"net"
@@ -21,12 +20,6 @@ const (
 
 var (
 	defaultLogger = Logger(log.New(os.Stderr, "", log.LstdFlags))
-	// ErrOverRecovery is returned when the times of starting over child prefork processes exceed
-	// the threshold.
-	ErrOverRecovery = errors.New("exceeding the value of RecoverThreshold")
-
-	// ErrOnlyReuseportOnWindows is returned when Reuseport is false.
-	ErrOnlyReuseportOnWindows = errors.New("windows only supports Reuseport = true")
 )
 
 // Logger is used for logging formatted messages.
@@ -51,22 +44,11 @@ type Prefork struct {
 
 	Addr string
 
-	// Flag to use a listener with reuseport, if not a file Listener will be used
-	// See: https://www.nginx.com/blog/socket-sharding-nginx-release-1-9-1/
-	//
-	// It's disabled by default
-	Reuseport bool
-
-	// Child prefork processes may exit with failure and will be started over until the times reach
-	// the value of RecoverThreshold, then it will return and terminate the server.
-	RecoverThreshold int
-
 	// By default standard logger from log package is used.
 	Logger Logger
 
-	ServeFunc         func(ln net.Listener) error
-	ServeTLSFunc      func(ln net.Listener, certFile, keyFile string) error
-	ServeTLSEmbedFunc func(ln net.Listener, certData, keyData []byte) error
+	ServeFunc    func(ln net.Listener) error
+	ServeTLSFunc func(ln net.Listener, certFile, keyFile string) error
 
 	ln    net.Listener
 	files []*os.File
@@ -92,13 +74,11 @@ func IsChild() bool {
 // New wraps the net/http server to run with preforked processes
 func New(s *http.Server, logger Logger) *Prefork {
 	return &Prefork{
-		Network:           defaultNetwork,
-		Addr:              s.Addr,
-		RecoverThreshold:  runtime.GOMAXPROCS(0) / 2,
-		Logger:            logger,
-		ServeFunc:         s.Serve,
-		ServeTLSFunc:      s.ServeTLS,
-		ServeTLSEmbedFunc: nil,
+		Network:      defaultNetwork,
+		Addr:         s.Addr,
+		Logger:       logger,
+		ServeFunc:    s.Serve,
+		ServeTLSFunc: s.ServeTLS,
 	}
 }
 
@@ -116,11 +96,7 @@ func (p *Prefork) listen(addr string) (net.Listener, error) {
 		p.Network = defaultNetwork
 	}
 
-	if p.Reuseport {
-		return reuseport.Listen(p.Network, addr)
-	}
-
-	return net.FileListener(os.NewFile(3, ""))
+	return reuseport.Listen(p.Network, addr)
 }
 
 func (p *Prefork) setTCPListenerFiles(addr string) error {
@@ -160,24 +136,6 @@ func (p *Prefork) doCommand() (*exec.Cmd, error) {
 }
 
 func (p *Prefork) prefork(addr string) (err error) {
-	if !p.Reuseport {
-		if runtime.GOOS == "windows" {
-			return ErrOnlyReuseportOnWindows
-		}
-
-		if err = p.setTCPListenerFiles(addr); err != nil {
-			return
-		}
-
-		// defer for closing the net.Listener opened by setTCPListenerFiles.
-		defer func() {
-			e := p.ln.Close()
-			if err == nil {
-				err = e
-			}
-		}()
-	}
-
 	type procSig struct {
 		pid int
 		err error
