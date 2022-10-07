@@ -88,7 +88,7 @@ func CheckDev() bool {
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
-	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), CheckDev())
+	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), CheckDev(), cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller))
 }
 
 type envVariable string
@@ -110,9 +110,11 @@ const (
 	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, disabled. please reference zerolog.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
 	// GddLogFormat text or json
+	// Deprecated: move to zerolog
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"
 	// GddLogReqEnable enables request and response logging
 	GddLogReqEnable envVariable = "GDD_LOG_REQ_ENABLE"
+	GddLogCaller    envVariable = "GDD_LOG_CALLER"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
 	// GddWriteTimeout sets http connection write timeout

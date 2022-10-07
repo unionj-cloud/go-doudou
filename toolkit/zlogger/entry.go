@@ -12,16 +12,20 @@ import (
 
 var Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-func InitEntry(levelStr string, isDev bool) {
+func InitEntry(levelStr string, dev, caller bool) {
 	var output io.Writer
-	if isDev {
+	if dev {
 		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
 	} else {
 		output = os.Stdout
 	}
 	level, _ := zerolog.ParseLevel(levelStr)
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	Logger = zerolog.New(output).Level(level).With().Timestamp().Caller().Stack().Logger()
+	zeroCtx := zerolog.New(output).Level(level).With().Timestamp().Stack()
+	if caller {
+		zeroCtx = zeroCtx.Caller()
+	}
+	Logger = zeroCtx.Logger()
 }
 
 // Output duplicates the global logger and sets w as its output.
