@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/valyala/fasthttp/reuseport"
@@ -77,7 +76,6 @@ func (p *Prefork) listen(addr string) (net.Listener, error) {
 func (p *Prefork) doCommand() (*exec.Cmd, error) {
 	/* #nosec G204 */
 	cmd := exec.Command(os.Args[0], os.Args[1:]...)
-	logger.Info().Msgf("command for forking child: %s", strings.Join(os.Args, " "))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
@@ -105,7 +103,7 @@ func (p *Prefork) prefork() (err error) {
 	for i := 0; i < goMaxProcs; i++ {
 		var cmd *exec.Cmd
 		if cmd, err = p.doCommand(); err != nil {
-			logger.Error().Err(err).Msg("failed to start a child prefork process")
+			logger.Info().Msgf("failed to start a child prefork process: %s", err)
 			return
 		}
 
@@ -117,7 +115,7 @@ func (p *Prefork) prefork() (err error) {
 
 	// return error if child crashes
 	if err = (<-sigCh).err; err != nil {
-		logger.Error().Err(err).Msg("")
+		logger.Info().Msg(err.Error())
 	}
 	return err
 }
@@ -138,14 +136,14 @@ func (p *Prefork) ListenAndServe() error {
 			}
 		}()
 		if err = p.ServeFunc(ln); err != nil {
-			logger.Error().Err(err).Msg("")
+			logger.Info().Msg(err.Error())
 		}
 		return err
 	}
 
 	var err error
 	if err = p.prefork(); err != nil {
-		logger.Error().Err(err).Msg("")
+		logger.Info().Msg(err.Error())
 	}
 	return err
 }
