@@ -186,6 +186,7 @@ func watchMaster() {
 	// it indicates that the master process has exited
 	for range time.NewTicker(time.Millisecond * 500).C {
 		if os.Getppid() == 1 {
+			logger.Info().Msg("exit self as parent process exit")
 			os.Exit(1)
 		}
 	}
