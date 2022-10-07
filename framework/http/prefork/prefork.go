@@ -114,7 +114,10 @@ func (p *Prefork) prefork() (err error) {
 	}
 
 	// return error if child crashes
-	return (<-sigCh).err
+	if err = (<-sigCh).err; err != nil {
+		logger.Error().Err(err).Msg("")
+	}
+	return err
 }
 
 // ListenAndServe serves HTTP requests from the given TCP addr
@@ -132,10 +135,17 @@ func (p *Prefork) ListenAndServe() error {
 				err = e
 			}
 		}()
-		return p.ServeFunc(ln)
+		if err = p.ServeFunc(ln); err != nil {
+			logger.Error().Err(err).Msg("")
+		}
+		return err
 	}
 
-	return p.prefork()
+	var err error
+	if err = p.prefork(); err != nil {
+		logger.Error().Err(err).Msg("")
+	}
+	return err
 }
 
 // ListenAndServeTLS serves HTTPS requests from the given TCP addr
