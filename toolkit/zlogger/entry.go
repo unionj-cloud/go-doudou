@@ -21,11 +21,7 @@ func InitEntry(levelStr string, isDev bool) {
 	}
 	level, _ := zerolog.ParseLevel(levelStr)
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	zeroCtx := zerolog.New(output).Level(level).With().Timestamp().Stack()
-	if level <= zerolog.DebugLevel {
-		zeroCtx = zeroCtx.Caller()
-	}
-	Logger = zeroCtx.Logger()
+	Logger = zerolog.New(output).Level(level).With().Timestamp().Caller().Stack().Logger()
 }
 
 // Output duplicates the global logger and sets w as its output.
