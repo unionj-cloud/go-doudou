@@ -230,14 +230,14 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
-		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
 			preforkServer := prefork.New(httpServer)
 			if err := preforkServer.ListenAndServe(); err != nil {
 				logger.Error().Err(err).Msg("")
 			}
 		} else {
+			logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
+			logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 			if err := httpServer.ListenAndServe(); err != nil {
 				logger.Error().Err(err).Msg("")
 			}

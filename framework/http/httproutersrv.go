@@ -25,7 +25,6 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -148,7 +147,7 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
 			preforkServer := prefork.New(httpServer)
 			if err := preforkServer.ListenAndServe(); err != nil {
-				logger.Error().Err(err).Msgf("stacktrace from error: %s", string(debug.Stack()))
+				logger.Error().Err(err).Msg("")
 			}
 		} else {
 			logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)

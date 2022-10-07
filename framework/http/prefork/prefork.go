@@ -2,7 +2,6 @@ package prefork
 
 import (
 	"fmt"
-	"github.com/libp2p/go-reuseport"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"log"
 	"net"
@@ -11,6 +10,8 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/libp2p/go-reuseport"
 )
 
 const (
@@ -102,7 +103,7 @@ func (p *Prefork) prefork() (err error) {
 	for i := 0; i < goMaxProcs; i++ {
 		var cmd *exec.Cmd
 		if cmd, err = p.doCommand(); err != nil {
-			logger.Info().Msgf("failed to start a child prefork process: %s", err)
+			logger.Error().Err(err).Msg("failed to start a child prefork process")
 			return
 		}
 
@@ -114,7 +115,7 @@ func (p *Prefork) prefork() (err error) {
 
 	// return error if child crashes
 	if err = (<-sigCh).err; err != nil {
-		logger.Info().Msg(err.Error())
+		logger.Error().Err(err).Msg("")
 	}
 	return err
 }
@@ -135,14 +136,14 @@ func (p *Prefork) ListenAndServe() error {
 			}
 		}()
 		if err = p.ServeFunc(ln); err != nil {
-			logger.Info().Msg(err.Error())
+			logger.Error().Err(err).Msg("")
 		}
 		return err
 	}
 
 	var err error
 	if err = p.prefork(); err != nil {
-		logger.Info().Msg(err.Error())
+		logger.Error().Err(err).Msg("")
 	}
 	return err
 }
