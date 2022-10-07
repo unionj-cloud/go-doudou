@@ -88,7 +88,12 @@ func CheckDev() bool {
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
-	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), CheckDev(), cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller))
+	opts := []zlogger.LoggerConfigOption{
+		zlogger.WithDev(CheckDev()),
+		zlogger.WithCaller(cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller)),
+		zlogger.WithPid(cast.ToBoolOrDefault(GddPreforkEnable.Load(), DefaultGddPreforkEnable)),
+	}
+	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), zlogger.NewLoggerConfig(opts...))
 }
 
 type envVariable string

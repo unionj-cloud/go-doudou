@@ -8,13 +8,48 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
 	"io"
 	"os"
+	"strconv"
 )
 
 var Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-func InitEntry(levelStr string, dev, caller bool) {
+type LoggerConfig struct {
+	Dev    bool
+	Caller bool
+	Pid    bool
+}
+
+type LoggerConfigOption func(*LoggerConfig)
+
+func WithDev(dev bool) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Dev = dev
+	}
+}
+
+func WithCaller(caller bool) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Caller = caller
+	}
+}
+
+func WithPid(pid bool) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Pid = pid
+	}
+}
+
+func NewLoggerConfig(opts ...LoggerConfigOption) LoggerConfig {
+	lc := LoggerConfig{}
+	for _, item := range opts {
+		item(&lc)
+	}
+	return lc
+}
+
+func InitEntry(levelStr string, lc LoggerConfig) {
 	var output io.Writer
-	if dev {
+	if lc.Dev {
 		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
 	} else {
 		output = os.Stdout
@@ -22,8 +57,11 @@ func InitEntry(levelStr string, dev, caller bool) {
 	level, _ := zerolog.ParseLevel(levelStr)
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 	zeroCtx := zerolog.New(output).Level(level).With().Timestamp().Stack()
-	if caller {
+	if lc.Caller {
 		zeroCtx = zeroCtx.Caller()
+	}
+	if lc.Pid {
+		zeroCtx = zeroCtx.Str("__pid", strconv.Itoa(os.Getpid()))
 	}
 	Logger = zeroCtx.Logger()
 }
