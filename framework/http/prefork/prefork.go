@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/valyala/fasthttp/reuseport"
@@ -76,6 +77,7 @@ func (p *Prefork) listen(addr string) (net.Listener, error) {
 func (p *Prefork) doCommand() (*exec.Cmd, error) {
 	/* #nosec G204 */
 	cmd := exec.Command(os.Args[0], os.Args[1:]...)
+	logger.Info().Msgf("command for forking child: %s", strings.Join(os.Args, " "))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
