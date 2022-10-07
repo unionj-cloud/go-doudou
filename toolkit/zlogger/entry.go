@@ -5,18 +5,14 @@ import (
 	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
-	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"io"
 	"os"
-	"runtime"
-	"time"
 )
 
 var Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-func InitEntry(levelStr, service string, isDev bool) {
+func InitEntry(levelStr string, isDev bool) {
 	var output io.Writer
 	if isDev {
 		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
@@ -24,27 +20,12 @@ func InitEntry(levelStr, service string, isDev bool) {
 		output = os.Stdout
 	}
 	level, _ := zerolog.ParseLevel(levelStr)
-	hostname, _ := os.Hostname()
-	buildTime := buildinfo.BuildTime
-	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
-		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
-			buildTime = t.Local().Format(constants.FORMAT8)
-		}
-	}
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	zeroCtx := zerolog.New(output).Level(level).With().Timestamp()
-	if isDev {
-		Logger = zeroCtx.Logger()
-		return
+	zeroCtx := zerolog.New(output).Level(level).With().Timestamp().Stack()
+	if level <= zerolog.DebugLevel {
+		zeroCtx = zeroCtx.Caller()
 	}
-	Logger = zeroCtx.Caller().Stack().
-		Str("__meta_service", service).
-		Str("__meta_hostname", hostname).
-		Str("__meta_go_version", runtime.Version()).
-		Str("__meta_godoudou_version", buildinfo.GddVer).
-		Str("__meta_build_user", buildinfo.BuildUser).
-		Str("__meta_build_time", buildTime).
-		Logger()
+	Logger = zeroCtx.Logger()
 }
 
 // Output duplicates the global logger and sets w as its output.

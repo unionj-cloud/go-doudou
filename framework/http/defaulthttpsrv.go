@@ -95,6 +95,7 @@ func toMiddlewareFunc(m func(http.Handler) http.HandlerFunc) mux.MiddlewareFunc 
 }
 
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
+// Deprecated: use NewHttpRouterSrv instead for better performance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
@@ -232,7 +233,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
 		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
-			preforkServer := prefork.New(httpServer, &logger.Logger)
+			preforkServer := prefork.New(httpServer)
 			if err := preforkServer.ListenAndServe(); err != nil {
 				logger.Error().Err(err).Msg("")
 			}

@@ -1,7 +1,8 @@
 package prefork
 
 import (
-	"flag"
+	"fmt"
+	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"log"
 	"net"
 	"net/http"
@@ -14,13 +15,19 @@ import (
 )
 
 const (
-	preforkChildFlag = "-gdd-prefork-child"
-	defaultNetwork   = "tcp4"
+	envPreforkChildKey = "GDD_PREFORK_CHILD"
+	envPreforkChildVal = "1"
+	defaultNetwork     = "tcp4"
 )
 
 var (
 	defaultLogger = Logger(log.New(os.Stderr, "", log.LstdFlags))
 )
+
+// IsChild determines if the current process is a child of Prefork
+func IsChild() bool {
+	return os.Getenv(envPreforkChildKey) == envPreforkChildVal
+}
 
 // Logger is used for logging formatted messages.
 type Logger interface {
@@ -40,53 +47,20 @@ type Prefork struct {
 	// The network must be "tcp", "tcp4" or "tcp6".
 	//
 	// By default is "tcp4"
-	Network string
-
-	Addr string
-
-	// By default standard logger from log package is used.
-	Logger Logger
-
+	Network      string
+	Addr         string
 	ServeFunc    func(ln net.Listener) error
 	ServeTLSFunc func(ln net.Listener, certFile, keyFile string) error
-
-	ln    net.Listener
-	files []*os.File
-}
-
-func init() { //nolint:gochecknoinits
-	// Definition flag to not break the program when the user adds their own flags
-	// and runs `flag.Parse()`
-	flag.Bool(preforkChildFlag[1:], false, "Is a child process")
-}
-
-// IsChild checks if the current thread/process is a child
-func IsChild() bool {
-	for _, arg := range os.Args[1:] {
-		if arg == preforkChildFlag {
-			return true
-		}
-	}
-
-	return false
 }
 
 // New wraps the net/http server to run with preforked processes
-func New(s *http.Server, logger Logger) *Prefork {
+func New(s *http.Server) *Prefork {
 	return &Prefork{
 		Network:      defaultNetwork,
 		Addr:         s.Addr,
-		Logger:       logger,
 		ServeFunc:    s.Serve,
 		ServeTLSFunc: s.ServeTLS,
 	}
-}
-
-func (p *Prefork) logger() Logger {
-	if p.Logger != nil {
-		return p.Logger
-	}
-	return defaultLogger
 }
 
 func (p *Prefork) listen(addr string) (net.Listener, error) {
@@ -99,43 +73,18 @@ func (p *Prefork) listen(addr string) (net.Listener, error) {
 	return reuseport.Listen(p.Network, addr)
 }
 
-func (p *Prefork) setTCPListenerFiles(addr string) error {
-	if p.Network == "" {
-		p.Network = defaultNetwork
-	}
-
-	tcpAddr, err := net.ResolveTCPAddr(p.Network, addr)
-	if err != nil {
-		return err
-	}
-
-	tcplistener, err := net.ListenTCP(p.Network, tcpAddr)
-	if err != nil {
-		return err
-	}
-
-	p.ln = tcplistener
-
-	fl, err := tcplistener.File()
-	if err != nil {
-		return err
-	}
-
-	p.files = []*os.File{fl}
-
-	return nil
-}
-
 func (p *Prefork) doCommand() (*exec.Cmd, error) {
 	/* #nosec G204 */
-	cmd := exec.Command(os.Args[0], append(os.Args[1:], preforkChildFlag)...)
+	cmd := exec.Command(os.Args[0], os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.ExtraFiles = p.files
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("%s=%s", envPreforkChildKey, envPreforkChildVal),
+	)
 	return cmd, cmd.Start()
 }
 
-func (p *Prefork) prefork(addr string) (err error) {
+func (p *Prefork) prefork() (err error) {
 	type procSig struct {
 		pid int
 		err error
@@ -154,7 +103,7 @@ func (p *Prefork) prefork(addr string) (err error) {
 	for i := 0; i < goMaxProcs; i++ {
 		var cmd *exec.Cmd
 		if cmd, err = p.doCommand(); err != nil {
-			p.logger().Printf("failed to start a child prefork process, error: %v\n", err)
+			logger.Error().Err(err).Msg("failed to start a child prefork process")
 			return
 		}
 
@@ -175,16 +124,18 @@ func (p *Prefork) ListenAndServe() error {
 		if err != nil {
 			return err
 		}
-
-		p.ln = ln
-
+		logger.Info().Msgf("Http server is listening at %v", p.Addr)
 		// kill current child proc when master exits
 		go watchMaster()
-
+		defer func() {
+			if e := ln.Close(); err == nil {
+				err = e
+			}
+		}()
 		return p.ServeFunc(ln)
 	}
 
-	return p.prefork(p.Addr)
+	return p.prefork()
 }
 
 // ListenAndServeTLS serves HTTPS requests from the given TCP addr
@@ -196,16 +147,18 @@ func (p *Prefork) ListenAndServeTLS(certKey, certFile string) error {
 		if err != nil {
 			return err
 		}
-
-		p.ln = ln
-
+		logger.Info().Msgf("Http server is listening at %v", p.Addr)
 		// kill current child proc when master exits
 		go watchMaster()
-
+		defer func() {
+			if e := ln.Close(); err == nil {
+				err = e
+			}
+		}()
 		return p.ServeTLSFunc(ln, certFile, certKey)
 	}
 
-	return p.prefork(p.Addr)
+	return p.prefork()
 }
 
 // watchMaster watches child procs

@@ -24,6 +24,7 @@ func CheckDev() bool {
 	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
 }
 
+// Deprecated: move to zerolog
 func New() *logrus.Entry {
 	hostname, _ := os.Hostname()
 	buildTime := buildinfo.BuildTime

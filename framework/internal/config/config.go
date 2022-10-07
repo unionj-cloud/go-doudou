@@ -88,7 +88,7 @@ func CheckDev() bool {
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
-	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), GddServiceName.Load(), CheckDev())
+	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), CheckDev())
 }
 
 type envVariable string
@@ -107,7 +107,7 @@ const (
 	GddBanner envVariable = "GDD_BANNER"
 	// GddBannerText sets text content of banner
 	GddBannerText envVariable = "GDD_BANNER_TEXT"
-	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, please reference logger.ParseLevel
+	// GddLogLevel accepts panic, fatal, error, warn, warning, info, debug, trace, disabled. please reference zerolog.ParseLevel
 	GddLogLevel envVariable = "GDD_LOG_LEVEL"
 	// GddLogFormat text or json
 	GddLogFormat envVariable = "GDD_LOG_FORMAT"
