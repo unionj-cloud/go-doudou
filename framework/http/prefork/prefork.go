@@ -2,6 +2,7 @@ package prefork
 
 import (
 	"fmt"
+	"github.com/libp2p/go-reuseport"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"log"
 	"net"
@@ -10,8 +11,6 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
-
-	"github.com/valyala/fasthttp/reuseport"
 )
 
 const (
@@ -77,7 +76,7 @@ func (p *Prefork) doCommand() (*exec.Cmd, error) {
 	/* #nosec G204 */
 	cmd := exec.Command(os.Args[0], os.Args[1:]...)
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("%s=%s", envPreforkChildKey, envPreforkChildVal),
 	)

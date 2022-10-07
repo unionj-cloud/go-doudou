@@ -80,6 +80,7 @@ require (
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.15.11
+	github.com/libp2p/go-reuseport v0.2.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c
 	github.com/mattn/go-colorable v0.1.12
@@ -93,13 +94,14 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/valyala/fasthttp v1.40.0
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/automaxprocs v1.5.1
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
+	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
 	google.golang.org/grpc v1.38.0
