@@ -86,7 +86,6 @@ require (
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.15.11
-	github.com/libp2p/go-reuseport v0.2.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c
 	github.com/mattn/go-colorable v0.1.12

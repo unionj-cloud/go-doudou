@@ -130,6 +130,8 @@ func (srv *FastHttpSrv) newFastHttpServer() *fasthttp.Server {
 		IdleTimeout:                        idle,
 		NoDefaultServerHeader:              true,
 		NoDefaultDate:                      true,
+		DisableHeaderNamesNormalizing:      true,
+		NoDefaultContentType:               true,
 		Logger:                             &logger.Logger,
 		TLSConfig:                          nil,             // TODO Plan to make it configurable with environment variable
 		WriteBufferSize:                    4096,            // TODO 4096 is default value. Plan to make it configurable with environment variable

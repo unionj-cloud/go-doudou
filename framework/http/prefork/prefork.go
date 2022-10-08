@@ -3,14 +3,13 @@ package prefork
 import (
 	"fmt"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/valyala/fasthttp/reuseport"
 	"log"
 	"net"
 	"os"
 	"os/exec"
 	"runtime"
 	"time"
-
-	"github.com/libp2p/go-reuseport"
 )
 
 const (
