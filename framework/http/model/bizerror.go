@@ -1,4 +1,4 @@
-package ddhttp
+package model
 
 import (
 	"fmt"

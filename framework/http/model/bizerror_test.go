@@ -1,4 +1,4 @@
-package ddhttp_test
+package model_test
 
 import (
 	"github.com/pkg/errors"

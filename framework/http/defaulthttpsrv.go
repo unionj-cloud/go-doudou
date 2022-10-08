@@ -11,6 +11,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
 	configui "github.com/unionj-cloud/go-doudou/framework/http/config"
+	"github.com/unionj-cloud/go-doudou/framework/http/fast"
 	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
 	"github.com/unionj-cloud/go-doudou/framework/http/prefork"
@@ -38,10 +39,11 @@ func init() {
 }
 
 type common struct {
-	gddRoutes   []model.Route
-	debugRoutes []model.Route
-	bizRoutes   []model.Route
-	Middlewares []mux.MiddlewareFunc
+	gddRoutes       []model.Route
+	debugRoutes     []model.Route
+	bizRoutes       []model.Route
+	Middlewares     []mux.MiddlewareFunc
+	FastMiddlewares []fast.MiddlewareFunc
 }
 
 // DefaultHttpSrv wraps gorilla mux router
@@ -231,7 +233,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
 		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
-			preforkServer := prefork.New(httpServer)
+			preforkServer := prefork.New(httpServer, httpServer.Addr)
 			if err := preforkServer.ListenAndServe(); err != nil {
 				logger.Error().Err(err).Msg("")
 			}

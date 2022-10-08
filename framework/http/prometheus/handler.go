@@ -9,10 +9,10 @@ import (
 func Routes() []model.Route {
 	return []model.Route{
 		{
-			"Prometheus",
-			"GET",
-			"/go-doudou/prometheus",
-			promhttp.Handler().ServeHTTP,
+			Name:        "Prometheus",
+			Method:      "GET",
+			Pattern:     "/go-doudou/prometheus",
+			HandlerFunc: promhttp.Handler().ServeHTTP,
 		},
 	}
 }

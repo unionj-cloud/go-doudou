@@ -5,7 +5,6 @@ import (
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -53,11 +52,16 @@ type Prefork struct {
 	ServeTLSFunc func(ln net.Listener, certFile, keyFile string) error
 }
 
+type HttpServer interface {
+	Serve(l net.Listener) error
+	ServeTLS(l net.Listener, certFile, keyFile string) error
+}
+
 // New wraps the net/http server to run with preforked processes
-func New(s *http.Server) *Prefork {
+func New(s HttpServer, addr string) *Prefork {
 	return &Prefork{
 		Network:      defaultNetwork,
-		Addr:         s.Addr,
+		Addr:         addr,
 		ServeFunc:    s.Serve,
 		ServeTLSFunc: s.ServeTLS,
 	}

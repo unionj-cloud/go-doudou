@@ -145,7 +145,7 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
 		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
-			preforkServer := prefork.New(httpServer)
+			preforkServer := prefork.New(httpServer, httpServer.Addr)
 			if err := preforkServer.ListenAndServe(); err != nil {
 				logger.Error().Err(err).Msg("")
 			}

@@ -15,10 +15,10 @@ func Routes() []model.Route {
 	handler := NewConfigHandler()
 	return []model.Route{
 		{
-			"GetConfig",
-			"GET",
-			"/go-doudou/config",
-			handler.GetConfig,
+			Name:        "GetConfig",
+			Method:      "GET",
+			Pattern:     "/go-doudou/config",
+			HandlerFunc: handler.GetConfig,
 		},
 	}
 }

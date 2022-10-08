@@ -15,10 +15,10 @@ func Routes() []model.Route {
 	handler := NewRegistryHandler()
 	return []model.Route{
 		{
-			"GetRegistry",
-			"GET",
-			"/go-doudou/registry",
-			handler.GetRegistry,
+			Name:        "GetRegistry",
+			Method:      "GET",
+			Pattern:     "/go-doudou/registry",
+			HandlerFunc: handler.GetRegistry,
 		},
 	}
 }

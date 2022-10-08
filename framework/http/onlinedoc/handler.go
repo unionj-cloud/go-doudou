@@ -16,16 +16,16 @@ func Routes() []model.Route {
 	handler := NewOnlineDocHandler()
 	return []model.Route{
 		{
-			"GetDoc",
-			"GET",
-			"/go-doudou/doc",
-			handler.GetDoc,
+			Name:        "GetDoc",
+			Method:      "GET",
+			Pattern:     "/go-doudou/doc",
+			HandlerFunc: handler.GetDoc,
 		},
 		{
-			"GetOpenAPI",
-			"GET",
-			"/go-doudou/openapi.json",
-			handler.GetOpenAPI,
+			Name:        "GetOpenAPI",
+			Method:      "GET",
+			Pattern:     "/go-doudou/openapi.json",
+			HandlerFunc: handler.GetOpenAPI,
 		},
 	}
 }
