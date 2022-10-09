@@ -53,13 +53,6 @@ func (g *Group) TRACE(path string, handler fasthttp.RequestHandler) {
 	g.router.TRACE(g.prefix+path, handler)
 }
 
-// ANY is a shortcut for group.Handle(router.MethodWild, path, handler)
-//
-// WARNING: Use only for routes where the request method is not important
-func (g *Group) ANY(path string, handler fasthttp.RequestHandler) {
-	g.router.ANY(g.prefix+path, handler)
-}
-
 // ServeFiles serves files from the given file system root.
 // The path must end with "/{filepath:*}", files are then served from the local
 // path /defined/root/dir/{filepath:*}.
