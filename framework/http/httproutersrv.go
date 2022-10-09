@@ -13,7 +13,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/httprouter"
 	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
-	"github.com/unionj-cloud/go-doudou/framework/http/prefork"
 	"github.com/unionj-cloud/go-doudou/framework/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
@@ -69,12 +68,8 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 	srv.Middlewares = append(srv.Middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
+		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
 	)
-	appType := config.GddAppType.LoadOrDefault(config.DefaultGddAppType)
-	switch strings.TrimSpace(appType) {
-	case "rest":
-		srv.Middlewares = append(srv.Middlewares, rest)
-	}
 	return srv
 }
 
@@ -145,17 +140,10 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
-			preforkServer := prefork.New(httpServer, httpServer.Addr)
-			if err := preforkServer.ListenAndServe(); err != nil {
-				logger.Error().Err(err).Msg("")
-			}
-		} else {
-			logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
-			logger.Info().Msgf("Http server started in %s", time.Since(startAt))
-			if err := httpServer.ListenAndServe(); err != nil {
-				logger.Error().Err(err).Msg("")
-			}
+		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
+		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
+		if err := httpServer.ListenAndServe(); err != nil {
+			logger.Error().Err(err).Msg("")
 		}
 	}()
 
@@ -213,10 +201,9 @@ func (srv *HttpRouterSrv) Run() {
 			{
 				Name:    "GetStatsviz",
 				Method:  http.MethodGet,
-				Pattern: gddPathPrefix + "statsviz/*filepath",
+				Pattern: gddPathPrefix + "statsviz/*",
 				HandlerFunc: func(writer http.ResponseWriter, request *http.Request) {
-					params := httprouter.ParamsFromContext(request.Context())
-					if params.ByName("filepath") == "/ws" {
+					if strings.HasSuffix(request.URL.Path, "/ws") {
 						statsviz.Ws(writer, request)
 						return
 					}
@@ -258,10 +245,10 @@ func (srv *HttpRouterSrv) Run() {
 			{
 				Name:    "GetDebugPprofIndex",
 				Method:  http.MethodGet,
-				Pattern: debugPathPrefix + "pprof/*filepath",
+				Pattern: debugPathPrefix + "pprof/*",
 				HandlerFunc: func(writer http.ResponseWriter, request *http.Request) {
-					params := httprouter.ParamsFromContext(request.Context())
-					switch params.ByName("filepath") {
+					lastSegment := request.URL.Path[strings.LastIndex(request.URL.Path, "/"):]
+					switch lastSegment {
 					case "/cmdline":
 						pprof.Cmdline(writer, request)
 						return

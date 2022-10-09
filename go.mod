@@ -30,7 +30,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/radovskyb/watcher v1.0.7
-	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.8.0
@@ -38,8 +37,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.10
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
-	github.com/valyala/bytebufferpool v1.0.0
-	github.com/valyala/fasthttp v1.40.0
 	golang.org/x/tools v0.1.5
 )
 
@@ -68,11 +65,8 @@ require (
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
 	github.com/containerd/containerd v1.5.2 // indirect
-	github.com/d7561985/opentracefasthttp v1.0.0
 	github.com/docker/docker v20.10.7+incompatible // indirect
-	github.com/elithrar/simple-scrypt v1.3.0
 	github.com/fatih/color v1.12.0 // indirect
-	github.com/ferluci/fast-realip v1.0.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.0
@@ -99,12 +93,14 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb // indirect
+	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
 	github.com/yusufpapurcu/wmi v1.2.2
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/automaxprocs v1.5.1
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect

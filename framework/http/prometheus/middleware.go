@@ -11,7 +11,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/process"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
-	"github.com/valyala/fasthttp"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -64,18 +63,6 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 
 		timer.ObserveDuration()
 	})
-}
-
-// FastPrometheusMiddleware returns fasthttp RequestHandler for prometheus matrix
-func FastPrometheusMiddleware(inner fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		path := string(ctx.URI().Path())
-		method := string(ctx.Method())
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path, method))
-		inner(ctx)
-		countRequests.WithLabelValues(path, method, strconv.Itoa(ctx.Response.StatusCode())).Inc()
-		timer.ObserveDuration()
-	}
 }
 
 var processPool sync.Pool

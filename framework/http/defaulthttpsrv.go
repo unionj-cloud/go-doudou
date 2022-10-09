@@ -11,10 +11,8 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
 	configui "github.com/unionj-cloud/go-doudou/framework/http/config"
-	"github.com/unionj-cloud/go-doudou/framework/http/fast"
 	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/framework/http/onlinedoc"
-	"github.com/unionj-cloud/go-doudou/framework/http/prefork"
 	"github.com/unionj-cloud/go-doudou/framework/http/prometheus"
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
@@ -39,11 +37,10 @@ func init() {
 }
 
 type common struct {
-	gddRoutes       []model.Route
-	debugRoutes     []model.Route
-	bizRoutes       []model.Route
-	Middlewares     []mux.MiddlewareFunc
-	FastMiddlewares []fast.MiddlewareFunc
+	gddRoutes   []model.Route
+	debugRoutes []model.Route
+	bizRoutes   []model.Route
+	Middlewares []mux.MiddlewareFunc
 }
 
 // DefaultHttpSrv wraps gorilla mux router
@@ -125,12 +122,8 @@ func NewDefaultHttpSrv() *DefaultHttpSrv {
 	srv.Middlewares = append(srv.Middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
+		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
 	)
-	appType := config.GddAppType.LoadOrDefault(config.DefaultGddAppType)
-	switch strings.TrimSpace(appType) {
-	case "rest":
-		srv.Middlewares = append(srv.Middlewares, rest)
-	}
 	return srv
 }
 
@@ -232,17 +225,10 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		if cast.ToBoolOrDefault(config.GddPreforkEnable.Load(), config.DefaultGddPreforkEnable) {
-			preforkServer := prefork.New(httpServer, httpServer.Addr)
-			if err := preforkServer.ListenAndServe(); err != nil {
-				logger.Error().Err(err).Msg("")
-			}
-		} else {
-			logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
-			logger.Info().Msgf("Http server started in %s", time.Since(startAt))
-			if err := httpServer.ListenAndServe(); err != nil {
-				logger.Error().Err(err).Msg("")
-			}
+		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
+		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
+		if err := httpServer.ListenAndServe(); err != nil {
+			logger.Error().Err(err).Msg("")
 		}
 	}()
 

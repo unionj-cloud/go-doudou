@@ -33,12 +33,6 @@ func WithCaller(caller bool) LoggerConfigOption {
 	}
 }
 
-func WithPid(pid bool) LoggerConfigOption {
-	return func(lc *LoggerConfig) {
-		lc.Pid = pid
-	}
-}
-
 func NewLoggerConfig(opts ...LoggerConfigOption) LoggerConfig {
 	lc := LoggerConfig{}
 	for _, item := range opts {

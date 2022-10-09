@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
-	"github.com/valyala/fasthttp"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -45,7 +44,6 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
-	FastHandler fasthttp.RequestHandler
 }
 
 // borrowed from httputil unexported function drainBody
