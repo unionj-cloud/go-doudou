@@ -406,7 +406,7 @@ var appendHttpHandlerImplTmpl = `
 				if {{ $r.Name }} != nil {
 					if errors.Is({{ $r.Name }}, context.Canceled) {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
-					} else if _err, ok := {{ $r.Name }}.(*ddhttp.BizError); ok {
+					} else if _err, ok := {{ $r.Name }}.(*ddmodel.BizError); ok {
 						http.Error(_writer, _err.Error(), _err.StatusCode)
 					} else {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
@@ -465,6 +465,7 @@ var importTmpl = `
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	ddmodel "github.com/unionj-cloud/go-doudou/framework/http/model"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"

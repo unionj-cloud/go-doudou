@@ -37,14 +37,10 @@ func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
 	return []ddmodel.Route{
 		{{- range $m := .Meta.Methods }}
 		{
-			"{{$m.Name}}",
-			"{{$m.Name | httpMethod}}",
-			{{- if eq $.RoutePatternStrategy 1}}
-			"/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}",
-			{{- else }}
-			"/{{$m.Name | pattern}}",
-			{{- end }}
-			handler.{{$m.Name}},
+			Name: "{{$m.Name}}",
+			Method: "{{$m.Name | httpMethod}}",
+			Pattern: {{- if eq $.RoutePatternStrategy 1}}"/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}",{{- else }}"/{{$m.Name | pattern}}",{{- end }}
+			HandlerFunc: handler.{{$m.Name}},
 		},
 		{{- end }}
 	}

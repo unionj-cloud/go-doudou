@@ -72,28 +72,28 @@ func (m *MocksvcHandler) GetPanic(w http.ResponseWriter, r *http.Request) {
 func Routes(handler IMocksvcHandler) []ddmodel.Route {
 	return []ddmodel.Route{
 		{
-			"GetUser",
-			"GET",
-			"/user",
-			handler.GetUser,
+			Name:        "GetUser",
+			Method:      "GET",
+			Pattern:     "/user",
+			HandlerFunc: handler.GetUser,
 		},
 		{
-			"SaveUser",
-			"POST",
-			"/save/user",
-			handler.SaveUser,
+			Name:        "SaveUser",
+			Method:      "POST",
+			Pattern:     "/save/user",
+			HandlerFunc: handler.SaveUser,
 		},
 		{
-			"SignUp",
-			"POST",
-			"/sign/up",
-			handler.SignUp,
+			Name:        "SignUp",
+			Method:      "POST",
+			Pattern:     "/sign/up",
+			HandlerFunc: handler.SignUp,
 		},
 		{
-			"GetPanic",
-			"GET",
-			"/panic",
-			handler.GetPanic,
+			Name:        "GetPanic",
+			Method:      "GET",
+			Pattern:     "/panic",
+			HandlerFunc: handler.GetPanic,
 		},
 	}
 }
