@@ -68,10 +68,11 @@ const (
 	DefaultGddNacosConfigGroup  = "DEFAULT_GROUP"
 	DefaultGddNacosConfigDataid = ""
 
-	DefaultGddEnableResponseGzip  = true
-	DefaultGddAppType             = "rest"
-	DefaultGddFallbackContentType = "application/json; charset=UTF-8"
-	DefaultGddConfigRemoteType    = ""
+	DefaultGddEnableResponseGzip         = true
+	DefaultGddAppType                    = "rest"
+	DefaultGddFallbackContentType        = "application/json; charset=UTF-8"
+	DefaultGddRouterSaveMatchedRoutePath = true
+	DefaultGddConfigRemoteType           = ""
 
 	DefaultGddApolloCluster      = "default"
 	DefaultGddApolloAddr         = ""

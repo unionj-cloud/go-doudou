@@ -44,6 +44,7 @@ func NewFastHttpSrv() *FastHttpSrv {
 		rr = "/"
 	}
 	rootRouter := router.New()
+	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
 	srv := &FastHttpSrv{
 		Router:     rootRouter.Group(rr),
 		rootRouter: rootRouter,

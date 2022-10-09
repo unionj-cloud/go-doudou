@@ -150,7 +150,8 @@ const (
 	// Deprecated: move to GddFallbackContentType
 	GddAppType envVariable = "GDD_APP_TYPE"
 	// GddFallbackContentType fallback response content-type header value
-	GddFallbackContentType envVariable = "GDD_FALLBACK_CONTENTTYPE"
+	GddFallbackContentType        envVariable = "GDD_FALLBACK_CONTENTTYPE"
+	GddRouterSaveMatchedRoutePath envVariable = "GDD_ROUTER_SAVEMATCHEDROUTEPATH"
 
 	// GddConfigRemoteType has two options available: nacos, apollo
 	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"

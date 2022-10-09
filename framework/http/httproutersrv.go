@@ -47,6 +47,7 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 		rr = "/"
 	}
 	rootRouter := httprouter.New()
+	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
 	srv := &HttpRouterSrv{
 		Router:     rootRouter.NewGroup(rr),
 		rootRouter: rootRouter,

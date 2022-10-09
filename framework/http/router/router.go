@@ -38,6 +38,7 @@ func New() *Router {
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
+		SaveMatchedRoutePath:   true,
 	}
 }
 

@@ -67,8 +67,6 @@ func New(s HttpServer, addr string) *Prefork {
 }
 
 func (p *Prefork) listen(addr string) (net.Listener, error) {
-	runtime.GOMAXPROCS(1)
-
 	if p.Network == "" {
 		p.Network = defaultNetwork
 	}
@@ -126,6 +124,7 @@ func (p *Prefork) prefork() (err error) {
 // ListenAndServe serves HTTP requests from the given TCP addr
 func (p *Prefork) ListenAndServe() error {
 	if IsChild() {
+		runtime.GOMAXPROCS(1)
 		ln, err := p.listen(p.Addr)
 		if err != nil {
 			return err
@@ -156,6 +155,7 @@ func (p *Prefork) ListenAndServe() error {
 // certFile and keyFile are paths to TLS certificate and key files.
 func (p *Prefork) ListenAndServeTLS(certKey, certFile string) error {
 	if IsChild() {
+		runtime.GOMAXPROCS(1)
 		ln, err := p.listen(p.Addr)
 		if err != nil {
 			return err

@@ -3,13 +3,13 @@ package model_test
 import (
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/http/model"
 	"testing"
 )
 
 func TestWithStatusCode(t *testing.T) {
 	Convey("Create a BizError with 401 http status code", t, func() {
-		bizError := ddhttp.NewBizError(errors.New("Unauthorised"), ddhttp.WithStatusCode(401))
+		bizError := model.NewBizError(errors.New("Unauthorised"), model.WithStatusCode(401))
 		So(bizError, ShouldNotBeZeroValue)
 		So(bizError.StatusCode, ShouldEqual, 401)
 
@@ -21,7 +21,7 @@ func TestWithStatusCode(t *testing.T) {
 
 func TestWithErrCode(t *testing.T) {
 	Convey("Create a BizError with 100401 business error code", t, func() {
-		bizError := ddhttp.NewBizError(errors.New("Unauthorised"), ddhttp.WithErrCode(100401))
+		bizError := model.NewBizError(errors.New("Unauthorised"), model.WithErrCode(100401))
 		So(bizError, ShouldNotBeZeroValue)
 		So(bizError.ErrCode, ShouldEqual, 100401)
 
