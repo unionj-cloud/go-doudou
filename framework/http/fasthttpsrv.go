@@ -239,7 +239,7 @@ func (srv *FastHttpSrv) Run() {
 			{
 				Name:        "GetDebugPprofIndex",
 				Method:      http.MethodGet,
-				Pattern:     debugPathPrefix + "pprof/*filepath",
+				Pattern:     debugPathPrefix + "pprof/*",
 				FastHandler: pprofhandler.PprofHandler,
 			},
 		}...)
