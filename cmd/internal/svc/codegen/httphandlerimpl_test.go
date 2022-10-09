@@ -34,7 +34,7 @@ func TestGenHttpHandlerImplWithImpl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenHttpHandlerImplWithImpl(tt.args.dir, tt.args.ic, true, strcase.ToLowerCamel)
+			GenHttpHandlerImpl(tt.args.dir, tt.args.ic, true, strcase.ToLowerCamel)
 		})
 	}
 }
@@ -42,7 +42,7 @@ func TestGenHttpHandlerImplWithImpl(t *testing.T) {
 func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
 	svcfile := testDir + "/svc.go"
 	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
-	GenHttpHandlerImplWithImpl(testDir, ic, true, strcase.ToLowerCamel)
+	GenHttpHandlerImpl(testDir, ic, true, strcase.ToLowerCamel)
 }
 
 func Test_unimplementedMethods(t *testing.T) {

@@ -135,11 +135,7 @@ func (receiver *Svc) Http() {
 	default:
 		caseconvertor = strcase.ToLowerCamel
 	}
-	if receiver.Handler {
-		codegen.GenHttpHandlerImplWithImpl(dir, ic, receiver.Omitempty, caseconvertor)
-	} else {
-		codegen.GenHttpHandlerImpl(dir, ic)
-	}
+	codegen.GenHttpHandlerImpl(dir, ic, receiver.Omitempty, caseconvertor)
 	if receiver.Client {
 		codegen.GenGoIClient(dir, ic)
 		codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
