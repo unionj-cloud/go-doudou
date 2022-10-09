@@ -1,17 +1,13 @@
 package router
 
 import (
-	"github.com/unionj-cloud/go-doudou/framework/http/router/radix"
 	"github.com/valyala/fasthttp"
 )
 
 // Router is a fasthttp.RequestHandler which can be used to dispatch requests to different
 // handler functions via configurable routes
 type Router struct {
-	trees              []*radix.Tree
-	treeMutable        bool
-	customMethodsIndex map[string]int
-	registeredPaths    map[string][]string
+	registeredPaths map[string][]string
 
 	// If enabled, adds the matched route path onto the ctx.UserValue context
 	// before invoking the handler.
@@ -75,6 +71,8 @@ type Router struct {
 
 	// Cached value of global (*) allowed methods
 	globalAllowed string
+
+	handlerStore map[string]fasthttp.RequestHandler
 }
 
 // Group is a sub-router to group paths

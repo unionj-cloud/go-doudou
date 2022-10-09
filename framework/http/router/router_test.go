@@ -33,16 +33,11 @@ var httpMethods = []string{
 	fasthttp.MethodConnect,
 	fasthttp.MethodOptions,
 	fasthttp.MethodTrace,
-	MethodWild,
 	"CUSTOM",
 }
 
 func randomHTTPMethod() string {
 	method := httpMethods[rand.Intn(len(httpMethods)-1)]
-
-	for method == MethodWild {
-		method = httpMethods[rand.Intn(len(httpMethods)-1)]
-	}
 
 	return method
 }
@@ -181,9 +176,6 @@ func TestRouterAPI(t *testing.T) {
 	})
 	router.TRACE("/TRACE", func(ctx *fasthttp.RequestCtx) {
 		trace = true
-	})
-	router.ANY("/ANY", func(ctx *fasthttp.RequestCtx) {
-		any = true
 	})
 	router.Handle(fasthttp.MethodGet, "/Handler", httpHandler)
 
@@ -617,9 +609,6 @@ func testRouterNotFoundByMethod(t *testing.T, method string) {
 	}
 
 	reqMethod := method
-	if method == MethodWild {
-		reqMethod = randomHTTPMethod()
-	}
 
 	for _, tr := range testRoutes {
 		if runtime.GOOS == "windows" && strings.HasPrefix(tr.route, "/../") {
@@ -699,7 +688,6 @@ func TestRouterNotFound_MethodWild(t *testing.T) {
 	postFound, anyFound := false, false
 
 	router := New()
-	router.ANY("/{path:*}", func(ctx *fasthttp.RequestCtx) { anyFound = true })
 	router.POST("/specific", func(ctx *fasthttp.RequestCtx) { postFound = true })
 
 	for i := 0; i < 100; i++ {
@@ -771,9 +759,6 @@ func TestRouterPanicHandler(t *testing.T) {
 
 func testRouterLookupByMethod(t *testing.T, method string) {
 	reqMethod := method
-	if method == MethodWild {
-		reqMethod = randomHTTPMethod()
-	}
 
 	routed := false
 	wantHandle := func(_ *fasthttp.RequestCtx) {
@@ -1121,7 +1106,6 @@ func BenchmarkRouterParams(b *testing.B) {
 func BenchmarkRouterANY(b *testing.B) {
 	r := New()
 	r.GET("/data", func(ctx *fasthttp.RequestCtx) {})
-	r.ANY("/", func(ctx *fasthttp.RequestCtx) {})
 
 	ctx := new(fasthttp.RequestCtx)
 	ctx.Request.Header.SetMethod("GET")
@@ -1134,14 +1118,10 @@ func BenchmarkRouterANY(b *testing.B) {
 
 func BenchmarkRouterGet_ANY(b *testing.B) {
 	resp := []byte("Bench GET")
-	respANY := []byte("Bench GET (ANY)")
 
 	r := New()
 	r.GET("/", func(ctx *fasthttp.RequestCtx) {
 		ctx.Success("text/plain", resp)
-	})
-	r.ANY("/", func(ctx *fasthttp.RequestCtx) {
-		ctx.Success("text/plain", respANY)
 	})
 
 	ctx := new(fasthttp.RequestCtx)

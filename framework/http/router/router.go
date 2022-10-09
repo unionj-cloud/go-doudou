@@ -1,44 +1,36 @@
 package router
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/savsgio/gotils/bytes"
 	"github.com/savsgio/gotils/strconv"
-	"github.com/unionj-cloud/go-doudou/framework/http/router/radix"
-	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 )
-
-// MethodWild wild HTTP method
-const MethodWild = "*"
 
 var (
 	defaultContentType = []byte("text/plain; charset=utf-8")
 	questionMark       = byte('?')
-
-	// MatchedRoutePathParam is the param name under which the path of the matched
-	// route is stored, if Router.SaveMatchedRoutePath is set.
-	MatchedRoutePathParam = fmt.Sprintf("__matchedRoutePath::%s__", bytes.Rand(make([]byte, 15)))
-
-	// MatchedRouteNameParam is the param name under which the name of the matched
-	// route is stored, if Router.SaveMatchedRoutePath is set.
-	MatchedRouteNameParam = fmt.Sprintf("__matchedRouteName::%s__", bytes.Rand(make([]byte, 15)))
+	routeNameKey       = []byte("routeNameKey")
 )
+
+func (r *Router) saveMatchedRoutePath(name string, handler fasthttp.RequestHandler) fasthttp.RequestHandler {
+	return func(ctx *fasthttp.RequestCtx) {
+		ctx.SetUserValueBytes(routeNameKey, name)
+		handler(ctx)
+	}
+}
 
 // New returns a new router.
 // Path auto-correction, including trailing slashes, is enabled by default.
 func New() *Router {
 	return &Router{
-		trees:                  make([]*radix.Tree, 10),
-		customMethodsIndex:     make(map[string]int),
 		registeredPaths:        make(map[string][]string),
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 		SaveMatchedRoutePath:   true,
+		handlerStore:           make(map[string]fasthttp.RequestHandler),
 	}
 }
 
@@ -48,16 +40,6 @@ func (r *Router) Group(path string) *Group {
 	return &Group{
 		router: r,
 		prefix: path,
-	}
-}
-
-func (r *Router) saveMatchedRoutePath(path string, handler fasthttp.RequestHandler, name ...string) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		ctx.SetUserValue(MatchedRoutePathParam, path)
-		if len(name) > 0 {
-			ctx.SetUserValue(MatchedRouteNameParam, name[0])
-		}
-		handler(ctx)
 	}
 }
 
@@ -81,32 +63,8 @@ func (r *Router) methodIndexOf(method string) int {
 		return 7
 	case fasthttp.MethodTrace:
 		return 8
-	case MethodWild:
-		return 9
 	}
-
-	if i, ok := r.customMethodsIndex[method]; ok {
-		return i
-	}
-
 	return -1
-}
-
-// Mutable allows updating the route handler
-//
-// It's disabled by default
-//
-// WARNING: Use with care. It could generate unexpected behaviours
-func (r *Router) Mutable(v bool) {
-	r.treeMutable = v
-
-	for i := range r.trees {
-		tree := r.trees[i]
-
-		if tree != nil {
-			tree.Mutable = v
-		}
-	}
 }
 
 // List returns all registered routes grouped by method
@@ -159,13 +117,6 @@ func (r *Router) TRACE(path string, handler fasthttp.RequestHandler, name ...str
 	r.Handle(fasthttp.MethodTrace, path, handler, name...)
 }
 
-// ANY is a shortcut for router.Handle(router.MethodWild, path, handler)
-//
-// WARNING: Use only for routes where the request method is not important
-func (r *Router) ANY(path string, handler fasthttp.RequestHandler, name ...string) {
-	r.Handle(MethodWild, path, handler, name...)
-}
-
 // ServeFiles serves files from the given file system root.
 // The path must end with "/{filepath:*}", files are then served from the local
 // path /defined/root/dir/{filepath:*}.
@@ -210,6 +161,14 @@ func (r *Router) ServeFilesCustom(path string, fs *fasthttp.FS) {
 	r.GET(path, fileHandler)
 }
 
+func path2key(method, path string) string {
+	var sb strings.Builder
+	sb.WriteString(method)
+	sb.WriteString(":")
+	sb.WriteString(path)
+	return sb.String()
+}
+
 // Handle registers a new request handler with the given path and method.
 //
 // For GET, POST, PUT, PATCH and DELETE requests the respective shortcut
@@ -226,68 +185,18 @@ func (r *Router) Handle(method, path string, handler fasthttp.RequestHandler, na
 		panic("path must begin with '/' in path '" + path + "'")
 	case handler == nil:
 		panic("handler must not be nil")
+	case len(name) == 0:
+		panic("route name must not be nil")
 	}
-
+	if r.SaveMatchedRoutePath {
+		handler = r.saveMatchedRoutePath(name[0], handler)
+	}
+	r.handlerStore[path2key(method, path)] = handler
+	_, f := r.registeredPaths[method]
 	r.registeredPaths[method] = append(r.registeredPaths[method], path)
-
-	methodIndex := r.methodIndexOf(method)
-	if methodIndex == -1 {
-		tree := radix.New()
-		tree.Mutable = r.treeMutable
-
-		r.trees = append(r.trees, tree)
-		methodIndex = len(r.trees) - 1
-		r.customMethodsIndex[method] = methodIndex
-	}
-
-	tree := r.trees[methodIndex]
-	if tree == nil {
-		tree = radix.New()
-		tree.Mutable = r.treeMutable
-
-		r.trees[methodIndex] = tree
+	if !f {
 		r.globalAllowed = r.allowed("*", "")
 	}
-
-	if r.SaveMatchedRoutePath {
-		handler = r.saveMatchedRoutePath(path, handler, name...)
-	}
-
-	optionalPaths := getOptionalPaths(path)
-
-	// if not has optional paths, adds the original
-	if len(optionalPaths) == 0 {
-		tree.Add(path, handler)
-	} else {
-		for _, p := range optionalPaths {
-			tree.Add(p, handler)
-		}
-	}
-}
-
-// Lookup allows the manual lookup of a method + path combo.
-// This is e.g. useful to build a framework around this router.
-// If the path was found, it returns the handler function.
-// Otherwise the second return value indicates whether a redirection to
-// the same path with an extra / without the trailing slash should be performed.
-func (r *Router) Lookup(method, path string, ctx *fasthttp.RequestCtx) (fasthttp.RequestHandler, bool) {
-	methodIndex := r.methodIndexOf(method)
-	if methodIndex == -1 {
-		return nil, false
-	}
-
-	if tree := r.trees[methodIndex]; tree != nil {
-		handler, tsr := tree.Get(path, ctx)
-		if handler != nil || tsr {
-			return handler, tsr
-		}
-	}
-
-	if tree := r.trees[r.methodIndexOf(MethodWild)]; tree != nil {
-		return tree.Get(path, ctx)
-	}
-
-	return nil, false
 }
 
 func (r *Router) recv(ctx *fasthttp.RequestCtx) {
@@ -319,7 +228,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 				continue
 			}
 
-			handle, _ := r.trees[r.methodIndexOf(method)].Get(path, nil)
+			handle, _ := r.handlerStore[path2key(method, path)]
 			if handle != nil {
 				// Add request method to list of allowed methods
 				allowed = append(allowed, method)
@@ -346,98 +255,20 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 	return
 }
 
-func (r *Router) tryRedirect(ctx *fasthttp.RequestCtx, tree *radix.Tree, tsr bool, method, path string) bool {
-	// Moved Permanently, request with GET method
-	code := fasthttp.StatusMovedPermanently
-	if method != fasthttp.MethodGet {
-		// Permanent Redirect, request with same method
-		code = fasthttp.StatusPermanentRedirect
-	}
-
-	if tsr && r.RedirectTrailingSlash {
-		uri := bytebufferpool.Get()
-
-		if len(path) > 1 && path[len(path)-1] == '/' {
-			uri.SetString(path[:len(path)-1])
-		} else {
-			uri.SetString(path)
-			uri.WriteString("/")
-		}
-
-		queryBuf := ctx.URI().QueryString()
-		if len(queryBuf) > 0 {
-			uri.WriteByte(questionMark)
-			uri.Write(queryBuf)
-		}
-
-		ctx.Redirect(uri.String(), code)
-
-		bytebufferpool.Put(uri)
-
-		return true
-	}
-
-	// Try to fix the request path
-	if r.RedirectFixedPath {
-		path := strconv.B2S(ctx.Request.URI().Path())
-
-		uri := bytebufferpool.Get()
-		found := tree.FindCaseInsensitivePath(
-			cleanPath(path),
-			r.RedirectTrailingSlash,
-			uri,
-		)
-
-		if found {
-			queryBuf := ctx.URI().QueryString()
-			if len(queryBuf) > 0 {
-				uri.WriteByte(questionMark)
-				uri.Write(queryBuf)
-			}
-
-			ctx.RedirectBytes(uri.Bytes(), code)
-
-			bytebufferpool.Put(uri)
-
-			return true
-		}
-	}
-
-	return false
-}
-
 // Handler makes the router implement the http.Handler interface.
 func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	if r.PanicHandler != nil {
 		defer r.recv(ctx)
 	}
 
-	path := strconv.B2S(ctx.Request.URI().PathOriginal())
+	path := strconv.B2S(ctx.Request.URI().Path())
 	method := strconv.B2S(ctx.Request.Header.Method())
 	methodIndex := r.methodIndexOf(method)
 
 	if methodIndex > -1 {
-		if tree := r.trees[methodIndex]; tree != nil {
-			if handler, tsr := tree.Get(path, ctx); handler != nil {
-				handler(ctx)
-				return
-			} else if method != fasthttp.MethodConnect && path != "/" {
-				if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {
-					return
-				}
-			}
-		}
-	}
-
-	// Try to search in the wild method tree
-	if tree := r.trees[r.methodIndexOf(MethodWild)]; tree != nil {
-		if handler, tsr := tree.Get(path, ctx); handler != nil {
+		if handler := r.handlerStore[path2key(method, path)]; handler != nil {
 			handler(ctx)
 			return
-		} else if method != fasthttp.MethodConnect && path != "/" {
-			if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {
-				return
-			}
 		}
 	}
 
