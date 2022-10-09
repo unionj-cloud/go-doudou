@@ -185,10 +185,11 @@ func (r *Router) Handle(method, path string, handler fasthttp.RequestHandler, na
 		panic("path must begin with '/' in path '" + path + "'")
 	case handler == nil:
 		panic("handler must not be nil")
-	case len(name) == 0:
-		panic("route name must not be nil")
 	}
 	if r.SaveMatchedRoutePath {
+		if len(name) == 0 {
+			panic("route name must not be nil")
+		}
 		handler = r.saveMatchedRoutePath(name[0], handler)
 	}
 	r.handlerStore[path2key(method, path)] = handler
