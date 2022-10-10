@@ -5,11 +5,8 @@
 package httprouter
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 )
 
@@ -42,28 +39,6 @@ func TestParams(t *testing.T) {
 	}
 	if val := ps.ByName("noKey"); val != "" {
 		t.Errorf("Expected empty string for not found key; got: %s", val)
-	}
-}
-
-func TestRouter(t *testing.T) {
-	router := New()
-
-	routed := false
-	router.Handle(http.MethodGet, "/user/:name", func(w http.ResponseWriter, r *http.Request, ps Params) {
-		routed = true
-		want := Params{Param{"name", "gopher"}, Param{"$matchedRoutePath", "/user/:name"}}
-		if !reflect.DeepEqual(ps, want) {
-			t.Fatalf("wrong wildcard values: want %v, got %v", want, ps)
-		}
-	})
-
-	w := new(mockResponseWriter)
-
-	req, _ := http.NewRequest(http.MethodGet, "/user/gopher", nil)
-	router.ServeHTTP(w, req)
-
-	if !routed {
-		t.Fatal("routing failed")
 	}
 }
 
@@ -370,152 +345,4 @@ func TestRouterNotAllowed(t *testing.T) {
 	if allow := w.Header().Get("Allow"); allow != "DELETE, OPTIONS, POST" {
 		t.Error("unexpected Allow header value: " + allow)
 	}
-}
-
-func TestRouterNotFound(t *testing.T) {
-	handlerFunc := func(_ http.ResponseWriter, _ *http.Request, _ Params) {}
-
-	router := New()
-	router.GET("/path", handlerFunc)
-	router.GET("/dir/", handlerFunc)
-	router.GET("/", handlerFunc)
-
-	testRoutes := []struct {
-		route    string
-		code     int
-		location string
-	}{
-		{"/path/", http.StatusMovedPermanently, "/path"},   // TSR -/
-		{"/dir", http.StatusMovedPermanently, "/dir/"},     // TSR +/
-		{"", http.StatusMovedPermanently, "/"},             // TSR +/
-		{"/PATH", http.StatusMovedPermanently, "/path"},    // Fixed Case
-		{"/DIR/", http.StatusMovedPermanently, "/dir/"},    // Fixed Case
-		{"/PATH/", http.StatusMovedPermanently, "/path"},   // Fixed Case -/
-		{"/DIR", http.StatusMovedPermanently, "/dir/"},     // Fixed Case +/
-		{"/../path", http.StatusMovedPermanently, "/path"}, // CleanPath
-		{"/nope", http.StatusNotFound, ""},                 // NotFound
-	}
-	for _, tr := range testRoutes {
-		r, _ := http.NewRequest(http.MethodGet, tr.route, nil)
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, r)
-		if !(w.Code == tr.code && (w.Code == http.StatusNotFound || fmt.Sprint(w.Header().Get("Location")) == tr.location)) {
-			t.Errorf("NotFound handling route %s failed: Code=%d, Header=%v", tr.route, w.Code, w.Header().Get("Location"))
-		}
-	}
-
-	// Test custom not found handler
-	var notFound bool
-	router.NotFound = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(http.StatusNotFound)
-		notFound = true
-	})
-	r, _ := http.NewRequest(http.MethodGet, "/nope", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound && notFound == true) {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
-
-	// Test other method than GET (want 308 instead of 301)
-	router.PATCH("/path", handlerFunc)
-	r, _ = http.NewRequest(http.MethodPatch, "/path/", nil)
-	w = httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusPermanentRedirect && fmt.Sprint(w.Header()) == "map[Location:[/path]]") {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
-
-	// Test special case where no node for the prefix "/" exists
-	router = New()
-	router.GET("/a", handlerFunc)
-	r, _ = http.NewRequest(http.MethodGet, "/", nil)
-	w = httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound) {
-		t.Errorf("NotFound handling route / failed: Code=%d", w.Code)
-	}
-}
-
-func TestRouterPanicHandler(t *testing.T) {
-	router := New()
-	panicHandled := false
-
-	router.PanicHandler = func(rw http.ResponseWriter, r *http.Request, p interface{}) {
-		panicHandled = true
-	}
-
-	router.Handle(http.MethodPut, "/user/:name", func(_ http.ResponseWriter, _ *http.Request, _ Params) {
-		panic("oops!")
-	})
-
-	w := new(mockResponseWriter)
-	req, _ := http.NewRequest(http.MethodPut, "/user/gopher", nil)
-
-	defer func() {
-		if rcv := recover(); rcv != nil {
-			t.Fatal("handling panic failed")
-		}
-	}()
-
-	router.ServeHTTP(w, req)
-
-	if !panicHandled {
-		t.Fatal("simulating failed")
-	}
-}
-
-func TestRouterParamsFromContext(t *testing.T) {
-	routed := false
-
-	wantParams := Params{Param{"name", "gopher"}, Param{"$matchedRoutePath", "/user/:name"}}
-	handlerFunc := func(_ http.ResponseWriter, req *http.Request) {
-		// get params from request context
-		params := ParamsFromContext(req.Context())
-
-		if !reflect.DeepEqual(params, wantParams) {
-			t.Fatalf("Wrong parameter values: want %v, got %v", wantParams, params)
-		}
-
-		routed = true
-	}
-
-	var nilParams Params
-	nilParams = Params{Param{"$matchedRoutePath", "/user"}}
-	handlerFuncNil := func(_ http.ResponseWriter, req *http.Request) {
-		// get params from request context
-		params := ParamsFromContext(req.Context())
-
-		if !reflect.DeepEqual(params, nilParams) {
-			t.Fatalf("Wrong parameter values: want %v, got %v", nilParams, params)
-		}
-
-		routed = true
-	}
-	router := New()
-	router.HandlerFunc(http.MethodGet, "/user", handlerFuncNil)
-	router.HandlerFunc(http.MethodGet, "/user/:name", handlerFunc)
-
-	w := new(mockResponseWriter)
-	r, _ := http.NewRequest(http.MethodGet, "/user/gopher", nil)
-	router.ServeHTTP(w, r)
-	if !routed {
-		t.Fatal("Routing failed!")
-	}
-
-	routed = false
-	r, _ = http.NewRequest(http.MethodGet, "/user", nil)
-	router.ServeHTTP(w, r)
-	if !routed {
-		t.Fatal("Routing failed!")
-	}
-}
-
-type mockFileSystem struct {
-	opened bool
-}
-
-func (mfs *mockFileSystem) Open(name string) (http.File, error) {
-	mfs.opened = true
-	return nil, errors.New("this is just a mock")
 }
