@@ -31,6 +31,20 @@ Go-doudou（doudou发音"兜兜"）是一个基于OpenAPI v3 (for REST)和Protob
 
 请阅读文档 [https://go-doudou.github.io/zh/](https://go-doudou.github.io/zh/) 了解更多。
 
+## Benchmark
+
+![benchmark](./benchmark.png)
+
+Machine: `MacBook Pro (16-inch, 2019)`  
+CPU: `2.3 GHz 8 cores Intel Core i9`  
+Memory: `16 GB 2667 MHz DDR4`
+ProcessingTime: `0ms, 10ms, 100ms, 500ms`  
+Concurrency: `1000`  
+Duration: `30s`  
+go-doudou Version: `v1.3.7`  
+
+[Benchmark测试源码在这里](https://github.com/wubin1989/go-web-framework-benchmark)
+
 ## 感谢
 
 Go-doudou是站在巨人的肩膀上开发而成的，在此感谢以下项目和它们的贡献者的无私付出：

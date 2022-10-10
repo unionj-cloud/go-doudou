@@ -31,6 +31,20 @@ Go-doudou（doudou pronounce /dəudəu/）is OpenAPI 3.0 (for REST) spec and Pro
 
 Read the Docs [https://go-doudou.github.io](https://go-doudou.github.io) to Learn More.
 
+## Benchmark
+
+![benchmark](./benchmark.png)
+
+Machine: `MacBook Pro (16-inch, 2019)`  
+CPU: `2.3 GHz 8 cores Intel Core i9`  
+Memory: `16 GB 2667 MHz DDR4`
+ProcessingTime: `0ms, 10ms, 100ms, 500ms`  
+Concurrency: `1000`  
+Duration: `30s`  
+go-doudou Version: `v1.3.7`  
+
+[Checkout the test code](https://github.com/wubin1989/go-web-framework-benchmark)
+
 ## Credits
 
 Give credits to following repositories and all their contributors:

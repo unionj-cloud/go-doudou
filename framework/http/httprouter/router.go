@@ -202,7 +202,6 @@ func New() *Router {
 	r := &Router{
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
-		SaveMatchedRoutePath:   true,
 		registeredPaths:        make(map[string][]string),
 		handlers:               make(map[string]Handle),
 		dynamicHandlers:        make([]map[*urlpath.Path]Handle, len(httpMethods)),
