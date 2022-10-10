@@ -94,7 +94,6 @@ func toMiddlewareFunc(m func(http.Handler) http.HandlerFunc) mux.MiddlewareFunc 
 }
 
 // NewDefaultHttpSrv create a DefaultHttpSrv instance
-// Deprecated: use NewHttpRouterSrv instead for better performance
 func NewDefaultHttpSrv() *DefaultHttpSrv {
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {

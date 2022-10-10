@@ -8,6 +8,7 @@ import (
 func TestRouteGroupOfARouteGroup(t *testing.T) {
 	var get bool
 	router := New()
+	router.SaveMatchedRoutePath = false
 	foo := router.NewGroup("/foo") // creates /foo group
 	bar := foo.NewGroup("/bar")
 
@@ -31,6 +32,7 @@ func TestRouteGroupAPI(t *testing.T) {
 	httpHandler := handlerStruct{&handler}
 
 	router := New()
+	router.SaveMatchedRoutePath = false
 	group := router.NewGroup("/foo") // creates /foo group
 
 	group.GET("/GET", func(w http.ResponseWriter, r *http.Request, _ Params) {
