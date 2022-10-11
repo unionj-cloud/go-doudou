@@ -226,19 +226,8 @@ func retransmitMultGetter() int {
 
 func newNode(data ...map[string]interface{}) error {
 	mconf = newConf()
-	service := config.DefaultGddServiceName
-	if stringutils.IsNotEmpty(config.GddServiceName.Load()) {
-		service = config.GddServiceName.Load()
-	}
-	if stringutils.IsEmpty(service) {
-		return errors.New(fmt.Sprintf("NewNode() error: No env variable %s found", string(config.GddServiceName)))
-	}
-	httpPort := config.DefaultGddPort
-	if stringutils.IsNotEmpty(config.GddPort.Load()) {
-		if port, err := cast.ToIntE(config.GddPort.Load()); err == nil {
-			httpPort = port
-		}
-	}
+	service := config.GetServiceName()
+	httpPort := config.GetPort()
 	now := time.Now()
 	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
@@ -264,7 +253,7 @@ func newNode(data ...map[string]interface{}) error {
 		Meta: nodeMeta{
 			Service:       service,
 			RouteRootPath: rr,
-			Port:          httpPort,
+			Port:          int(httpPort),
 			RegisterAt:    &now,
 			GoVer:         runtime.Version(),
 			GddVer:        buildinfo.GddVer,
@@ -380,9 +369,9 @@ func registerConfigListener(memConf *memberlist.Config) {
 }
 
 func getModemap() map[string]struct{} {
-	modeStr := config.DefaultGddServiceDiscoveryMode
-	if stringutils.IsNotEmpty(config.GddServiceDiscoveryMode.Load()) {
-		modeStr = config.GddServiceDiscoveryMode.Load()
+	modeStr := config.GddServiceDiscoveryMode.LoadOrDefault(config.DefaultGddServiceDiscoveryMode)
+	if stringutils.IsEmpty(modeStr) {
+		return nil
 	}
 	modes := strings.Split(modeStr, ",")
 	modemap := make(map[string]struct{})
@@ -414,6 +403,24 @@ func NewNode(data ...map[string]interface{}) error {
 	return nil
 }
 
+func NewGrpc(data ...map[string]interface{}) error {
+	for mode, _ := range getModemap() {
+		switch mode {
+		case "nacos":
+			if err := nacos.NewGrpc(data...); err != nil {
+				return err
+			}
+		case "memberlist":
+			if err := newNode(data...); err != nil {
+				return err
+			}
+		default:
+			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
+		}
+	}
+	return nil
+}
+
 func shutdown() {
 	if mlist != nil {
 		_ = mlist.Shutdown()
@@ -428,6 +435,19 @@ func Shutdown() {
 		switch mode {
 		case "nacos":
 			nacos.Shutdown()
+		case "memberlist":
+			shutdown()
+		default:
+			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
+		}
+	}
+}
+
+func ShutdownGrpc() {
+	for mode, _ := range getModemap() {
+		switch mode {
+		case "nacos":
+			nacos.ShutdownGrpc()
 		case "memberlist":
 			shutdown()
 		default:

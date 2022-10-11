@@ -17,6 +17,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/http/registry"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	register "github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
@@ -37,7 +38,7 @@ type HttpRouterSrv struct {
 }
 
 // NewHttpRouterSrv create a HttpRouterSrv instance
-func NewHttpRouterSrv() *HttpRouterSrv {
+func NewHttpRouterSrv(data ...map[string]interface{}) *HttpRouterSrv {
 	rr := config.DefaultGddRouteRootPath
 	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
 		rr = config.GddRouteRootPath.Load()
@@ -70,6 +71,7 @@ func NewHttpRouterSrv() *HttpRouterSrv {
 		handlers.ProxyHeaders,
 		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
 	)
+	register.NewNode(data...)
 	return srv
 }
 
@@ -298,6 +300,8 @@ func (srv *HttpRouterSrv) Run() {
 	srv.printRoutes()
 	httpServer := srv.newHttpServer()
 	defer func() {
+		register.Shutdown()
+
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
 			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),

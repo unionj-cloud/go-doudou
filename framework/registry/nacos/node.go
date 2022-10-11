@@ -41,27 +41,6 @@ func getRegisterHost() string {
 	return registerHost
 }
 
-func getPort() uint64 {
-	httpPort := config.DefaultGddPort
-	if stringutils.IsNotEmpty(config.GddPort.Load()) {
-		if port, err := cast.ToIntE(config.GddPort.Load()); err == nil {
-			httpPort = port
-		}
-	}
-	return uint64(httpPort)
-}
-
-func getServiceName() string {
-	service := config.DefaultGddServiceName
-	if stringutils.IsNotEmpty(config.GddServiceName.Load()) {
-		service = config.GddServiceName.Load()
-	}
-	if stringutils.IsEmpty(service) {
-		logger.Panic().Msgf("[go-doudou] no value for environment variable %s found", config.GddServiceName)
-	}
-	return service
-}
-
 var onceNacos sync.Once
 var NewNamingClient = clients.NewNamingClient
 
@@ -78,8 +57,8 @@ func NewNode(data ...map[string]interface{}) error {
 		InitialiseNacosNamingClient()
 	})
 	registerHost := getRegisterHost()
-	httpPort := getPort()
-	service := getServiceName()
+	httpPort := config.GetPort()
+	service := config.GetServiceName()
 	weight := config.DefaultGddWeight
 	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
 		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
@@ -122,10 +101,62 @@ func NewNode(data ...map[string]interface{}) error {
 		Ephemeral:   true,
 	})
 	if err != nil {
-		return errors.Errorf("[go-doudou] failed to register to nacos server: %s", err)
+		return errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err)
 	}
 	if success {
-		logger.Info().Msg("[go-doudou] registered to nacos server successfully")
+		logger.Info().Msgf("[go-doudou] %s registered to nacos server successfully", service)
+	}
+	return nil
+}
+
+func NewGrpc(data ...map[string]interface{}) error {
+	onceNacos.Do(func() {
+		InitialiseNacosNamingClient()
+	})
+	registerHost := getRegisterHost()
+	grpcPort := config.GetGrpcPort()
+	service := config.GetServiceName() + "_grpc"
+	weight := config.DefaultGddWeight
+	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
+		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
+			weight = w
+		}
+	}
+	buildTime := buildinfo.BuildTime
+	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
+		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
+			buildTime = t.Local().Format(constants.FORMAT8)
+		}
+	}
+	metadata := make(map[string]string)
+	metadata["registerAt"] = time.Now().Local().Format(constants.FORMAT8)
+	metadata["goVer"] = runtime.Version()
+	metadata["gddVer"] = buildinfo.GddVer
+	metadata["buildUser"] = buildinfo.BuildUser
+	metadata["buildTime"] = buildTime
+	metadata["weight"] = strconv.Itoa(weight)
+	for _, item := range data {
+		for k, v := range item {
+			metadata[k] = fmt.Sprint(v)
+		}
+	}
+	success, err := NamingClient.RegisterInstance(vo.RegisterInstanceParam{
+		Ip:          registerHost,
+		Port:        grpcPort,
+		Weight:      float64(weight),
+		Enable:      true,
+		Healthy:     true,
+		Metadata:    metadata,
+		ClusterName: config.GddNacosClusterName.LoadOrDefault(config.DefaultGddNacosClusterName),
+		ServiceName: service,
+		GroupName:   config.GddNacosGroupName.LoadOrDefault(config.DefaultGddNacosGroupName),
+		Ephemeral:   true,
+	})
+	if err != nil {
+		return errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err)
+	}
+	if success {
+		logger.Info().Msgf("[go-doudou] %s registered to nacos server successfully", service)
 	}
 	return nil
 }
@@ -133,8 +164,8 @@ func NewNode(data ...map[string]interface{}) error {
 func Shutdown() {
 	if NamingClient != nil {
 		registerHost := getRegisterHost()
-		httpPort := getPort()
-		service := getServiceName()
+		httpPort := config.GetPort()
+		service := config.GetServiceName()
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
 			Ip:          registerHost,
 			Port:        httpPort,
@@ -143,13 +174,37 @@ func Shutdown() {
 		})
 		NamingClient = nil
 		if err != nil {
-			logger.Error().Err(err).Msg("[go-doudou] failed to deregister from nacos server")
+			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
 			return
 		}
 		if !success {
-			logger.Error().Msg("[go-doudou] failed to deregister from nacos server")
+			logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
 			return
 		}
-		logger.Info().Msg("[go-doudou] deregistered from nacos server successfully")
+		logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
+	}
+}
+
+func ShutdownGrpc() {
+	if NamingClient != nil {
+		registerHost := getRegisterHost()
+		grpcPort := config.GetGrpcPort()
+		service := config.GetServiceName() + "_grpc"
+		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
+			Ip:          registerHost,
+			Port:        grpcPort,
+			ServiceName: service,
+			Ephemeral:   true,
+		})
+		NamingClient = nil
+		if err != nil {
+			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
+		}
+		if !success {
+			logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
+		}
+		logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
 	}
 }

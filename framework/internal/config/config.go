@@ -335,3 +335,31 @@ func GetNacosClientParam() vo.NacosClientParam {
 		ServerConfigs: serverConfigs,
 	}
 }
+
+func GetServiceName() string {
+	service := GddServiceName.LoadOrDefault(DefaultGddServiceName)
+	if stringutils.IsEmpty(service) {
+		zlogger.Panic().Msgf("[go-doudou] no value for environment variable %s found", GddServiceName)
+	}
+	return service
+}
+
+func GetPort() uint64 {
+	httpPort := DefaultGddPort
+	if stringutils.IsNotEmpty(GddPort.Load()) {
+		if port, err := cast.ToIntE(GddPort.Load()); err == nil {
+			httpPort = port
+		}
+	}
+	return uint64(httpPort)
+}
+
+func GetGrpcPort() uint64 {
+	grpcPort := DefaultGddGrpcPort
+	if stringutils.IsNotEmpty(GddGrpcPort.Load()) {
+		if port, err := cast.ToIntE(GddGrpcPort.Load()); err == nil {
+			grpcPort = port
+		}
+	}
+	return uint64(grpcPort)
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/unionj-cloud/go-doudou/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
+	register "github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/toolkit/timeutils"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
@@ -26,11 +27,20 @@ func init() {
 
 type GrpcServer struct {
 	*grpc.Server
+	tags map[string]interface{}
 }
 
 func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 	server := GrpcServer{}
 	server.Server = grpc.NewServer(opt...)
+	register.NewGrpc()
+	return &server
+}
+
+func NewGrpcServerWithTags(tags map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
+	server := GrpcServer{}
+	server.Server = grpc.NewServer(opt...)
+	register.NewGrpc(tags)
 	return &server
 }
 
@@ -86,6 +96,8 @@ func (srv *GrpcServer) Run() {
 	}()
 
 	defer func() {
+		register.ShutdownGrpc()
+
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
 			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
