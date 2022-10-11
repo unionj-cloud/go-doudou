@@ -85,14 +85,8 @@ func (d Ddl) Exec() {
 
 func genDao(d Ddl, tables []table.Table) {
 	var err error
-	if err = codegen.GenBaseGo(d.Dir, d.Df); err != nil {
-		panic(errors.Wrap(err, caller.NewCaller().String()))
-	}
 	for _, t := range tables {
 		if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
-			panic(errors.Wrap(err, caller.NewCaller().String()))
-		}
-		if err = codegen.GenDaoImplGo(d.Dir, t, d.Df); err != nil {
 			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}
 		if err = codegen.GenDaoSQL(d.Dir, t, d.Df); err != nil {

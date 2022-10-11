@@ -15,7 +15,7 @@ import (
 // DB wraps sqlx.Tx and sqlx.DB https://github.com/jmoiron/sqlx/issues/344#issuecomment-318372779
 type DB interface {
 	Querier
-	BeginTxx(ctx context.Context, opts *sql.TxOptions) (Tx, error)
+	BeginTxx(ctx context.Context, opts *sql.TxOptions) (GddTx, error)
 	Close() error
 }
 
@@ -64,7 +64,7 @@ func WithRedisKeyTTL(ttl time.Duration) GddDBOption {
 	}
 }
 
-func NewGddDB(db *sqlx.DB, options ...GddDBOption) DB {
+func NewGddDB(db *sqlx.DB, options ...GddDBOption) GddDB {
 	g := &GddDB{
 		DB:          db,
 		logger:      logger.NewSqlLogger(),
@@ -73,10 +73,10 @@ func NewGddDB(db *sqlx.DB, options ...GddDBOption) DB {
 	for _, opt := range options {
 		opt(g)
 	}
-	return g
+	return *g
 }
 
-func (g *GddDB) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
+func (g GddDB) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
 	var (
 		q    string
 		args []interface{}
@@ -94,7 +94,7 @@ func (g *GddDB) NamedExecContext(ctx context.Context, query string, arg interfac
 	return
 }
 
-func (g *GddDB) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
+func (g GddDB) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
 	defer func() {
 		g.logger.LogWithErr(ctx, err, nil, query, args...)
 	}()
@@ -103,7 +103,7 @@ func (g *GddDB) ExecContext(ctx context.Context, query string, args ...interface
 	return
 }
 
-func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+func (g GddDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
 	hit := true
 	defer func() {
 		g.logger.LogWithErr(ctx, err, &hit, query, args...)
@@ -128,7 +128,7 @@ func (g *GddDB) GetContext(ctx context.Context, dest interface{}, query string, 
 	return
 }
 
-func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+func (g GddDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
 	hit := true
 	defer func() {
 		g.logger.LogWithErr(ctx, err, &hit, query, args...)
@@ -154,12 +154,12 @@ func (g *GddDB) SelectContext(ctx context.Context, dest interface{}, query strin
 }
 
 // BeginTxx begins a transaction
-func (g *GddDB) BeginTxx(ctx context.Context, opts *sql.TxOptions) (Tx, error) {
+func (g GddDB) BeginTxx(ctx context.Context, opts *sql.TxOptions) (GddTx, error) {
 	tx, err := g.DB.BeginTxx(ctx, opts)
 	if err != nil {
-		return nil, err
+		return GddTx{}, err
 	}
-	return &GddTx{tx, g.logger, g.cacheStore, g.redisKeyTTL}, nil
+	return GddTx{tx, g.logger, g.cacheStore, g.redisKeyTTL}, nil
 }
 
 // GddTx wraps sqlx.Tx
@@ -170,7 +170,7 @@ type GddTx struct {
 	redisKeyTTL time.Duration
 }
 
-func (g *GddTx) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
+func (g GddTx) NamedExecContext(ctx context.Context, query string, arg interface{}) (ret sql.Result, err error) {
 	var (
 		q    string
 		args []interface{}
@@ -188,7 +188,7 @@ func (g *GddTx) NamedExecContext(ctx context.Context, query string, arg interfac
 	return
 }
 
-func (g *GddTx) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
+func (g GddTx) ExecContext(ctx context.Context, query string, args ...interface{}) (ret sql.Result, err error) {
 	defer func() {
 		g.logger.LogWithErr(ctx, err, nil, query, args...)
 	}()
@@ -197,7 +197,7 @@ func (g *GddTx) ExecContext(ctx context.Context, query string, args ...interface
 	return
 }
 
-func (g *GddTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+func (g GddTx) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
 	hit := true
 	defer func() {
 		g.logger.LogWithErr(ctx, err, &hit, query, args...)
@@ -222,7 +222,7 @@ func (g *GddTx) GetContext(ctx context.Context, dest interface{}, query string, 
 	return
 }
 
-func (g *GddTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+func (g GddTx) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
 	hit := true
 	defer func() {
 		g.logger.LogWithErr(ctx, err, &hit, query, args...)
