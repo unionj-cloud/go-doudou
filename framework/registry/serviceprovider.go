@@ -2,7 +2,6 @@ package registry
 
 import (
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
-	"github.com/wubin1989/nacos-sdk-go/clients/naming_client"
 )
 
 type IServiceProvider interface {
@@ -15,10 +14,4 @@ type IMemberlistServiceProvider interface {
 	AddNode(node *memberlist.Node)
 	UpdateWeight(node *memberlist.Node)
 	RemoveNode(node *memberlist.Node)
-}
-
-type INacosServiceProvider interface {
-	SetClusters(clusters []string)
-	SetGroupName(groupName string)
-	SetNamingClient(namingClient naming_client.INamingClient)
 }

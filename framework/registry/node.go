@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -211,7 +212,7 @@ func retransmitMultGetter() int {
 
 var joinOnce sync.Once
 
-func joinCluster(data ...map[string]interface{}) {
+func joinCluster() {
 	mconf = newConf()
 	service := config.GetServiceName()
 	now := time.Now()
@@ -247,9 +248,6 @@ func joinCluster(data ...map[string]interface{}) {
 			Weight:        weight,
 		},
 	}
-	if len(data) > 0 {
-		mmeta.Data = data[0]
-	}
 	queue := &memberlist.TransmitLimitedQueue{
 		NumNodes:             numNodes,
 		RetransmitMultGetter: retransmitMultGetter,
@@ -278,10 +276,19 @@ func newNode(data ...map[string]interface{}) {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 	joinOnce.Do(func() {
-		joinCluster(data...)
+		joinCluster()
 	})
 	dele := mconf.Delegate.(*delegate)
 	dele.mmeta.Meta.Port = int(config.GetPort())
+	if len(data) > 0 {
+		if dele.mmeta.Data != nil {
+			for k, v := range data[0] {
+				dele.mmeta.Data[k] = v
+			}
+		} else {
+			dele.mmeta.Data = data[0]
+		}
+	}
 	if err := mlist.UpdateNode(15 * time.Second); err != nil {
 		panic(errors.Wrap(err, "failed to register RESTful service to memberlist"))
 	}
@@ -294,10 +301,19 @@ func newGrpc(data ...map[string]interface{}) {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 	joinOnce.Do(func() {
-		joinCluster(data...)
+		joinCluster()
 	})
 	dele := mconf.Delegate.(*delegate)
 	dele.mmeta.Meta.GrpcPort = int(config.GetGrpcPort())
+	if len(data) > 0 {
+		if dele.mmeta.Data != nil {
+			for k, v := range data[0] {
+				dele.mmeta.Data[k] = v
+			}
+		} else {
+			dele.mmeta.Data = data[0]
+		}
+	}
 	if err := mlist.UpdateNode(15 * time.Second); err != nil {
 		panic(errors.Wrap(err, "failed to register gRPC service to memberlist"))
 	}
@@ -582,4 +598,170 @@ func LocalNode() *memberlist.Node {
 		return nil
 	}
 	return mlist.LocalNode()
+}
+
+type server struct {
+	service       string
+	node          string
+	baseUrl       string
+	weight        int
+	currentWeight int
+}
+
+func (s *server) Weight() int {
+	return s.weight
+}
+
+type base struct {
+	name    string
+	nodes   []*server
+	nodeMap map[string]*server
+	lock    sync.RWMutex
+}
+
+// AddNode add or update node providing the service
+func (m *base) AddNode(node *memberlist.Node) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	svcName := SvcName(node)
+	if svcName != m.name {
+		return
+	}
+	baseUrl, _ := BaseUrl(node)
+	weight, _ := MetaWeight(node)
+	if s, exists := m.nodeMap[node.Name]; !exists {
+		s = &server{
+			service:       m.name,
+			node:          node.Name,
+			baseUrl:       baseUrl,
+			weight:        weight,
+			currentWeight: 0,
+		}
+		m.nodes = append(m.nodes, s)
+		m.nodeMap[node.Name] = s
+		logger.Info().Msgf("[go-doudou] add node %s to load balancer, supplying %s service", node.Name, svcName)
+	} else {
+		old := *s
+		s.baseUrl = baseUrl
+		s.weight = weight
+		logger.Info().Msgf("[go-doudou] node %s update, supplying %s service, old: %+v, new: %+v", node.Name, svcName, old, *s)
+	}
+}
+
+func (m *base) UpdateWeight(node *memberlist.Node) {
+	weight, _ := MetaWeight(node)
+	if weight > 0 {
+		return
+	}
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	svcName := SvcName(node)
+	if svcName != m.name {
+		return
+	}
+	if s, exists := m.nodeMap[node.Name]; exists {
+		old := *s
+		s.weight = node.Weight
+		logger.Info().Msgf("[go-doudou] weight of node %s update, old: %d, new: %d", node.Name, old.weight, s.weight)
+	}
+}
+
+func (m *base) GetServer(nodeName string) *server {
+	return m.nodeMap[nodeName]
+}
+
+func (m *base) RemoveNode(node *memberlist.Node) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	svcName := SvcName(node)
+	if svcName != m.name {
+		return
+	}
+	if _, exists := m.nodeMap[node.Name]; exists {
+		var idx int
+		for i, n := range m.nodes {
+			if n.node == node.Name {
+				idx = i
+			}
+		}
+		m.nodes = append(m.nodes[:idx], m.nodes[idx+1:]...)
+		delete(m.nodeMap, node.Name)
+		logger.Info().Msgf("[go-doudou] remove node %s from load balancer, supplying %s service", node.Name, svcName)
+	}
+}
+
+// MemberlistServiceProvider defines an implementation for IServiceProvider
+type MemberlistServiceProvider struct {
+	base
+	current uint64
+}
+
+// SelectServer selects a node which is supplying service specified by name property from cluster
+func (m *MemberlistServiceProvider) SelectServer() string {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	if len(m.nodes) == 0 {
+		return ""
+	}
+	next := int(atomic.AddUint64(&m.current, uint64(1)) % uint64(len(m.nodes)))
+	m.current = uint64(next)
+	selected := m.nodes[next]
+	return selected.baseUrl
+}
+
+// NewMemberlistServiceProvider create an NewMemberlistServiceProvider instance
+func NewMemberlistServiceProvider(name string) *MemberlistServiceProvider {
+	joinOnce.Do(func() {
+		joinCluster()
+	})
+	sp := &MemberlistServiceProvider{
+		base: base{
+			name:    name,
+			nodeMap: make(map[string]*server),
+		},
+	}
+	RegisterServiceProvider(sp)
+	return sp
+}
+
+// SmoothWeightedRoundRobinProvider is a smooth weighted round-robin algo implementation for IServiceProvider
+// https://github.com/nginx/nginx/commit/52327e0627f49dbda1e8db695e63a4b0af4448b1
+type SmoothWeightedRoundRobinProvider struct {
+	base
+}
+
+// SelectServer selects a node which is supplying service specified by name property from cluster
+func (m *SmoothWeightedRoundRobinProvider) SelectServer() string {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	if len(m.nodes) == 0 {
+		return ""
+	}
+	var selected *server
+	total := 0
+	for i := 0; i < len(m.nodes); i++ {
+		s := m.nodes[i]
+		s.currentWeight += s.weight
+		total += s.weight
+		if selected == nil || s.currentWeight > selected.currentWeight {
+			selected = s
+		}
+	}
+	selected.currentWeight -= total
+	return selected.baseUrl
+}
+
+// NewSmoothWeightedRoundRobinProvider create an SmoothWeightedRoundRobinProvider instance
+func NewSmoothWeightedRoundRobinProvider(name string) *SmoothWeightedRoundRobinProvider {
+	joinOnce.Do(func() {
+		joinCluster()
+	})
+	sp := &SmoothWeightedRoundRobinProvider{
+		base: base{
+			name:    name,
+			nodeMap: make(map[string]*server),
+		},
+	}
+	RegisterServiceProvider(sp)
+	return sp
 }

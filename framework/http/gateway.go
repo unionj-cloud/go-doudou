@@ -7,7 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
-	"github.com/wubin1989/nacos-sdk-go/vo"
+	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -147,11 +147,11 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 						continue
 					}
 					if value, ok := proxyConfig.ProviderStore.Get(serviceName); ok {
-						if provider, ok = value.(*NacosWRRServiceProvider); ok {
+						if provider, ok = value.(*nacos.NacosWRRServiceProvider); ok {
 							break
 						}
 					}
-					provider = NewNacosWRRServiceProvider(serviceName, WithNacosClusters([]string{cluster}), WithNacosGroupName(group))
+					provider = nacos.NewNacosWRRServiceProvider(serviceName, nacos.WithNacosClusters([]string{cluster}), nacos.WithNacosGroupName(group))
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				default:
 					nodes, err := registry.AllNodes()
@@ -169,11 +169,11 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 						continue
 					}
 					if value, ok := proxyConfig.ProviderStore.Get(serviceName); ok {
-						if provider, ok = value.(*SmoothWeightedRoundRobinProvider); ok {
+						if provider, ok = value.(*registry.SmoothWeightedRoundRobinProvider); ok {
 							break
 						}
 					}
-					provider = NewSmoothWeightedRoundRobinProvider(serviceName)
+					provider = registry.NewSmoothWeightedRoundRobinProvider(serviceName)
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				}
 				if provider != nil {

@@ -29,7 +29,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/toolkit/fileutils"
 	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	ddclient "github.com/unionj-cloud/go-doudou/framework/client"
 	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -295,13 +295,13 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	}
 {{- end }}
 
-func New{{.Meta.Name}}Client(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
+func New{{.Meta.Name}}Client(opts ...ddclient.DdClientOption) *{{.Meta.Name}}Client {
 	{{- if .Env }}
-	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
+	defaultProvider := ddclient.NewServiceProvider("{{.Env}}")
 	{{- else }}
-	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name | toUpper}}")
+	defaultProvider := ddclient.NewServiceProvider("{{.Meta.Name | toUpper}}")
 	{{- end }}
-	defaultClient := ddhttp.NewClient()
+	defaultClient := ddclient.NewClient()
 
 	svcClient := &{{.Meta.Name}}Client{
 		provider: defaultProvider,

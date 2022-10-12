@@ -28,7 +28,7 @@ require (
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.13.0
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
@@ -37,7 +37,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.10
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
-	golang.org/x/tools v0.1.5
+	golang.org/x/tools v0.1.12
 )
 
 require (
@@ -54,7 +54,6 @@ require (
 	github.com/miekg/dns v1.1.42
 	github.com/rs/cors v1.8.2
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
-	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/slok/goresilience v0.2.0
 )
 
@@ -84,25 +83,30 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c
 	github.com/mattn/go-colorable v0.1.12
 	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20220216144756-c35f1ee13d7c
-	github.com/prometheus/common v0.28.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.8.0
 	github.com/rs/zerolog v1.28.0
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
-	github.com/wubin1989/nacos-sdk-go v1.1.2-0.20220706053037-873d23c0d56d
+	github.com/wubin1989/nacos-sdk-go/v2 v2.1.1
 	github.com/yusufpapurcu/wmi v1.2.2
-	go.opencensus.io v0.23.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.5.1
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875
-	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
-	google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159 // indirect
-	google.golang.org/grpc v1.38.0
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
+	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14
+	golang.org/x/text v0.3.8 // indirect
+	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
+	google.golang.org/grpc v1.50.0
 )
+
+replace github.com/wubin1989/nacos-sdk-go/v2 v2.1.1 => /Users/wubin1989/workspace/cloud/nacos-sdk-go

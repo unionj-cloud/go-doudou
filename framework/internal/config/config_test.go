@@ -10,9 +10,9 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/framework/configmgr/mock"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/wubin1989/nacos-sdk-go/clients/cache"
-	"github.com/wubin1989/nacos-sdk-go/clients/config_client"
-	"github.com/wubin1989/nacos-sdk-go/vo"
+	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"
+	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
+	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"testing"
 )
 

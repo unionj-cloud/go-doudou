@@ -1,4 +1,4 @@
-package ddhttp_test
+package client_test
 
 import (
 	"bytes"
@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/go-msgpack/codec"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/framework/client"
 	"github.com/unionj-cloud/go-doudou/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	"github.com/unionj-cloud/go-doudou/framework/registry"
 	nmock "github.com/unionj-cloud/go-doudou/framework/registry/nacos/mock"
-	"github.com/wubin1989/nacos-sdk-go/common/constant"
-	"github.com/wubin1989/nacos-sdk-go/model"
-	"github.com/wubin1989/nacos-sdk-go/vo"
+	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
+	"github.com/wubin1989/nacos-sdk-go/v2/model"
+	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"os"
 	"testing"
 	"time"
@@ -30,13 +30,10 @@ var clientConfigTest = *constant.NewClientConfig(
 var serverConfigTest = *constant.NewServerConfig("console.nacos.io", 80, constant.WithContextPath("/nacos"))
 
 var services = model.Service{
-	Name:            "DEFAULT_GROUP@@DEMO",
-	CacheMillis:     1000,
-	UseSpecifiedURL: false,
+	Name:        "DEFAULT_GROUP@@DEMO",
+	CacheMillis: 1000,
 	Hosts: []model.Instance{
 		{
-			Valid:      true,
-			Marked:     false,
 			InstanceId: "10.10.10.10-80-a-DEMO",
 			Port:       80,
 			Ip:         "10.10.10.10",
@@ -50,8 +47,6 @@ var services = model.Service{
 			Healthy:     true,
 		},
 		{
-			Valid:       true,
-			Marked:      false,
 			InstanceId:  "10.10.10.11-80-a-DEMO",
 			Port:        80,
 			Ip:          "10.10.10.11",
@@ -63,8 +58,6 @@ var services = model.Service{
 			Healthy:     true,
 		},
 		{
-			Valid:       true,
-			Marked:      false,
 			InstanceId:  "10.10.10.12-80-a-DEMO",
 			Port:        80,
 			Ip:          "10.10.10.12",
@@ -76,8 +69,6 @@ var services = model.Service{
 			Healthy:     false,
 		},
 		{
-			Valid:       true,
-			Marked:      false,
 			InstanceId:  "10.10.10.13-80-a-DEMO",
 			Port:        80,
 			Ip:          "10.10.10.13",
@@ -89,8 +80,6 @@ var services = model.Service{
 			Healthy:     true,
 		},
 		{
-			Valid:       true,
-			Marked:      false,
 			InstanceId:  "10.10.10.14-80-a-DEMO",
 			Port:        80,
 			Ip:          "10.10.10.14",
@@ -103,8 +92,8 @@ var services = model.Service{
 		},
 	},
 	Checksum:    "3bbcf6dd1175203a8afdade0e77a27cd1528787794594",
-	LastRefTime: 1528787794594, Env: "", Clusters: "a",
-	Metadata: map[string]string(nil),
+	LastRefTime: 1528787794594,
+	Clusters:    "a",
 }
 
 func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
@@ -122,9 +111,9 @@ func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(services.Hosts, nil)
 
-	n := ddhttp.NewNacosRRServiceProvider("testsvc",
-		ddhttp.WithNacosNamingClient(namingClient),
-		ddhttp.WithNacosClusters([]string{"a"}))
+	n := client.NewNacosRRServiceProvider("testsvc",
+		client.WithNacosNamingClient(namingClient),
+		client.WithNacosClusters([]string{"a"}))
 	for i := 0; i < len(services.Hosts)*2; i++ {
 		got := n.SelectServer()
 		fmt.Println(got)
@@ -145,9 +134,9 @@ func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(&services.Hosts[0], nil)
 
-	n := ddhttp.NewNacosWRRServiceProvider("testsvc",
-		ddhttp.WithNacosNamingClient(namingClient),
-		ddhttp.WithNacosClusters([]string{"a"}))
+	n := client.NewNacosWRRServiceProvider("testsvc",
+		client.WithNacosNamingClient(namingClient),
+		client.WithNacosClusters([]string{"a"}))
 	got := n.SelectServer()
 	require.Equal(t, got, "http://10.10.10.10:80/api")
 }
@@ -170,9 +159,9 @@ func (receiver *MockDdClient) SetClient(client *resty.Client) {
 	receiver.client = client
 }
 
-func NewMockDdClient(opts ...ddhttp.DdClientOption) *MockDdClient {
-	defaultProvider := ddhttp.NewServiceProvider("MOCKDDCLIENT")
-	defaultClient := ddhttp.NewClient()
+func NewMockDdClient(opts ...client.DdClientOption) *MockDdClient {
+	defaultProvider := client.NewServiceProvider("MOCKDDCLIENT")
+	defaultClient := client.NewClient()
 
 	svcClient := &MockDdClient{
 		provider: defaultProvider,
@@ -188,21 +177,21 @@ func NewMockDdClient(opts ...ddhttp.DdClientOption) *MockDdClient {
 
 func TestWithProvider(t *testing.T) {
 	Convey("Create a DdClient instance with custom provider", t, func() {
-		m := NewMockDdClient(ddhttp.WithProvider(ddhttp.NewMemberlistServiceProvider("mock-svc")))
+		m := NewMockDdClient(client.WithProvider(client.NewMemberlistServiceProvider("mock-svc")))
 		So(m.provider, ShouldNotBeZeroValue)
 	})
 }
 
 func TestWithClient(t *testing.T) {
 	Convey("Create a DdClient instance with custom client", t, func() {
-		m := NewMockDdClient(ddhttp.WithClient(resty.New()))
+		m := NewMockDdClient(client.WithClient(resty.New()))
 		So(m.client, ShouldNotBeZeroValue)
 	})
 }
 
 func TestWithRootPath(t *testing.T) {
 	Convey("Create a DdClient instance with custom rootPath", t, func() {
-		m := NewMockDdClient(ddhttp.WithRootPath("/v1"))
+		m := NewMockDdClient(client.WithRootPath("/v1"))
 		So(m.rootPath, ShouldEqual, "/v1")
 	})
 }
@@ -217,10 +206,7 @@ func TestRetryCount(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	setup()
-	err := registry.NewNode()
-	if err != nil {
-		panic(err)
-	}
+	registry.NewNode()
 	defer registry.Shutdown()
 	m.Run()
 }
@@ -249,7 +235,7 @@ func setup() {
 
 func Test_base_AddNode(t *testing.T) {
 	Convey("Should select one node", t, func() {
-		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider := client.NewMemberlistServiceProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
 		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "localhost", 8088, "/v1"))
 
@@ -262,7 +248,7 @@ func Test_base_AddNode(t *testing.T) {
 
 func Test_base_AddNode_Fail(t *testing.T) {
 	Convey("Should select one node", t, func() {
-		provider := ddhttp.NewMemberlistServiceProvider("test")
+		provider := client.NewMemberlistServiceProvider("test")
 		provider.AddNode(registry.LocalNode())
 		So(provider.SelectServer(), ShouldBeZeroValue)
 
@@ -312,7 +298,7 @@ func setMetaWeight(node *memberlist.Node, weight int) error {
 func Test_base_UpdateWeight(t *testing.T) {
 	_ = setMetaWeight(registry.LocalNode(), 0)
 	Convey("Weight should change", t, func() {
-		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider := client.NewMemberlistServiceProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
 		registry.LocalNode().Weight = 4
 		provider.UpdateWeight(registry.LocalNode())
@@ -323,7 +309,7 @@ func Test_base_UpdateWeight(t *testing.T) {
 func Test_base_UpdateWeight_Fail(t *testing.T) {
 	_ = setMetaWeight(registry.LocalNode(), 8)
 	Convey("Weight should not change as meta weight greater than 0", t, func() {
-		provider := ddhttp.NewMemberlistServiceProvider("ddhttp")
+		provider := client.NewMemberlistServiceProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
 		registry.LocalNode().Weight = 4
 		provider.UpdateWeight(registry.LocalNode())
@@ -334,7 +320,7 @@ func Test_base_UpdateWeight_Fail(t *testing.T) {
 func Test_base_UpdateWeight_Fail_SvcName_Mismatch(t *testing.T) {
 	_ = setMetaWeight(registry.LocalNode(), 0)
 	Convey("Weight should not change as service name mismatch", t, func() {
-		provider := ddhttp.NewMemberlistServiceProvider("test")
+		provider := client.NewMemberlistServiceProvider("test")
 		provider.UpdateWeight(registry.LocalNode())
 		So(provider.GetServer("ddhttp"), ShouldBeNil)
 	})
@@ -342,7 +328,7 @@ func Test_base_UpdateWeight_Fail_SvcName_Mismatch(t *testing.T) {
 
 func Test_SMRR_AddNode(t *testing.T) {
 	Convey("Should select one node", t, func() {
-		provider := ddhttp.NewSmoothWeightedRoundRobinProvider("ddhttp")
+		provider := client.NewSmoothWeightedRoundRobinProvider("ddhttp")
 		provider.AddNode(registry.LocalNode())
 		So(provider.SelectServer(), ShouldEqual, fmt.Sprintf("http://%s:%d%s", "localhost", 8088, "/v1"))
 	})
@@ -350,7 +336,7 @@ func Test_SMRR_AddNode(t *testing.T) {
 
 func Test_SMRR_SelectServer(t *testing.T) {
 	Convey("Should select none node", t, func() {
-		provider := ddhttp.NewSmoothWeightedRoundRobinProvider("ddhttp")
+		provider := client.NewSmoothWeightedRoundRobinProvider("ddhttp")
 		provider.RemoveNode(registry.LocalNode())
 		So(provider.SelectServer(), ShouldBeZeroValue)
 	})
