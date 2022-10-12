@@ -71,7 +71,9 @@ func NewHttpRouterSrv(data ...map[string]interface{}) *HttpRouterSrv {
 		handlers.ProxyHeaders,
 		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
 	)
-	register.NewNode(data...)
+	if len(data) > 0 {
+		srv.data = data[0]
+	}
 	return srv
 }
 
@@ -155,6 +157,7 @@ func (srv *HttpRouterSrv) newHttpServer() *http.Server {
 // Run runs http server
 func (srv *HttpRouterSrv) Run() {
 	banner.Print()
+	register.NewNode(srv.data)
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
 		srv.Middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.Middlewares...)

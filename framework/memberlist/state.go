@@ -3,7 +3,7 @@ package memberlist
 import (
 	"bytes"
 	"fmt"
-	"github.com/shirou/gopsutil/cpu"
+	"github.com/unionj-cloud/go-doudou/toolkit/cpu"
 	"math"
 	"math/rand"
 	"net"

@@ -42,6 +42,7 @@ type common struct {
 	debugRoutes []model.Route
 	bizRoutes   []model.Route
 	Middlewares []mux.MiddlewareFunc
+	data        map[string]interface{}
 }
 
 // DefaultHttpSrv wraps gorilla mux router
@@ -124,7 +125,9 @@ func NewDefaultHttpSrv(data ...map[string]interface{}) *DefaultHttpSrv {
 		handlers.ProxyHeaders,
 		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
 	)
-	register.NewNode(data...)
+	if len(data) > 0 {
+		srv.data = data[0]
+	}
 	return srv
 }
 
@@ -239,6 +242,7 @@ func (srv *DefaultHttpSrv) newHttpServer() *http.Server {
 // Run runs http server
 func (srv *DefaultHttpSrv) Run() {
 	banner.Print()
+	register.NewNode(srv.data)
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
 		srv.Middlewares = append([]mux.MiddlewareFunc{prometheus.PrometheusMiddleware}, srv.Middlewares...)

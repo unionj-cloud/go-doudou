@@ -27,20 +27,20 @@ func init() {
 
 type GrpcServer struct {
 	*grpc.Server
-	tags map[string]interface{}
+	data map[string]interface{}
 }
 
 func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 	server := GrpcServer{}
 	server.Server = grpc.NewServer(opt...)
-	register.NewGrpc()
 	return &server
 }
 
-func NewGrpcServerWithTags(tags map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
-	server := GrpcServer{}
+func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
+	server := GrpcServer{
+		data: data,
+	}
 	server.Server = grpc.NewServer(opt...)
-	register.NewGrpc(tags)
 	return &server
 }
 
@@ -77,6 +77,11 @@ func (srv *GrpcServer) printServices() {
 // Run runs grpc server
 func (srv *GrpcServer) Run() {
 	banner.Print()
+	if srv.data != nil {
+		register.NewGrpc(srv.data)
+	} else {
+		register.NewGrpc()
+	}
 	port := config.DefaultGddGrpcPort
 	if p, err := cast.ToIntE(config.GddGrpcPort.Load()); err == nil {
 		port = p

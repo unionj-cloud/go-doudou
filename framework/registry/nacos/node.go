@@ -52,7 +52,7 @@ func InitialiseNacosNamingClient() {
 	}
 }
 
-func NewNode(data ...map[string]interface{}) error {
+func NewNode(data ...map[string]interface{}) {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
@@ -101,15 +101,14 @@ func NewNode(data ...map[string]interface{}) error {
 		Ephemeral:   true,
 	})
 	if err != nil {
-		return errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err)
+		panic(errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err))
 	}
 	if success {
 		logger.Info().Msgf("[go-doudou] %s registered to nacos server successfully", service)
 	}
-	return nil
 }
 
-func NewGrpc(data ...map[string]interface{}) error {
+func NewGrpc(data ...map[string]interface{}) {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
@@ -153,12 +152,11 @@ func NewGrpc(data ...map[string]interface{}) error {
 		Ephemeral:   true,
 	})
 	if err != nil {
-		return errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err)
+		panic(errors.Errorf("[go-doudou] %s failed to register to nacos server: %s", service, err))
 	}
 	if success {
 		logger.Info().Msgf("[go-doudou] %s registered to nacos server successfully", service)
 	}
-	return nil
 }
 
 func Shutdown() {

@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -29,11 +30,7 @@ var mlist memberlist.IMemberlist
 var mconf *memberlist.Config
 var BroadcastQueue *memberlist.TransmitLimitedQueue
 var events = &eventDelegate{}
-
-type mergedMeta struct {
-	Meta nodeMeta               `json:"_meta,omitempty"`
-	Data map[string]interface{} `json:"data,omitempty"`
-}
+var globalLock sync.Mutex
 
 func seeds(seedstr string) []string {
 	if stringutils.IsEmpty(seedstr) {
@@ -67,14 +64,14 @@ func join() error {
 	}
 	s := seeds(seed)
 	if len(s) == 0 {
-		logger.Warn().Msg("No seed found")
+		logger.Warn().Msg("[go-doudou] No seed found")
 		return nil
 	}
 	_, err := mlist.Join(s)
 	if err != nil {
 		return errors.Wrap(err, "[go-doudou] Failed to join cluster")
 	}
-	logger.Info().Msgf("Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
+	logger.Info().Msgf("[go-doudou] Node %s joined cluster successfully", mlist.LocalNode().FullAddress())
 	return nil
 }
 
@@ -88,18 +85,6 @@ func AllNodes() ([]*memberlist.Node, error) {
 		nodes = append(nodes, node)
 	}
 	return nodes, nil
-}
-
-type nodeMeta struct {
-	Service       string     `json:"service"`
-	RouteRootPath string     `json:"routeRootPath"`
-	Port          int        `json:"port"`
-	RegisterAt    *time.Time `json:"registerAt"`
-	GoVer         string     `json:"goVer"`
-	GddVer        string     `json:"gddVer"`
-	BuildUser     string     `json:"buildUser"`
-	BuildTime     string     `json:"buildTime"`
-	Weight        int        `json:"weight"`
 }
 
 func newMeta(node *memberlist.Node) (mergedMeta, error) {
@@ -120,7 +105,7 @@ func newConf() *memberlist.Config {
 	if stringutils.IsNotEmpty(cidrs) {
 		var err error
 		if cfg.CIDRsAllowed, err = memberlist.ParseCIDRs(strings.Split(cidrs, ",")); err != nil {
-			logger.Error().Msgf("call ParseCIDRs error: %s\n", err.Error())
+			logger.Error().Msgf("[go-doudou] call ParseCIDRs error: %s\n", err.Error())
 		}
 	}
 	setGddMemIndirectChecks(cfg)
@@ -224,10 +209,11 @@ func retransmitMultGetter() int {
 	return mconf.RetransmitMult
 }
 
-func newNode(data ...map[string]interface{}) error {
+var joinOnce sync.Once
+
+func joinCluster(data ...map[string]interface{}) {
 	mconf = newConf()
 	service := config.GetServiceName()
-	httpPort := config.GetPort()
 	now := time.Now()
 	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
@@ -253,7 +239,6 @@ func newNode(data ...map[string]interface{}) error {
 		Meta: nodeMeta{
 			Service:       service,
 			RouteRootPath: rr,
-			Port:          int(httpPort),
 			RegisterAt:    &now,
 			GoVer:         runtime.Version(),
 			GddVer:        buildinfo.GddVer,
@@ -261,7 +246,6 @@ func newNode(data ...map[string]interface{}) error {
 			BuildTime:     buildTime,
 			Weight:        weight,
 		},
-		Data: make(map[string]interface{}),
 	}
 	if len(data) > 0 {
 		mmeta.Data = data[0]
@@ -278,18 +262,48 @@ func newNode(data ...map[string]interface{}) error {
 	mconf.Events = events
 	var err error
 	if mlist, err = createMemberlist(mconf); err != nil {
-		return errors.Wrap(err, "[go-doudou] Failed to create memberlist")
+		panic(errors.Wrap(err, "[go-doudou] Failed to create memberlist"))
 	}
 	if err = join(); err != nil {
 		mlist.Shutdown()
-		return errors.Wrap(err, "[go-doudou] Node register failed")
+		panic(errors.Wrap(err, "[go-doudou] memberlist Node register failed"))
+	}
+	registerConfigListener(mconf)
+	local := mlist.LocalNode()
+	logger.Info().Msgf("[go-doudou] memberlist created. local node is Node %s, memberlist port %d", local.Name, local.Port)
+	return
+}
+
+func newNode(data ...map[string]interface{}) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+	joinOnce.Do(func() {
+		joinCluster(data...)
+	})
+	dele := mconf.Delegate.(*delegate)
+	dele.mmeta.Meta.Port = int(config.GetPort())
+	if err := mlist.UpdateNode(15 * time.Second); err != nil {
+		panic(errors.Wrap(err, "failed to register RESTful service to memberlist"))
 	}
 	local := mlist.LocalNode()
 	baseUrl, _ := BaseUrl(local)
-	logger.Info().Msgf("memberlist created. local node is Node %s, providing %s service at %s, memberlist port %s",
-		local.Name, mmeta.Meta.Service, baseUrl, fmt.Sprint(local.Port))
-	registerConfigListener(mconf)
-	return nil
+	logger.Info().Msgf("[go-doudou] local node %s is providing RESTful service %s at %s", local.Name, dele.mmeta.Meta.Service, baseUrl)
+}
+
+func newGrpc(data ...map[string]interface{}) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+	joinOnce.Do(func() {
+		joinCluster(data...)
+	})
+	dele := mconf.Delegate.(*delegate)
+	dele.mmeta.Meta.GrpcPort = int(config.GetGrpcPort())
+	if err := mlist.UpdateNode(15 * time.Second); err != nil {
+		panic(errors.Wrap(err, "failed to register gRPC service to memberlist"))
+	}
+	local := mlist.LocalNode()
+	addr, _ := GrpcAddr(local)
+	logger.Info().Msgf("[go-doudou] local node %s is providing gRPC service %s at %s", local.Name, dele.mmeta.Meta.Service, addr)
 }
 
 type memConfigListener struct {
@@ -385,48 +399,42 @@ func getModemap() map[string]struct{} {
 // service related custom data (<= 512 bytes after being marshalled as json format) can be passed into it by data parameter.
 // it is made as a variadic function only for backward compatibility purposes,
 // only first parameter will be used.
-func NewNode(data ...map[string]interface{}) error {
+func NewNode(data ...map[string]interface{}) {
 	for mode, _ := range getModemap() {
 		switch mode {
 		case "nacos":
-			if err := nacos.NewNode(data...); err != nil {
-				return err
-			}
+			nacos.NewNode(data...)
 		case "memberlist":
-			if err := newNode(data...); err != nil {
-				return err
-			}
+			newNode(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
 	}
-	return nil
 }
 
-func NewGrpc(data ...map[string]interface{}) error {
+func NewGrpc(data ...map[string]interface{}) {
 	for mode, _ := range getModemap() {
 		switch mode {
 		case "nacos":
-			if err := nacos.NewGrpc(data...); err != nil {
-				return err
-			}
+			nacos.NewGrpc(data...)
 		case "memberlist":
-			if err := newNode(data...); err != nil {
-				return err
-			}
+			newGrpc(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
 	}
-	return nil
 }
+
+var shutdownOnce sync.Once
 
 func shutdown() {
-	if mlist != nil {
-		_ = mlist.Shutdown()
-		mlist = nil
-		logger.Info().Msg("memberlist shutdown")
-	}
+	shutdownOnce.Do(func() {
+		if mlist != nil {
+			_ = mlist.Shutdown()
+			mlist = nil
+			logger.Info().Msg("[go-doudou] memberlist shutdown")
+		}
+	})
 }
 
 // Shutdown stops all connections and communications with other nodes in the cluster
@@ -460,7 +468,7 @@ func ShutdownGrpc() {
 func Leave(timeout time.Duration) {
 	if mlist != nil {
 		_ = mlist.Leave(timeout)
-		logger.Info().Msg("local node left the cluster")
+		logger.Info().Msg("[go-doudou] local node left the cluster")
 	}
 }
 
@@ -479,6 +487,7 @@ type NodeInfo struct {
 	Host      string                 `json:"host"`
 	SvcPort   int                    `json:"svcPort"`
 	MemPort   int                    `json:"memPort"`
+	GrpcPort  int                    `json:"grpcPort"`
 }
 
 // Info return node info
@@ -522,6 +531,17 @@ func BaseUrl(node *memberlist.Node) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("http://%s:%d%s", node.Addr, mm.Meta.Port, mm.Meta.RouteRootPath), nil
+}
+
+func GrpcAddr(node *memberlist.Node) (string, error) {
+	var (
+		mm  mergedMeta
+		err error
+	)
+	if mm, err = newMeta(node); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%d", node.Addr, mm.Meta.GrpcPort), nil
 }
 
 func MetaWeight(node *memberlist.Node) (int, error) {

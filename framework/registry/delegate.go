@@ -6,7 +6,28 @@ import (
 	"github.com/unionj-cloud/go-doudou/framework/memberlist"
 	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
 	"sync"
+	"time"
 )
+
+type nodeMeta struct {
+	Service       string `json:"service"`
+	RouteRootPath string `json:"routeRootPath"`
+	// RESTful service port, alias for http port
+	Port int `json:"port"`
+	// gRPC service port
+	GrpcPort   int        `json:"grpcPort"`
+	RegisterAt *time.Time `json:"registerAt"`
+	GoVer      string     `json:"goVer"`
+	GddVer     string     `json:"gddVer"`
+	BuildUser  string     `json:"buildUser"`
+	BuildTime  string     `json:"buildTime"`
+	Weight     int        `json:"weight"`
+}
+
+type mergedMeta struct {
+	Meta nodeMeta               `json:"_meta,omitempty"`
+	Data map[string]interface{} `json:"data,omitempty"`
+}
 
 type delegate struct {
 	mmeta mergedMeta
