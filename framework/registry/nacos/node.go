@@ -164,61 +164,61 @@ func NewGrpc(data ...map[string]interface{}) {
 	}
 }
 
-var shutdownOnce sync.Once
-
 func Shutdown() {
-	service := config.GetServiceName()
-	shutdownOnce.Do(func() {
-		if NamingClient != nil {
-			registerHost := getRegisterHost()
-			httpPort := config.GetPort()
-			success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
-				Ip:          registerHost,
-				Port:        httpPort,
-				ServiceName: service,
-				Ephemeral:   true,
-			})
-			NamingClient.CloseClient()
-			NamingClient = nil
-			if err != nil {
-				logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
-				return
-			}
-			if !success {
-				logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
-				return
-			}
+	if NamingClient != nil {
+		registerHost := getRegisterHost()
+		httpPort := config.GetPort()
+		service := config.GetServiceName()
+		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
+			Ip:          registerHost,
+			Port:        httpPort,
+			ServiceName: service,
+			Ephemeral:   true,
+		})
+		if err != nil {
+			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
 		}
-	})
-	logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
+		if !success {
+			logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
+		}
+		logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
+	}
 }
 
 func ShutdownGrpc() {
-	service := config.GetServiceName() + "_grpc"
+	if NamingClient != nil {
+		registerHost := getRegisterHost()
+		grpcPort := config.GetGrpcPort()
+		service := config.GetServiceName() + "_grpc"
+		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
+			Ip:          registerHost,
+			Port:        grpcPort,
+			ServiceName: service,
+			Ephemeral:   true,
+		})
+		if err != nil {
+			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
+		}
+		if !success {
+			logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
+			return
+		}
+		logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
+	}
+}
+
+var shutdownOnce sync.Once
+
+func CloseNamingClient() {
 	shutdownOnce.Do(func() {
 		if NamingClient != nil {
-			registerHost := getRegisterHost()
-			grpcPort := config.GetGrpcPort()
-			success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
-				Ip:          registerHost,
-				Port:        grpcPort,
-				ServiceName: service,
-				Ephemeral:   true,
-			})
 			NamingClient.CloseClient()
 			NamingClient = nil
-			if err != nil {
-				logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from nacos server", service)
-				return
-			}
-			if !success {
-				logger.Error().Msgf("[go-doudou] failed to deregister %s from nacos server", service)
-				return
-			}
-			logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
 		}
 	})
-	logger.Info().Msgf("[go-doudou] deregistered %s from nacos server successfully", service)
 }
 
 type nacosBase struct {
