@@ -49,7 +49,7 @@ const (
 	DefaultGddMemCIDRsAllowed   = ""
 	DefaultGddMemLogDisable     = false
 
-	DefaultGddServiceDiscoveryMode = "memberlist"
+	DefaultGddServiceDiscoveryMode = ""
 
 	DefaultGddNacosNamespaceId         = "public"
 	DefaultGddNacosTimeoutMs           = 10000
