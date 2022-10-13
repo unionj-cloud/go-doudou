@@ -217,6 +217,7 @@ func CloseNamingClient() {
 		if NamingClient != nil {
 			NamingClient.CloseClient()
 			NamingClient = nil
+			logger.Info().Msg("[go-doudou] nacos naming client closed")
 		}
 	})
 }
