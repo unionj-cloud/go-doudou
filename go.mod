@@ -93,7 +93,7 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
-	github.com/wubin1989/nacos-sdk-go/v2 v2.1.1
+	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221017151922-fbfe3b2fc545
 	github.com/yusufpapurcu/wmi v1.2.2
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.5.1
@@ -108,5 +108,3 @@ require (
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0
 )
-
-replace github.com/wubin1989/nacos-sdk-go/v2 v2.1.1 => /Users/wubin1989/workspace/cloud/nacos-sdk-go
