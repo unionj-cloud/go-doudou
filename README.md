@@ -6,11 +6,11 @@
 <br/>
 <p align="center">
   <a href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Go"></a>
-  <a href="https://godoc.org/github.com/unionj-cloud/go-doudou/v2"><img src="https://godoc.org/github.com/unionj-cloud/go-doudou/v2?status.png" alt="GoDoc"></a>
-  <a href="https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml"><img src="https://github.com/unionj-cloud/go-doudou/v2/actions/workflows/go.yml/badge.svg?branch=main" alt="Go"></a>
+  <a href="https://godoc.org/github.com/unionj-cloud/go-doudou"><img src="https://godoc.org/github.com/unionj-cloud/go-doudou?status.png" alt="GoDoc"></a>
+  <a href="https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml"><img src="https://github.com/unionj-cloud/go-doudou/actions/workflows/go.yml/badge.svg?branch=main" alt="Go"></a>
   <a href="https://codecov.io/gh/unionj-cloud/go-doudou"><img src="https://codecov.io/gh/unionj-cloud/go-doudou/branch/main/graph/badge.svg?token=QRLPRAX885" alt="codecov"></a>
-  <a href="https://goreportcard.com/report/github.com/unionj-cloud/go-doudou/v2"><img src="https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou/v2" alt="Go Report Card"></a>
-  <a href="https://github.com/unionj-cloud/go-doudou/v2"><img src="https://img.shields.io/github/v/release/unionj-cloud/go-doudou?style=flat-square" alt="Release"></a>
+  <a href="https://goreportcard.com/report/github.com/unionj-cloud/go-doudou"><img src="https://goreportcard.com/badge/github.com/unionj-cloud/go-doudou" alt="Go Report Card"></a>
+  <a href="https://github.com/unionj-cloud/go-doudou"><img src="https://img.shields.io/github/v/release/unionj-cloud/go-doudou?style=flat-square" alt="Release"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://wakatime.com/badge/user/852bcf22-8a37-460a-a8e2-115833174eba/project/57c830f7-e507-4cb1-9fd1-feedd96685f6"><img src="https://wakatime.com/badge/user/852bcf22-8a37-460a-a8e2-115833174eba/project/57c830f7-e507-4cb1-9fd1-feedd96685f6.svg" alt="License: MIT"></a>
 </p>
