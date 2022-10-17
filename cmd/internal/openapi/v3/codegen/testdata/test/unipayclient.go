@@ -10,8 +10,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type UnipayClient struct {
@@ -65,9 +65,9 @@ func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context, _heade
 	return
 }
 
-func NewUnipay(opts ...ddhttp.DdClientOption) *UnipayClient {
-	defaultProvider := ddhttp.NewServiceProvider("UNIPAY")
-	defaultClient := ddhttp.NewClient()
+func NewUnipay(opts ...restclient.RestClientOption) *UnipayClient {
+	defaultProvider := restclient.NewServiceProvider("UNIPAY")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &UnipayClient{
 		provider: defaultProvider,

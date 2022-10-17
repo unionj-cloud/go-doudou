@@ -2,7 +2,7 @@ package templateutils
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"strings"
 	"text/template"
 	"time"

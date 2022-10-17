@@ -3,7 +3,7 @@ package maputils_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
 	"reflect"
 	"testing"
 )

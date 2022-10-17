@@ -5,10 +5,10 @@ import (
 	"bytes"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/toolkit/copier"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -130,12 +130,12 @@ var appendHttpHandlerImplTmpl = `
 				}
 			} else {
 				{{- if isStruct $p }}
-				if _err := ddhttp.ValidateStruct({{$p.Name}}); _err != nil {
+				if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
 				{{- else }}
-				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
@@ -152,12 +152,12 @@ var appendHttpHandlerImplTmpl = `
 				return	
 			} else {
 				{{- if isStruct $p }}
-				if _err := ddhttp.ValidateStruct({{$p.Name}}); _err != nil {
+				if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
 				{{- else }}
-				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
@@ -208,7 +208,7 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = _req.Form["{{$p.Name}}"]
 			{{- end }}
 			{{- end }}
-			if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
 				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -248,7 +248,7 @@ var appendHttpHandlerImplTmpl = `
 				{{$p.Name}} = _req.Form["{{$p.Name}}[]"]
 				{{- end }}
 				{{- end }}
-				if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
 					http.Error(_writer, _err.Error(), http.StatusBadRequest)
 					return
 				}
@@ -290,7 +290,7 @@ var appendHttpHandlerImplTmpl = `
 			{{$p.Name}} = _req.FormValue("{{$p.Name}}")
 			{{- end }}
 			{{- end }}
-			if _err := ddhttp.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
 				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -314,7 +314,7 @@ var appendHttpHandlerImplTmpl = `
 				if {{ $r.Name }} != nil {
 					if errors.Is({{ $r.Name }}, context.Canceled) {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
-					} else if _err, ok := {{ $r.Name }}.(*ddmodel.BizError); ok {
+					} else if _err, ok := {{ $r.Name }}.(*rest.BizError); ok {
 						http.Error(_writer, _err.Error(), _err.StatusCode)
 					} else {
 						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
@@ -371,10 +371,9 @@ var importTmpl = `
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	ddmodel "github.com/unionj-cloud/go-doudou/framework/http/model"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"

@@ -1,7 +1,7 @@
 package astutils
 
 import (
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"go/ast"
 	"go/token"
 	"strings"

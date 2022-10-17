@@ -2,9 +2,9 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
 )
 
 var httpHandlerTmpl = `/**
@@ -22,7 +22,7 @@ var httpHandlerTmpl = `/**
 package httpsrv
 
 import (
-	ddmodel "github.com/unionj-cloud/go-doudou/framework/http/model"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"net/http"
 	"os"
 )
@@ -33,8 +33,8 @@ type {{.Meta.Name}}Handler interface {
 {{- end }}
 }
 
-func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
-	return []ddmodel.Route{
+func Routes(handler {{.Meta.Name}}Handler) []rest.Route {
+	return []rest.Route{
 		{{- range $m := .Meta.Methods }}
 		{
 			Name: "{{$m.Name}}",
@@ -47,7 +47,7 @@ func Routes(handler {{.Meta.Name}}Handler) []ddmodel.Route {
 }
 
 
-var RouteAnnotationStore = ddmodel.AnnotationStore{
+var RouteAnnotationStore = rest.AnnotationStore{
 	{{- range $m := .Meta.Methods }}
 	{{- if $m.Annotations }}
 	"{{$m.Name}}": {

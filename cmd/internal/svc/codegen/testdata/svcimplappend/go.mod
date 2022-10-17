@@ -10,5 +10,5 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v0.8.1
+	github.com/unionj-cloud/go-doudou/v2 v0.8.1
 )

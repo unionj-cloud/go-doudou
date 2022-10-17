@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,9 +15,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/codegen"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/config"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/ddl/table"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/config"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/table"
 )
 
 // Ddl is for ddl command

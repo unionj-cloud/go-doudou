@@ -3,8 +3,8 @@ package codegen
 import (
 	"bufio"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +18,7 @@ var mainTmpl = `/**
 package main
 
 import (
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
     "{{.ConfigPackage}}"
 	"{{.HttpPackage}}"
@@ -28,7 +28,7 @@ func main() {
 	conf := config.LoadFromEnv()
     svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
-	srv := ddhttp.NewHttpRouterSrv()
+	srv := rest.NewRestServer()
 	srv.AddRoute(httpsrv.Routes(handler)...)
 	srv.Run()
 }

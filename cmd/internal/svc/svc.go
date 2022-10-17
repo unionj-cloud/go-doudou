@@ -6,13 +6,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/executils"
-	v3helper "github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/openapi/v3/codegen/client"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/svc/codegen"
-	"github.com/unionj-cloud/go-doudou/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
+	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"os/exec"
 	"os/user"
@@ -142,9 +142,7 @@ func (receiver *Svc) Http() {
 		codegen.GenGoClientProxy(dir, ic)
 	}
 	codegen.GenSvcImpl(dir, ic)
-	if receiver.Doc {
-		codegen.GenDoc(dir, ic, receiver.RoutePatternStrategy)
-	}
+	codegen.GenDoc(dir, ic, receiver.RoutePatternStrategy)
 }
 
 // ValidateRestApi is checking whether parameter types in each of service interface methods valid or not
@@ -466,8 +464,8 @@ func (receiver *Svc) Run(watch bool) {
 
 // Upgrade upgrades go-doudou to latest release version
 func (receiver *Svc) Upgrade(version string) {
-	fmt.Printf("go install -v github.com/unionj-cloud/go-doudou@%s\n", version)
-	if err := receiver.runner.Run("go", "install", "-v", fmt.Sprintf("github.com/unionj-cloud/go-doudou@%s", version)); err != nil {
+	fmt.Printf("go install -v github.com/unionj-cloud/go-doudou/v2@%s\n", version)
+	if err := receiver.runner.Run("go", "install", "-v", fmt.Sprintf("github.com/unionj-cloud/go-doudou/v2@%s", version)); err != nil {
 		panic(err)
 	}
 }

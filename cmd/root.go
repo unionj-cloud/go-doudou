@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 // rootCmd is the base command when called without any subcommands

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 )
 
 var postmanCollectionPath string

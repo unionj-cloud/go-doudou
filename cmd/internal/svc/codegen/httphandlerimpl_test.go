@@ -3,8 +3,8 @@ package codegen
 import (
 	"fmt"
 	"github.com/iancoleman/strcase"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/copier"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"os"
 	"path/filepath"
 	"testing"

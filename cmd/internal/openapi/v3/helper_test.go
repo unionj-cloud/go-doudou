@@ -2,8 +2,8 @@ package v3
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"strings"
 	"testing"
 )

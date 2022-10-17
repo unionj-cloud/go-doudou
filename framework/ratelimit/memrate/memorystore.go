@@ -4,8 +4,8 @@ import (
 	"context"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/hashicorp/golang-lru/simplelru"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
-	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
 	"sync"
 )
 

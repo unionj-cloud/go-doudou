@@ -3,7 +3,7 @@ package cache
 import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"time"
 )
 

@@ -14,10 +14,10 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
-	"github.com/unionj-cloud/go-doudou/toolkit/fileutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 type DownloadClient struct {
@@ -92,9 +92,9 @@ func (receiver *DownloadClient) GetDownloadAvatar(ctx context.Context, _headers 
 	return
 }
 
-func NewDownload(opts ...ddhttp.DdClientOption) *DownloadClient {
-	defaultProvider := ddhttp.NewServiceProvider("DOWNLOAD")
-	defaultClient := ddhttp.NewClient()
+func NewDownload(opts ...restclient.RestClientOption) *DownloadClient {
+	defaultProvider := restclient.NewServiceProvider("DOWNLOAD")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &DownloadClient{
 		provider: defaultProvider,

@@ -11,8 +11,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type UserClient struct {
@@ -31,35 +31,6 @@ func (receiver *UserClient) SetProvider(provider registry.IServiceProvider) {
 
 func (receiver *UserClient) SetClient(client *resty.Client) {
 	receiver.client = client
-}
-
-// GetUserLogin Logs user into the system
-func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
-	queryParams *struct {
-		Password *string `json:"password,omitempty" url:"password"`
-		Username *string `json:"username,omitempty" url:"username"`
-	}) (ret string, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_queryParams, _ := _querystring.Values(queryParams)
-	_req.SetQueryParamsFromValues(_queryParams)
-
-	_resp, _err = _req.Get("/user/login")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	ret = _resp.String()
-	return
 }
 
 // GetUserUsername Get user by user name
@@ -121,9 +92,38 @@ func (receiver *UserClient) PostUserCreateWithList(ctx context.Context, _headers
 	return
 }
 
-func NewUser(opts ...ddhttp.DdClientOption) *UserClient {
-	defaultProvider := ddhttp.NewServiceProvider("USER")
-	defaultClient := ddhttp.NewClient()
+// GetUserLogin Logs user into the system
+func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
+	queryParams *struct {
+		Password *string `json:"password,omitempty" url:"password"`
+		Username *string `json:"username,omitempty" url:"username"`
+	}) (ret string, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_queryParams, _ := _querystring.Values(queryParams)
+	_req.SetQueryParamsFromValues(_queryParams)
+
+	_resp, _err = _req.Get("/user/login")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	ret = _resp.String()
+	return
+}
+
+func NewUser(opts ...restclient.RestClientOption) *UserClient {
+	defaultProvider := restclient.NewServiceProvider("USER")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &UserClient{
 		provider: defaultProvider,

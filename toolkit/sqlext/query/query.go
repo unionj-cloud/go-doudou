@@ -2,10 +2,10 @@ package query
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/arithsymbol"
-	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/logicsymbol"
-	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/sortenum"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/arithsymbol"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/logicsymbol"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/sortenum"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"reflect"
 	"strings"
 )

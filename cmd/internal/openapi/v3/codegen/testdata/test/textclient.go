@@ -11,9 +11,9 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 )
 
 type TextClient struct {
@@ -102,9 +102,9 @@ func (receiver *TextClient) PostTextExtractFromFile(ctx context.Context, _header
 	return
 }
 
-func NewText(opts ...ddhttp.DdClientOption) *TextClient {
-	defaultProvider := ddhttp.NewServiceProvider("TEXT")
-	defaultClient := ddhttp.NewClient()
+func NewText(opts ...restclient.RestClientOption) *TextClient {
+	defaultProvider := restclient.NewServiceProvider("TEXT")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &TextClient{
 		provider: defaultProvider,

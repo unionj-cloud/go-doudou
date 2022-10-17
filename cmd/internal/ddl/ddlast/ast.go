@@ -1,8 +1,8 @@
 package ddlast
 
 import (
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"sort"
 	"strings"
 )

@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 )
 
 type TestsvcHandlerImpl struct {
@@ -33,7 +33,7 @@ func (receiver *TestsvcHandlerImpl) PageUsers(_writer http.ResponseWriter, _req 
 			http.Error(_writer, _err.Error(), http.StatusBadRequest)
 			return
 		} else {
-			if _err := ddhttp.ValidateStruct(query); _err != nil {
+			if _err := rest.ValidateStruct(query); _err != nil {
 				http.Error(_writer, _err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -46,7 +46,7 @@ func (receiver *TestsvcHandlerImpl) PageUsers(_writer http.ResponseWriter, _req 
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			http.Error(_writer, err.Error(), http.StatusBadRequest)
-		} else if _err, ok := err.(*ddhttp.BizError); ok {
+		} else if _err, ok := err.(*rest.BizError); ok {
 			http.Error(_writer, _err.Error(), _err.StatusCode)
 		} else {
 			http.Error(_writer, err.Error(), http.StatusInternalServerError)

@@ -8,8 +8,8 @@ package memrate
 import (
 	"context"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"math"
 	"sync"
 	"time"

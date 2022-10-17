@@ -3,8 +3,8 @@ package cmd_test
 import (
 	"bytes"
 	"github.com/spf13/cobra"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/svc"
-	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"os"
 	"os/exec"
 )

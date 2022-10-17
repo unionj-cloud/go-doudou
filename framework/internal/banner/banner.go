@@ -2,9 +2,9 @@ package banner
 
 import (
 	"github.com/common-nighthawk/go-figure"
-	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"sync"
 )
 

@@ -10,8 +10,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type PageClient struct {
@@ -30,36 +30,6 @@ func (receiver *PageClient) SetProvider(provider registry.IServiceProvider) {
 
 func (receiver *PageClient) SetClient(client *resty.Client) {
 	receiver.client = client
-}
-
-// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
-func (receiver *PageClient) PostPageUsers2(ctx context.Context, _headers map[string]string,
-	// comments above input and output struct type parameters in vo package will display on online document
-	// not comments here
-	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
-	var _err error
-
-	_req := receiver.client.R()
-	_req.SetContext(ctx)
-	if len(_headers) > 0 {
-		_req.SetHeaders(_headers)
-	}
-	_req.SetBody(bodyJSON)
-
-	_resp, _err = _req.Post("/page/users/2")
-	if _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	if _resp.IsError() {
-		err = errors.New(_resp.String())
-		return
-	}
-	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
-		err = errors.Wrap(_err, "")
-		return
-	}
-	return
 }
 
 // PostPageUsers PageUsers demonstrate how to define POST and Content-Type as application/json api
@@ -92,9 +62,39 @@ func (receiver *PageClient) PostPageUsers(ctx context.Context, _headers map[stri
 	return
 }
 
-func NewPage(opts ...ddhttp.DdClientOption) *PageClient {
-	defaultProvider := ddhttp.NewServiceProvider("PAGE")
-	defaultClient := ddhttp.NewClient()
+// PostPageUsers2 PageUsers2 demonstrate how to define POST and Content-Type as application/json api
+func (receiver *PageClient) PostPageUsers2(ctx context.Context, _headers map[string]string,
+	// comments above input and output struct type parameters in vo package will display on online document
+	// not comments here
+	bodyJSON *PageQuery) (ret PageUsers2Resp, _resp *resty.Response, err error) {
+	var _err error
+
+	_req := receiver.client.R()
+	_req.SetContext(ctx)
+	if len(_headers) > 0 {
+		_req.SetHeaders(_headers)
+	}
+	_req.SetBody(bodyJSON)
+
+	_resp, _err = _req.Post("/page/users/2")
+	if _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	if _resp.IsError() {
+		err = errors.New(_resp.String())
+		return
+	}
+	if _err = json.Unmarshal(_resp.Body(), &ret); _err != nil {
+		err = errors.Wrap(_err, "")
+		return
+	}
+	return
+}
+
+func NewPage(opts ...restclient.RestClientOption) *PageClient {
+	defaultProvider := restclient.NewServiceProvider("PAGE")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &PageClient{
 		provider: defaultProvider,

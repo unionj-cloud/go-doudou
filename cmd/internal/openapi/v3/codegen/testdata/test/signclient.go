@@ -11,8 +11,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type SignClient struct {
@@ -62,9 +62,9 @@ func (receiver *SignClient) PostSignUp(ctx context.Context, _headers map[string]
 	return
 }
 
-func NewSign(opts ...ddhttp.DdClientOption) *SignClient {
-	defaultProvider := ddhttp.NewServiceProvider("SIGN")
-	defaultClient := ddhttp.NewClient()
+func NewSign(opts ...restclient.RestClientOption) *SignClient {
+	defaultProvider := restclient.NewServiceProvider("SIGN")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &SignClient{
 		provider: defaultProvider,

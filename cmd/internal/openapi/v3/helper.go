@@ -2,11 +2,11 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/copier"
-	. "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	. "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"regexp"
 	"strings"
 	"unicode"

@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"os"
 	"path/filepath"
 	"testing"

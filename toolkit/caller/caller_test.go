@@ -2,7 +2,7 @@ package caller_test
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"testing"
 )
 

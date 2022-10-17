@@ -2,7 +2,7 @@ package astutils
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"

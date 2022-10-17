@@ -11,8 +11,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type CustomerClient struct {
@@ -63,9 +63,9 @@ func (receiver *CustomerClient) GetCustomerValidateToken(ctx context.Context, _h
 	return
 }
 
-func NewCustomer(opts ...ddhttp.DdClientOption) *CustomerClient {
-	defaultProvider := ddhttp.NewServiceProvider("CUSTOMER")
-	defaultClient := ddhttp.NewClient()
+func NewCustomer(opts ...restclient.RestClientOption) *CustomerClient {
+	defaultProvider := restclient.NewServiceProvider("CUSTOMER")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &CustomerClient{
 		provider: defaultProvider,

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 	"io"
 	"io/ioutil"
 	"os"

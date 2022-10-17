@@ -8,11 +8,11 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/copier"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,12 +48,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	_querystring "github.com/google/go-querystring/query"
-	"github.com/unionj-cloud/go-doudou/toolkit/fileutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	v3 "github.com/unionj-cloud/go-doudou/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"io"
 	"mime/multipart"
 	"net/url"
@@ -225,13 +225,13 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	}
 {{- end }}
 
-func New{{.Meta.Name}}(opts ...ddhttp.DdClientOption) *{{.Meta.Name}}Client {
+func New{{.Meta.Name}}(opts ...restclient.RestClientOption) *{{.Meta.Name}}Client {
 	{{- if .Env }}
-	defaultProvider := ddhttp.NewServiceProvider("{{.Env}}")
+	defaultProvider := restclient.NewServiceProvider("{{.Env}}")
 	{{- else }}
-	defaultProvider := ddhttp.NewServiceProvider("{{.Meta.Name | toUpper}}")
+	defaultProvider := restclient.NewServiceProvider("{{.Meta.Name | toUpper}}")
 	{{- end }}
-	defaultClient := ddhttp.NewClient()
+	defaultClient := restclient.NewClient()
 
 	svcClient := &{{.Meta.Name}}Client{
 		provider: defaultProvider,

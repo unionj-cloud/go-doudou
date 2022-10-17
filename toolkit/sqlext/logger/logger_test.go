@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/unionj-cloud/go-doudou/framework/tracing"
-	"github.com/unionj-cloud/go-doudou/toolkit/sqlext/logger"
+	"github.com/unionj-cloud/go-doudou/v2/framework/tracing"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/logger"
 	"os"
 	"testing"
 )

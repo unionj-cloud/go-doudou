@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-sockaddr"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/framework/grpc/grpc_resolver_nacos"
-	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpc/grpc_resolver_nacos"
+	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/model"
@@ -57,7 +57,7 @@ func InitialiseNacosNamingClient() {
 	}
 }
 
-func NewNode(data ...map[string]interface{}) {
+func NewRest(data ...map[string]interface{}) {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
@@ -164,7 +164,7 @@ func NewGrpc(data ...map[string]interface{}) {
 	}
 }
 
-func Shutdown() {
+func ShutdownRest() {
 	if NamingClient != nil {
 		registerHost := getRegisterHost()
 		httpPort := config.GetPort()

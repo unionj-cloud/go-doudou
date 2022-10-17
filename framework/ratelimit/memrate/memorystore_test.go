@@ -5,7 +5,7 @@ import (
 	"fmt"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/framework/ratelimit"
+	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
 	"reflect"
 	"testing"
 )

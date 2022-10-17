@@ -6,12 +6,12 @@ import (
 	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
-	"github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	_ "go.uber.org/automaxprocs"
@@ -153,57 +153,7 @@ const (
 
 	// GddConfigRemoteType has two options available: nacos, apollo
 	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"
-
-	// GddMemSeed sets cluster seeds for joining
-	GddMemSeed envVariable = "GDD_MEM_SEED"
-	// GddMemName unique name of this node in cluster. if empty or not set, hostname will be used instead
-	GddMemName envVariable = "GDD_MEM_NAME"
-	// GddMemHost specify AdvertiseAddr attribute of memberlist config struct.
-	// if GddMemHost starts with dot such as .seed-svc-headless.default.svc.cluster.local,
-	// it will be prefixed by hostname such as seed-2.seed-svc-headless.default.svc.cluster.local
-	// for supporting k8s stateful service
-	// if empty or not set, private ip will be used instead.
-	GddMemHost envVariable = "GDD_MEM_HOST"
-	// GddMemPort if empty or not set, an available port will be chosen randomly. recommend specifying a port
-	GddMemPort envVariable = "GDD_MEM_PORT"
-	// GddMemDeadTimeout dead node will be removed from node map if not received refute messages from it in GddMemDeadTimeout second
-	// expose GossipToTheDeadTime property of memberlist.Config
-	GddMemDeadTimeout envVariable = "GDD_MEM_DEAD_TIMEOUT"
-	// GddMemSyncInterval local node will synchronize states from other random node every GddMemSyncInterval second
-	// expose PushPullInterval property of memberlist.Config
-	GddMemSyncInterval envVariable = "GDD_MEM_SYNC_INTERVAL"
-	// GddMemReclaimTimeout dead node will be replaced with new node with the same name but different full address in GddMemReclaimTimeout second
-	// expose DeadNodeReclaimTime property of memberlist.Config
-	GddMemReclaimTimeout envVariable = "GDD_MEM_RECLAIM_TIMEOUT"
-	// GddMemProbeInterval probe interval
-	// expose ProbeInterval property of memberlist.Config
-	GddMemProbeInterval envVariable = "GDD_MEM_PROBE_INTERVAL"
-	// GddMemProbeTimeout probe timeout
-	// expose ProbeTimeout property of memberlist.Config
-	GddMemProbeTimeout envVariable = "GDD_MEM_PROBE_TIMEOUT"
-	// GddMemSuspicionMult is the multiplier for determining the time an inaccessible node is considered suspect before declaring it dead.
-	// expose SuspicionMult property of memberlist.Config
-	GddMemSuspicionMult  envVariable = "GDD_MEM_SUSPICION_MULT"
-	GddMemRetransmitMult envVariable = "GDD_MEM_RETRANSMIT_MULT"
-	// GddMemGossipNodes how many remote nodes you want to gossip messages
-	// expose GossipNodes property of memberlist.Config
-	GddMemGossipNodes envVariable = "GDD_MEM_GOSSIP_NODES"
-	// GddMemGossipInterval gossip interval
-	// expose GossipInterval property of memberlist.Config
-	GddMemGossipInterval envVariable = "GDD_MEM_GOSSIP_INTERVAL"
-	// GddMemTCPTimeout tcp timeout
-	// expose TCPTimeout property of memberlist.Config
-	GddMemTCPTimeout envVariable = "GDD_MEM_TCP_TIMEOUT"
-	// GddMemWeight node weight
-	GddMemWeight envVariable = "GDD_MEM_WEIGHT"
-	// GddMemWeightInterval node weight will be calculated every GddMemWeightInterval
-	GddMemWeightInterval envVariable = "GDD_MEM_WEIGHT_INTERVAL"
-	GddMemIndirectChecks envVariable = "GDD_MEM_INDIRECT_CHECKS"
-	GddMemLogDisable     envVariable = "GDD_MEM_LOG_DISABLE"
-	// GddMemCIDRsAllowed If not set, allow any connection (default), otherwise specify all networks
-	// allowed connecting (you must specify IPv6/IPv4 separately)
-	GddMemCIDRsAllowed envVariable = "GDD_MEM_CIDRS_ALLOWED"
-
+	
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
 

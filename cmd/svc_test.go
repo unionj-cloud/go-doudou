@@ -2,7 +2,7 @@ package cmd_test
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/cmd"
+	"github.com/unionj-cloud/go-doudou/v2/cmd"
 	"testing"
 )
 

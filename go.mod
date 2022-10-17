@@ -1,4 +1,4 @@
-module github.com/unionj-cloud/go-doudou
+module github.com/unionj-cloud/go-doudou/v2
 
 go 1.16
 
@@ -14,9 +14,7 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-yaml v1.8.9
-	github.com/gorilla/mux v1.8.0
-	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/hashicorp/logutils v1.0.0
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jeremywohl/flatten v1.0.1
@@ -41,19 +39,13 @@ require (
 )
 
 require (
-	github.com/armon/go-metrics v0.3.9
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/google/btree v1.0.1
 	github.com/google/go-github/v42 v42.0.0
 	github.com/gorilla/handlers v1.5.1
-	github.com/hashicorp/go-msgpack v1.1.5
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-sockaddr v1.0.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/miekg/dns v1.1.42
 	github.com/rs/cors v1.8.2
-	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 	github.com/slok/goresilience v0.2.0
 )
 
@@ -74,8 +66,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.15.11

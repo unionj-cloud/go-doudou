@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/toolkit/dotenv"
-	"github.com/unionj-cloud/go-doudou/toolkit/maputils"
-	"github.com/unionj-cloud/go-doudou/toolkit/yaml"
-	logger "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
@@ -168,8 +168,7 @@ func (m *NacosConfigMgr) CallbackOnChange(namespace, group, dataId, data, old st
 		}
 	}
 	changes := maputils.Diff(newData, oldData)
-	m.onChange("__"+dataId+"__"+"registry", group, namespace, changes)
-	m.onChange("__"+dataId+"__"+"ddhttp", group, namespace, changes)
+	m.onChange("__"+dataId+"__"+"rest", group, namespace, changes)
 	m.onChange(dataId, group, namespace, changes)
 }
 

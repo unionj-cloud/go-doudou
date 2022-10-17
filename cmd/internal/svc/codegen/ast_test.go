@@ -2,7 +2,7 @@ package codegen
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
 	"path/filepath"
 	"testing"
 )

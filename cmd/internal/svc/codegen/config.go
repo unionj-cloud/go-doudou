@@ -2,7 +2,7 @@ package codegen
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -16,7 +16,7 @@ package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
-    "github.com/unionj-cloud/go-doudou/toolkit/zlogger"
+    "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 type Config struct {

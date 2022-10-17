@@ -1,7 +1,7 @@
 package pathutils
 
 import (
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"path/filepath"
 	"runtime"

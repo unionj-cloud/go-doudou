@@ -2,7 +2,7 @@ package codegen
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"text/template"

@@ -12,5 +12,5 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/unionj-cloud/go-doudou v1.2.1-0.20220718044017-75b309c4c402
+	github.com/unionj-cloud/go-doudou/v2 v1.2.1-0.20220718044017-75b309c4c402
 )

@@ -2,7 +2,7 @@ package numberutils_test
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/toolkit/numberutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/numberutils"
 	"testing"
 )
 

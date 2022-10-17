@@ -1,14 +1,17 @@
 package nacos_test
 
 import (
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/framework/registry/nacos"
-	"github.com/unionj-cloud/go-doudou/framework/registry/nacos/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
+	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos/mock"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/naming_client"
+	"github.com/wubin1989/nacos-sdk-go/v2/model"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"testing"
 )
@@ -22,7 +25,7 @@ func setup() {
 	_ = config.GddWeight.Write("5")
 }
 
-func TestNewNode(t *testing.T) {
+func TestNewRest(t *testing.T) {
 	Convey("Should not have error", t, func() {
 		setup()
 		_ = config.GddNacosRegisterHost.Write("seed")
@@ -52,17 +55,16 @@ func TestNewNode(t *testing.T) {
 		}
 
 		So(func() {
-			nacos.NewNode(map[string]interface{}{
+			nacos.NewRest(map[string]interface{}{
 				"foo": "bar",
 			})
 		}, ShouldNotPanic)
 
-		nacos.Shutdown()
-		So(nacos.NamingClient, ShouldBeNil)
+		nacos.ShutdownRest()
 	})
 }
 
-func TestNewNode2(t *testing.T) {
+func TestNewRest2(t *testing.T) {
 	Convey("Should not have error", t, func() {
 		setup()
 		ctrl := gomock.NewController(t)
@@ -93,17 +95,17 @@ func TestNewNode2(t *testing.T) {
 		_ = config.GddNacosRegisterHost.Write("")
 
 		So(func() {
-			nacos.NewNode(map[string]interface{}{
+			nacos.NewRest(map[string]interface{}{
 				"foo": "bar",
 			})
 		}, ShouldNotPanic)
 
-		nacos.Shutdown()
-		So(nacos.NamingClient, ShouldBeNil)
+		nacos.ShutdownRest()
+
 	})
 }
 
-func TestShutdownFail(t *testing.T) {
+func TestShutdownRestFail(t *testing.T) {
 	Convey("Should fail", t, func() {
 		setup()
 		ctrl := gomock.NewController(t)
@@ -134,17 +136,17 @@ func TestShutdownFail(t *testing.T) {
 		_ = config.GddNacosRegisterHost.Write("")
 
 		So(func() {
-			nacos.NewNode(map[string]interface{}{
+			nacos.NewRest(map[string]interface{}{
 				"foo": "bar",
 			})
 		}, ShouldNotPanic)
 
-		nacos.Shutdown()
-		So(nacos.NamingClient, ShouldBeNil)
+		nacos.ShutdownRest()
+
 	})
 }
 
-func TestShutdownFail2(t *testing.T) {
+func TestShutdownRestFail2(t *testing.T) {
 	Convey("Should fail", t, func() {
 		setup()
 		ctrl := gomock.NewController(t)
@@ -175,12 +177,123 @@ func TestShutdownFail2(t *testing.T) {
 		_ = config.GddNacosRegisterHost.Write("")
 
 		So(func() {
-			nacos.NewNode(map[string]interface{}{
+			nacos.NewRest(map[string]interface{}{
 				"foo": "bar",
 			})
 		}, ShouldNotPanic)
 
-		nacos.Shutdown()
-		So(nacos.NamingClient, ShouldBeNil)
+		nacos.ShutdownRest()
 	})
+}
+
+var services = model.Service{
+	Name:        "DEFAULT_GROUP@@DEMO",
+	CacheMillis: 1000,
+	Hosts: []model.Instance{
+		{
+			InstanceId: "10.10.10.10-80-a-DEMO",
+			Port:       80,
+			Ip:         "10.10.10.10",
+			Weight:     10,
+			Metadata: map[string]string{
+				"rootPath": "/api",
+			},
+			ClusterName: "a",
+			ServiceName: "DEMO",
+			Enable:      true,
+			Healthy:     true,
+		},
+		{
+			InstanceId:  "10.10.10.11-80-a-DEMO",
+			Port:        80,
+			Ip:          "10.10.10.11",
+			Weight:      9,
+			Metadata:    map[string]string{},
+			ClusterName: "a",
+			ServiceName: "DEMO",
+			Enable:      true,
+			Healthy:     true,
+		},
+		{
+			InstanceId:  "10.10.10.12-80-a-DEMO",
+			Port:        80,
+			Ip:          "10.10.10.12",
+			Weight:      8,
+			Metadata:    map[string]string{},
+			ClusterName: "a",
+			ServiceName: "DEMO",
+			Enable:      true,
+			Healthy:     false,
+		},
+		{
+			InstanceId:  "10.10.10.13-80-a-DEMO",
+			Port:        80,
+			Ip:          "10.10.10.13",
+			Weight:      7,
+			Metadata:    map[string]string{},
+			ClusterName: "a",
+			ServiceName: "DEMO",
+			Enable:      false,
+			Healthy:     true,
+		},
+		{
+			InstanceId:  "10.10.10.14-80-a-DEMO",
+			Port:        80,
+			Ip:          "10.10.10.14",
+			Weight:      6,
+			Metadata:    map[string]string{},
+			ClusterName: "a",
+			ServiceName: "DEMO",
+			Enable:      true,
+			Healthy:     true,
+		},
+	},
+	Checksum:    "3bbcf6dd1175203a8afdade0e77a27cd1528787794594",
+	LastRefTime: 1528787794594,
+	Clusters:    "a",
+}
+
+func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	namingClient := mock.NewMockINamingClient(ctrl)
+	namingClient.
+		EXPECT().
+		SelectInstances(vo.SelectInstancesParam{
+			Clusters:    []string{"a"},
+			ServiceName: "testsvc",
+			HealthyOnly: true,
+		}).
+		AnyTimes().
+		Return(services.Hosts, nil)
+
+	n := nacos.NewNacosRRServiceProvider("testsvc",
+		nacos.WithNacosNamingClient(namingClient),
+		nacos.WithNacosClusters([]string{"a"}))
+	for i := 0; i < len(services.Hosts)*2; i++ {
+		got := n.SelectServer()
+		fmt.Println(got)
+	}
+}
+
+func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	namingClient := mock.NewMockINamingClient(ctrl)
+	namingClient.
+		EXPECT().
+		SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
+			Clusters:    []string{"a"},
+			ServiceName: "testsvc",
+		}).
+		AnyTimes().
+		Return(&services.Hosts[0], nil)
+
+	n := nacos.NewNacosWRRServiceProvider("testsvc",
+		nacos.WithNacosNamingClient(namingClient),
+		nacos.WithNacosClusters([]string{"a"}))
+	got := n.SelectServer()
+	require.Equal(t, got, "http://10.10.10.10:80/api")
 }

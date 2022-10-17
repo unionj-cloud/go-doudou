@@ -3,7 +3,7 @@ package templateutils
 import (
 	"bytes"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"path/filepath"
 	"strings"
 	"text/template"

@@ -9,10 +9,10 @@ import (
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/cmd/internal/executils"
-	"github.com/unionj-cloud/go-doudou/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/version"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -117,7 +117,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
-	github.com/unionj-cloud/go-doudou ` + version.Release + `
+	github.com/unionj-cloud/go-doudou/v2 ` + version.Release + `
 )`
 
 const gitignoreTmpl = `# Binaries for programs and plugins
@@ -159,8 +159,8 @@ RUN go mod download
 ADD . ./
 RUN go mod vendor
 
-RUN export GDD_VER=$(go list -mod=vendor -m -f '{{` + "`" + `{{` + "`" + `}} .Version {{` + "`" + `}}` + "`" + `}}' github.com/unionj-cloud/go-doudou) && \
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-s -w -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildUser=$HOST_USER' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.BuildTime=$(date)' -X 'github.com/unionj-cloud/go-doudou/framework/buildinfo.GddVer=$GDD_VER'" -mod vendor -o api cmd/main.go && \
+RUN export GDD_VER=$(go list -mod=vendor -m -f '{{` + "`" + `{{` + "`" + `}} .Version {{` + "`" + `}}` + "`" + `}}' github.com/unionj-cloud/go-doudou/v2) && \
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -ldflags="-s -w -X 'github.com/unionj-cloud/go-doudou/v2/framework/buildinfo.BuildUser=$HOST_USER' -X 'github.com/unionj-cloud/go-doudou/v2/framework/buildinfo.BuildTime=$(date)' -X 'github.com/unionj-cloud/go-doudou/v2/framework/buildinfo.GddVer=$GDD_VER'" -mod vendor -o api cmd/main.go && \
 strip api && /usr/local/bin/upx api
 
 FROM alpine:3.14

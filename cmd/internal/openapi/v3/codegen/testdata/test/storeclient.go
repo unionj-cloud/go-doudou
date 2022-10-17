@@ -10,8 +10,8 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	ddhttp "github.com/unionj-cloud/go-doudou/framework/http"
-	"github.com/unionj-cloud/go-doudou/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 )
 
 type StoreClient struct {
@@ -119,9 +119,9 @@ func (receiver *StoreClient) GetStoreInventory(ctx context.Context, _headers map
 	return
 }
 
-func NewStore(opts ...ddhttp.DdClientOption) *StoreClient {
-	defaultProvider := ddhttp.NewServiceProvider("STORE")
-	defaultClient := ddhttp.NewClient()
+func NewStore(opts ...restclient.RestClientOption) *StoreClient {
+	defaultProvider := restclient.NewServiceProvider("STORE")
+	defaultClient := restclient.NewClient()
 
 	svcClient := &StoreClient{
 		provider: defaultProvider,
