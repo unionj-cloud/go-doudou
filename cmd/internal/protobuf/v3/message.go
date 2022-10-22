@@ -80,6 +80,8 @@ type Message struct {
 	IsMap      bool
 	IsRepeated bool
 	IsTopLevel bool
+	// IsImported denotes the message will be imported from third-party, such as from google/protobuf
+	IsImported bool
 }
 
 func (m Message) Inner() bool {
@@ -91,7 +93,14 @@ func (m Message) GetName() string {
 }
 
 func (m Message) String() string {
-	return m.Name
+	switch {
+	case reflect.DeepEqual(m, Any):
+		return "anypb.Any"
+	case reflect.DeepEqual(m, Empty):
+		return "emptypb.Empty"
+	default:
+		return m.Name
+	}
 }
 
 // NewMessage returns message instance from astutils.StructMeta
@@ -175,10 +184,14 @@ var (
 		IsScalar: true,
 	}
 	Any = Message{
-		Name: "google.protobuf.Any",
+		Name:       "google.protobuf.Any",
+		IsTopLevel: true,
+		IsImported: true,
 	}
 	Empty = Message{
-		Name: "google.protobuf.Empty",
+		Name:       "google.protobuf.Empty",
+		IsTopLevel: true,
+		IsImported: true,
 	}
 )
 

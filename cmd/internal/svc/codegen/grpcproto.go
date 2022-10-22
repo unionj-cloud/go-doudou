@@ -54,7 +54,7 @@ message {{.Name}} {
   {{- if $f.Comments }}
   {{ toComment $f.Comments }}
   {{- end }}
-  {{$f.Type}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
+  {{$f.Type.GetName}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
   {{- end }}
 }
 {{- end}}
@@ -64,7 +64,7 @@ service {{.Name}} {
   {{- if $r.Comments }}
   {{ toComment $r.Comments }}
   {{- end }}
-  rpc {{$r.Name}}({{$r.Request}}) returns ({{$r.Response}});
+  rpc {{$r.Name}}({{$r.Request.Name}}) returns ({{$r.Response.Name}});
   {{- end}}
 }
 `

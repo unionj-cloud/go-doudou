@@ -30,7 +30,7 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"google.golang.org/grpc"
-	ddgrpc "github.com/unionj-cloud/go-doudou/v2/framework/grpc"
+    "github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
     "{{.ConfigPackage}}"
 	pb "{{.PbPackage}}"
@@ -39,7 +39,7 @@ import (
 func main() {
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
-	grpcServer := ddgrpc.NewGrpcServer(
+	grpcServer := grpcx.NewGrpcServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_ctxtags.StreamServerInterceptor(),
 			grpc_opentracing.StreamServerInterceptor(),

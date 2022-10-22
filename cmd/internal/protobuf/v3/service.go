@@ -65,7 +65,7 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 	if reflect.DeepEqual(rpcRequest, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
-	if !strings.HasPrefix(rpcRequest.Name, "stream ") {
+	if !strings.HasPrefix(rpcRequest.Name, "stream ") && !rpcRequest.IsImported {
 		if _, ok := MessageStore[rpcRequest.Name]; !ok {
 			MessageStore[rpcRequest.Name] = rpcRequest
 		}
@@ -74,7 +74,7 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 	if reflect.DeepEqual(rpcResponse, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
-	if !strings.HasPrefix(rpcResponse.Name, "stream ") {
+	if !strings.HasPrefix(rpcResponse.Name, "stream ") && !rpcResponse.IsImported {
 		if _, ok := MessageStore[rpcResponse.Name]; !ok {
 			MessageStore[rpcResponse.Name] = rpcResponse
 		}

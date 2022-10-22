@@ -31,7 +31,7 @@ import (
 	"{{.VoPackage}}"
 )
 
-//go:generate go-doudou svc http --handler -c --doc
+//go:generate go-doudou svc http -c
 //go:generate go-doudou svc grpc
 
 type {{.SvcName}} interface {

@@ -79,7 +79,7 @@ var svcimportTmplGrpc = `
 
 var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
     {{- if eq $m.StreamType 0 }}
-	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(ctx context.Context, request *pb.{{$m.Request}}) (*pb.{{$m.Response}}, error) {
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(ctx context.Context, request *{{$m.Request | convert}}) (*{{$m.Response | convert}}, error) {
     	//TODO implement me
 		panic("implement me")
     }
@@ -97,7 +97,7 @@ var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
 	}
     {{- end }}
     {{- if eq $m.StreamType 3 }}
-	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(request *pb.{{$m.Request}}, server pb.{{$.GrpcSvc.Name}}_{{$m.Name}}Server) error {
+	func (receiver *{{$.Meta.Name}}Impl) {{$m.Name}}(request *{{$m.Request | convert}}, server pb.{{$.GrpcSvc.Name}}_{{$m.Name}}Server) error {
 		//TODO implement me
 		panic("implement me")
 	}
@@ -254,6 +254,13 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	astutils.FixImport(original, svcimplfile)
 }
 
+func convert(m v3.Message) string {
+	if !m.IsImported {
+		return "pb." + m.String()
+	}
+	return m.String()
+}
+
 // GenSvcImplGrpc generates service implementation for grpc
 func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Service) {
 	var (
@@ -321,6 +328,7 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["convert"] = convert
 	if tpl, err = template.New("svcimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
