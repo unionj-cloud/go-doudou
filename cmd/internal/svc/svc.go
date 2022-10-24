@@ -492,4 +492,5 @@ func (receiver *Svc) Grpc() {
 	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
 	codegen.GenMainGrpc(dir, ic, grpcSvc)
+	codegen.GenMethodAnnotationStore(dir, ic)
 }

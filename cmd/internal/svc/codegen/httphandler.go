@@ -23,6 +23,7 @@ package httpsrv
 
 import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
+	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"net/http"
 	"os"
 )
@@ -47,7 +48,7 @@ func Routes(handler {{.Meta.Name}}Handler) []rest.Route {
 }
 
 
-var RouteAnnotationStore = rest.AnnotationStore{
+var RouteAnnotationStore = framework.AnnotationStore{
 	{{- range $m := .Meta.Methods }}
 	{{- if $m.Annotations }}
 	"{{$m.Name}}": {
