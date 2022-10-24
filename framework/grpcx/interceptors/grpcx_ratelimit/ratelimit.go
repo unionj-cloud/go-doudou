@@ -12,7 +12,9 @@ import (
 	"time"
 )
 
-type GetKey func(ctx context.Context, fullMethod string) string
+type KeyGetter interface {
+	GetKey(ctx context.Context, fullMethod string) string
+}
 
 type RateLimitInterceptor struct {
 	mstore *memrate.MemoryStore
@@ -73,9 +75,9 @@ func NewRateLimitInterceptor(options ...RateLimitInterceptorOption) *RateLimitIn
 	return &interceptor
 }
 
-func (r *RateLimitInterceptor) UnaryServerInterceptor(getKey GetKey) grpc.UnaryServerInterceptor {
+func (r *RateLimitInterceptor) UnaryServerInterceptor(keyGetter KeyGetter) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		key := getKey(ctx, info.FullMethod)
+		key := keyGetter.GetKey(ctx, info.FullMethod)
 		if !r.limitKey(key) {
 			return nil, status.Errorf(codes.ResourceExhausted, "%s is rejected by grpcx_ratelimit middleware, please retry later.", key)
 		}
@@ -83,13 +85,13 @@ func (r *RateLimitInterceptor) UnaryServerInterceptor(getKey GetKey) grpc.UnaryS
 	}
 }
 
-func (r *RateLimitInterceptor) StreamServerInterceptor(getKey GetKey) grpc.StreamServerInterceptor {
+func (r *RateLimitInterceptor) StreamServerInterceptor(keyGetter KeyGetter) grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		ctx := stream.Context()
 		if stream1, ok := stream.(*grpc_middleware.WrappedServerStream); ok {
 			ctx = stream1.WrappedContext
 		}
-		key := getKey(ctx, info.FullMethod)
+		key := keyGetter.GetKey(ctx, info.FullMethod)
 		if !r.limitKey(key) {
 			return status.Errorf(codes.ResourceExhausted, "%s is rejected by grpcx_ratelimit middleware, please retry later.", key)
 		}
