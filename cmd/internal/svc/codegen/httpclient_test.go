@@ -40,33 +40,6 @@ func TestGenGoClient(t *testing.T) {
 	}
 }
 
-func TestGenGoClient2(t *testing.T) {
-	svcfile := filepath.Join(testDir, "svc.go")
-	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
-
-	type args struct {
-		dir string
-		ic  astutils.InterfaceCollector
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "",
-			args: args{
-				dir: testDir,
-				ic:  ic,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			GenGoClient(tt.args.dir, tt.args.ic, "", 1, strcase.ToLowerCamel)
-		})
-	}
-}
-
 func TestGenGoClientPanic_Stat(t *testing.T) {
 	Convey("Test GenGoClient panic from Stat", t, func() {
 		MkdirAll = os.MkdirAll

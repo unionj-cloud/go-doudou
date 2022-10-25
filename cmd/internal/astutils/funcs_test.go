@@ -309,12 +309,6 @@ func TestVisit(t *testing.T) {
 	assert.Len(t, files, 1)
 }
 
-func TestGetMod(t *testing.T) {
-	testDir := pathutils.Abs("./testdata")
-	_ = os.Chdir(testDir)
-	assert.Equal(t, "testdata", GetMod())
-}
-
 func TestGetImportPath(t *testing.T) {
 	testDir := pathutils.Abs("./testdata")
 	_ = os.Chdir(testDir)
