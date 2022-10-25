@@ -27,7 +27,7 @@ var grpcLease clientv3.LeaseID
 func InitEtcdCli() {
 	etcdEndpoints := config.GddEtcdEndpoints.LoadOrDefault(config.DefaultGddEtcdEndpoints)
 	if stringutils.IsEmpty(etcdEndpoints) {
-		logger.Panic().Msg("env GDD_ETCD_ENDPOINTS is not set")
+		logger.Panic().Msg("[go-doudou] env GDD_ETCD_ENDPOINTS is not set")
 	}
 	endpoints := strings.Split(etcdEndpoints, ",")
 	var err error
@@ -35,7 +35,7 @@ func InitEtcdCli() {
 		Endpoints:   endpoints,
 		DialTimeout: 5 * time.Second,
 	}); err != nil {
-		logger.Panic().Err(err).Msg("register to etcd failed")
+		logger.Panic().Err(err).Msg("[go-doudou] register to etcd failed")
 	}
 }
 
@@ -47,14 +47,14 @@ func getLeaseID() clientv3.LeaseID {
 	leaseStr := config.GddEtcdLease.Load()
 	if stringutils.IsNotEmpty(leaseStr) {
 		if value, err := cast.ToInt64E(leaseStr); err != nil {
-			logger.Error().Err(err).Msgf("cast %s to int failed", leaseStr)
+			logger.Error().Err(err).Msgf("[go-doudou] cast %s to int failed", leaseStr)
 		} else {
 			lease = value
 		}
 	}
 	leaseResp, err := EtcdCli.Grant(tctx, lease)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("get etcd lease ID failed")
+		logger.Panic().Err(err).Msgf("[go-doudou] get etcd lease ID failed")
 	}
 	return leaseResp.ID
 }
@@ -62,7 +62,7 @@ func getLeaseID() clientv3.LeaseID {
 func registerService(service string, port uint64, lease clientv3.LeaseID, userData ...map[string]interface{}) {
 	em, err := endpoints.NewManager(EtcdCli, service)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("register %s to etcd failed", service)
+		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	host := utils.GetRegisterHost()
 	addr := host + ":" + strconv.Itoa(int(port))
@@ -71,16 +71,16 @@ func registerService(service string, port uint64, lease clientv3.LeaseID, userDa
 	tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err = em.AddEndpoint(tctx, service+"/"+addr, endpoints.Endpoint{Addr: addr, Metadata: metadata}, clientv3.WithLease(lease)); err != nil {
-		logger.Panic().Err(err).Msgf("register %s to etcd failed", service)
+		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	// set keep-alive logic
 	leaseRespChan, err := EtcdCli.KeepAlive(context.Background(), lease)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("register %s to etcd failed", service)
+		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	go func() {
 		for leaseKeepResp := range leaseRespChan {
-			logger.Debug().Msgf("%#v", *leaseKeepResp)
+			logger.Debug().Msgf("[go-doudou] %#v", *leaseKeepResp)
 		}
 	}()
 }

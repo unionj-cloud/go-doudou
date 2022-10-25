@@ -44,6 +44,8 @@ func NewGrpc(data ...map[string]interface{}) {
 		switch mode {
 		case "nacos":
 			nacos.NewGrpc(data...)
+		case "etcd":
+			etcd.NewGrpc(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
@@ -55,6 +57,8 @@ func ShutdownRest() {
 		switch mode {
 		case "nacos":
 			nacos.ShutdownRest()
+		case "etcd":
+			etcd.ShutdownRest()
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
@@ -66,6 +70,8 @@ func ShutdownGrpc() {
 		switch mode {
 		case "nacos":
 			nacos.ShutdownGrpc()
+		case "etcd":
+			etcd.ShutdownGrpc()
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
