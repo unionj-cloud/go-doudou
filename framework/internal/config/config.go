@@ -153,7 +153,7 @@ const (
 
 	// GddConfigRemoteType has two options available: nacos, apollo
 	GddConfigRemoteType envVariable = "GDD_CONFIG_REMOTE_TYPE"
-	
+
 	GddRetryCount         envVariable = "GDD_RETRY_COUNT"
 	GddTracingMetricsRoot envVariable = "GDD_TRACING_METRICS_ROOT"
 
@@ -192,6 +192,10 @@ const (
 	GddSqlLogEnable envVariable = "GDD_SQL_LOG_ENABLE"
 
 	GddStatsFreq envVariable = "GDD_STATS_FREQ"
+
+	GddRegisterHost  envVariable = "GDD_REGISTER_HOST"
+	GddEtcdEndpoints envVariable = "GDD_ETCD_ENDPOINTS"
+	GddEtcdLease     envVariable = "GDD_ETCD_LEASE"
 )
 
 // Load loads value from environment variable

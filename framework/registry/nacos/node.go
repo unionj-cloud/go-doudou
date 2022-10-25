@@ -2,11 +2,11 @@ package nacos
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-sockaddr"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_nacos"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
@@ -25,27 +25,6 @@ import (
 )
 
 var NamingClient naming_client.INamingClient
-
-var GetPrivateIP = sockaddr.GetPrivateIP
-
-func getRegisterHost() string {
-	registerHost := config.DefaultGddNacosRegisterHost
-	if stringutils.IsNotEmpty(config.GddNacosRegisterHost.Load()) {
-		registerHost = config.GddNacosRegisterHost.Load()
-	}
-	if stringutils.IsEmpty(registerHost) {
-		var err error
-		registerHost, err = GetPrivateIP()
-		if err != nil {
-			logger.Panic().Err(err).Msg("[go-doudou] failed to get interface addresses")
-		}
-		if stringutils.IsEmpty(registerHost) {
-			logger.Panic().Msg("[go-doudou] no private IP address found, and explicit IP not provided")
-		}
-	}
-	return registerHost
-}
-
 var onceNacos sync.Once
 var NewNamingClient = clients.NewNamingClient
 
@@ -61,7 +40,7 @@ func NewRest(data ...map[string]interface{}) {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
-	registerHost := getRegisterHost()
+	registerHost := utils.GetRegisterHost()
 	httpPort := config.GetPort()
 	service := config.GetServiceName()
 	weight := config.DefaultGddWeight
@@ -117,7 +96,7 @@ func NewGrpc(data ...map[string]interface{}) {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
-	registerHost := getRegisterHost()
+	registerHost := utils.GetRegisterHost()
 	grpcPort := config.GetGrpcPort()
 	service := config.GetServiceName() + "_grpc"
 	weight := config.DefaultGddWeight
@@ -166,7 +145,7 @@ func NewGrpc(data ...map[string]interface{}) {
 
 func ShutdownRest() {
 	if NamingClient != nil {
-		registerHost := getRegisterHost()
+		registerHost := utils.GetRegisterHost()
 		httpPort := config.GetPort()
 		service := config.GetServiceName()
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
@@ -189,7 +168,7 @@ func ShutdownRest() {
 
 func ShutdownGrpc() {
 	if NamingClient != nil {
-		registerHost := getRegisterHost()
+		registerHost := utils.GetRegisterHost()
 		grpcPort := config.GetGrpcPort()
 		service := config.GetServiceName() + "_grpc"
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{

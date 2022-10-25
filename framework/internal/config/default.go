@@ -65,4 +65,8 @@ const (
 	DefaultGddSqlLogEnable = false
 
 	DefaultGddStatsFreq = "1s"
+
+	DefaultGddRegisterHost        = ""
+	DefaultGddEtcdEndpoints       = ""
+	DefaultGddEtcdLease     int64 = 5
 )

@@ -2,6 +2,7 @@ package registry
 
 import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
@@ -30,6 +31,8 @@ func NewRest(data ...map[string]interface{}) {
 		switch mode {
 		case "nacos":
 			nacos.NewRest(data...)
+		case "etcd":
+			etcd.NewRest(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
