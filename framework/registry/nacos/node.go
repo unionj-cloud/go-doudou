@@ -1,6 +1,7 @@
 package nacos
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
@@ -42,7 +43,7 @@ func NewRest(data ...map[string]interface{}) {
 	})
 	registerHost := utils.GetRegisterHost()
 	httpPort := config.GetPort()
-	service := config.GetServiceName()
+	service := config.GetServiceName() + "_rest"
 	weight := config.DefaultGddWeight
 	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
 		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
@@ -147,7 +148,7 @@ func ShutdownRest() {
 	if NamingClient != nil {
 		registerHost := utils.GetRegisterHost()
 		httpPort := config.GetPort()
-		service := config.GetServiceName()
+		service := config.GetServiceName() + "_rest"
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
 			Ip:          registerHost,
 			Port:        httpPort,
@@ -205,7 +206,7 @@ type nacosBase struct {
 	clusters     []string //optional,default:DEFAULT
 	serviceName  string   //required
 	groupName    string   //optional,default:DEFAULT_GROUP
-	lock         sync.RWMutex
+	lock         sync.Mutex
 	namingClient naming_client.INamingClient
 }
 
@@ -269,8 +270,8 @@ type NacosRRServiceProvider struct {
 
 // SelectServer return service address from environment variable
 func (n *NacosRRServiceProvider) SelectServer() string {
-	n.lock.RLock()
-	defer n.lock.RUnlock()
+	n.lock.Lock()
+	defer n.lock.Unlock()
 	if n.namingClient == nil {
 		logger.Error().Msg("[go-doudou] nacos discovery client has not been initialized")
 		return ""
@@ -316,8 +317,8 @@ type NacosWRRServiceProvider struct {
 
 // SelectServer return service address from environment variable
 func (n *NacosWRRServiceProvider) SelectServer() string {
-	n.lock.RLock()
-	defer n.lock.RUnlock()
+	n.lock.Lock()
+	defer n.lock.Unlock()
 	if n.namingClient == nil {
 		logger.Error().Msg("[go-doudou] nacos discovery client has not been initialized")
 		return ""
@@ -358,6 +359,14 @@ type NacosConfig struct {
 }
 
 func NewWRRGrpcClientConn(config NacosConfig, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(config, "nacos_weight_balancer", dialOptions...)
+}
+
+func NewRRGrpcClientConn(config NacosConfig, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(config, "round_robin", dialOptions...)
+}
+
+func NewGrpcClientConn(config NacosConfig, lb string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
@@ -369,8 +378,10 @@ func NewWRRGrpcClientConn(config NacosConfig, dialOptions ...grpc.DialOption) *g
 		NacosClient: NamingClient,
 	})
 	serverAddr := fmt.Sprintf("nacos://%s/", config.ServiceName)
-	dialOptions = append(dialOptions, grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "nacos_weight_balancer"}`))
-	grpcConn, err := grpc.Dial(serverAddr, dialOptions...)
+	dialOptions = append(dialOptions, grpc.WithBlock(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "`+lb+`"}`))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	grpcConn, err := grpc.DialContext(ctx, serverAddr, dialOptions...)
 	if err != nil {
 		logger.Panic().Err(err).Msgf("[go-doudou] failed to connect to server %s", serverAddr)
 	}

@@ -12,10 +12,15 @@ import (
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
+	"go.etcd.io/etcd/client/v3/naming/resolver"
+	"google.golang.org/grpc"
+	gresolver "google.golang.org/grpc/resolver"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -67,7 +72,7 @@ func registerService(service string, port uint64, lease clientv3.LeaseID, userDa
 	host := utils.GetRegisterHost()
 	addr := host + ":" + strconv.Itoa(int(port))
 	metadata := make(map[string]string)
-	populateMeta(metadata, userData...)
+	populateMeta(metadata, strings.HasSuffix(service, "_grpc"), userData...)
 	tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err = em.AddEndpoint(tctx, service+"/"+addr, endpoints.Endpoint{Addr: addr, Metadata: metadata}, clientv3.WithLease(lease)); err != nil {
@@ -85,7 +90,7 @@ func registerService(service string, port uint64, lease clientv3.LeaseID, userDa
 	}()
 }
 
-func populateMeta(meta map[string]string, userData ...map[string]interface{}) {
+func populateMeta(meta map[string]string, isGrpc bool, userData ...map[string]interface{}) {
 	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
@@ -114,7 +119,7 @@ func populateMeta(meta map[string]string, userData ...map[string]interface{}) {
 	if stringutils.IsNotEmpty(buildTime) {
 		meta["buildTime"] = buildTime
 	}
-	if stringutils.IsNotEmpty(rr) {
+	if stringutils.IsNotEmpty(rr) && !isGrpc {
 		meta["rootPath"] = rr
 	}
 	for _, item := range userData {
@@ -128,7 +133,7 @@ func NewRest(data ...map[string]interface{}) {
 	onceEtcd.Do(func() {
 		InitEtcdCli()
 	})
-	service := config.GetServiceName()
+	service := config.GetServiceName() + "_rest"
 	port := config.GetPort()
 	restLease = getLeaseID()
 	registerService(service, port, restLease, data...)
@@ -148,7 +153,7 @@ func NewGrpc(data ...map[string]interface{}) {
 
 func ShutdownRest() {
 	if EtcdCli != nil {
-		service := config.GetServiceName()
+		service := config.GetServiceName() + "_rest"
 		em, err := endpoints.NewManager(EtcdCli, service)
 		if err != nil {
 			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
@@ -157,7 +162,7 @@ func ShutdownRest() {
 		addr := utils.GetRegisterHost() + ":" + strconv.Itoa(int(config.GetPort()))
 		tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		if err = em.DeleteEndpoint(tctx, service+"/"+addr, clientv3.WithLease(restLease)); err != nil {
+		if err = em.DeleteEndpoint(tctx, service+"/"+addr); err != nil {
 			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
@@ -176,7 +181,7 @@ func ShutdownGrpc() {
 		addr := utils.GetRegisterHost() + ":" + strconv.Itoa(int(config.GetGrpcPort()))
 		tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		if err = em.DeleteEndpoint(tctx, service+"/"+addr, clientv3.WithLease(grpcLease)); err != nil {
+		if err = em.DeleteEndpoint(tctx, service+"/"+addr); err != nil {
 			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
@@ -194,4 +199,126 @@ func CloseEtcdClient() {
 			logger.Info().Msg("[go-doudou] etcd client closed")
 		}
 	})
+}
+
+// RRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
+type RRServiceProvider struct {
+	current  uint64
+	lock     sync.Mutex
+	c        *clientv3.Client
+	target   string
+	wch      endpoints.WatchChannel
+	ctx      context.Context
+	cancel   context.CancelFunc
+	wg       sync.WaitGroup
+	curState atomic.Value
+}
+
+func (r *RRServiceProvider) watch() {
+	defer r.wg.Done()
+
+	allUps := make(map[string]*endpoints.Update)
+	for {
+		select {
+		case <-r.ctx.Done():
+			return
+		case ups, ok := <-r.wch:
+			if !ok {
+				return
+			}
+
+			for _, up := range ups {
+				switch up.Op {
+				case endpoints.Add:
+					allUps[up.Key] = up
+				case endpoints.Delete:
+					delete(allUps, up.Key)
+				}
+			}
+
+			addrs := convertToAddress(allUps)
+			r.curState.Store(gresolver.State{Addresses: addrs})
+		}
+	}
+}
+
+func convertToAddress(ups map[string]*endpoints.Update) []gresolver.Address {
+	var addrs []gresolver.Address
+	for _, up := range ups {
+		addr := gresolver.Address{
+			Addr:     up.Endpoint.Addr,
+			Metadata: up.Endpoint.Metadata,
+		}
+		addrs = append(addrs, addr)
+	}
+	return addrs
+}
+
+// SelectServer return service address from environment variable
+func (n *RRServiceProvider) SelectServer() string {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	instances := n.curState.Load().(gresolver.State).Addresses
+	sort.SliceStable(instances, func(i, j int) bool {
+		return instances[i].Addr < instances[j].Addr
+	})
+	next := int(atomic.AddUint64(&n.current, uint64(1)) % uint64(len(instances)))
+	n.current = uint64(next)
+	selected := instances[next]
+	meta := selected.Metadata.(map[string]interface{})
+	return fmt.Sprintf("http://%s%s", selected.Addr, meta["rootPath"])
+}
+
+// NewRRServiceProvider creates new RRServiceProvider instance
+func NewRRServiceProvider(serviceName string) *RRServiceProvider {
+	onceEtcd.Do(func() {
+		InitEtcdCli()
+	})
+	r := &RRServiceProvider{
+		c:      EtcdCli,
+		target: serviceName,
+	}
+	r.ctx, r.cancel = context.WithCancel(context.Background())
+	em, err := endpoints.NewManager(r.c, r.target)
+	if err != nil {
+		logger.Panic().Err(err).Msg("[go-doudou] failed to create endpoint manager")
+	}
+	r.wch, err = em.NewWatchChannel(r.ctx)
+	if err != nil {
+		logger.Panic().Err(err).Msg("[go-doudou] failed to create watch channel")
+	}
+	r.wg.Add(1)
+	go r.watch()
+	return r
+}
+
+//func NewWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+//	return NewGrpcClientConn(service, "nacos_weight_balancer", dialOptions...)
+//}
+
+func NewRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(service, "round_robin", dialOptions...)
+}
+
+func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	onceEtcd.Do(func() {
+		InitEtcdCli()
+	})
+	etcdResolver, err := resolver.NewBuilder(EtcdCli)
+	if err != nil {
+		logger.Panic().Err(err).Msg("[go-doudou] failed to create etcd resolver")
+	}
+	dialOptions = append(dialOptions,
+		grpc.WithBlock(),
+		grpc.WithResolvers(etcdResolver),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "`+lb+`"}`),
+	)
+	serverAddr := fmt.Sprintf("etcd:///%s", service)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	grpcConn, err := grpc.DialContext(ctx, serverAddr, dialOptions...)
+	if err != nil {
+		logger.Panic().Err(err).Msgf("[go-doudou] failed to connect to server %s", serverAddr)
+	}
+	return grpcConn
 }
