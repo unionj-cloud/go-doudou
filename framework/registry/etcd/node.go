@@ -9,7 +9,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
@@ -32,7 +32,7 @@ var grpcLease clientv3.LeaseID
 func InitEtcdCli() {
 	etcdEndpoints := config.GddEtcdEndpoints.LoadOrDefault(config.DefaultGddEtcdEndpoints)
 	if stringutils.IsEmpty(etcdEndpoints) {
-		logger.Panic().Msg("[go-doudou] env GDD_ETCD_ENDPOINTS is not set")
+		zlogger.Panic().Msg("[go-doudou] env GDD_ETCD_ENDPOINTS is not set")
 	}
 	endpoints := strings.Split(etcdEndpoints, ",")
 	var err error
@@ -40,7 +40,7 @@ func InitEtcdCli() {
 		Endpoints:   endpoints,
 		DialTimeout: 5 * time.Second,
 	}); err != nil {
-		logger.Panic().Err(err).Msg("[go-doudou] register to etcd failed")
+		zlogger.Panic().Err(err).Msg("[go-doudou] register to etcd failed")
 	}
 }
 
@@ -52,14 +52,14 @@ func getLeaseID() clientv3.LeaseID {
 	leaseStr := config.GddEtcdLease.Load()
 	if stringutils.IsNotEmpty(leaseStr) {
 		if value, err := cast.ToInt64E(leaseStr); err != nil {
-			logger.Error().Err(err).Msgf("[go-doudou] cast %s to int failed", leaseStr)
+			zlogger.Error().Err(err).Msgf("[go-doudou] cast %s to int failed", leaseStr)
 		} else {
 			lease = value
 		}
 	}
 	leaseResp, err := EtcdCli.Grant(tctx, lease)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("[go-doudou] get etcd lease ID failed")
+		zlogger.Panic().Err(err).Msgf("[go-doudou] get etcd lease ID failed")
 	}
 	return leaseResp.ID
 }
@@ -67,30 +67,30 @@ func getLeaseID() clientv3.LeaseID {
 func registerService(service string, port uint64, lease clientv3.LeaseID, userData ...map[string]interface{}) {
 	em, err := endpoints.NewManager(EtcdCli, service)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
+		zlogger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	host := utils.GetRegisterHost()
 	addr := host + ":" + strconv.Itoa(int(port))
-	metadata := make(map[string]string)
+	metadata := make(map[string]interface{})
 	populateMeta(metadata, strings.HasSuffix(service, "_grpc"), userData...)
 	tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err = em.AddEndpoint(tctx, service+"/"+addr, endpoints.Endpoint{Addr: addr, Metadata: metadata}, clientv3.WithLease(lease)); err != nil {
-		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
+		zlogger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	// set keep-alive logic
 	leaseRespChan, err := EtcdCli.KeepAlive(context.Background(), lease)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
+		zlogger.Panic().Err(err).Msgf("[go-doudou] register %s to etcd failed", service)
 	}
 	go func() {
 		for leaseKeepResp := range leaseRespChan {
-			logger.Debug().Msgf("[go-doudou] %#v", *leaseKeepResp)
+			zlogger.Debug().Msgf("[go-doudou] %#v", *leaseKeepResp)
 		}
 	}()
 }
 
-func populateMeta(meta map[string]string, isGrpc bool, userData ...map[string]interface{}) {
+func populateMeta(meta map[string]interface{}, isGrpc bool, userData ...map[string]interface{}) {
 	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
@@ -109,7 +109,7 @@ func populateMeta(meta map[string]string, isGrpc bool, userData ...map[string]in
 	}
 	meta["registerAt"] = time.Now().Local().Format(constants.FORMAT8)
 	meta["goVer"] = runtime.Version()
-	meta["weight"] = strconv.Itoa(weight)
+	meta["weight"] = weight
 	if stringutils.IsNotEmpty(buildinfo.GddVer) {
 		meta["gddVer"] = buildinfo.GddVer
 	}
@@ -137,7 +137,7 @@ func NewRest(data ...map[string]interface{}) {
 	port := config.GetPort()
 	restLease = getLeaseID()
 	registerService(service, port, restLease, data...)
-	logger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
+	zlogger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
 }
 
 func NewGrpc(data ...map[string]interface{}) {
@@ -148,7 +148,7 @@ func NewGrpc(data ...map[string]interface{}) {
 	port := config.GetGrpcPort()
 	grpcLease = getLeaseID()
 	registerService(service, port, grpcLease, data...)
-	logger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
+	zlogger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
 }
 
 func ShutdownRest() {
@@ -156,17 +156,17 @@ func ShutdownRest() {
 		service := config.GetServiceName() + "_rest"
 		em, err := endpoints.NewManager(EtcdCli, service)
 		if err != nil {
-			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
+			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
 		addr := utils.GetRegisterHost() + ":" + strconv.Itoa(int(config.GetPort()))
 		tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err = em.DeleteEndpoint(tctx, service+"/"+addr); err != nil {
-			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
+			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
-		logger.Info().Msgf("[go-doudou] deregistered %s from etcd successfully", service)
+		zlogger.Info().Msgf("[go-doudou] deregistered %s from etcd successfully", service)
 	}
 }
 
@@ -175,17 +175,17 @@ func ShutdownGrpc() {
 		service := config.GetServiceName() + "_grpc"
 		em, err := endpoints.NewManager(EtcdCli, service)
 		if err != nil {
-			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
+			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
 		addr := utils.GetRegisterHost() + ":" + strconv.Itoa(int(config.GetGrpcPort()))
 		tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err = em.DeleteEndpoint(tctx, service+"/"+addr); err != nil {
-			logger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
+			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
 			return
 		}
-		logger.Info().Msgf("[go-doudou] deregistered %s from etcd successfully", service)
+		zlogger.Info().Msgf("[go-doudou] deregistered %s from etcd successfully", service)
 	}
 }
 
@@ -196,7 +196,7 @@ func CloseEtcdClient() {
 		if EtcdCli != nil {
 			EtcdCli.Close()
 			EtcdCli = nil
-			logger.Info().Msg("[go-doudou] etcd client closed")
+			zlogger.Info().Msg("[go-doudou] etcd client closed")
 		}
 	})
 }
@@ -281,20 +281,20 @@ func NewRRServiceProvider(serviceName string) *RRServiceProvider {
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 	em, err := endpoints.NewManager(r.c, r.target)
 	if err != nil {
-		logger.Panic().Err(err).Msg("[go-doudou] failed to create endpoint manager")
+		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create endpoint manager")
 	}
 	r.wch, err = em.NewWatchChannel(r.ctx)
 	if err != nil {
-		logger.Panic().Err(err).Msg("[go-doudou] failed to create watch channel")
+		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create watch channel")
 	}
 	r.wg.Add(1)
 	go r.watch()
 	return r
 }
 
-//func NewWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-//	return NewGrpcClientConn(service, "nacos_weight_balancer", dialOptions...)
-//}
+func NewWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(service, "etcd_weight_balancer", dialOptions...)
+}
 
 func NewRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
 	return NewGrpcClientConn(service, "round_robin", dialOptions...)
@@ -306,7 +306,7 @@ func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption
 	})
 	etcdResolver, err := resolver.NewBuilder(EtcdCli)
 	if err != nil {
-		logger.Panic().Err(err).Msg("[go-doudou] failed to create etcd resolver")
+		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create etcd resolver")
 	}
 	dialOptions = append(dialOptions,
 		grpc.WithBlock(),
@@ -318,7 +318,7 @@ func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption
 	defer cancel()
 	grpcConn, err := grpc.DialContext(ctx, serverAddr, dialOptions...)
 	if err != nil {
-		logger.Panic().Err(err).Msgf("[go-doudou] failed to connect to server %s", serverAddr)
+		zlogger.Panic().Err(err).Msgf("[go-doudou] failed to connect to server %s", serverAddr)
 	}
 	return grpcConn
 }
