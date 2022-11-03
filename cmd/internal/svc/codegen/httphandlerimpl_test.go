@@ -2,18 +2,11 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"path/filepath"
 	"testing"
 )
-
-func TestGenHttpHandlerImplWithImpl2(t *testing.T) {
-	svcfile := testDir + "/svc.go"
-	ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
-	GenHttpHandlerImpl(testDir, ic, true, strcase.ToLowerCamel)
-}
 
 func Test_unimplementedMethods(t *testing.T) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(testDir, "svc.go"), astutils.ExprString)
