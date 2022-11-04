@@ -151,7 +151,7 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 							break
 						}
 					}
-					provider = nacos.NewNacosWRRServiceProvider(serviceName, nacos.WithNacosClusters([]string{cluster}), nacos.WithNacosGroupName(group))
+					provider = nacos.NewWRRServiceProvider(serviceName, nacos.WithNacosClusters([]string{cluster}), nacos.WithNacosGroupName(group))
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				default:
 				}

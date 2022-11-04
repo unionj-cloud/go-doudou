@@ -14,7 +14,6 @@ import (
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"google.golang.org/grpc"
-	gresolver "google.golang.org/grpc/resolver"
 	"runtime"
 	"sort"
 	"strconv"
@@ -214,6 +213,17 @@ type RRServiceProvider struct {
 	curState atomic.Value
 }
 
+type address struct {
+	addr          string
+	rootPath      string
+	weight        int
+	currentWeight int
+}
+
+type state struct {
+	addresses []*address
+}
+
 func (r *RRServiceProvider) watch() {
 	defer r.wg.Done()
 
@@ -237,36 +247,43 @@ func (r *RRServiceProvider) watch() {
 			}
 
 			addrs := convertToAddress(allUps)
-			r.curState.Store(gresolver.State{Addresses: addrs})
+			r.curState.Store(state{addresses: addrs})
 		}
 	}
 }
 
-func convertToAddress(ups map[string]*endpoints.Update) []gresolver.Address {
-	var addrs []gresolver.Address
+func convertToAddress(ups map[string]*endpoints.Update) (addrs []*address) {
 	for _, up := range ups {
-		addr := gresolver.Address{
-			Addr:     up.Endpoint.Addr,
-			Metadata: up.Endpoint.Metadata,
+		weight := 1
+		var rootPath string
+		if metadata, ok := up.Endpoint.Metadata.(map[string]interface{}); !ok {
+			zlogger.Error().Msg("[go-doudou] etcd endpoint metadata is not map[string]string type")
+		} else {
+			weight = int(metadata["weight"].(float64))
+			rootPath = metadata["rootPath"].(string)
+		}
+		addr := &address{
+			addr:     up.Endpoint.Addr,
+			rootPath: rootPath,
+			weight:   weight,
 		}
 		addrs = append(addrs, addr)
 	}
-	return addrs
+	return
 }
 
 // SelectServer return service address from environment variable
 func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	instances := n.curState.Load().(gresolver.State).Addresses
+	instances := n.curState.Load().(state).addresses
 	sort.SliceStable(instances, func(i, j int) bool {
-		return instances[i].Addr < instances[j].Addr
+		return instances[i].addr < instances[j].addr
 	})
 	next := int(atomic.AddUint64(&n.current, uint64(1)) % uint64(len(instances)))
 	n.current = uint64(next)
 	selected := instances[next]
-	meta := selected.Metadata.(map[string]interface{})
-	return fmt.Sprintf("http://%s%s", selected.Addr, meta["rootPath"])
+	return fmt.Sprintf("http://%s%s", selected.addr, selected.rootPath)
 }
 
 // NewRRServiceProvider creates new RRServiceProvider instance
@@ -290,6 +307,39 @@ func NewRRServiceProvider(serviceName string) *RRServiceProvider {
 	r.wg.Add(1)
 	go r.watch()
 	return r
+}
+
+type SmoothWeightedRoundRobinProvider struct {
+	*RRServiceProvider
+}
+
+// SelectServer selects a node which is supplying service specified by name property from cluster
+func (n *SmoothWeightedRoundRobinProvider) SelectServer() string {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	instances := n.curState.Load().(state).addresses
+	if len(instances) == 0 {
+		return ""
+	}
+	var selected *address
+	total := 0
+	for i := 0; i < len(instances); i++ {
+		s := instances[i]
+		s.currentWeight += s.weight
+		total += s.weight
+		if selected == nil || s.currentWeight > selected.currentWeight {
+			selected = s
+		}
+	}
+	selected.currentWeight -= total
+	return fmt.Sprintf("http://%s%s", selected.addr, selected.rootPath)
+}
+
+// NewSWRRServiceProvider creates new SmoothWeightedRoundRobinProvider instance
+func NewSWRRServiceProvider(serviceName string) *SmoothWeightedRoundRobinProvider {
+	return &SmoothWeightedRoundRobinProvider{
+		RRServiceProvider: NewRRServiceProvider(serviceName),
+	}
 }
 
 func NewWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {

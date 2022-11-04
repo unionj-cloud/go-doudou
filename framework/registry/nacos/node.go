@@ -335,8 +335,8 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])
 }
 
-// NewNacosWRRServiceProvider creates new ServiceProvider instance
-func NewNacosWRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
+// NewWRRServiceProvider creates new ServiceProvider instance
+func NewWRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})

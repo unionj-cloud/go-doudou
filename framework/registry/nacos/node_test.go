@@ -291,7 +291,7 @@ func TestNacosWRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(&services.Hosts[0], nil)
 
-	n := nacos.NewNacosWRRServiceProvider("testsvc",
+	n := nacos.NewWRRServiceProvider("testsvc",
 		nacos.WithNacosNamingClient(namingClient),
 		nacos.WithNacosClusters([]string{"a"}))
 	got := n.SelectServer()
