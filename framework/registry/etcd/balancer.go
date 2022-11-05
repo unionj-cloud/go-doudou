@@ -75,9 +75,6 @@ func newChooser(cs []*conn) Chooser {
 }
 
 func (chs Chooser) pick() conn {
-	if len(chs.data) == 0 {
-		return conn{}
-	}
 	var selected *conn
 	total := 0
 	for i := 0; i < len(chs.data); i++ {

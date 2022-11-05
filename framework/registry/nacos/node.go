@@ -283,7 +283,11 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 		HealthyOnly: true,
 	})
 	if err != nil {
-		logger.Error().Err(err).Msg("[go-doudou] error")
+		logger.Error().Err(err).Msgf("[go-doudou] %s server not found", n.serviceName)
+		return ""
+	}
+	if len(instances) == 0 {
+		logger.Error().Msgf("[go-doudou] %s server not found", n.serviceName)
 		return ""
 	}
 	sort.Sort(instance(instances))
@@ -329,7 +333,7 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 		GroupName:   n.groupName,
 	})
 	if err != nil {
-		logger.Error().Err(err).Msg("[go-doudou] failed to select one healthy instance")
+		logger.Error().Err(err).Msgf("[go-doudou] %s server not found", n.serviceName)
 		return ""
 	}
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])

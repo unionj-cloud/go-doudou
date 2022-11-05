@@ -277,6 +277,10 @@ func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	instances := n.curState.Load().(state).addresses
+	if len(instances) == 0 {
+		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
+		return ""
+	}
 	sort.SliceStable(instances, func(i, j int) bool {
 		return instances[i].addr < instances[j].addr
 	})
@@ -319,6 +323,7 @@ func (n *SmoothWeightedRoundRobinProvider) SelectServer() string {
 	defer n.lock.Unlock()
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
+		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
 		return ""
 	}
 	var selected *address

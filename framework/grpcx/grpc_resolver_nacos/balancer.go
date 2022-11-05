@@ -82,7 +82,7 @@ type Chooser struct {
 
 // NewChooser initializes a new Chooser for picking from the provided Choices.
 func newChooser(cs conns) Chooser {
-	sort.Sort(conns(cs))
+	sort.Sort(cs)
 	totals := make([]int, len(cs))
 	runningTotal := 0
 	for i, c := range cs {
