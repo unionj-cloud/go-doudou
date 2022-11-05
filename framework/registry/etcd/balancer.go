@@ -21,7 +21,7 @@ func init() {
 type wPickerBuilder struct{}
 
 func (*wPickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
-	zlogger.Info().Msgf("etcd_weight_balancer Picker: Build called with info: %v", info)
+	zlogger.Debug().Msgf("[go-doudou] etcd_weight_balancer Picker: Build called with info: %v", info)
 	if len(info.ReadySCs) == 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}

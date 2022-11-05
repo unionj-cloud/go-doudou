@@ -262,14 +262,14 @@ func (a instance) Less(i, j int) bool {
 	return a[i].InstanceId < a[j].InstanceId
 }
 
-// NacosRRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
-type NacosRRServiceProvider struct {
+// RRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
+type RRServiceProvider struct {
 	nacosBase
 	current uint64
 }
 
 // SelectServer return service address from environment variable
-func (n *NacosRRServiceProvider) SelectServer() string {
+func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if n.namingClient == nil {
@@ -297,12 +297,12 @@ func (n *NacosRRServiceProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s:%d%s", selected.Ip, selected.Port, selected.Metadata["rootPath"])
 }
 
-// NewNacosRRServiceProvider creates new ServiceProvider instance
-func NewNacosRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosRRServiceProvider {
+// NewRRServiceProvider creates new ServiceProvider instance
+func NewRRServiceProvider(serviceName string, opts ...NacosProviderOption) *RRServiceProvider {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
-	provider := &NacosRRServiceProvider{
+	provider := &RRServiceProvider{
 		nacosBase: nacosBase{
 			serviceName:  serviceName,
 			namingClient: NamingClient,
@@ -314,13 +314,13 @@ func NewNacosRRServiceProvider(serviceName string, opts ...NacosProviderOption) 
 	return provider
 }
 
-// NacosWRRServiceProvider is a WRR load balance implementation for IServiceProvider
-type NacosWRRServiceProvider struct {
+// WRRServiceProvider is a WRR load balance implementation for IServiceProvider
+type WRRServiceProvider struct {
 	nacosBase
 }
 
 // SelectServer return service address from environment variable
-func (n *NacosWRRServiceProvider) SelectServer() string {
+func (n *WRRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if n.namingClient == nil {
@@ -340,11 +340,11 @@ func (n *NacosWRRServiceProvider) SelectServer() string {
 }
 
 // NewWRRServiceProvider creates new ServiceProvider instance
-func NewWRRServiceProvider(serviceName string, opts ...NacosProviderOption) *NacosWRRServiceProvider {
+func NewWRRServiceProvider(serviceName string, opts ...NacosProviderOption) *WRRServiceProvider {
 	onceNacos.Do(func() {
 		InitialiseNacosNamingClient()
 	})
-	provider := &NacosWRRServiceProvider{
+	provider := &WRRServiceProvider{
 		nacosBase{
 			serviceName:  serviceName,
 			namingClient: NamingClient,

@@ -313,12 +313,13 @@ func NewRRServiceProvider(serviceName string) *RRServiceProvider {
 	return r
 }
 
-type SmoothWeightedRoundRobinProvider struct {
+// SWRRServiceProvider is a smooth weighted round-robin service provider
+type SWRRServiceProvider struct {
 	*RRServiceProvider
 }
 
 // SelectServer selects a node which is supplying service specified by name property from cluster
-func (n *SmoothWeightedRoundRobinProvider) SelectServer() string {
+func (n *SWRRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	instances := n.curState.Load().(state).addresses
@@ -340,9 +341,9 @@ func (n *SmoothWeightedRoundRobinProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s%s", selected.addr, selected.rootPath)
 }
 
-// NewSWRRServiceProvider creates new SmoothWeightedRoundRobinProvider instance
-func NewSWRRServiceProvider(serviceName string) *SmoothWeightedRoundRobinProvider {
-	return &SmoothWeightedRoundRobinProvider{
+// NewSWRRServiceProvider creates new SWRRServiceProvider instance
+func NewSWRRServiceProvider(serviceName string) *SWRRServiceProvider {
+	return &SWRRServiceProvider{
 		RRServiceProvider: NewRRServiceProvider(serviceName),
 	}
 }

@@ -6,8 +6,10 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
+	"go.etcd.io/etcd/client/v3"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -147,11 +149,23 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 						continue
 					}
 					if value, ok := proxyConfig.ProviderStore.Get(serviceName); ok {
-						if provider, ok = value.(*nacos.NacosWRRServiceProvider); ok {
+						if provider, ok = value.(*nacos.WRRServiceProvider); ok {
 							break
 						}
 					}
 					provider = nacos.NewWRRServiceProvider(serviceName, nacos.WithNacosClusters([]string{cluster}), nacos.WithNacosGroupName(group))
+					proxyConfig.ProviderStore.Add(serviceName, provider)
+				case "etcd":
+					getResponse, err := etcd.EtcdCli.Get(r.Context(), serviceName+"/", clientv3.WithPrefix())
+					if err != nil || getResponse.Count == 0 {
+						continue
+					}
+					if value, ok := proxyConfig.ProviderStore.Get(serviceName); ok {
+						if provider, ok = value.(*etcd.SWRRServiceProvider); ok {
+							break
+						}
+					}
+					provider = etcd.NewSWRRServiceProvider(serviceName)
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				default:
 				}
