@@ -268,7 +268,7 @@ func TestNacosRRServiceProvider_SelectServer(t *testing.T) {
 		AnyTimes().
 		Return(services.Hosts, nil)
 
-	n := nacos.NewNacosRRServiceProvider("testsvc",
+	n := nacos.NewRRServiceProvider("testsvc",
 		nacos.WithNacosNamingClient(namingClient),
 		nacos.WithNacosClusters([]string{"a"}))
 	for i := 0; i < len(services.Hosts)*2; i++ {
