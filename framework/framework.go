@@ -1,5 +1,10 @@
 package framework
 
+import (
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"os"
+)
+
 type Annotation struct {
 	Name   string
 	Params []string
@@ -23,4 +28,8 @@ func (receiver AnnotationStore) GetParams(key string, annotationName string) []s
 		}
 	}
 	return nil
+}
+
+func CheckDev() bool {
+	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
@@ -45,7 +46,7 @@ func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption
 }
 
 func (srv *GrpcServer) printServices() {
-	if !config.CheckDev() {
+	if !framework.CheckDev() {
 		return
 	}
 	logger.Info().Msg("================ Registered Services ================")

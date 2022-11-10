@@ -5,7 +5,9 @@ import (
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
@@ -81,18 +83,17 @@ func LoadConfigFromRemote() {
 	}
 }
 
-func CheckDev() bool {
-	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
-}
-
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
+	zl, _ := zerolog.ParseLevel(GddLogLevel.LoadOrDefault(DefaultGddLogLevel))
 	opts := []zlogger.LoggerConfigOption{
-		zlogger.WithDev(CheckDev()),
+		zlogger.WithDev(framework.CheckDev()),
 		zlogger.WithCaller(cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller)),
+		zlogger.WithDiscard(cast.ToBoolOrDefault(GddLogDiscard.Load(), DefaultGddLogDiscard)),
+		zlogger.WithZeroLogLevel(zl),
 	}
-	zlogger.InitEntry(GddLogLevel.LoadOrDefault(DefaultGddLogLevel), zlogger.NewLoggerConfig(opts...))
+	zlogger.InitEntry(zlogger.NewLoggerConfig(opts...))
 }
 
 type envVariable string
@@ -119,6 +120,7 @@ const (
 	// GddLogReqEnable enables request and response logging
 	GddLogReqEnable envVariable = "GDD_LOG_REQ_ENABLE"
 	GddLogCaller    envVariable = "GDD_LOG_CALLER"
+	GddLogDiscard   envVariable = "GDD_LOG_DISCARD"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
 	// GddWriteTimeout sets http connection write timeout

@@ -9,6 +9,7 @@ import (
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
+	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
@@ -94,7 +95,7 @@ type RestServer struct {
 }
 
 func (srv *RestServer) printRoutes() {
-	if !config.CheckDev() {
+	if !framework.CheckDev() {
 		return
 	}
 	logger.Info().Msg("================ Registered Routes ================")

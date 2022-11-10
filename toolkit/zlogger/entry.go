@@ -14,9 +14,13 @@ import (
 var Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 type LoggerConfig struct {
-	Dev    bool
-	Caller bool
-	Pid    bool
+	Dev     bool
+	Caller  bool
+	Discard bool
+	Pid     bool
+
+	Writer io.Writer
+	Level  zerolog.Level
 }
 
 type LoggerConfigOption func(*LoggerConfig)
@@ -33,6 +37,24 @@ func WithCaller(caller bool) LoggerConfigOption {
 	}
 }
 
+func WithDiscard(discard bool) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Discard = discard
+	}
+}
+
+func WithWriter(writer io.Writer) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Writer = writer
+	}
+}
+
+func WithZeroLogLevel(level zerolog.Level) LoggerConfigOption {
+	return func(lc *LoggerConfig) {
+		lc.Level = level
+	}
+}
+
 func NewLoggerConfig(opts ...LoggerConfigOption) LoggerConfig {
 	lc := LoggerConfig{}
 	for _, item := range opts {
@@ -41,16 +63,19 @@ func NewLoggerConfig(opts ...LoggerConfigOption) LoggerConfig {
 	return lc
 }
 
-func InitEntry(levelStr string, lc LoggerConfig) {
+func InitEntry(lc LoggerConfig) {
 	var output io.Writer
-	if lc.Dev {
-		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
-	} else {
-		output = os.Stdout
+	if !lc.Discard {
+		if lc.Writer != nil {
+			output = lc.Writer
+		} else if lc.Dev {
+			output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
+		} else {
+			output = os.Stdout
+		}
 	}
-	level, _ := zerolog.ParseLevel(levelStr)
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	zeroCtx := zerolog.New(output).Level(level).With().Timestamp().Stack()
+	zeroCtx := zerolog.New(output).Level(lc.Level).With().Timestamp().Stack()
 	if lc.Caller {
 		zeroCtx = zeroCtx.Caller()
 	}
