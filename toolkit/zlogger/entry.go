@@ -85,6 +85,12 @@ func InitEntry(lc LoggerConfig) {
 	Logger = zeroCtx.Logger()
 }
 
+// SetOutput duplicates the global logger and sets w as its output,
+// then assign to zlogger package level zerolog.Logger
+func SetOutput(w io.Writer) {
+	Logger = Logger.Output(w)
+}
+
 // Output duplicates the global logger and sets w as its output.
 func Output(w io.Writer) zerolog.Logger {
 	return Logger.Output(w)
