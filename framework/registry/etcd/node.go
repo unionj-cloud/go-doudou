@@ -348,7 +348,7 @@ func NewSWRRServiceProvider(serviceName string) *SWRRServiceProvider {
 	}
 }
 
-func NewWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+func NewSWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
 	return NewGrpcClientConn(service, "etcd_weight_balancer", dialOptions...)
 }
 
