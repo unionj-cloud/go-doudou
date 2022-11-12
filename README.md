@@ -37,7 +37,7 @@ Read the Docs [https://go-doudou.github.io](https://go-doudou.github.io) to Lear
 
 Machine: `MacBook Pro (16-inch, 2019)`  
 CPU: `2.3 GHz 8 cores Intel Core i9`  
-Memory: `16 GB 2667 MHz DDR4`
+Memory: `16 GB 2667 MHz DDR4`  
 ProcessingTime: `0ms, 10ms, 100ms, 500ms`  
 Concurrency: `1000`  
 Duration: `30s`  
@@ -48,8 +48,6 @@ go-doudou Version: `v1.3.7`
 ## Credits
 
 Give credits to following repositories and all their contributors:
-- [hashicorp/memberlist](https://github.com/hashicorp/memberlist): go-doudou is relying on it to implement service register/discovery/fault tolerance feature.
-- [gorilla/mux](https://github.com/gorilla/mux): go-doudou is relying on it to implement http router.
 - [go-redis/redis_rate](github.com/go-redis/redis_rate): go-doudou is relying on it to implement redis based rate limit feature
 - [apolloconfig/agollo](https://github.com/apolloconfig/agollo): go-doudou is relying on it to implement remote configuration management support for [Apollo](https://github.com/apolloconfig/apollo)
 - [nacos-group/nacos-sdk-go](https://github.com/nacos-group/nacos-sdk-go): go-doudou is relying on it to implement service discovery and remote configuration management support for [Nacos](https://github.com/alibaba/nacos)
