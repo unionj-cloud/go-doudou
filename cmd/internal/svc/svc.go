@@ -250,7 +250,7 @@ func NewSvc(dir string, opts ...SvcOption) ISvc {
 }
 
 // Push executes go mod vendor command first, then build docker image and push to remote image repository
-// It also generates deployment kind(for monolithic) and statefulset kind(for microservice) yaml files for kubernetes deploy, if these files already exist,
+// It also generates deployment kind and statefulset kind yaml files for kubernetes deploy, if these files already exist,
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
 func (receiver *Svc) Push(repo string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
@@ -290,13 +290,12 @@ func (receiver *Svc) Push(repo string) {
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 
-// Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as statefulset kind using statefulset.yaml file in the project root,
-// so if you want to deploy a monolithic project, please set k8sfile flag.
+// Deploy deploys project to kubernetes. If k8sfile flag not set, it will be deployed as deployment kind using *_deployment.yaml file in the project root,
 func (receiver *Svc) Deploy(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
-		k8sfile = filepath.Join(receiver.dir, svcname+"_statefulset.yaml")
+		k8sfile = filepath.Join(receiver.dir, svcname+"_deployment.yaml")
 	}
 	logrus.Infof("Execute command: kubectl apply -f %s\n", k8sfile)
 	if err := receiver.runner.Run("kubectl", "apply", "-f", k8sfile); err != nil {
@@ -304,13 +303,13 @@ func (receiver *Svc) Deploy(k8sfile string) {
 	}
 }
 
-// Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use statefulset.yaml file in the project root,
+// Shutdown stops and removes the project from kubernetes. If k8sfile flag not set, it will use *_deployment.yaml file in the project root,
 // so if you had already set k8sfile flag when you deploy the project, you should set the same k8sfile flag.
 func (receiver *Svc) Shutdown(k8sfile string) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
 	if stringutils.IsEmpty(k8sfile) {
-		k8sfile = filepath.Join(receiver.dir, svcname+"_statefulset.yaml")
+		k8sfile = filepath.Join(receiver.dir, svcname+"_deployment.yaml")
 	}
 	logrus.Infof("Execute command: kubectl delete -f %s\n", k8sfile)
 	if err := receiver.runner.Run("kubectl", "delete", "-f", k8sfile); err != nil {
