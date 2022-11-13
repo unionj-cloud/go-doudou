@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/getkin/kin-openapi/openapi2"
+	"github.com/getkin/kin-openapi/openapi2conv"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-resty/resty/v2"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
@@ -941,14 +944,27 @@ func loadAPI(file string) v3.API {
 	if docfile, err = os.Open(file); err != nil {
 		panic(err)
 	}
-	defer func(docfile *os.File) {
-		_ = docfile.Close()
-	}(docfile)
+	defer docfile.Close()
 	if docraw, err = ioutil.ReadAll(docfile); err != nil {
 		panic(err)
 	}
 	if err = json.Unmarshal(docraw, &api); err != nil {
 		panic(err)
+	}
+	if stringutils.IsEmpty(api.Openapi) {
+		var doc openapi2.T
+		if err = json.Unmarshal(docraw, &doc); err != nil {
+			panic(err)
+		}
+		if stringutils.IsEmpty(doc.Swagger) {
+			panic("not support")
+		}
+		var doc1 *openapi3.T
+		doc1, err = openapi2conv.ToV3(&doc)
+		if err != nil {
+			panic(err)
+		}
+		copier.DeepCopy(doc1, &api)
 	}
 	return api
 }
