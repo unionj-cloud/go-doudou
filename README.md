@@ -21,7 +21,6 @@
 > Lightweight Golang Microservice Framework
 
 - 💡 Starts from golang interface, no need to learn new IDL(interface definition language).
-- 🛠️ Built-in SWIM gossip protocol based service register and discovery mechanism to help you build a robust, scalable and decentralized service cluster.
 - 🔩 Powerful code generator cli built-in. After defining your interface methods, your only job is implementing your awesome idea.
 - ⚡ Born from the cloud-native era. Built-in CLI can speed up your product iteration.
 - 🔑 Built-in service governance support including remote configuration management, client-side load balancer, rate limiter, circuit breaker, bulkhead, timeout, retry and more.
