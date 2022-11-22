@@ -243,7 +243,7 @@ func handleDefaultCase(ft string) ProtobufType {
 			panic("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
 		return Message{
-			Name:  fmt.Sprintf("map<%s, %s>", keyMessage, elemMessage),
+			Name:  fmt.Sprintf("map<%s, %s>", keyMessage.GetName(), elemMessage.GetName()),
 			IsMap: true,
 		}
 	}
@@ -253,8 +253,25 @@ func handleDefaultCase(ft string) ProtobufType {
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
+		messageName := elemMessage.GetName()
+		if strings.Contains(elemMessage.GetName(), "repeated ") {
+			messageName = messageName[strings.LastIndex(messageName, ".")+1:]
+			messageName = "Nested" + strcase.ToCamel(messageName)
+			MessageStore[messageName] = Message{
+				Name: messageName,
+				Fields: []Field{
+					{
+						Name:     strcase.ToSnake(messageName),
+						Type:     elemMessage,
+						Number:   1,
+						JsonName: strcase.ToLowerCamel(messageName),
+					},
+				},
+				IsInner: true,
+			}
+		}
 		return Message{
-			Name:       fmt.Sprintf("repeated %s", elemMessage),
+			Name:       fmt.Sprintf("repeated %s", messageName),
 			IsRepeated: true,
 		}
 	}

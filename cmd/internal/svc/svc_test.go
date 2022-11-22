@@ -347,8 +347,10 @@ func Test_GenClient(t *testing.T) {
 func TestSvc_Push(t *testing.T) {
 	receiver := NewMockSvc(pathutils.Abs("./testdata"))
 	s := receiver.(*svc.Svc)
-	s.ImagePrefix = "go-doudou-"
-	s.Push("wubin1989")
+	s.Push(svc.PushConfig{
+		Repo:   "wubin1989",
+		Prefix: "go-doudou-",
+	})
 }
 
 func TestHelperProcess(*testing.T) {

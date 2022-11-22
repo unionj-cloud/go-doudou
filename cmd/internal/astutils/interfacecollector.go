@@ -173,8 +173,8 @@ func (ic *InterfaceCollector) field2Results(list []*ast.Field) []FieldMeta {
 	for _, result := range list {
 		var rComments []string
 		if cmts, exists := ic.cmap[result]; exists {
-			for _, comment := range cmts {
-				rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
+			for _, comment := range cmts[0].List {
+				rComments = append(rComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
 			}
 		}
 		rt := ic.exprString(result.Type)
