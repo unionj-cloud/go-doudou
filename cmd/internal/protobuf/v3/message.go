@@ -35,7 +35,7 @@ type EnumField struct {
 	Number int
 }
 
-func newEnumField(field string, index int) EnumField {
+func (receiver ProtoGenerator) newEnumField(field string, index int) EnumField {
 	return EnumField{
 		Name:   strings.ToUpper(strcase.ToSnake(field)),
 		Number: index,
@@ -59,10 +59,10 @@ func (e Enum) GetName() string {
 	return e.Name
 }
 
-func NewEnum(enumMeta astutils.EnumMeta) Enum {
+func (receiver ProtoGenerator) NewEnum(enumMeta astutils.EnumMeta) Enum {
 	var fields []EnumField
 	for i, field := range enumMeta.Values {
-		fields = append(fields, newEnumField(field, i))
+		fields = append(fields, receiver.newEnumField(field, i))
 	}
 	return Enum{
 		Name:   strcase.ToCamel(enumMeta.Name),
@@ -104,10 +104,10 @@ func (m Message) String() string {
 }
 
 // NewMessage returns message instance from astutils.StructMeta
-func NewMessage(structmeta astutils.StructMeta) Message {
+func (receiver ProtoGenerator) NewMessage(structmeta astutils.StructMeta) Message {
 	var fields []Field
 	for i, field := range structmeta.Fields {
-		fields = append(fields, newField(field, i+1))
+		fields = append(fields, receiver.newField(field, i+1))
 	}
 	return Message{
 		Name:       strcase.ToCamel(structmeta.Name),
@@ -126,23 +126,20 @@ type Field struct {
 	JsonName string
 }
 
-func newField(field astutils.FieldMeta, index int) Field {
-	t := MessageOf(field.Type)
+func (receiver ProtoGenerator) newField(field astutils.FieldMeta, index int) Field {
+	t := receiver.MessageOf(field.Type)
 	if t.Inner() {
 		message := t.(Message)
 		message.Name = strcase.ToCamel(field.Name)
 		t = message
 	}
-	jsonName := field.DocName
-	if stringutils.IsEmpty(jsonName) {
-		jsonName = strcase.ToLowerCamel(field.Name)
-	}
+	fieldName := receiver.fieldNamingFunc(field.Name)
 	return Field{
-		Name:     strcase.ToSnake(field.Name),
+		Name:     fieldName,
 		Type:     t,
 		Number:   index,
 		Comments: field.Comments,
-		JsonName: jsonName,
+		JsonName: fieldName,
 	}
 }
 
@@ -195,7 +192,7 @@ var (
 	}
 )
 
-func MessageOf(ft string) ProtobufType {
+func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
 	if astutils.IsVarargs(ft) {
 		ft = astutils.ToSlice(ft)
 	}
@@ -220,7 +217,7 @@ func MessageOf(ft string) ProtobufType {
 	case "float64":
 		return Double
 	default:
-		return handleDefaultCase(ft)
+		return receiver.handleDefaultCase(ft)
 	}
 }
 
@@ -230,15 +227,15 @@ func init() {
 	anonystructre = regexp.MustCompile(`anonystruct«(.*)»`)
 }
 
-func handleDefaultCase(ft string) ProtobufType {
+func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 	if strings.HasPrefix(ft, "map[") {
 		elem := ft[strings.Index(ft, "]")+1:]
 		key := ft[4:strings.Index(ft, "]")]
-		keyMessage := MessageOf(key)
+		keyMessage := receiver.MessageOf(key)
 		if reflect.DeepEqual(keyMessage, Float) || reflect.DeepEqual(keyMessage, Double) || reflect.DeepEqual(keyMessage, Bytes) {
 			panic("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
-		elemMessage := MessageOf(elem)
+		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
@@ -249,7 +246,7 @@ func handleDefaultCase(ft string) ProtobufType {
 	}
 	if strings.HasPrefix(ft, "[") {
 		elem := ft[strings.Index(ft, "]")+1:]
-		elemMessage := MessageOf(elem)
+		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			panic("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
 		}
@@ -257,14 +254,15 @@ func handleDefaultCase(ft string) ProtobufType {
 		if strings.Contains(elemMessage.GetName(), "repeated ") {
 			messageName = messageName[strings.LastIndex(messageName, ".")+1:]
 			messageName = "Nested" + strcase.ToCamel(messageName)
+			fieldName := receiver.fieldNamingFunc(messageName)
 			MessageStore[messageName] = Message{
 				Name: messageName,
 				Fields: []Field{
 					{
-						Name:     strcase.ToSnake(messageName),
+						Name:     fieldName,
 						Type:     elemMessage,
 						Number:   1,
-						JsonName: strcase.ToLowerCamel(messageName),
+						JsonName: fieldName,
 					},
 				},
 				IsInner: true,
@@ -279,7 +277,7 @@ func handleDefaultCase(ft string) ProtobufType {
 		result := anonystructre.FindStringSubmatch(ft)
 		var structmeta astutils.StructMeta
 		json.Unmarshal([]byte(result[1]), &structmeta)
-		message := NewMessage(structmeta)
+		message := receiver.NewMessage(structmeta)
 		message.IsInner = true
 		message.IsTopLevel = false
 		return message
