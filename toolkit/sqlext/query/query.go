@@ -218,6 +218,10 @@ type Where struct {
 	children []Base
 }
 
+func (w Where) IsEmpty() bool {
+	return len(w.children) == 0
+}
+
 // Sql implement Base interface, return string sql expression
 func (w Where) Sql() (string, []interface{}) {
 	if len(w.children) == 0 {

@@ -61,23 +61,23 @@ func (receiver {{.DomainName}}Dao) AfterBulkSaveHook(ctx context.Context, data [
 	// implement your business logic
 }
 
-func (receiver {{.DomainName}}Dao) BeforeUpdateManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where query.Where) {
+func (receiver {{.DomainName}}Dao) BeforeUpdateManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where *query.Where) {
 	// implement your business logic
 }
 
-func (receiver {{.DomainName}}Dao) AfterUpdateManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where query.Where, affected int64) {
+func (receiver {{.DomainName}}Dao) AfterUpdateManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where *query.Where, affected int64) {
 	// implement your business logic
 }
 
-func (receiver {{.DomainName}}Dao) BeforeDeleteManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where query.Where) {
+func (receiver {{.DomainName}}Dao) BeforeDeleteManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where *query.Where) {
 	// implement your business logic
 }
 
-func (receiver {{.DomainName}}Dao) AfterDeleteManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where query.Where, affected int64) {
+func (receiver {{.DomainName}}Dao) AfterDeleteManyHook(ctx context.Context, data []*domain.{{.DomainName}}, where *query.Where, affected int64) {
 	// implement your business logic
 }
 
-func (receiver {{.DomainName}}Dao) BeforeReadManyHook(ctx context.Context, page *query.Page, where ...query.Where) {
+func (receiver {{.DomainName}}Dao) BeforeReadManyHook(ctx context.Context, page *query.Page, where *query.Where) {
 	// implement your business logic
 }
 
@@ -360,13 +360,13 @@ func (receiver {{.DomainName}}Dao) DeleteMany(ctx context.Context, where query.W
 		args   []interface{}
 		affected int64
 	)
-	receiver.BeforeDeleteManyHook(ctx, nil, where)
+	receiver.BeforeDeleteManyHook(ctx, nil, &where)
 	w, args = where.Sql()
 	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(fmt.Sprintf("delete from {{.TableName}} where %s;", w)), args...); err != nil {
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if affected, err = result.RowsAffected(); err == nil {
-		receiver.AfterDeleteManyHook(ctx, nil, where, affected)
+		receiver.AfterDeleteManyHook(ctx, nil, &where, affected)
 	}
 	return affected, err
 }
@@ -426,7 +426,7 @@ func (receiver {{.DomainName}}Dao) UpdateMany(ctx context.Context, data []*domai
 		w         string
 		affected  int64
 	)
-	receiver.BeforeUpdateManyHook(ctx, data, where)
+	receiver.BeforeUpdateManyHook(ctx, data, &where)
 	if statement, err = templateutils.BlockMysql("{{.DomainName | ToLower}}dao.sql", {{.DomainName | ToLower}}daosql, "Update{{.DomainName}}s", nil); err != nil {
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
@@ -442,7 +442,7 @@ func (receiver {{.DomainName}}Dao) UpdateMany(ctx context.Context, data []*domai
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if affected, err = result.RowsAffected(); err == nil {
-		receiver.AfterUpdateManyHook(ctx, data, where, affected)
+		receiver.AfterUpdateManyHook(ctx, data, &where, affected)
 	}
 	return affected, err
 }
@@ -458,7 +458,7 @@ func (receiver {{.DomainName}}Dao) UpdateManyNoneZero(ctx context.Context, data 
 		w         string
 		affected  int64
 	)
-	receiver.BeforeUpdateManyHook(ctx, data, where)
+	receiver.BeforeUpdateManyHook(ctx, data, &where)
 	value := reflectutils.ValueOf(data).Interface()
 	if _, ok := value.(domain.{{.DomainName}}); !ok {
 		return 0, errors.New("underlying type of data should be domain.{{.DomainName}}")
@@ -478,7 +478,7 @@ func (receiver {{.DomainName}}Dao) UpdateManyNoneZero(ctx context.Context, data 
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if affected, err = result.RowsAffected(); err == nil {
-		receiver.AfterUpdateManyHook(ctx, data, where, affected)
+		receiver.AfterUpdateManyHook(ctx, data, &where, affected)
 	}
 	return affected, err
 }
@@ -498,13 +498,13 @@ func (receiver {{.DomainName}}Dao) Get(ctx context.Context, dest *domain.{{.Doma
 	return nil
 }
 
-func (receiver {{.DomainName}}Dao) SelectMany(ctx context.Context, dest *[]domain.{{.DomainName}}, where ...query.Where) error {
+func (receiver {{.DomainName}}Dao) SelectMany(ctx context.Context, dest *[]domain.{{.DomainName}}, where query.Where) error {
 	var (
 		statements []string
 		err       error
 		args       []interface{}
 	)
-	receiver.BeforeReadManyHook(ctx, nil, where...)
+	receiver.BeforeReadManyHook(ctx, nil, &where)
     statements = append(statements, "select * from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -521,14 +521,14 @@ func (receiver {{.DomainName}}Dao) SelectMany(ctx context.Context, dest *[]domai
 	return nil
 }
 
-func (receiver {{.DomainName}}Dao) CountMany(ctx context.Context, where ...query.Where) (int, error) {
+func (receiver {{.DomainName}}Dao) CountMany(ctx context.Context, where query.Where) (int, error) {
 	var (
 		statements []string
 		err       error
 		total     int
 		args       []interface{}
 	)
-	receiver.BeforeReadManyHook(ctx, nil, where...)
+	receiver.BeforeReadManyHook(ctx, nil, &where)
 	statements = append(statements, "select count(1) from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -553,13 +553,13 @@ type {{.DomainName}}PageRet struct {
 	HasNext  bool
 }
 
-func (receiver {{.DomainName}}Dao) PageMany(ctx context.Context, dest *{{.DomainName}}PageRet, page query.Page, where ...query.Where) error {
+func (receiver {{.DomainName}}Dao) PageMany(ctx context.Context, dest *{{.DomainName}}PageRet, page query.Page, where query.Where) error {
 	var (
 		statements []string
 		err       error
 		args       []interface{}
 	)
-	receiver.BeforeReadManyHook(ctx, &page, where...)
+	receiver.BeforeReadManyHook(ctx, &page, &where)
 	statements = append(statements, "select * from {{.TableName}}")
     if len(where) > 0 {
         statements = append(statements, "where")
@@ -613,14 +613,14 @@ func (receiver {{.DomainName}}Dao) DeleteManySoft(ctx context.Context, where que
 		args     []interface{}
 		affected int64
 	)
-	receiver.BeforeDeleteManyHook(ctx, nil, where)
+	receiver.BeforeDeleteManyHook(ctx, nil, &where)
 	w, args = where.Sql()
 	args = append([]interface{}{time.Now()}, args...)
 	if result, err = receiver.db.ExecContext(ctx, receiver.db.Rebind(fmt.Sprintf("update {{.TableName}} set delete_at=? where %s;", w)), args...); err != nil {
 		return 0, errors.Wrap(err, caller.NewCaller().String())
 	}
 	if affected, err = result.RowsAffected(); err == nil {
-		receiver.AfterDeleteManyHook(ctx, nil, where, affected)
+		receiver.AfterDeleteManyHook(ctx, nil, &where, affected)
 	}
 	return affected, err
 }`
