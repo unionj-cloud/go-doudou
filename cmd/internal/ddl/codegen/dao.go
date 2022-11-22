@@ -506,14 +506,12 @@ func (receiver {{.DomainName}}Dao) SelectMany(ctx context.Context, dest *[]domai
 	)
 	receiver.BeforeReadManyHook(ctx, nil, &where)
     statements = append(statements, "select * from {{.TableName}}")
-    if len(where) > 0 {
-        statements = append(statements, "where")
-        for _, item := range where {
-			q, wargs := item.Sql()
-			statements = append(statements, q)
-			args = append(args, wargs...)
-		}
-    }
+	if !where.IsEmpty() {
+		statements = append(statements, "where")
+		q, wargs := where.Sql()
+		statements = append(statements, q)
+		args = append(args, wargs...)
+	}
 	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
 	if err = receiver.db.SelectContext(ctx, dest, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return errors.Wrap(err, caller.NewCaller().String())
@@ -530,14 +528,12 @@ func (receiver {{.DomainName}}Dao) CountMany(ctx context.Context, where query.Wh
 	)
 	receiver.BeforeReadManyHook(ctx, nil, &where)
 	statements = append(statements, "select count(1) from {{.TableName}}")
-    if len(where) > 0 {
-        statements = append(statements, "where")
-        for _, item := range where {
-			q, wargs := item.Sql()
-			statements = append(statements, q)
-			args = append(args, wargs...)
-		}
-    }
+    if !where.IsEmpty() {
+		statements = append(statements, "where")
+		q, wargs := where.Sql()
+		statements = append(statements, q)
+		args = append(args, wargs...)
+	}
 	sqlStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
 	if err = receiver.db.GetContext(ctx, &total, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return 0, errors.Wrap(err, caller.NewCaller().String())
@@ -561,14 +557,12 @@ func (receiver {{.DomainName}}Dao) PageMany(ctx context.Context, dest *{{.Domain
 	)
 	receiver.BeforeReadManyHook(ctx, &page, &where)
 	statements = append(statements, "select * from {{.TableName}}")
-    if len(where) > 0 {
-        statements = append(statements, "where")
-        for _, item := range where {
-			q, wargs := item.Sql()
-			statements = append(statements, q)
-			args = append(args, wargs...)
-		}
-    }
+    if !where.IsEmpty() {
+		statements = append(statements, "where")
+		q, wargs := where.Sql()
+		statements = append(statements, q)
+		args = append(args, wargs...)
+	}
 	p, pargs := page.Sql()
 	statements = append(statements, p)
 	args = append(args, pargs...)
@@ -580,14 +574,12 @@ func (receiver {{.DomainName}}Dao) PageMany(ctx context.Context, dest *{{.Domain
 	args = nil
     statements = nil
 	statements = append(statements, "select count(1) from {{.TableName}}")
-    if len(where) > 0 {
-        statements = append(statements, "where")
-        for _, item := range where {
-			q, wargs := item.Sql()
-			statements = append(statements, q)
-			args = append(args, wargs...)
-		}
-    }
+    if !where.IsEmpty() {
+		statements = append(statements, "where")
+		q, wargs := where.Sql()
+		statements = append(statements, q)
+		args = append(args, wargs...)
+	}
 	sqlStr = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.Join(statements, " ")), "where"))
 	if err = receiver.db.GetContext(ctx, &dest.Total, receiver.db.Rebind(sqlStr), args...); err != nil {
 		return errors.Wrap(err, caller.NewCaller().String())
