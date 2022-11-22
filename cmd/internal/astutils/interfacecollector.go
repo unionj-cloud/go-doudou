@@ -109,9 +109,9 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 					cnode = name
 				}
 				if cmts, exists := ic.cmap[cnode]; exists {
-					for _, comment := range cmts {
-						field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
-						field.Annotations = append(field.Annotations, GetAnnotations(comment.Text())...)
+					for _, comment := range cmts[0].List {
+						field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+						field.Annotations = append(field.Annotations, GetAnnotations(comment.Text)...)
 					}
 				}
 				var validateTags []string
@@ -128,9 +128,9 @@ func (ic *InterfaceCollector) field2Params(list []*ast.Field) []FieldMeta {
 		var pComments []string
 		var annotations []Annotation
 		if cmts, exists := ic.cmap[param]; exists {
-			for _, comment := range cmts {
-				pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text(), "//")))
-				annotations = append(annotations, GetAnnotations(comment.Text())...)
+			for _, comment := range cmts[0].List {
+				pComments = append(pComments, strings.TrimSpace(strings.TrimPrefix(comment.Text, "//")))
+				annotations = append(annotations, GetAnnotations(comment.Text)...)
 			}
 		}
 		var pn string
