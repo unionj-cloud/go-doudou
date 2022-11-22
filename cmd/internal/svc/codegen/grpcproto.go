@@ -80,7 +80,7 @@ func toComment(comments []string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func GenGrpcProto(dir string, ic astutils.InterfaceCollector) (service v3.Service, protoFile string) {
+func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerator) (service v3.Service, protoFile string) {
 	var (
 		err       error
 		svcname   string
@@ -117,10 +117,10 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) (service v3.Servic
 	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-	service = v3.NewService(svcname, modName+"/transport/grpc")
+	service = p.NewService(svcname, modName+"/transport/grpc")
 	service.Comments = ic.Interfaces[0].Comments
 	for _, method := range ic.Interfaces[0].Methods {
-		service.Rpcs = append(service.Rpcs, v3.NewRpc(method))
+		service.Rpcs = append(service.Rpcs, p.NewRpc(method))
 	}
 	for k := range v3.ImportStore {
 		service.Imports = append(service.Imports, k)
@@ -151,7 +151,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector) (service v3.Servic
 	return
 }
 
-func messagesOf(vofile string) []v3.Message {
+func messagesOf(vofile string, p v3.ProtoGenerator) []v3.Message {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
 	if err != nil {
@@ -162,12 +162,12 @@ func messagesOf(vofile string) []v3.Message {
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Message
 	for _, item := range structs {
-		ret = append(ret, v3.NewMessage(item))
+		ret = append(ret, p.NewMessage(item))
 	}
 	return ret
 }
 
-func ParseVoGrpc(dir string) {
+func ParseVoGrpc(dir string, p v3.ProtoGenerator) {
 	var (
 		err        error
 		messages   []v3.Message
@@ -196,14 +196,14 @@ func ParseVoGrpc(dir string) {
 	}
 	for k, v := range allMethods {
 		if astutils.IsEnum(v) {
-			v3.EnumStore[k] = v3.NewEnum(astutils.EnumMeta{
+			v3.EnumStore[k] = p.NewEnum(astutils.EnumMeta{
 				Name:   k,
 				Values: allConsts[k],
 			})
 		}
 	}
 	for _, file := range files {
-		messages = append(messages, messagesOf(file)...)
+		messages = append(messages, messagesOf(file, p)...)
 	}
 	for _, item := range messages {
 		v3.MessageStore[item.Name] = item

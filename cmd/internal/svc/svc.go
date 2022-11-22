@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
+	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
@@ -44,7 +45,7 @@ type ISvc interface {
 	DoWatch()
 	Run(watch bool)
 	Upgrade(version string)
-	Grpc()
+	Grpc(p v3.ProtoGenerator)
 }
 
 // Svc wraps all config properties for commands
@@ -467,7 +468,7 @@ func (receiver *Svc) Upgrade(version string) {
 	}
 }
 
-func (receiver *Svc) Grpc() {
+func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	dir := receiver.dir
 	ValidateDataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
@@ -476,8 +477,8 @@ func (receiver *Svc) Grpc() {
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
 
-	codegen.ParseVoGrpc(dir)
-	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic)
+	codegen.ParseVoGrpc(dir, p)
+	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 	if err := receiver.runner.Run("protoc", "--proto_path=.",
 		"--go_out=.",

@@ -11,9 +11,25 @@ import (
 	"time"
 )
 
-// service SearchService {
-//   rpc Search(SearchRequest) returns (SearchResponse);
-// }
+type ProtoGenerator struct {
+	fieldNamingFunc func(string) string
+}
+
+type ProtoGeneratorOption func(*ProtoGenerator)
+
+func WithFieldNamingFunc(fn func(string) string) ProtoGeneratorOption {
+	return func(p *ProtoGenerator) {
+		p.fieldNamingFunc = fn
+	}
+}
+
+func NewProtoGenerator(options ...ProtoGeneratorOption) ProtoGenerator {
+	var p ProtoGenerator
+	for _, opt := range options {
+		opt(&p)
+	}
+	return p
+}
 
 const Syntax = "proto3"
 
@@ -32,7 +48,7 @@ type Service struct {
 	Imports  []string
 }
 
-func NewService(name, goPackage string) Service {
+func (receiver ProtoGenerator) NewService(name, goPackage string) Service {
 	return Service{
 		Name:      strcase.ToCamel(name) + "Service",
 		Package:   strcase.ToSnake(name),
@@ -59,9 +75,9 @@ type Rpc struct {
 	StreamType StreamType
 }
 
-func NewRpc(method astutils.MethodMeta) Rpc {
+func (receiver ProtoGenerator) NewRpc(method astutils.MethodMeta) Rpc {
 	rpcName := strcase.ToCamel(method.Name) + "Rpc"
-	rpcRequest := newRequest(rpcName, method.Params)
+	rpcRequest := receiver.newRequest(rpcName, method.Params)
 	if reflect.DeepEqual(rpcRequest, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
@@ -70,7 +86,7 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 			MessageStore[rpcRequest.Name] = rpcRequest
 		}
 	}
-	rpcResponse := newResponse(rpcName, method.Results)
+	rpcResponse := receiver.newResponse(rpcName, method.Results)
 	if reflect.DeepEqual(rpcResponse, Empty) {
 		ImportStore["google/protobuf/empty.proto"] = struct{}{}
 	}
@@ -96,7 +112,7 @@ func NewRpc(method astutils.MethodMeta) Rpc {
 	}
 }
 
-func newRequest(rpcName string, params []astutils.FieldMeta) Message {
+func (receiver ProtoGenerator) newRequest(rpcName string, params []astutils.FieldMeta) Message {
 	if len(params) == 0 {
 		return Empty
 	}
@@ -107,7 +123,7 @@ func newRequest(rpcName string, params []astutils.FieldMeta) Message {
 		params = params[1:]
 	}
 	if len(params) == 1 {
-		if m, ok := MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
+		if m, ok := receiver.MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
 			if strings.HasPrefix(params[0].Name, "stream") {
 				m.Name = "stream " + m.Name
 			}
@@ -116,7 +132,7 @@ func newRequest(rpcName string, params []astutils.FieldMeta) Message {
 	}
 	var fields []Field
 	for i, field := range params {
-		fields = append(fields, newField(field, i+1))
+		fields = append(fields, receiver.newField(field, i+1))
 	}
 	return Message{
 		Name:       strcase.ToCamel(rpcName + "Request"),
@@ -125,7 +141,7 @@ func newRequest(rpcName string, params []astutils.FieldMeta) Message {
 	}
 }
 
-func newResponse(rpcName string, params []astutils.FieldMeta) Message {
+func (receiver ProtoGenerator) newResponse(rpcName string, params []astutils.FieldMeta) Message {
 	if len(params) == 0 {
 		return Empty
 	}
@@ -136,7 +152,7 @@ func newResponse(rpcName string, params []astutils.FieldMeta) Message {
 		params = params[:len(params)-1]
 	}
 	if len(params) == 1 {
-		if m, ok := MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
+		if m, ok := receiver.MessageOf(params[0].Type).(Message); ok && m.IsTopLevel {
 			if strings.HasPrefix(params[0].Name, "stream") {
 				m.Name = "stream " + m.Name
 			}
@@ -145,7 +161,7 @@ func newResponse(rpcName string, params []astutils.FieldMeta) Message {
 	}
 	var fields []Field
 	for i, field := range params {
-		fields = append(fields, newField(field, i+1))
+		fields = append(fields, receiver.newField(field, i+1))
 	}
 	return Message{
 		Name:       strcase.ToCamel(rpcName + "Response"),
