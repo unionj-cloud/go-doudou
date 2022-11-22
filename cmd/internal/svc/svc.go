@@ -11,7 +11,6 @@ import (
 	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"os/exec"
@@ -36,7 +35,7 @@ type ISvc interface {
 	GetDir() string
 	Http()
 	Init()
-	Push(repo string)
+	Push(cfg PushConfig)
 	Deploy(k8sfile string)
 	Shutdown(k8sfile string)
 	GenClient()
@@ -80,9 +79,6 @@ type Svc struct {
 
 	// ModName is go module name
 	ModName string
-
-	// ImagePrefix is image name prefix string used for building and pushing docker image
-	ImagePrefix string
 
 	// PostmanCollectionPath is postman collection v2.1 compatible file disk path
 	PostmanCollectionPath string
@@ -230,12 +226,6 @@ func WithModName(modName string) SvcOption {
 	}
 }
 
-func WithImagePrefix(imagePrefix string) SvcOption {
-	return func(svc *Svc) {
-		svc.ImagePrefix = imagePrefix
-	}
-}
-
 // NewSvc new Svc instance
 func NewSvc(dir string, opts ...SvcOption) ISvc {
 	ret := Svc{
@@ -249,13 +239,22 @@ func NewSvc(dir string, opts ...SvcOption) ISvc {
 	return &ret
 }
 
+type PushConfig struct {
+	Repo   string
+	Prefix string
+	Ver    string
+}
+
 // Push executes go mod vendor command first, then build docker image and push to remote image repository
 // It also generates deployment kind and statefulset kind yaml files for kubernetes deploy, if these files already exist,
 // it will only change the image version in each file, so you can edit these files manually to fit your need.
-func (receiver *Svc) Push(repo string) {
+func (receiver *Svc) Push(cfg PushConfig) {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(receiver.dir, "svc.go"), astutils.ExprString)
 	svcname := strings.ToLower(ic.Interfaces[0].Name)
-	imageName := fmt.Sprintf("%s%s", receiver.ImagePrefix, svcname)
+	imageName := fmt.Sprintf("%s%s", cfg.Prefix, svcname)
+	if stringutils.IsNotEmpty(cfg.Ver) {
+		imageName += ":" + cfg.Ver
+	}
 	loginUser, _ := user.Current()
 	var err error
 	if loginUser != nil {
@@ -270,23 +269,22 @@ func (receiver *Svc) Push(repo string) {
 		}
 	}
 
-	if stringutils.IsEmpty(repo) {
-		logrus.Warnln("no private docker image repository address provided")
-		return
+	if stringutils.IsNotEmpty(cfg.Repo) {
+		remoteImageName := cfg.Repo + "/" + imageName
+		err = receiver.runner.Run("docker", "tag", imageName, remoteImageName)
+		if err != nil {
+			panic(err)
+		}
+		err = receiver.runner.Run("docker", "push", remoteImageName)
+		if err != nil {
+			panic(err)
+		}
+		logrus.Infof("image %s has been pushed successfully\n", remoteImageName)
+		imageName = remoteImageName
 	}
-	image := fmt.Sprintf("%s/%s:%s", repo, imageName, fmt.Sprintf("v%s", time.Now().Local().Format(constants.FORMAT11)))
-	err = receiver.runner.Run("docker", "tag", imageName, image)
-	if err != nil {
-		panic(err)
-	}
-	err = receiver.runner.Run("docker", "push", image)
-	if err != nil {
-		panic(err)
-	}
-	logrus.Infof("image %s has been pushed successfully\n", image)
 
-	codegen.GenK8sDeployment(receiver.dir, svcname, image)
-	codegen.GenK8sStatefulset(receiver.dir, svcname, image)
+	codegen.GenK8sDeployment(receiver.dir, svcname, imageName)
+	codegen.GenK8sStatefulset(receiver.dir, svcname, imageName)
 	logrus.Infof("k8s yaml has been created/updated successfully. execute command 'go-doudou svc deploy' to deploy service %s to k8s cluster\n", svcname)
 }
 
