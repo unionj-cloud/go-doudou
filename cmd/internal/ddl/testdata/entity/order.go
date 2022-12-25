@@ -1,4 +1,4 @@
-package domain
+package entity
 
 //dd:table
 type Order struct {

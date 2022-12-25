@@ -44,9 +44,9 @@ func TestGetImportPath(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				file: filepath.Join(dir, "/domain"),
+				file: filepath.Join(dir, "/entity"),
 			},
-			want: "importpath/domain",
+			want: "importpath/entity",
 		},
 	}
 	for _, tt := range tests {

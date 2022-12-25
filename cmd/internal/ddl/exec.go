@@ -32,7 +32,7 @@ type Ddl struct {
 
 // Exec executes the logic for ddl command
 // if Reverse is true, it will generate code from database tables,
-// otherwise it will update database tables from structs defined in domain pkg
+// otherwise it will update database tables from structs defined in entity pkg
 func (d Ddl) Exec() {
 	var db *sqlx.DB
 	var err error
@@ -69,7 +69,7 @@ func (d Ddl) Exec() {
 		for _, item := range tables {
 			dfile := filepath.Join(d.Dir, strings.ToLower(item.Meta.Name)+".go")
 			if _, err = os.Stat(dfile); os.IsNotExist(err) {
-				if err = codegen.GenDomainGo(d.Dir, item.Meta); err != nil {
+				if err = codegen.GenEntityGo(d.Dir, item.Meta); err != nil {
 					panic(errors.Wrap(err, caller.NewCaller().String()))
 				}
 			} else {
@@ -86,6 +86,9 @@ func (d Ddl) Exec() {
 func genDao(d Ddl, tables []table.Table) {
 	var err error
 	for _, t := range tables {
+		if err = codegen.GenIDaoGo(d.Dir, t, d.Df); err != nil {
+			panic(errors.Wrap(err, caller.NewCaller().String()))
+		}
 		if err = codegen.GenDaoGo(d.Dir, t, d.Df); err != nil {
 			panic(errors.Wrap(err, caller.NewCaller().String()))
 		}

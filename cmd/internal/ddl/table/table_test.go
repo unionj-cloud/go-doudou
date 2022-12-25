@@ -19,7 +19,7 @@ import (
 )
 
 func ExampleNewTableFromStruct() {
-	testDir := pathutils.Abs("../testdata/domain")
+	testDir := pathutils.Abs("../testdata/entity")
 	var files []string
 	var err error
 	err = filepath.Walk(testDir, astutils.Visit(&files))

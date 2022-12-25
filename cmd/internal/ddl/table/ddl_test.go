@@ -412,7 +412,7 @@ func ExampleStruct2Table() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain", "ddl_", []string{"ddl_user", "ddl_book"}, db, "test")
+	_ = Struct2Table(context.Background(), "../testdata/entity", "ddl_", []string{"ddl_user", "ddl_book"}, db, "test")
 	// Output:
 	//CREATE TABLE `ddl_order` (
 	//`id` INT NOT NULL AUTO_INCREMENT,
@@ -471,7 +471,7 @@ func ExampleStruct2TableDrapAddFk() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain2", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	_ = Struct2Table(context.Background(), "../testdata/entity2", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
 	// Output:
 	//ALTER TABLE `ddl_book`
 	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
@@ -543,7 +543,7 @@ func ExampleStruct2TableShouldDropDropFkAddFk() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain3", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	_ = Struct2Table(context.Background(), "../testdata/entity3", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
 	// Output:
 	//ALTER TABLE `ddl_book`
 	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
@@ -616,7 +616,7 @@ func ExampleStruct2TableFkContinue() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain4", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	_ = Struct2Table(context.Background(), "../testdata/entity4", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
 	// Output:
 	//ALTER TABLE `ddl_book`
 	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;
@@ -689,7 +689,7 @@ func ExampleStruct2TableDropAddIndex_name_phone_idx() {
 	defer terminator()
 	defer db.Close()
 
-	_ = Struct2Table(context.Background(), "../testdata/domain4", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
+	_ = Struct2Table(context.Background(), "../testdata/entity4", "ddl_", []string{"ddl_user", "ddl_book", "ddl_publisher"}, db, "test")
 	// Output:
 	//ALTER TABLE `ddl_book`
 	//CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT;

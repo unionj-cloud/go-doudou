@@ -21,7 +21,7 @@ var daosqltmpl = `{{` + "`" + `{{` + "`" + `}}define "NoneZeroSet"{{` + "`" + `}
 	{{- end}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Insert{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Insert{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 INSERT INTO ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -33,7 +33,7 @@ VALUES ({{- range $i, $co := .InsertColumns}}
 	   {{- end }})
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Update{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Update{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 UPDATE ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 SET
 	{{- range $i, $co := .UpdateColumns}}
@@ -44,7 +44,7 @@ WHERE
     ` + "`" + `{{.Pk.Name}}` + "`" + ` =:{{.Pk.Name}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Update{{.DomainName}}NoneZero"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Update{{.EntityName}}NoneZero"{{` + "`" + `}}` + "`" + `}}
 UPDATE ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 SET
     {{` + "`" + `{{` + "`" + `}}Eval "NoneZeroSet" . | TrimSuffix ","{{` + "`" + `}}` + "`" + `}}
@@ -52,7 +52,7 @@ WHERE
     ` + "`" + `{{.Pk.Name}}` + "`" + `=:{{.Pk.Name}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Upsert{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Upsert{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 INSERT INTO ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -69,7 +69,7 @@ UPDATE
 		{{- end }}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Upsert{{.DomainName}}NoneZero"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Upsert{{.EntityName}}NoneZero"{{` + "`" + `}}` + "`" + `}}
 INSERT INTO ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -83,13 +83,13 @@ UPDATE
 		{{` + "`" + `{{` + "`" + `}}Eval "NoneZeroSet" . | TrimSuffix ","{{` + "`" + `}}` + "`" + `}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Get{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Get{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 select *
 from ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 where ` + "`" + `{{.Pk.Name}}` + "`" + ` = ?
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Update{{.DomainName}}s"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Update{{.EntityName}}s"{{` + "`" + `}}` + "`" + `}}
 UPDATE ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 SET
 	{{- range $i, $co := .UpdateColumns}}
@@ -98,13 +98,13 @@ SET
 	{{- end }}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "Update{{.DomainName}}sNoneZero"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "Update{{.EntityName}}sNoneZero"{{` + "`" + `}}` + "`" + `}}
 UPDATE ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 SET
     {{` + "`" + `{{` + "`" + `}}Eval "NoneZeroSet" . | TrimSuffix ","{{` + "`" + `}}` + "`" + `}}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "InsertIgnore{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "InsertIgnore{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 INSERT IGNORE INTO ` + "`" + `{{.Schema}}` + "`" + `.` + "`" + `{{.TableName}}` + "`" + `
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -116,7 +116,7 @@ VALUES ({{- range $i, $co := .InsertColumns}}
 	   {{- end }})
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "UpdateClause{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "UpdateClause{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 ON DUPLICATE KEY
 UPDATE
 		{{- range $i, $co := .UpdateColumns}}
@@ -125,7 +125,7 @@ UPDATE
 		{{- end }}
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}
 
-{{` + "`" + `{{` + "`" + `}}define "UpdateClauseSelect{{.DomainName}}"{{` + "`" + `}}` + "`" + `}}
+{{` + "`" + `{{` + "`" + `}}define "UpdateClauseSelect{{.EntityName}}"{{` + "`" + `}}` + "`" + `}}
 ON DUPLICATE KEY
 UPDATE
 		{{` + "`" + `{{` + "`" + `}}- range $i, $co := .Columns{{` + "`" + `}}` + "`" + `}}
@@ -135,7 +135,7 @@ UPDATE
 {{` + "`" + `{{` + "`" + `}}end{{` + "`" + `}}` + "`" + `}}`
 
 // GenDaoSQL generates sql statements used by dao layer
-func GenDaoSQL(domainpath string, t table.Table, folder ...string) error {
+func GenDaoSQL(entityPath string, t table.Table, folder ...string) error {
 	var (
 		err      error
 		daopath  string
@@ -151,7 +151,7 @@ func GenDaoSQL(domainpath string, t table.Table, folder ...string) error {
 	if len(folder) > 0 {
 		df = folder[0]
 	}
-	daopath = filepath.Join(filepath.Dir(domainpath), df)
+	daopath = filepath.Join(filepath.Dir(entityPath), df)
 	_ = os.MkdirAll(daopath, os.ModePerm)
 	daofile := filepath.Join(daopath, strings.ToLower(t.Meta.Name)+"daosql.go")
 	if _, err = os.Stat(daofile); os.IsNotExist(err) {
@@ -181,14 +181,14 @@ func GenDaoSQL(domainpath string, t table.Table, folder ...string) error {
 		_ = tpl.Execute(&sqlBuf, struct {
 			Schema        string
 			TableName     string
-			DomainName    string
+			EntityName    string
 			InsertColumns []table.Column
 			UpdateColumns []table.Column
 			Pk            table.Column
 		}{
 			Schema:        os.Getenv("DB_SCHEMA"),
 			TableName:     t.Name,
-			DomainName:    t.Meta.Name,
+			EntityName:    t.Meta.Name,
 			InsertColumns: iColumns,
 			UpdateColumns: uColumns,
 			Pk:            pkColumn,
