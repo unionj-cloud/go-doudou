@@ -214,7 +214,7 @@ func Table2struct(ctx context.Context, pre, schema string, existTables []string,
 			cols = append(cols, col)
 		}
 
-		domain := astutils.StructMeta{
+		entity := astutils.StructMeta{
 			Name:   strcase.ToCamel(strings.TrimPrefix(t, pre)),
 			Fields: fields,
 		}
@@ -232,7 +232,7 @@ func Table2struct(ctx context.Context, pre, schema string, existTables []string,
 			Columns: cols,
 			Pk:      pkColumn.Name,
 			Indexes: indexes,
-			Meta:    domain,
+			Meta:    entity,
 			Fks:     fks,
 		})
 	}

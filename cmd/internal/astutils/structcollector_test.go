@@ -237,8 +237,8 @@ func TestStructCollector_Alias(t *testing.T) {
 	}
 }
 
-func TestStructCollector_Domain(t *testing.T) {
-	file := pathutils.Abs("testdata/domain/purchase.go")
+func TestStructCollector_Entity(t *testing.T) {
+	file := pathutils.Abs("testdata/entity/purchase.go")
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {

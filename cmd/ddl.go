@@ -18,7 +18,7 @@ var pre string
 var df string
 var env string
 
-// ddlCmd generates domain and dao layer source code from database tables and update tables from domain code
+// ddlCmd generates entity and dao layer source code from database tables and update tables from entity code
 var ddlCmd = &cobra.Command{
 	Use:   "ddl",
 	Short: "migration tool between database table structure and golang struct",
@@ -31,7 +31,7 @@ var ddlCmd = &cobra.Command{
 		if err != nil {
 			logrus.Panicln("Error processing env", err)
 		}
-		if dir, err = pathutils.FixPath(dir, "domain"); err != nil {
+		if dir, err = pathutils.FixPath(dir, "entity"); err != nil {
 			logrus.Panicln(err)
 		}
 		d := ddl.Ddl{dir, reverse, dao, pre, df, conf}
@@ -50,10 +50,10 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	ddlCmd.Flags().StringVar(&dir, "domain", "domain", "Path of domain folder.")
+	ddlCmd.Flags().StringVar(&dir, "entity", "entity", "Path of entity folder.")
 	ddlCmd.Flags().StringVar(&pre, "pre", "", "Table name prefix. e.g.: prefix biz_ for biz_product.")
 	ddlCmd.Flags().StringVar(&df, "df", "dao", "Name of dao folder.")
 	ddlCmd.Flags().StringVar(&env, "env", "dev", "Environment name such as dev, uat, test, prod, default is dev")
-	ddlCmd.Flags().BoolVarP(&reverse, "reverse", "r", false, "If true, generate domain code from database. If false, update or create database tables from domain code.")
+	ddlCmd.Flags().BoolVarP(&reverse, "reverse", "r", false, "If true, generate entity code from database. If false, update or create database tables from entity code.")
 	ddlCmd.Flags().BoolVarP(&dao, "dao", "d", false, "If true, generate dao code.")
 }
