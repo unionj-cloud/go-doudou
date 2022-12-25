@@ -248,7 +248,8 @@ type FieldMeta struct {
 	Annotations []Annotation
 	// ValidateTag based on https://github.com/go-playground/validator
 	// please refer to its documentation https://pkg.go.dev/github.com/go-playground/validator/v10
-	ValidateTag string
+	ValidateTag    string
+	IsPathVariable bool
 }
 
 // StructMeta wraps struct info
@@ -380,7 +381,8 @@ type MethodMeta struct {
 	// when generate client code from openapi3 spec json file, QueryParams is parameters in url as query string.
 	QueryParams *FieldMeta
 	// Annotations of the method
-	Annotations []Annotation
+	Annotations     []Annotation
+	HasPathVariable bool
 }
 
 const methodTmpl = `func {{ if .Recv }}(receiver {{.Recv}}){{ end }} {{.Name}}({{- range $i, $p := .Params}}

@@ -79,7 +79,13 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		}
 		_req.SetContext(ctx)
 		{{- range $p := $m.Params }}
-		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
+		{{- if $p.IsPathVariable }}
+		{{- if IsEnum $p }}
+		_req.SetPathParam("{{$p.Name}}", {{$p.Name}}.StringGetter())
+		{{- else }}
+		_req.SetPathParam("{{$p.Name}}", fmt.Sprintf("%v", {{$p.Name}}))
+		{{- end }}
+		{{- else if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if contains $p.Type "["}}
 		for _, _fh := range {{$p.Name}} {
 			_f, _err := _fh.Open()
@@ -206,16 +212,15 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 
 		{{- if eq ($m.Name | httpMethod) "GET" }}
-		_resp, _err = _req.SetQueryParamsFromValues(_urlValues).
-			Get(_path)
+		_req.SetQueryParamsFromValues(_urlValues)
 		{{- else }}
 		if _req.Body != nil {
 			_req.SetQueryParamsFromValues(_urlValues)
 		} else {
 			_req.SetFormDataFromValues(_urlValues)
 		}
-		_resp, _err = _req.{{$m.Name | restyMethod}}(_path)
 		{{- end }}
+		_resp, _err = _req.{{$m.Name | restyMethod}}(_path)
 		if _err != nil {
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
@@ -387,7 +392,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
 	funcMap["httpMethod"] = httpMethod
-	funcMap["pattern"] = pattern
+	funcMap["pattern"] = apiPattern
 	funcMap["lower"] = strings.ToLower
 	funcMap["contains"] = strings.Contains
 	funcMap["isBuiltin"] = v3helper.IsBuiltin
