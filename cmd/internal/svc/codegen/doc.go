@@ -94,7 +94,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	} else {
 		// Simple parameters such as v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64 and corresponding Array type
 		// will be put into query parameter as url search params no matter what http method is.
-		// Complex parameters such as structs in vo package, map and corresponding slice/array type
+		// Complex parameters such as structs in vo and dto package, map and corresponding slice/array type
 		// will be put into request body as json content type.
 		// File and file array parameter will be put into request body as multipart/form-data content type.
 		upload := false
@@ -307,7 +307,7 @@ func init() {
 `
 
 // GenDoc generates OpenAPI 3.0 description json file.
-// Not support alias type in vo file.
+// Not support alias type in vo or dto file.
 func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
 		err     error
@@ -378,14 +378,17 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	astutils.FixImport([]byte(source), gofile)
 }
 
-func ParseVo(dir string) {
+func ParseDto(dir string, dtoDir string) {
 	var (
 		err        error
 		vos        []v3.Schema
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
 	)
-	vodir := filepath.Join(dir, "vo")
+	vodir := filepath.Join(dir, dtoDir)
+	if _, err = os.Stat(vodir); os.IsNotExist(err) {
+		return
+	}
 	var files []string
 	err = filepath.Walk(vodir, astutils.Visit(&files))
 	if err != nil {

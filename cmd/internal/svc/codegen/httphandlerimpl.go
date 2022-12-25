@@ -377,6 +377,7 @@ var importTmpl = `
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 	"github.com/pkg/errors"
 `
 
@@ -483,6 +484,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 		ServicePackage string
 		ServiceAlias   string
 		VoPackage      string
+		DtoPackage     string
 		Meta           astutils.InterfaceMeta
 		Omitempty      bool
 		Version        string
@@ -490,6 +492,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
 		VoPackage:      modName + "/vo",
+		DtoPackage:     modName + "/dto",
 		Meta:           meta,
 		Omitempty:      omitempty,
 		Version:        version.Release,
@@ -509,10 +512,12 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 		ServicePackage string
 		ServiceAlias   string
 		VoPackage      string
+		DtoPackage     string
 	}{
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
 		VoPackage:      modName + "/vo",
+		DtoPackage:     modName + "/dto",
 	}); err != nil {
 		panic(err)
 	}

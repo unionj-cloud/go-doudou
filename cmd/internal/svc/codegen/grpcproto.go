@@ -167,14 +167,17 @@ func messagesOf(vofile string, p v3.ProtoGenerator) []v3.Message {
 	return ret
 }
 
-func ParseVoGrpc(dir string, p v3.ProtoGenerator) {
+func ParseDtoGrpc(dir string, p v3.ProtoGenerator, dtoDir string) {
 	var (
 		err        error
 		messages   []v3.Message
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
 	)
-	vodir := filepath.Join(dir, "vo")
+	vodir := filepath.Join(dir, dtoDir)
+	if _, err = os.Stat(vodir); os.IsNotExist(err) {
+		return
+	}
 	var files []string
 	err = filepath.Walk(vodir, astutils.Visit(&files))
 	if err != nil {
