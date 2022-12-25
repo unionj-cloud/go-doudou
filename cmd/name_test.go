@@ -17,8 +17,7 @@ func TestNameCmd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// go-doudou name -f /Users/wubin1989/workspace/chengdutreeyee/team3-cloud-analyse/vo/vo.go -o
-	_, _, err = ExecuteCommandC(cmd.GetRootCmd(), []string{"name", "-f", filepath.Join(dir, "vo", "vo.go"), "-o"}...)
+	_, _, err = ExecuteCommandC(cmd.GetRootCmd(), []string{"name", "-f", filepath.Join(dir, "dto", "dto.go"), "-o"}...)
 	if err != nil {
 		t.Fatal(err)
 	}

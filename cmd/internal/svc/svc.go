@@ -91,9 +91,19 @@ func ValidateDataType(dir string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), codegen.ExprStringP)
 	vodir := filepath.Join(dir, "vo")
 	var files []string
-	_ = filepath.Walk(vodir, astutils.Visit(&files))
-	for _, file := range files {
-		astutils.BuildStructCollector(file, codegen.ExprStringP)
+	if _, err := os.Stat(vodir); !os.IsNotExist(err) {
+		_ = filepath.Walk(vodir, astutils.Visit(&files))
+		for _, file := range files {
+			astutils.BuildStructCollector(file, codegen.ExprStringP)
+		}
+	}
+	dtodir := filepath.Join(dir, "dto")
+	if _, err := os.Stat(dtodir); !os.IsNotExist(err) {
+		files = nil
+		_ = filepath.Walk(dtodir, astutils.Visit(&files))
+		for _, file := range files {
+			astutils.BuildStructCollector(file, codegen.ExprStringP)
+		}
 	}
 }
 
@@ -113,7 +123,8 @@ func (receiver *Svc) GetDir() string {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
-	codegen.ParseVo(dir)
+	codegen.ParseDto(dir, "vo")
+	codegen.ParseDto(dir, "dto")
 	ValidateDataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
@@ -153,7 +164,8 @@ func ValidateRestApi(dir string, ic astutils.InterfaceCollector) {
 		panic(errors.New("no service interface found"))
 	}
 	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
-		codegen.ParseVo(dir)
+		codegen.ParseDto(dir, "vo")
+		codegen.ParseDto(dir, "dto")
 	}
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)
@@ -477,7 +489,8 @@ func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	codegen.GenConfig(dir)
 	codegen.GenDb(dir)
 
-	codegen.ParseVoGrpc(dir, p)
+	codegen.ParseDtoGrpc(dir, p, "vo")
+	codegen.ParseDtoGrpc(dir, p, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 	if err := receiver.runner.Run("protoc", "--proto_path=.",

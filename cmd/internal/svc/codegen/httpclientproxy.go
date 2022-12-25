@@ -35,6 +35,7 @@ var cpimportTmpl = `
 	"os"
 	"time"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 `
 
 var appendTmpl = `
@@ -239,6 +240,7 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 	}
 	if err = tpl.Execute(&buf, struct {
 		VoPackage      string
+		DtoPackage     string
 		Meta           astutils.InterfaceMeta
 		ServicePackage string
 		ServiceAlias   string
@@ -246,6 +248,7 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		Version        string
 	}{
 		VoPackage:      modName + "/vo",
+		DtoPackage:     modName + "/dto",
 		Meta:           meta,
 		ServicePackage: modName,
 		ServiceAlias:   ic.Package.Name,
@@ -267,8 +270,10 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
 		VoPackage     string
+		DtoPackage    string
 	}{
 		VoPackage:     modName + "/vo",
+		DtoPackage:    modName + "/dto",
 		ConfigPackage: modName + "/config",
 	}); err != nil {
 		panic(err)

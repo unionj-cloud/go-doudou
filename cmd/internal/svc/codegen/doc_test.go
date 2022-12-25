@@ -108,9 +108,9 @@ func Test_schemasOf(t *testing.T) {
 }
 
 func TestParseVo(t *testing.T) {
-	Convey("Test ParseVo", t, func() {
+	Convey("Test ParseDto", t, func() {
 		So(func() {
-			ParseVo(testDir)
+			ParseDto(testDir, "vo")
 		}, ShouldNotPanic)
 		So(len(v3helper.Schemas), ShouldNotBeZeroValue)
 	})

@@ -23,6 +23,7 @@ import (
 	"context"
 	"github.com/go-resty/resty/v2"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
 )
@@ -93,13 +94,15 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		VoPackage string
-		Meta      astutils.InterfaceMeta
-		Version   string
+		VoPackage  string
+		DtoPackage string
+		Meta       astutils.InterfaceMeta
+		Version    string
 	}{
-		VoPackage: modName + "/vo",
-		Meta:      meta,
-		Version:   version.Release,
+		VoPackage:  modName + "/vo",
+		DtoPackage: modName + "/dto",
+		Meta:       meta,
+		Version:    version.Release,
 	}); err != nil {
 		panic(err)
 	}

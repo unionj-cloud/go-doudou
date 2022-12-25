@@ -41,6 +41,7 @@ import (
 	"path/filepath"
 	"strings"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 )
 
 type {{.Meta.Name}}Client struct {
@@ -403,12 +404,14 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
 		VoPackage            string
+		DtoPackage           string
 		Meta                 astutils.InterfaceMeta
 		Env                  string
 		RoutePatternStrategy int
 		Version              string
 	}{
 		VoPackage:            modName + "/vo",
+		DtoPackage:           modName + "/dto",
 		Meta:                 meta,
 		Env:                  env,
 		RoutePatternStrategy: routePatternStrategy,

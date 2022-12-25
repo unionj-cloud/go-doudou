@@ -10,11 +10,11 @@ import (
 
 // ExprStringP Support all built-in type referenced from https://golang.org/pkg/builtin/
 // Support map with string key
-// Support structs of vo package
+// Support structs of vo and dto package
 // Support slice of types mentioned above
 // Not support alias type (all alias type fields of a struct will be outputted as v3.Any in openapi 3.0 json document)
 // Support anonymous struct type
-// as struct field type in vo package
+// as struct field type in vo and dto package
 // or as parameter type in method signature in svc.go file besides context.Context, multipart.FileHeader, v3.FileModel, os.File
 // when go-doudou command line flag doc is true
 func ExprStringP(expr ast.Expr) string {
@@ -36,7 +36,7 @@ func ExprStringP(expr ast.Expr) string {
 		return _expr.Value
 	case *ast.MapType:
 		if ExprStringP(_expr.Key) != "string" {
-			panic("support string map key only in svc.go file and vo package")
+			panic("support string map key only in svc.go file and vo, dto package")
 		}
 		return "map[string]" + ExprStringP(_expr.Value)
 	case *ast.StructType:
@@ -49,22 +49,23 @@ func ExprStringP(expr ast.Expr) string {
 		}
 		panic(fmt.Sprintf("invalid ellipsis expression: %+v\n", expr))
 	case *ast.FuncType:
-		panic("not support function as struct field type in vo package and as parameter in method signature in svc.go file")
+		panic("not support function as struct field type in vo and dto package and as parameter in method signature in svc.go file")
 	case *ast.ChanType:
-		panic("not support channel as struct field type in vo package and as parameter in method signature in svc.go file")
+		panic("not support channel as struct field type in vo and dto package and as parameter in method signature in svc.go file")
 	default:
-		panic(fmt.Errorf("not support expression as struct field type in vo package and in method signature in svc.go file: %+v", expr))
+		panic(fmt.Errorf("not support expression as struct field type in vo and dto package and in method signature in svc.go file: %+v", expr))
 	}
 }
 
 func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	result := ExprStringP(expr.X) + "." + expr.Sel.Name
 	if !strings.HasPrefix(result, "vo.") &&
+		!strings.HasPrefix(result, "dto.") &&
 		result != "context.Context" &&
 		result != "v3.FileModel" &&
 		result != "multipart.FileHeader" &&
 		result != "os.File" {
-		panic(fmt.Errorf("not support %s in svc.go file and vo package", result))
+		panic(fmt.Errorf("not support %s in svc.go file and vo, dto package", result))
 	}
 	return result
 }

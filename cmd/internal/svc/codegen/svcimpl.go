@@ -23,6 +23,7 @@ var svcimportTmpl = `
 	"context"
 	"{{.ConfigPackage}}"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 	"github.com/jmoiron/sqlx"
 	"github.com/brianvoe/gofakeit/v6"
 `
@@ -74,6 +75,7 @@ var svcimportTmplGrpc = `
 	"context"
 	"{{.ConfigPackage}}"
 	"{{.VoPackage}}"
+	"{{.DtoPackage}}"
 	pb "{{.PbPackage}}"
 `
 
@@ -217,11 +219,13 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	if err = tpl.Execute(&buf, struct {
 		ConfigPackage string
 		VoPackage     string
+		DtoPackage    string
 		SvcPackage    string
 		Meta          astutils.InterfaceMeta
 		Version       string
 	}{
 		VoPackage:     modName + "/vo",
+		DtoPackage:    modName + "/dto",
 		ConfigPackage: modName + "/config",
 		SvcPackage:    ic.Package.Name,
 		Meta:          meta,
@@ -242,8 +246,10 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
 		VoPackage     string
+		DtoPackage    string
 	}{
 		VoPackage:     modName + "/vo",
+		DtoPackage:    modName + "/dto",
 		ConfigPackage: modName + "/config",
 	}); err != nil {
 		panic(err)
@@ -335,6 +341,7 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if err = tpl.Execute(&buf, struct {
 		ConfigPackage string
 		VoPackage     string
+		DtoPackage    string
 		PbPackage     string
 		SvcPackage    string
 		Meta          astutils.InterfaceMeta
@@ -342,6 +349,7 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		Version       string
 	}{
 		VoPackage:     modName + "/vo",
+		DtoPackage:    modName + "/dto",
 		ConfigPackage: modName + "/config",
 		PbPackage:     modName + "/transport/grpc",
 		SvcPackage:    ic.Package.Name,
@@ -364,9 +372,11 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
 		VoPackage     string
+		DtoPackage    string
 		PbPackage     string
 	}{
 		VoPackage:     modName + "/vo",
+		DtoPackage:    modName + "/dto",
 		ConfigPackage: modName + "/config",
 		PbPackage:     modName + "/transport/grpc",
 	}); err != nil {
