@@ -10,6 +10,7 @@ import (
 	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
@@ -120,13 +121,17 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				v3helper.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
 				required := !v3helper.IsOptional(item.Type)
 				if v3helper.IsBuiltin(item) {
-					params = append(params, v3.Parameter{
+					param := v3.Parameter{
 						Name:        strcase.ToLowerCamel(item.Name),
 						In:          v3.InQuery,
 						Schema:      &pschema,
 						Description: pschema.Description,
 						Required:    required,
-					})
+					}
+					if item.IsPathVariable {
+						param.In = v3.InPath
+					}
+					params = append(params, param)
 				} else {
 					var content v3.Content
 					mt := &v3.MediaType{
@@ -272,6 +277,28 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 	}
 }
 
+func apiPattern(method string) string {
+	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
+	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
+	splits := strings.Split(snake, "_")
+	head := strings.ToUpper(splits[0])
+	if sliceutils.StringContains(httpMethods, head) {
+		splits = splits[1:]
+	}
+	clean := sliceutils.StringFilter(splits, func(item string) bool {
+		return stringutils.IsNotEmpty(item)
+	})
+	var partials []string
+	for _, v := range clean {
+		if strings.HasPrefix(v, ":") {
+			partials = append(partials, "{"+strings.TrimPrefix(v, ":")+"}")
+		} else {
+			partials = append(partials, v)
+		}
+	}
+	return strings.Join(partials, "/")
+}
+
 func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[string]v3.Path {
 	if len(ic.Interfaces) == 0 {
 		return nil
@@ -279,7 +306,7 @@ func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[strin
 	pathmap := make(map[string]v3.Path)
 	inter := ic.Interfaces[0]
 	for _, method := range inter.Methods {
-		endpoint := fmt.Sprintf("/%s", pattern(method.Name))
+		endpoint := fmt.Sprintf("/%s", apiPattern(method.Name))
 		if routePatternStrategy == 1 {
 			endpoint = fmt.Sprintf("/%s/%s", strings.ToLower(inter.Name), noSplitPattern(method.Name))
 		}

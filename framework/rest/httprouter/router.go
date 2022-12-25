@@ -357,7 +357,7 @@ func (r *Router) Handle(method, path string, handle Handle, name ...string) {
 		}
 		handle = r.saveMatchedRoutePath(name[0], handle)
 	}
-	if strings.Contains(path, "*") {
+	if strings.Contains(path, "*") || strings.Contains(path, ":") {
 		pt := urlpath.New(path)
 		r.dynamicHandlers[idx][&pt] = handle
 	} else {
@@ -392,14 +392,18 @@ func (r *Router) recv(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *Router) search(method, path string) Handle {
+func (r *Router) search(method, path string, ps *Params) Handle {
 	idx := r.methodIndexOf(method)
 	if idx < 0 {
 		return nil
 	}
 	for k := range r.dynamicHandlers[idx] {
-		if _, ok := k.Match(path); !ok {
+		match, ok := k.Match(path)
+		if !ok {
 			continue
+		}
+		for k1, v1 := range match.Params {
+			*ps = append(*ps, Param{Key: k1, Value: v1})
 		}
 		return r.dynamicHandlers[idx][k]
 	}
@@ -431,7 +435,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 
 			handle, _ := r.handlers[path2key(method, path)]
 			if handle == nil {
-				handle = r.search(method, path)
+				handle = r.search(method, path, nil)
 			}
 			if handle != nil {
 				// Add request method to list of allowed methods
@@ -471,11 +475,22 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if methodIndex > -1 {
 		handle := r.handlers[path2key(method, path)]
-		if handle == nil {
-			handle = r.search(method, path)
-		}
 		if handle != nil {
 			handle(w, req, nil)
+			return
+		}
+		ret := func() bool {
+			psp := r.getParams()
+			defer r.putParams(psp)
+			ps := (*psp)[0:1]
+			handle = r.search(method, path, &ps)
+			if handle != nil {
+				handle(w, req, ps)
+				return true
+			}
+			return false
+		}()
+		if ret {
 			return
 		}
 	}

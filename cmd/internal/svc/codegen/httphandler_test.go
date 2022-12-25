@@ -29,23 +29,29 @@ func Test_pattern(t *testing.T) {
 			want: "page/users",
 		},
 		{
-			name: "3",
+			name: "",
 			args: args{
-				method: "PostSelect_Books",
+				method: "Get",
 			},
-			want: "select.books",
+			want: "",
+		},
+		{
+			name: "",
+			args: args{
+				method: "GetShelves_ShelfBooks_Book",
+			},
+			want: "shelves/:shelf/books/:book",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pattern(tt.args.method); got != tt.want {
-				t.Errorf("pattern() = %v, want %v", got, tt.want)
-			}
+			assert.Equalf(t, tt.want, pattern(tt.args.method), "pattern(%v)", tt.args.method)
 		})
 	}
 }
 
-func Test_pattern1(t *testing.T) {
+// Shelves_ShelfBooks_Book
+func Test_httpMethod(t *testing.T) {
 	type args struct {
 		method string
 	}
@@ -57,28 +63,14 @@ func Test_pattern1(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				method: "GetHome_Html",
+				method: "GetShelves_ShelfBooks_Book",
 			},
-			want: "home.html",
-		},
-		{
-			name: "",
-			args: args{
-				method: "GetHome_html",
-			},
-			want: "home.html",
-		},
-		{
-			name: "",
-			args: args{
-				method: "Get",
-			},
-			want: "",
+			want: "GET",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, pattern(tt.args.method), "pattern(%v)", tt.args.method)
+			assert.Equalf(t, tt.want, httpMethod(tt.args.method), "httpMethod(%v)", tt.args.method)
 		})
 	}
 }

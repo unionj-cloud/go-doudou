@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
@@ -54,6 +55,23 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
+func pathVariables(method string) (ret []string) {
+	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
+	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
+	splits := strings.Split(snake, "_")
+	head := strings.ToUpper(splits[0])
+	if sliceutils.StringContains(httpMethods, head) {
+		splits = splits[1:]
+	}
+	pvs := sliceutils.StringFilter(splits, func(item string) bool {
+		return stringutils.IsNotEmpty(item) && strings.HasPrefix(item, ":")
+	})
+	for _, v := range pvs {
+		ret = append(ret, strings.TrimPrefix(v, ":"))
+	}
+	return
+}
+
 func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 	var methods []MethodMeta
 	for _, method := range list {
@@ -76,16 +94,25 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 		if ft.Params != nil {
 			params = ic.field2Params(ft.Params.List)
 		}
+
+		pvs := pathVariables(mn)
+		for i := range params {
+			if sliceutils.StringContains(pvs, params[i].Name) {
+				params[i].IsPathVariable = true
+			}
+		}
+
 		var results []FieldMeta
 		if ft.Results != nil {
 			results = ic.field2Results(ft.Results.List)
 		}
 		methods = append(methods, MethodMeta{
-			Name:        mn,
-			Params:      params,
-			Results:     results,
-			Comments:    mComments,
-			Annotations: annotations,
+			Name:            mn,
+			Params:          params,
+			Results:         results,
+			Comments:        mComments,
+			Annotations:     annotations,
+			HasPathVariable: len(pvs) > 0,
 		})
 	}
 	return methods

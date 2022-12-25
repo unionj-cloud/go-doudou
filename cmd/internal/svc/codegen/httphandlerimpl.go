@@ -34,10 +34,30 @@ var appendHttpHandlerImplTmpl = `
 			{{ $r.Name }} {{ $r.Type }}
 			{{- end }}
 		)
+		{{- if $m.HasPathVariable }}
+		paramsFromCtx := httprouter.ParamsFromContext(_req.Context())
+		{{- end }}
 		{{- $multipartFormParsed := false }}
 		{{- $formParsed := false }}
 		{{- range $p := $m.Params }}
-		{{- if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
+		{{- if $p.IsPathVariable }}
+		{{- if IsEnum $p }}
+		{{ $p.Name }}.StringSetter(paramsFromCtx.ByName("{{$p.Name}}"))
+		{{- else if $p.Type | isSupport }}
+		if casted, _err := cast.{{$p.Type | castFunc}}E(paramsFromCtx.ByName("{{$p.Name}}")); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
+			return
+		} else {
+			{{$p.Name}} = casted
+		}
+		{{- else }}
+		{{$p.Name}} = paramsFromCtx.ByName("{{$p.Name}}")
+		{{- end }}
+		if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
+			http.Error(_writer, _err.Error(), http.StatusBadRequest)
+			return
+		}
+		{{- else if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if not $multipartFormParsed }}
 		if _err := _req.ParseMultipartForm(32 << 20); _err != nil {
 			http.Error(_writer, _err.Error(), http.StatusBadRequest)
@@ -373,6 +393,7 @@ var importTmpl = `
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"

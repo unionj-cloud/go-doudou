@@ -69,10 +69,11 @@ var RouteAnnotationStore = framework.AnnotationStore{
 	{{- end }}
 }
 `
-
+// GetShelves_ShelfBooks_Book
+// /shelves/:shelf/books/:book
 func pattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "."))
+	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
 	splits := strings.Split(snake, "_")
 	head := strings.ToUpper(splits[0])
 	if sliceutils.StringContains(httpMethods, head) {
