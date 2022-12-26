@@ -2,11 +2,17 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/getkin/kin-openapi/openapi2"
+	"github.com/getkin/kin-openapi/openapi2conv"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/go-resty/resty/v2"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
-	. "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
@@ -264,4 +270,75 @@ func ElementType(t string) string {
 		return strings.TrimPrefix(t, "...")
 	}
 	return t[strings.Index(t, "]")+1:]
+}
+
+func LoadAPI(file string) API {
+	var (
+		docfile *os.File
+		err     error
+		docraw  []byte
+		api     API
+	)
+	if strings.HasPrefix(file, "http") {
+		link := file
+		client := resty.New()
+		client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(15))
+		root, _ := os.Getwd()
+		client.SetOutputDirectory(root)
+		filename := ".openapi3"
+		_, err := client.R().
+			SetOutput(filename).
+			Get(link)
+		if err != nil {
+			panic(err)
+		}
+		file = filepath.Join(root, filename)
+		defer os.Remove(file)
+	}
+	if docfile, err = os.Open(file); err != nil {
+		panic(err)
+	}
+	defer docfile.Close()
+	if docraw, err = ioutil.ReadAll(docfile); err != nil {
+		panic(err)
+	}
+	if err = json.Unmarshal(docraw, &api); err != nil {
+		panic(err)
+	}
+	if stringutils.IsEmpty(api.Openapi) {
+		var doc openapi2.T
+		if err = json.Unmarshal(docraw, &doc); err != nil {
+			panic(err)
+		}
+		if stringutils.IsEmpty(doc.Swagger) {
+			panic("not support")
+		}
+		var doc1 *openapi3.T
+		doc1, err = openapi2conv.ToV3(&doc)
+		if err != nil {
+			panic(err)
+		}
+		copier.DeepCopy(doc1, &api)
+	}
+	return api
+}
+
+func ToOptional(t string) string {
+	if !strings.HasPrefix(t, "*") {
+		return "*" + t
+	}
+	return t
+}
+
+func IsEnumType(methods []astutils.MethodMeta) bool {
+	methodMap := make(map[string]struct{})
+	for _, item := range methods {
+		methodMap[item.String()] = struct{}{}
+	}
+	for _, item := range IEnumMethods {
+		if _, ok := methodMap[item]; !ok {
+			return false
+		}
+	}
+	return true
 }

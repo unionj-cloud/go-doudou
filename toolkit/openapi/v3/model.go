@@ -1,6 +1,8 @@
 package v3
 
-import "io"
+import (
+	"io"
+)
 
 // Contact https://spec.openapis.org/oas/v3.0.3#contact-object
 type Contact struct {

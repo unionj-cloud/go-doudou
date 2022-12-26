@@ -2,7 +2,7 @@ package table
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/extraenum"

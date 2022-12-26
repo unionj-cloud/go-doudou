@@ -1,7 +1,6 @@
 package astutils
 
 import (
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"go/ast"
 	"go/token"
 	"strings"
@@ -13,19 +12,6 @@ type EnumCollector struct {
 	exprString func(ast.Expr) string
 	Consts     map[string][]string
 	Enums      map[string]EnumMeta
-}
-
-func IsEnum(methods []MethodMeta) bool {
-	methodMap := make(map[string]struct{})
-	for _, item := range methods {
-		methodMap[item.String()] = struct{}{}
-	}
-	for _, item := range v3.IEnumMethods {
-		if _, ok := methodMap[item]; !ok {
-			return false
-		}
-	}
-	return true
 }
 
 // Visit traverse each node from source code

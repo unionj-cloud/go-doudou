@@ -2,8 +2,12 @@ package v3
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"strings"
 	"testing"
 )
@@ -73,61 +77,61 @@ func TestSchemaOf(t *testing.T) {
 			Name:     "name",
 			Type:     "string",
 			IsExport: true,
-		}), ShouldEqual, v3.String)
+		}), ShouldEqual, String)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "age",
 			Type:     "int",
 			IsExport: true,
-		}), ShouldEqual, v3.Int)
+		}), ShouldEqual, Int)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "id",
 			Type:     "int64",
 			IsExport: true,
-		}), ShouldEqual, v3.Int64)
+		}), ShouldEqual, Int64)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "married",
 			Type:     "bool",
 			IsExport: true,
-		}), ShouldEqual, v3.Bool)
+		}), ShouldEqual, Bool)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "score",
 			Type:     "float32",
 			IsExport: true,
-		}), ShouldEqual, v3.Float32)
+		}), ShouldEqual, Float32)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "average",
 			Type:     "float64",
 			IsExport: true,
-		}), ShouldEqual, v3.Float64)
+		}), ShouldEqual, Float64)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "avatar",
-			Type:     "v3.FileModel",
+			Type:     "FileModel",
 			IsExport: true,
-		}), ShouldEqual, v3.File)
+		}), ShouldEqual, File)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "params",
 			Type:     "...int",
 			IsExport: true,
-		}).Type, ShouldEqual, v3.ArrayT)
+		}).Type, ShouldEqual, ArrayT)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "data",
 			Type:     "map[string]string",
 			IsExport: true,
-		}).Type, ShouldEqual, v3.ObjectT)
+		}).Type, ShouldEqual, ObjectT)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "anony",
 			Type:     "anonystruct«{\"Name\":\"\",\"Fields\":[{\"Name\":\"Name\",\"Type\":\"string\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Name\"},{\"Name\":\"Addr\",\"Type\":\"anonystruct«{\\\"Name\\\":\\\"\\\",\\\"Fields\\\":[{\\\"Name\\\":\\\"Zip\\\",\\\"Type\\\":\\\"string\\\",\\\"Tag\\\":\\\"\\\",\\\"Comments\\\":null,\\\"IsExport\\\":true,\\\"DocName\\\":\\\"Zip\\\"},{\\\"Name\\\":\\\"Block\\\",\\\"Type\\\":\\\"string\\\",\\\"Tag\\\":\\\"\\\",\\\"Comments\\\":null,\\\"IsExport\\\":true,\\\"DocName\\\":\\\"Block\\\"},{\\\"Name\\\":\\\"Full\\\",\\\"Type\\\":\\\"string\\\",\\\"Tag\\\":\\\"\\\",\\\"Comments\\\":null,\\\"IsExport\\\":true,\\\"DocName\\\":\\\"Full\\\"}],\\\"Comments\\\":null,\\\"Methods\\\":null,\\\"IsExport\\\":false}»\",\"Tag\":\"\",\"Comments\":null,\"IsExport\":true,\"DocName\":\"Addr\"}],\"Comments\":null,\"Methods\":null,\"IsExport\":false}»",
 			IsExport: true,
-		}).Type, ShouldEqual, v3.ObjectT)
+		}).Type, ShouldEqual, ObjectT)
 
 		SchemaNames = []string{"User"}
 		So(SchemaOf(astutils.FieldMeta{
@@ -164,7 +168,7 @@ func TestSchemaOf(t *testing.T) {
 			Name:     "any",
 			Type:     "Any",
 			IsExport: true,
-		}), ShouldEqual, v3.Any)
+		}), ShouldEqual, Any)
 	})
 }
 
@@ -250,4 +254,25 @@ func TestIsSlice(t *testing.T) {
 		So(IsSlice("...int"), ShouldBeTrue)
 		So(IsSlice("int"), ShouldBeFalse)
 	})
+}
+
+func TestEnum(t *testing.T) {
+	file := pathutils.Abs("testdata/enum.go")
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := astutils.NewEnumCollector(astutils.ExprString)
+	ast.Walk(sc, root)
+	for k, v := range sc.Methods {
+		if IsEnumType(v) {
+			em := astutils.EnumMeta{
+				Name:   k,
+				Values: sc.Consts[k],
+			}
+			sc.Enums[k] = em
+		}
+	}
+	require.Equal(t, 1, len(sc.Enums))
 }

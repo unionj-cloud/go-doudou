@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
 	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	v3Helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
 	"go/ast"
 	"go/parser"
@@ -198,7 +199,7 @@ func ParseDtoGrpc(dir string, p v3.ProtoGenerator, dtoDir string) {
 		}
 	}
 	for k, v := range allMethods {
-		if astutils.IsEnum(v) {
+		if v3Helper.IsEnumType(v) {
 			v3.EnumStore[k] = p.NewEnum(astutils.EnumMeta{
 				Name:   k,
 				Values: allConsts[k],

@@ -15,26 +15,26 @@ import (
 
 func Test_genGoVo(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "petstore3.json"))
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
+	api := v3.LoadAPI(path.Join(testdir, "petstore3.json"))
+	genGoDto(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoVo_clean(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "test5.json"))
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
+	api := v3.LoadAPI(path.Join(testdir, "test5.json"))
+	genGoDto(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoVo_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "petstore3.json"))
+	api := v3.LoadAPI(path.Join(testdir, "petstore3.json"))
 	omitempty = true
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
+	genGoDto(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }
 
 func Test_genGoHttp(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "petstore3.json"))
+	api := v3.LoadAPI(path.Join(testdir, "petstore3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -55,7 +55,7 @@ func Test_genGoHttp(t *testing.T) {
 
 func Test_genGoHttp1(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "test1.json"))
+	api := v3.LoadAPI(path.Join(testdir, "test1.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -76,7 +76,7 @@ func Test_genGoHttp1(t *testing.T) {
 
 func Test_genGoHttp2(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "test2.json"))
+	api := v3.LoadAPI(path.Join(testdir, "test2.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -97,7 +97,7 @@ func Test_genGoHttp2(t *testing.T) {
 
 func Test_genGoHttp3(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "test3.json"))
+	api := v3.LoadAPI(path.Join(testdir, "test3.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -117,7 +117,7 @@ func Test_genGoHttp3(t *testing.T) {
 }
 
 func Test_genGoHttp4(t *testing.T) {
-	api := loadAPI("https://petstore3.swagger.io/api/v3/openapi.json")
+	api := v3.LoadAPI("https://petstore3.swagger.io/api/v3/openapi.json")
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -138,7 +138,7 @@ func Test_genGoHttp4(t *testing.T) {
 
 func Test_genGoHttp5(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "test5.json"))
+	api := v3.LoadAPI(path.Join(testdir, "test5.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -159,19 +159,19 @@ func Test_genGoHttp5(t *testing.T) {
 
 func Test_loadApiPanic(t *testing.T) {
 	assert.Panics(t, func() {
-		loadAPI("notexists.json")
+		v3.LoadAPI("notexists.json")
 	})
 }
 
 func Test_loadApiJsonUnmarshalPanic(t *testing.T) {
 	assert.Panics(t, func() {
-		loadAPI("../testdata/test4.json")
+		v3.LoadAPI("../testdata/test4.json")
 	})
 }
 
 func Test_genGoHttp_Omit(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "petstore3.json"))
+	api := v3.LoadAPI(path.Join(testdir, "petstore3.json"))
 	omitempty = true
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
@@ -609,7 +609,7 @@ func Test_operation2Method(t *testing.T) {
 
 func Test_genGoVo_api(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "api-docs.json"))
+	api := v3.LoadAPI(path.Join(testdir, "api-docs.json"))
 	schemas = api.Components.Schemas
 	requestBodies = api.Components.RequestBodies
 	svcmap := make(map[string]map[string]v3.Path)
@@ -630,6 +630,6 @@ func Test_genGoVo_api(t *testing.T) {
 
 func Test_genGoVoJava(t *testing.T) {
 	testdir := pathutils.Abs("../testdata")
-	api := loadAPI(path.Join(testdir, "api-docs.json"))
-	genGoVo(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
+	api := v3.LoadAPI(path.Join(testdir, "api-docs.json"))
+	genGoDto(api.Components.Schemas, filepath.Join(testdir, "test", "vo.go"), "test")
 }

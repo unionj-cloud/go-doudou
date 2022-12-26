@@ -193,8 +193,8 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 		svcName   string
 		svcfile   string
 		modfile   string
-		dtodir     string
-		dtofile    string
+		dtodir    string
+		dtofile   string
 		goVersion string
 		firstLine string
 		f         *os.File
@@ -294,12 +294,12 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
 		_ = tpl.Execute(f, struct {
 			DtoPackage string
-			SvcName   string
-			Version   string
+			SvcName    string
+			Version    string
 		}{
 			DtoPackage: modName + "/dto",
-			SvcName:   svcName,
-			Version:   version.Release,
+			SvcName:    svcName,
+			Version:    version.Release,
 		})
 	} else {
 		logrus.Warnf("file %s already exists", svcfile)
@@ -340,8 +340,8 @@ func InitSvc(dir string) {
 		svcName   string
 		svcfile   string
 		modfile   string
-		dtodir     string
-		dtofile    string
+		dtodir    string
+		dtofile   string
 		goVersion string
 		firstLine string
 		f         *os.File
@@ -434,12 +434,12 @@ func InitSvc(dir string) {
 		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
 		_ = tpl.Execute(f, struct {
 			DtoPackage string
-			SvcName   string
-			Version   string
+			SvcName    string
+			Version    string
 		}{
 			DtoPackage: modName + "/dto",
-			SvcName:   svcName,
-			Version:   version.Release,
+			SvcName:    svcName,
+			Version:    version.Release,
 		})
 	} else {
 		logrus.Warnf("file %s already exists", svcfile)

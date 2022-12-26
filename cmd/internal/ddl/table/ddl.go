@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/config"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"

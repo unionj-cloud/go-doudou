@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
-	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
@@ -53,7 +52,7 @@ func schemasOf(vofile string) []v3.Schema {
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
 	for _, item := range structs {
-		ret = append(ret, v3helper.NewSchema(item))
+		ret = append(ret, v3.NewSchema(item))
 	}
 	return ret
 }
@@ -86,7 +85,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 	// then we use application/x-www-form-urlencoded as Content-type, and we make one ref schema from them as request body.
 	var simpleCnt int
 	for _, item := range method.Params {
-		if v3helper.IsBuiltin(item) || item.Type == "context.Context" {
+		if v3.IsBuiltin(item) || item.Type == "context.Context" {
 			simpleCnt++
 		}
 	}
@@ -103,7 +102,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			if item.Type == "context.Context" {
 				continue
 			}
-			pschemaType := v3helper.SchemaOf(item)
+			pschemaType := v3.SchemaOf(item)
 			if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File {
 				upload = true
 				break
@@ -117,10 +116,10 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 				if item.Type == "context.Context" {
 					continue
 				}
-				pschema := v3helper.CopySchema(item)
-				v3helper.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
-				required := !v3helper.IsOptional(item.Type)
-				if v3helper.IsBuiltin(item) {
+				pschema := v3.CopySchema(item)
+				v3.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
+				required := !v3.IsOptional(item.Type)
+				if v3.IsBuiltin(item) {
 					param := v3.Parameter{
 						Name:        strcase.ToLowerCamel(item.Name),
 						In:          v3.InQuery,
@@ -186,15 +185,15 @@ func response(method astutils.MethodMeta) *v3.Responses {
 			if stringutils.IsEmpty(key) {
 				key = item.Type[strings.LastIndex(item.Type, ".")+1:]
 			}
-			rschema := v3helper.CopySchema(item)
-			v3helper.RefAddDoc(&rschema, strings.Join(item.Comments, "\n"))
+			rschema := v3.CopySchema(item)
+			v3.RefAddDoc(&rschema, strings.Join(item.Comments, "\n"))
 			prop := strcase.ToLowerCamel(key)
 			respSchema.Properties[prop] = &rschema
-			if !v3helper.IsOptional(item.Type) {
+			if !v3.IsOptional(item.Type) {
 				respSchema.Required = append(respSchema.Required, prop)
 			}
 		}
-		v3helper.Schemas[title] = respSchema
+		v3.Schemas[title] = respSchema
 		respContent.JSON = &v3.MediaType{
 			Schema: &v3.Schema{
 				Ref: "#/components/schemas/" + title,
@@ -219,18 +218,18 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 		if item.Type == "context.Context" {
 			continue
 		}
-		pschemaType := v3helper.SchemaOf(item)
-		if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3helper.IsBuiltin(item) {
-			pschema := v3helper.CopySchema(item)
+		pschemaType := v3.SchemaOf(item)
+		if reflect.DeepEqual(pschemaType, v3.FileArray) || pschemaType == v3.File || v3.IsBuiltin(item) {
+			pschema := v3.CopySchema(item)
 			pschema.Description = strings.Join(item.Comments, "\n")
 			prop := strcase.ToLowerCamel(item.Name)
 			reqSchema.Properties[prop] = &pschema
-			if !v3helper.IsOptional(item.Type) {
+			if !v3.IsOptional(item.Type) {
 				reqSchema.Required = append(reqSchema.Required, prop)
 			}
 		}
 	}
-	v3helper.Schemas[title] = reqSchema
+	v3.Schemas[title] = reqSchema
 	mt := &v3.MediaType{
 		Schema: &v3.Schema{
 			Ref: "#/components/schemas/" + title,
@@ -255,15 +254,15 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 		if item.Type == "context.Context" {
 			continue
 		}
-		pschema := v3helper.CopySchema(item)
+		pschema := v3.CopySchema(item)
 		pschema.Description = strings.Join(item.Comments, "\n")
 		prop := strcase.ToLowerCamel(item.Name)
 		reqSchema.Properties[prop] = &pschema
-		if !v3helper.IsOptional(item.Type) {
+		if !v3.IsOptional(item.Type) {
 			reqSchema.Required = append(reqSchema.Required, prop)
 		}
 	}
-	v3helper.Schemas[title] = reqSchema
+	v3.Schemas[title] = reqSchema
 	mt := &v3.MediaType{
 		Schema: &v3.Schema{
 			Ref: "#/components/schemas/" + title,
@@ -381,7 +380,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 		},
 		Paths: paths,
 		Components: &v3.Components{
-			Schemas: v3helper.Schemas,
+			Schemas: v3.Schemas,
 		},
 	}
 	data, err = json.Marshal(api)
@@ -422,7 +421,7 @@ func ParseDto(dir string, dtoDir string) {
 		panic(err)
 	}
 	for _, file := range files {
-		v3helper.SchemaNames = append(v3helper.SchemaNames, getSchemaNames(file)...)
+		v3.SchemaNames = append(v3.SchemaNames, getSchemaNames(file)...)
 	}
 	allMethods = make(map[string][]astutils.MethodMeta)
 	allConsts = make(map[string][]string)
@@ -436,8 +435,8 @@ func ParseDto(dir string, dtoDir string) {
 		}
 	}
 	for k, v := range allMethods {
-		if astutils.IsEnum(v) {
-			v3helper.Enums[k] = astutils.EnumMeta{
+		if v3.IsEnumType(v) {
+			v3.Enums[k] = astutils.EnumMeta{
 				Name:   k,
 				Values: allConsts[k],
 			}
@@ -447,6 +446,6 @@ func ParseDto(dir string, dtoDir string) {
 		vos = append(vos, schemasOf(file)...)
 	}
 	for _, item := range vos {
-		v3helper.Schemas[item.Title] = item
+		v3.Schemas[item.Title] = item
 	}
 }

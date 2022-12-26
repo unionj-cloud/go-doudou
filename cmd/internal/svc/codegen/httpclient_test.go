@@ -4,7 +4,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"os"
 	"path/filepath"
 	"testing"

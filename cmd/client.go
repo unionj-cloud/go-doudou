@@ -29,7 +29,7 @@ var clientCmd = &cobra.Command{
 func init() {
 	httpCmd.AddCommand(clientCmd)
 
-	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `openapi 3.0 spec json file path or download link`)
+	clientCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 	clientCmd.Flags().StringVarP(&baseURLEnv, "env", "e", "", `base url environment variable name`)
 	clientCmd.Flags().StringVarP(&clientpkg, "pkg", "p", "client", `client package name`)
 	clientCmd.Flags().BoolVarP(&omitempty, "omit", "o", false, `json tag omitempty`)

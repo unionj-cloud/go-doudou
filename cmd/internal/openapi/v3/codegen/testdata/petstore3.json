@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "version": "1.0.5"
+    "version": "1.0.17"
   },
   "externalDocs": {
     "description": "Find out more about Swagger",
@@ -33,15 +33,15 @@
     },
     {
       "name": "store",
-      "description": "Operations about user"
-    },
-    {
-      "name": "user",
       "description": "Access to Petstore orders",
       "externalDocs": {
         "description": "Find out more about our store",
         "url": "http://swagger.io"
       }
+    },
+    {
+      "name": "user",
+      "description": "Operations about user"
     }
   ],
   "paths": {
@@ -54,7 +54,25 @@
         "description": "Update an existing pet by Id",
         "operationId": "updatePet",
         "requestBody": {
-          "$ref": "#/components/requestBodies/Pet"
+          "description": "Update an existent pet in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -559,7 +577,7 @@
           "store"
         ],
         "summary": "Find purchase order by ID",
-        "description": "For valid response try integer IDs with value <= 5 or > 10. Other values will generated exceptions",
+        "description": "For valid response try integer IDs with value <= 5 or > 10. Other values will generate exceptions.",
         "operationId": "getOrderById",
         "parameters": [
           {
@@ -755,7 +773,7 @@
                 }
               },
               "X-Expires-After": {
-                "description": "date in UTC when toekn expires",
+                "description": "date in UTC when token expires",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -917,10 +935,6 @@
     "schemas": {
       "Order": {
         "type": "object",
-        "required": [
-          "petId",
-          "shipDate"
-        ],
         "properties": {
           "id": {
             "type": "integer",
@@ -953,37 +967,6 @@
           },
           "complete": {
             "type": "boolean"
-          },
-          "customer": {
-            "type": "object",
-            "description": "客户信息结构体\n用于描述客户相关的信息",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64",
-                "example": 100000,
-                "description": "用户ID"
-              },
-              "username": {
-                "type": "string",
-                "example": "fehguy",
-                "description": "用户名"
-              },
-              "address": {
-                "type": "array",
-                "xml": {
-                  "name": "addresses",
-                  "wrapped": true
-                },
-                "items": {
-                  "$ref": "#/components/schemas/Address"
-                },
-                "description": "用户地址\n例如：北京海淀区xxx街道\n某某小区"
-              }
-            },
-            "xml": {
-              "name": "customer"
-            }
           }
         },
         "xml": {
@@ -1095,23 +1078,6 @@
             "description": "User Status",
             "format": "int32",
             "example": 1
-          },
-          "avatar": {
-            "type": "string",
-            "format": "binary"
-          },
-          "additional1": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string",
-              "format": "int64"
-            }
-          },
-          "additional2": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Tag"
-            }
           }
         },
         "xml": {
@@ -1126,8 +1092,7 @@
             "format": "int64"
           },
           "name": {
-            "type": "string",
-            "format": "tag"
+            "type": "string"
           }
         },
         "xml": {
@@ -1148,8 +1113,7 @@
           },
           "name": {
             "type": "string",
-            "example": "doggie",
-            "format": "dog"
+            "example": "doggie"
           },
           "category": {
             "$ref": "#/components/schemas/Category"
@@ -1163,8 +1127,7 @@
               "type": "string",
               "xml": {
                 "name": "photoUrl"
-              },
-              "format": "image"
+              }
             }
           },
           "tags": {
@@ -1178,7 +1141,7 @@
           },
           "status": {
             "type": "string",
-            "description": "pet status in the store\nthis is another line for test use",
+            "description": "pet status in the store",
             "enum": [
               "available",
               "pending",

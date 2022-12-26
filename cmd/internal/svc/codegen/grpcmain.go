@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"

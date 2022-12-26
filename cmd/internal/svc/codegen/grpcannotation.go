@@ -9,7 +9,7 @@ import (
 	"text/template"
 
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 )
 
 var annotationTmpl = `/**
