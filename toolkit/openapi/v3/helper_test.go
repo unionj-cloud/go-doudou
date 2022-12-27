@@ -74,6 +74,12 @@ func Test_castFunc(t *testing.T) {
 func TestSchemaOf(t *testing.T) {
 	Convey("SchemaOf", t, func() {
 		So(SchemaOf(astutils.FieldMeta{
+			Name:     "avatar",
+			Type:     "v3.FileModel",
+			IsExport: true,
+		}), ShouldEqual, File)
+
+		So(SchemaOf(astutils.FieldMeta{
 			Name:     "name",
 			Type:     "string",
 			IsExport: true,
@@ -108,12 +114,6 @@ func TestSchemaOf(t *testing.T) {
 			Type:     "float64",
 			IsExport: true,
 		}), ShouldEqual, Float64)
-
-		So(SchemaOf(astutils.FieldMeta{
-			Name:     "avatar",
-			Type:     "FileModel",
-			IsExport: true,
-		}), ShouldEqual, File)
 
 		So(SchemaOf(astutils.FieldMeta{
 			Name:     "params",
