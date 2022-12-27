@@ -69,6 +69,7 @@ var RouteAnnotationStore = framework.AnnotationStore{
 	{{- end }}
 }
 `
+
 // GetShelves_ShelfBooks_Book
 // /shelves/:shelf/books/:book
 func pattern(method string) string {

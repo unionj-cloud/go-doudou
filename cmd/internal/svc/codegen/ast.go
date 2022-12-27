@@ -62,6 +62,7 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	if !strings.HasPrefix(result, "vo.") &&
 		!strings.HasPrefix(result, "dto.") &&
 		result != "context.Context" &&
+		result != "time.Time" &&
 		result != "v3.FileModel" &&
 		result != "multipart.FileHeader" &&
 		result != "os.File" {

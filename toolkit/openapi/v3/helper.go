@@ -69,6 +69,8 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return Float64
 	case "multipart.FileHeader", "v3.FileModel":
 		return File
+	case "time.Time":
+		return Time
 	default:
 		return handleDefaultCase(ft)
 	}

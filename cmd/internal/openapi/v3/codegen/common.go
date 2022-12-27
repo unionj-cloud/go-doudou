@@ -11,20 +11,24 @@ import (
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"text/template"
 )
 
 type OpenAPICodeGenerator struct {
-	Schemas       map[string]v3.Schema
-	RequestBodies map[string]v3.RequestBody
-	Responses     map[string]v3.Response
-	Omitempty     bool
+	Schemas          map[string]v3.Schema
+	RequestBodies    map[string]v3.RequestBody
+	Responses        map[string]v3.Response
+	Omitempty        bool
+	SvcName, ModName string
+	Comments         []string
+	DtoPkg           string
+	ApiInfo          *v3.Info
 }
 
 func toComment(comment string, title ...string) string {
@@ -49,6 +53,20 @@ func clean(str string) string {
 
 func toCamel(str string) string {
 	return strcase.ToCamel(clean(str))
+}
+
+func (receiver OpenAPICodeGenerator) APIComments() []string {
+	info := receiver.ApiInfo
+	comments := []string{info.Title}
+	comments = append(comments, strings.Split(info.Description, "\n")...)
+	comments = append(comments, info.TermsOfService, info.Version)
+	if info.Contact != nil {
+		comments = append(comments, info.Contact.Email)
+	}
+	if info.License != nil {
+		comments = append(comments, info.License.Name, info.License.URL)
+	}
+	return comments
 }
 
 func (receiver *OpenAPICodeGenerator) object2Struct(schema *v3.Schema) string {
@@ -145,7 +163,11 @@ func (receiver *OpenAPICodeGenerator) toGoType(schema *v3.Schema) string {
 				}
 			}
 		}
-		return toCamel(clean(refName))
+		dtoName := toCamel(clean(refName))
+		if stringutils.IsNotEmpty(receiver.DtoPkg) {
+			dtoName = receiver.DtoPkg + "." + dtoName
+		}
+		return dtoName
 	}
 	switch schema.Type {
 	case v3.IntegerT:
@@ -176,7 +198,11 @@ func (receiver *OpenAPICodeGenerator) toOptionalGoType(schema *v3.Schema) string
 				}
 			}
 		}
-		return "*" + toCamel(clean(refName))
+		dtoName := toCamel(clean(refName))
+		if stringutils.IsNotEmpty(receiver.DtoPkg) {
+			dtoName = receiver.DtoPkg + "." + dtoName
+		}
+		return "*" + dtoName
 	}
 	switch schema.Type {
 	case v3.IntegerT:
@@ -235,10 +261,12 @@ func (receiver *OpenAPICodeGenerator) GenGoDto(schemas map[string]v3.Schema, out
 		Schemas map[string]v3.Schema
 		Omit    bool
 		Pkg     string
+		Version string
 	}{
 		Schemas: filterMap,
 		Omit:    receiver.Omitempty,
 		Pkg:     pkg,
+		Version: version.Release,
 	})
 	source := strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), output)
@@ -353,43 +381,70 @@ func IsOptional(t string) bool {
 	return strings.HasPrefix(t, "*")
 }
 
-func (receiver *OpenAPICodeGenerator) Api2Interface(paths map[string]v3.Path, svcname string) astutils.InterfaceMeta {
+func (receiver *OpenAPICodeGenerator) Api2Interface(paths map[string]v3.Path, svcName string, operationConverter IOperationConverter) astutils.InterfaceMeta {
 	var meta astutils.InterfaceMeta
-	meta.Name = strcase.ToCamel(svcname)
+	meta.Name = strcase.ToCamel(svcName)
+	meta.Comments = receiver.APIComments()
 	for endpoint, path := range paths {
 		if path.Get != nil {
-			if method, err := receiver.operation2Method(endpoint, "Get", path.Get, path.Parameters); err == nil {
+			if method, err := operationConverter.ConvertOperation(endpoint, "Get", path.Get, path.Parameters); err == nil {
 				meta.Methods = append(meta.Methods, method)
 			} else {
 				logrus.Errorln(err)
 			}
 		}
 		if path.Post != nil {
-			if method, err := receiver.operation2Method(endpoint, "Post", path.Post, path.Parameters); err == nil {
+			if method, err := operationConverter.ConvertOperation(endpoint, "Post", path.Post, path.Parameters); err == nil {
 				meta.Methods = append(meta.Methods, method)
 			} else {
 				logrus.Errorln(err)
 			}
 		}
 		if path.Put != nil {
-			if method, err := receiver.operation2Method(endpoint, "Put", path.Put, path.Parameters); err == nil {
+			if method, err := operationConverter.ConvertOperation(endpoint, "Put", path.Put, path.Parameters); err == nil {
 				meta.Methods = append(meta.Methods, method)
 			} else {
 				logrus.Errorln(err)
 			}
 		}
 		if path.Delete != nil {
-			if method, err := receiver.operation2Method(endpoint, "Delete", path.Delete, path.Parameters); err == nil {
+			if method, err := operationConverter.ConvertOperation(endpoint, "Delete", path.Delete, path.Parameters); err == nil {
 				meta.Methods = append(meta.Methods, method)
 			} else {
 				logrus.Errorln(err)
 			}
 		}
 	}
+	sort.SliceStable(meta.Methods, func(i, j int) bool {
+		return meta.Methods[i].Name < meta.Methods[j].Name
+	})
 	return meta
 }
 
-func (receiver *OpenAPICodeGenerator) operation2Method(endpoint, httpMethod string, operation *v3.Operation, gparams []v3.Parameter) (astutils.MethodMeta, error) {
+type ClientOperationConverter struct {
+	_         [0]int
+	Generator *OpenAPICodeGenerator
+}
+
+func (receiver *ClientOperationConverter) form(operation *v3.Operation) (bodyParams *astutils.FieldMeta) {
+	receiver.Generator.resolveSchemaFromRef(operation)
+	content := operation.RequestBody.Content
+	if content.JSON != nil {
+	} else if content.FormURL != nil {
+		bodyParams = receiver.Generator.schema2Field(content.FormURL.Schema, "bodyParams")
+		if !operation.RequestBody.Required && bodyParams != nil {
+			bodyParams.Type = v3.ToOptional(bodyParams.Type)
+		}
+	} else if content.FormData != nil {
+		bodyParams, _ = receiver.Generator.parseFormData(content.FormData)
+		if !operation.RequestBody.Required && bodyParams != nil {
+			bodyParams.Type = v3.ToOptional(bodyParams.Type)
+		}
+	}
+	return
+}
+
+func (receiver *ClientOperationConverter) ConvertOperation(endpoint, httpMethod string, operation *v3.Operation, gparams []v3.Parameter) (astutils.MethodMeta, error) {
 	var files, params []astutils.FieldMeta
 	var bodyJSON, bodyParams, qparams *astutils.FieldMeta
 	comments := commentLines(operation)
@@ -397,14 +452,15 @@ func (receiver *OpenAPICodeGenerator) operation2Method(endpoint, httpMethod stri
 	receiver.operationParams(operation.Parameters, &qSchema, &pathvars, &headervars)
 
 	if len(qSchema.Properties) > 0 {
-		qparams = receiver.schema2Field(&qSchema, "queryParams")
+		qparams = receiver.Generator.schema2Field(&qSchema, "queryParams")
 		if qSchema.Type == v3.ObjectT && len(qSchema.Required) == 0 {
 			qparams.Type = v3.ToOptional(qparams.Type)
 		}
 	}
 
 	if httpMethod != "Get" && operation.RequestBody != nil {
-		bodyJSON, bodyParams, files = receiver.requestBody(operation)
+		bodyJSON, files = receiver.Generator.requestBody(operation)
+		bodyParams = receiver.form(operation)
 	}
 
 	if operation.Responses == nil {
@@ -415,7 +471,7 @@ func (receiver *OpenAPICodeGenerator) operation2Method(endpoint, httpMethod stri
 		return astutils.MethodMeta{}, errors.Errorf("200 response definition not found in api %s %s", httpMethod, endpoint)
 	}
 
-	results, err := receiver.responseBody(endpoint, httpMethod, operation)
+	results, err := receiver.Generator.responseBody(endpoint, httpMethod, operation)
 	if err != nil {
 		return astutils.MethodMeta{}, err
 	}
@@ -437,7 +493,7 @@ func (receiver *OpenAPICodeGenerator) operation2Method(endpoint, httpMethod stri
 
 	params = append(params, files...)
 
-	return astutils.MethodMeta{
+	ret := astutils.MethodMeta{
 		Name:        httpMethod + toMethod(endpoint),
 		Params:      params,
 		Results:     results,
@@ -449,10 +505,11 @@ func (receiver *OpenAPICodeGenerator) operation2Method(endpoint, httpMethod stri
 		Comments:    comments,
 		Path:        endpoint,
 		QueryParams: qparams,
-	}, nil
+	}
+	return ret, nil
 }
 
-func (receiver *OpenAPICodeGenerator) operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, headervars *[]astutils.FieldMeta) {
+func (receiver *ClientOperationConverter) operationParams(parameters []v3.Parameter, qSchema *v3.Schema, pathvars, headervars *[]astutils.FieldMeta) {
 	for _, item := range parameters {
 		switch item.In {
 		case v3.InQuery:
@@ -461,16 +518,16 @@ func (receiver *OpenAPICodeGenerator) operationParams(parameters []v3.Parameter,
 				qSchema.Required = append(qSchema.Required, item.Name)
 			}
 		case v3.InPath:
-			*pathvars = append(*pathvars, receiver.parameter2Field(item))
+			*pathvars = append(*pathvars, receiver.Generator.parameter2Field(item))
 		case v3.InHeader:
-			*headervars = append(*headervars, receiver.parameter2Field(item))
+			*headervars = append(*headervars, receiver.Generator.parameter2Field(item))
 		default:
 			panic(fmt.Errorf("not support %s parameter yet", item.In))
 		}
 	}
 }
 
-func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (bodyJSON, bodyParams *astutils.FieldMeta, files []astutils.FieldMeta) {
+func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (bodyJSON *astutils.FieldMeta, files []astutils.FieldMeta) {
 	receiver.resolveSchemaFromRef(operation)
 
 	content := operation.RequestBody.Content
@@ -479,16 +536,8 @@ func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (body
 		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
-	} else if content.FormURL != nil {
-		bodyParams = receiver.schema2Field(content.FormURL.Schema, "bodyParams")
-		if !operation.RequestBody.Required && bodyParams != nil {
-			bodyParams.Type = v3.ToOptional(bodyParams.Type)
-		}
 	} else if content.FormData != nil {
-		bodyParams, files = receiver.parseFormData(content.FormData)
-		if !operation.RequestBody.Required && bodyParams != nil {
-			bodyParams.Type = v3.ToOptional(bodyParams.Type)
-		}
+		_, files = receiver.parseFormData(content.FormData)
 	} else if content.Stream != nil {
 		f := astutils.FieldMeta{
 			Name: "file",
@@ -562,7 +611,7 @@ func (receiver *OpenAPICodeGenerator) resolveSchemaFromRef(operation *v3.Operati
 	}
 }
 
-func (receiver *OpenAPICodeGenerator) globalParams(gparams []v3.Parameter) (v3.Schema, []astutils.FieldMeta, []astutils.FieldMeta) {
+func (receiver *ClientOperationConverter) globalParams(gparams []v3.Parameter) (v3.Schema, []astutils.FieldMeta, []astutils.FieldMeta) {
 	var pathvars, headervars []astutils.FieldMeta
 	qSchema := v3.Schema{
 		Type:       v3.ObjectT,
@@ -576,9 +625,9 @@ func (receiver *OpenAPICodeGenerator) globalParams(gparams []v3.Parameter) (v3.S
 				qSchema.Required = append(qSchema.Required, item.Name)
 			}
 		case v3.InPath:
-			pathvars = append(pathvars, receiver.parameter2Field(item))
+			pathvars = append(pathvars, receiver.Generator.parameter2Field(item))
 		case v3.InHeader:
-			headervars = append(headervars, receiver.parameter2Field(item))
+			headervars = append(headervars, receiver.Generator.parameter2Field(item))
 		default:
 			panic(fmt.Errorf("not support %s parameter yet", item.In))
 		}
@@ -586,7 +635,11 @@ func (receiver *OpenAPICodeGenerator) globalParams(gparams []v3.Parameter) (v3.S
 	return qSchema, pathvars, headervars
 }
 
-var httpTmpl = `package {{.Pkg}}
+var httpTmpl = `/**
+* Generated by go-doudou {{.Version}}.
+* You can edit it as your need.
+*/
+package {{.Pkg}}
 
 import (
 	"context"
@@ -810,7 +863,7 @@ func New{{.Meta.Name}}(opts ...restclient.RestClientOption) *{{.Meta.Name}}Clien
 }
 `
 
-func (receiver *OpenAPICodeGenerator) GenGoHTTP(paths map[string]v3.Path, svcName, dir, env, pkg string) {
+func (receiver *OpenAPICodeGenerator) GenGoHTTP(paths map[string]v3.Path, svcName, dir, env, pkg string, operationConverter IOperationConverter) {
 	_ = os.MkdirAll(dir, os.ModePerm)
 	output := filepath.Join(dir, svcName+"client.go")
 	fi, err := os.Stat(output)
@@ -837,62 +890,15 @@ func (receiver *OpenAPICodeGenerator) GenGoHTTP(paths map[string]v3.Path, svcNam
 	tpl, _ := template.New("http.go.tmpl").Funcs(funcMap).Parse(httpTmpl)
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
-		Meta astutils.InterfaceMeta
-		Env  string
-		Pkg  string
+		Meta    astutils.InterfaceMeta
+		Env     string
+		Pkg     string
+		Version string
 	}{
-		Meta: receiver.Api2Interface(paths, svcName),
-		Env:  env,
-		Pkg:  pkg,
-	})
-	source := strings.TrimSpace(sqlBuf.String())
-	astutils.FixImport([]byte(source), output)
-}
-
-// /shelves/{shelf}/books/{book}
-// [shelves,{shelf},books,{book}]
-// shelves_{shelf}_books_{book}
-// Shelves_ShelfBooks_Book
-func Pattern2Method(pattern string) string {
-	pattern = strings.TrimSuffix(strings.TrimPrefix(pattern, "/"), "/")
-	partials := strings.Split(pattern, "/")
-	var converted []string
-	for _, item := range partials {
-		if strings.HasPrefix(item, "{") && strings.HasSuffix(item, "}") {
-			item = strings.TrimSuffix(strings.TrimPrefix(item, "{"), "}")
-			item = cases.Title(language.English).String(strings.ToLower(item))
-			converted = append(converted, "_"+item)
-			continue
-		}
-		item = cases.Title(language.English).String(strings.ToLower(item))
-		converted = append(converted, item)
-	}
-	return strings.Join(converted, "")
-}
-
-type ApiPath struct {
-	Operation        *v3.Operation
-	GlobalParameters []v3.Parameter
-}
-
-func (receiver *OpenAPICodeGenerator) GenGoInterface(methodPaths map[string]ApiPath, svcName, output string) {
-	_ = os.MkdirAll(filepath.Dir(output), os.ModePerm)
-	funcMap := make(map[string]interface{})
-	funcMap["toCamel"] = strcase.ToCamel
-	funcMap["contains"] = strings.Contains
-	funcMap["restyMethod"] = RestyMethod
-	funcMap["toUpper"] = strings.ToUpper
-	funcMap["isOptional"] = IsOptional
-	tpl, _ := template.New("http.go.tmpl").Funcs(funcMap).Parse(httpTmpl)
-	var sqlBuf bytes.Buffer
-	_ = tpl.Execute(&sqlBuf, struct {
-		Meta astutils.InterfaceMeta
-		Env  string
-		Pkg  string
-	}{
-		Meta: receiver.Api2Interface(paths, svcname),
-		Env:  env,
-		Pkg:  pkg,
+		Meta:    receiver.Api2Interface(paths, svcName, operationConverter),
+		Env:     env,
+		Pkg:     pkg,
+		Version: version.Release,
 	})
 	source := strings.TrimSpace(sqlBuf.String())
 	astutils.FixImport([]byte(source), output)

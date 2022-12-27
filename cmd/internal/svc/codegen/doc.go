@@ -111,6 +111,24 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 
 		if upload {
 			ret.RequestBody = uploadFile(method)
+			for _, item := range method.Params {
+				if item.Type == "context.Context" {
+					continue
+				}
+				if v3.IsBuiltin(item) && item.IsPathVariable {
+					pschema := v3.CopySchema(item)
+					v3.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
+					required := !v3.IsOptional(item.Type)
+					param := v3.Parameter{
+						Name:        strings.ToLower(strcase.ToLowerCamel(item.Name)),
+						In:          v3.InPath,
+						Schema:      &pschema,
+						Description: pschema.Description,
+						Required:    required,
+					}
+					params = append(params, param)
+				}
+			}
 		} else {
 			for _, item := range method.Params {
 				if item.Type == "context.Context" {
@@ -128,6 +146,7 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 						Required:    required,
 					}
 					if item.IsPathVariable {
+						param.Name = strings.ToLower(param.Name)
 						param.In = v3.InPath
 					}
 					params = append(params, param)
@@ -216,6 +235,9 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 	}
 	for _, item := range method.Params {
 		if item.Type == "context.Context" {
+			continue
+		}
+		if item.IsPathVariable {
 			continue
 		}
 		pschemaType := v3.SchemaOf(item)

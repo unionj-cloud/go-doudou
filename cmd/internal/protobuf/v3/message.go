@@ -190,6 +190,10 @@ var (
 		IsTopLevel: true,
 		IsImported: true,
 	}
+	Time = Message{
+		Name:     "google.protobuf.Timestamp",
+		IsScalar: true,
+	}
 )
 
 func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
@@ -216,6 +220,9 @@ func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
 		return Float
 	case "float64":
 		return Double
+	case "time.Time":
+		ImportStore["google/protobuf/timestamp.proto"] = struct{}{}
+		return Time
 	default:
 		return receiver.handleDefaultCase(ft)
 	}
