@@ -42,6 +42,13 @@ func Test_pattern(t *testing.T) {
 			},
 			want: "shelves/:shelf/books/:book",
 		},
+		{
+			name: "",
+			args: args{
+				method: "Goodfood_BigappleBooks_Mybird",
+			},
+			want: "goodfood/:bigapple/books/:mybird",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

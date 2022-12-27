@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/iancoleman/strcase"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"reflect"
@@ -190,6 +190,10 @@ var (
 		IsTopLevel: true,
 		IsImported: true,
 	}
+	Time = Message{
+		Name:     "google.protobuf.Timestamp",
+		IsScalar: true,
+	}
 )
 
 func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
@@ -216,6 +220,9 @@ func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
 		return Float
 	case "float64":
 		return Double
+	case "time.Time":
+		ImportStore["google/protobuf/timestamp.proto"] = struct{}{}
+		return Time
 	default:
 		return receiver.handleDefaultCase(ft)
 	}

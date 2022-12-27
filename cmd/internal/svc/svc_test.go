@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/radovskyb/watcher"
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"

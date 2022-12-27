@@ -23,7 +23,7 @@ var initCmd = &cobra.Command{
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		s := svc.NewSvc(svcdir, svc.WithModName(modName))
+		s := svc.NewSvc(svcdir, svc.WithModName(modName), svc.WithDocPath(docfile))
 		s.Init()
 	},
 }
@@ -32,4 +32,5 @@ func init() {
 	svcCmd.AddCommand(initCmd)
 
 	initCmd.Flags().StringVarP(&modName, "mod", "m", "", `module name`)
+	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 }

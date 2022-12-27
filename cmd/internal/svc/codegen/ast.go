@@ -3,7 +3,7 @@ package codegen
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"go/ast"
 	"strings"
 )
@@ -62,6 +62,7 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	if !strings.HasPrefix(result, "vo.") &&
 		!strings.HasPrefix(result, "dto.") &&
 		result != "context.Context" &&
+		result != "time.Time" &&
 		result != "v3.FileModel" &&
 		result != "multipart.FileHeader" &&
 		result != "os.File" {

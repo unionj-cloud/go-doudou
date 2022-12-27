@@ -12,7 +12,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 )
 
 var httpHandlerTmpl = `/**
@@ -69,6 +69,7 @@ var RouteAnnotationStore = framework.AnnotationStore{
 	{{- end }}
 }
 `
+
 // GetShelves_ShelfBooks_Book
 // /shelves/:shelf/books/:book
 func pattern(method string) string {

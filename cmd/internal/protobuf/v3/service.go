@@ -3,7 +3,7 @@ package v3
 import (
 	"fmt"
 	"github.com/iancoleman/strcase"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"reflect"

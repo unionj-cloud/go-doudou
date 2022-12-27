@@ -1,7 +1,6 @@
 package astutils
 
 import (
-	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
@@ -18,14 +17,4 @@ func TestEnum(t *testing.T) {
 	}
 	sc := NewEnumCollector(ExprString)
 	ast.Walk(sc, root)
-	for k, v := range sc.Methods {
-		if IsEnum(v) {
-			em := EnumMeta{
-				Name:   k,
-				Values: sc.Consts[k],
-			}
-			sc.Enums[k] = em
-		}
-	}
-	require.Equal(t, 1, len(sc.Enums))
 }

@@ -6,12 +6,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
-	v3helper "github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"os/exec"
@@ -223,6 +224,8 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 // Init inits a project
 func (receiver *Svc) Init() {
 	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner)
+	// generate or overwrite svc.go file
+	server.GenSvcGo(receiver.dir, receiver.DocPath)
 }
 
 type SvcOption func(svc *Svc)
@@ -236,6 +239,12 @@ func WithRunner(runner executils.Runner) SvcOption {
 func WithModName(modName string) SvcOption {
 	return func(svc *Svc) {
 		svc.ModName = modName
+	}
+}
+
+func WithDocPath(docfile string) SvcOption {
+	return func(svc *Svc) {
+		svc.DocPath = docfile
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/rbretecher/go-postman-collection"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"go/ast"
