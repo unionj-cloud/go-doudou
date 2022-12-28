@@ -64,7 +64,7 @@ Welcome to contact me from
 - WeChat:  
   <img src="./qrcode.png" alt="wechat-group" width="240">
 - WeChat Group:  
-  <img src="./go-doudou-wechat-group.jpeg" alt="wechat-group" width="240">
+  <img src="./go-doudou-wechat-group.png" alt="wechat-group" width="240">
 - QQ group:  
   <img src="./go-doudou-qq-group.png" alt="qq-group" width="240">
 
