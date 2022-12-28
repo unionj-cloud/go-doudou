@@ -67,7 +67,7 @@ Go-doudou是站在巨人的肩膀上开发而成的，在此感谢以下项目�
 - 微信:  
   <img src="./qrcode.png" alt="wechat-group" width="240">
 - 微信群:  
-  <img src="./go-doudou-wechat-group.jpeg" alt="wechat-group" width="240">
+  <img src="./go-doudou-wechat-group.png" alt="wechat-group" width="240">
 - QQ群:  
   <img src="./go-doudou-qq-group.png" alt="qq-group" width="240">
 
