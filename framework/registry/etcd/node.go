@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -132,10 +133,10 @@ func NewRest(data ...map[string]interface{}) {
 	onceEtcd.Do(func() {
 		InitEtcdCli()
 	})
-	service := config.GetServiceName() + "_rest"
-	port := config.GetPort()
+	service := config.GetServiceName() + "_" + string(cons.REST_TYPE)
+	httpPort := config.GetPort()
 	restLease = getLeaseID()
-	registerService(service, port, restLease, data...)
+	registerService(service, httpPort, restLease, data...)
 	zlogger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
 }
 
@@ -143,16 +144,16 @@ func NewGrpc(data ...map[string]interface{}) {
 	onceEtcd.Do(func() {
 		InitEtcdCli()
 	})
-	service := config.GetServiceName() + "_grpc"
-	port := config.GetGrpcPort()
+	service := config.GetServiceName() + "_" + string(cons.GRPC_TYPE)
+	grpcPort := config.GetGrpcPort()
 	grpcLease = getLeaseID()
-	registerService(service, port, grpcLease, data...)
+	registerService(service, grpcPort, grpcLease, data...)
 	zlogger.Info().Msgf("[go-doudou] %s registered to etcd successfully", service)
 }
 
 func ShutdownRest() {
 	if EtcdCli != nil {
-		service := config.GetServiceName() + "_rest"
+		service := config.GetServiceName() + "_" + string(cons.REST_TYPE)
 		em, err := endpoints.NewManager(EtcdCli, service)
 		if err != nil {
 			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)
@@ -171,7 +172,7 @@ func ShutdownRest() {
 
 func ShutdownGrpc() {
 	if EtcdCli != nil {
-		service := config.GetServiceName() + "_grpc"
+		service := config.GetServiceName() + "_" + string(cons.GRPC_TYPE)
 		em, err := endpoints.NewManager(EtcdCli, service)
 		if err != nil {
 			zlogger.Error().Err(err).Msgf("[go-doudou] failed to deregister %s from etcd", service)

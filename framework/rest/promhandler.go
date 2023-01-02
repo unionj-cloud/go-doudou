@@ -4,6 +4,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+var PromRoutes = promRoutes
+
 func promRoutes() []Route {
 	return []Route{
 		{

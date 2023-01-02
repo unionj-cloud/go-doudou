@@ -84,6 +84,7 @@ func handleDefaultCase(ft string) *Schema {
 			AdditionalProperties: SchemaOf(astutils.FieldMeta{
 				Type: elem,
 			}),
+			XMapType: ft,
 		}
 	}
 	if strings.HasPrefix(ft, "[") {

@@ -13,6 +13,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/banner"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
@@ -277,6 +278,9 @@ func (srv *RestServer) Run() {
 		srv.gddRoutes = append(srv.gddRoutes, docRoutes()...)
 		srv.gddRoutes = append(srv.gddRoutes, promRoutes()...)
 		srv.gddRoutes = append(srv.gddRoutes, configRoutes()...)
+		if _, ok := config.ServiceDiscoveryMap()[constants.SD_MEMBERLIST]; ok {
+			srv.gddRoutes = append(srv.gddRoutes, MemberlistUIRoutes()...)
+		}
 		freq, err := time.ParseDuration(config.GddStatsFreq.Load())
 		if err != nil {
 			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddStatsFreq),
@@ -391,7 +395,6 @@ func (srv *RestServer) Run() {
 	httpServer := srv.newHttpServer()
 	defer func() {
 		register.ShutdownRest()
-
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
 		if err != nil {
 			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),

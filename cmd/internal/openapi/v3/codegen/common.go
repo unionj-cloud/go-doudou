@@ -233,6 +233,9 @@ func (receiver *OpenAPICodeGenerator) additionalProperties2Map(additionalPropert
 	if value, ok := additionalProperties.(map[string]interface{}); ok {
 		var additionalSchema v3.Schema
 		copier.DeepCopy(value, &additionalSchema)
+		if stringutils.IsNotEmpty(additionalSchema.XMapType) {
+			return additionalSchema.XMapType
+		}
 		return "map[string]" + receiver.toGoType(&additionalSchema)
 	}
 	return ""

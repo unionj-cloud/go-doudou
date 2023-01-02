@@ -78,11 +78,7 @@ func (srv *GrpcServer) printServices() {
 // Run runs grpc server
 func (srv *GrpcServer) Run() {
 	banner.Print()
-	if srv.data != nil {
-		register.NewGrpc(srv.data)
-	} else {
-		register.NewGrpc()
-	}
+	register.NewGrpc(srv.data)
 	port := config.DefaultGddGrpcPort
 	if p, err := cast.ToIntE(config.GddGrpcPort.Load()); err == nil {
 		port = p

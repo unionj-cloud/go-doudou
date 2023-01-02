@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var ConfigRoutes = configRoutes
+
 func configRoutes() []Route {
 	return []Route{
 		{

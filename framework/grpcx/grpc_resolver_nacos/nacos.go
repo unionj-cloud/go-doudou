@@ -3,7 +3,6 @@ package grpc_resolver_nacos
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -128,9 +127,6 @@ func populateEndpoints(ctx context.Context, clientConn resolver.ClientConn, inpu
 				//fmt.Printf("%v/n", add)
 				conns = append(conns, add)
 			}
-			//fmt.Printf("%v/n", conns)
-			sort.Sort(byAddressString(conns)) // Don't replace the same address list in the balancer
-
 			clientConn.UpdateState(resolver.State{Addresses: conns})
 		case <-ctx.Done():
 			grpclog.Info("[Nacos resolver] Watch has been finished")
@@ -138,10 +134,3 @@ func populateEndpoints(ctx context.Context, clientConn resolver.ClientConn, inpu
 		}
 	}
 }
-
-// byAddressString sorts resolver.Address by Address Field  sorting in increasing order.
-type byAddressString []resolver.Address
-
-func (p byAddressString) Len() int           { return len(p) }
-func (p byAddressString) Less(i, j int) bool { return p[i].Addr < p[j].Addr }
-func (p byAddressString) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }

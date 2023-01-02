@@ -223,6 +223,7 @@ type Schema struct {
 	// AdditionalProperties *Schema or bool
 	AdditionalProperties interface{} `json:"additionalProperties,omitempty"`
 	Pattern              interface{} `json:"pattern,omitempty"`
+	XMapType             string      `json:"x-map-type,omitempty"`
 }
 
 // Components https://spec.openapis.org/oas/v3.0.3#components-object
