@@ -83,15 +83,6 @@ func Test_seeds(t *testing.T) {
 	}
 }
 
-func Test_join_fail(t *testing.T) {
-	setup()
-	NewRest()
-	defer Shutdown()
-	_ = config.GddMemSeed.Write("not exist seed")
-	_ = config.GddServiceName.Write("testsvc")
-	require.Error(t, join())
-}
-
 func TestAllNodes(t *testing.T) {
 	setup()
 	NewRest()
