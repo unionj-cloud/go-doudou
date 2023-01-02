@@ -27,6 +27,15 @@ import (
 	"time"
 )
 
+var (
+	Tracing             = tracing
+	Metrics             = metrics
+	Log                 = log
+	FallbackContentType = fallbackContentType
+	BasicAuth           = basicAuth
+	Recovery            = recovery
+)
+
 type httpConfigListener struct {
 	configmgr.BaseApolloListener
 }

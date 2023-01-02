@@ -7,6 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_nacos"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -43,7 +44,7 @@ func NewRest(data ...map[string]interface{}) {
 	})
 	registerHost := utils.GetRegisterHost()
 	httpPort := config.GetPort()
-	service := config.GetServiceName() + "_rest"
+	service := config.GetServiceName() + "_" + string(cons.REST_TYPE)
 	weight := config.DefaultGddWeight
 	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
 		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
@@ -99,7 +100,7 @@ func NewGrpc(data ...map[string]interface{}) {
 	})
 	registerHost := utils.GetRegisterHost()
 	grpcPort := config.GetGrpcPort()
-	service := config.GetServiceName() + "_grpc"
+	service := config.GetServiceName() + "_" + string(cons.GRPC_TYPE)
 	weight := config.DefaultGddWeight
 	if stringutils.IsNotEmpty(config.GddWeight.Load()) {
 		if w, err := cast.ToIntE(config.GddWeight.Load()); err == nil {
@@ -148,7 +149,7 @@ func ShutdownRest() {
 	if NamingClient != nil {
 		registerHost := utils.GetRegisterHost()
 		httpPort := config.GetPort()
-		service := config.GetServiceName() + "_rest"
+		service := config.GetServiceName() + "_" + string(cons.REST_TYPE)
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
 			Ip:          registerHost,
 			Port:        httpPort,
@@ -171,7 +172,7 @@ func ShutdownGrpc() {
 	if NamingClient != nil {
 		registerHost := utils.GetRegisterHost()
 		grpcPort := config.GetGrpcPort()
-		service := config.GetServiceName() + "_grpc"
+		service := config.GetServiceName() + "_" + string(cons.GRPC_TYPE)
 		success, err := NamingClient.DeregisterInstance(vo.DeregisterInstanceParam{
 			Ip:          registerHost,
 			Port:        grpcPort,

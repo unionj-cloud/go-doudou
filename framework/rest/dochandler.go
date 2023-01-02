@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 
 // Oas store OpenAPI3.0 description json string
 var Oas string
+var DocRoutes = docRoutes
 
 func docRoutes() []Route {
 	return []Route{
@@ -24,21 +24,22 @@ func docRoutes() []Route {
 					buf    bytes.Buffer
 					scheme string
 				)
-				if tpl, err = template.New("onlinedoc.tmpl").Parse(indexTmpl); err != nil {
+				if tpl, err = template.New("onlinedoc.tmpl").Parse(onlinedocTmpl); err != nil {
 					panic(err)
 				}
-				doc, _ := json.Marshal(Oas)
 				if _req.TLS == nil {
 					scheme = "http"
 				} else {
 					scheme = "https"
 				}
+				doc := Oas
+				docUrl := fmt.Sprintf("%s://%s/go-doudou/openapi.json", scheme, _req.Host)
 				if err = tpl.Execute(&buf, struct {
 					Doc    string
 					DocUrl string
 				}{
-					Doc:    string(doc),
-					DocUrl: fmt.Sprintf("%s://%s/go-doudou/openapi.json", scheme, _req.Host),
+					Doc:    doc,
+					DocUrl: docUrl,
 				}); err != nil {
 					panic(err)
 				}

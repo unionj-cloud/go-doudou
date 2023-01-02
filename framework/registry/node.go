@@ -2,37 +2,26 @@ package registry
 
 import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"strings"
 )
 
 type IServiceProvider interface {
 	SelectServer() string
 }
 
-func getModemap() map[string]struct{} {
-	modeStr := config.GddServiceDiscoveryMode.LoadOrDefault(config.DefaultGddServiceDiscoveryMode)
-	if stringutils.IsEmpty(modeStr) {
-		return nil
-	}
-	modes := strings.Split(modeStr, ",")
-	modemap := make(map[string]struct{})
-	for _, mode := range modes {
-		modemap[mode] = struct{}{}
-	}
-	return modemap
-}
-
 func NewRest(data ...map[string]interface{}) {
-	for mode, _ := range getModemap() {
+	for mode, _ := range config.ServiceDiscoveryMap() {
 		switch mode {
-		case "nacos":
+		case constants.SD_NACOS:
 			nacos.NewRest(data...)
-		case "etcd":
+		case constants.SD_ETCD:
 			etcd.NewRest(data...)
+		case constants.SD_MEMBERLIST:
+			memberlist.NewRest(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
@@ -40,12 +29,14 @@ func NewRest(data ...map[string]interface{}) {
 }
 
 func NewGrpc(data ...map[string]interface{}) {
-	for mode, _ := range getModemap() {
+	for mode, _ := range config.ServiceDiscoveryMap() {
 		switch mode {
-		case "nacos":
+		case constants.SD_NACOS:
 			nacos.NewGrpc(data...)
-		case "etcd":
+		case constants.SD_ETCD:
 			etcd.NewGrpc(data...)
+		case constants.SD_MEMBERLIST:
+			memberlist.NewGrpc(data...)
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
@@ -53,12 +44,14 @@ func NewGrpc(data ...map[string]interface{}) {
 }
 
 func ShutdownRest() {
-	for mode, _ := range getModemap() {
+	for mode, _ := range config.ServiceDiscoveryMap() {
 		switch mode {
-		case "nacos":
+		case constants.SD_NACOS:
 			nacos.ShutdownRest()
-		case "etcd":
+		case constants.SD_ETCD:
 			etcd.ShutdownRest()
+		case constants.SD_MEMBERLIST:
+			memberlist.Shutdown()
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}
@@ -66,12 +59,14 @@ func ShutdownRest() {
 }
 
 func ShutdownGrpc() {
-	for mode, _ := range getModemap() {
+	for mode, _ := range config.ServiceDiscoveryMap() {
 		switch mode {
-		case "nacos":
+		case constants.SD_NACOS:
 			nacos.ShutdownGrpc()
-		case "etcd":
+		case constants.SD_ETCD:
 			etcd.ShutdownGrpc()
+		case constants.SD_MEMBERLIST:
+			memberlist.Shutdown()
 		default:
 			logger.Warn().Msgf("[go-doudou] unknown service discovery mode: %s", mode)
 		}

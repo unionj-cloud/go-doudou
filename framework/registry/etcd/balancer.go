@@ -52,12 +52,6 @@ func (p *wPicker) Pick(balancer.PickInfo) (balancer.PickResult, error) {
 	return balancer.PickResult{SubConn: sc}, nil
 }
 
-type WeightAttributeKey struct{}
-
-type WeightAddrInfo struct {
-	Weight int
-}
-
 type conn struct {
 	sc            balancer.SubConn
 	weight        int
