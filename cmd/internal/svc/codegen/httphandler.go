@@ -2,11 +2,9 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
@@ -70,29 +68,6 @@ var RouteAnnotationStore = framework.AnnotationStore{
 }
 `
 
-// GetShelves_ShelfBooks_Book
-// /shelves/:shelf/books/:book
-func pattern(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	re1, err := regexp.Compile("_?[A-Z]")
-	if err != nil {
-		panic(err)
-	}
-	method = re1.ReplaceAllStringFunc(method, func(s string) string {
-		if strings.HasPrefix(s, "_") {
-			return "/:" + strings.ToLower(strings.TrimPrefix(s, "_"))
-		} else {
-			return "/" + strings.ToLower(s)
-		}
-	})
-	splits := strings.Split(method, "/")[1:]
-	head := strings.ToUpper(splits[0])
-	if sliceutils.StringContains(httpMethods, head) {
-		splits = splits[1:]
-	}
-	return strings.Join(splits, "/")
-}
-
 func noSplitPattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	snake := strcase.ToSnake(method)
@@ -151,7 +126,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 
 	funcMap := make(map[string]interface{})
 	funcMap["httpMethod"] = httpMethod
-	funcMap["pattern"] = pattern
+	funcMap["pattern"] = astutils.Pattern
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["lower"] = strings.ToLower
 	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
