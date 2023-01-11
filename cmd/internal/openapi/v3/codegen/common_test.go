@@ -33,6 +33,13 @@ func TestPattern2Method(t *testing.T) {
 			},
 			want: "Goodfood_BigappleBooks_Mybird",
 		},
+		{
+			name: "",
+			args: args{
+				pattern: "/api/v1/query_range",
+			},
+			want: "ApiV1Query_range",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

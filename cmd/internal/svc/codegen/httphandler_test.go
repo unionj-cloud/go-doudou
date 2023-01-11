@@ -49,6 +49,27 @@ func Test_pattern(t *testing.T) {
 			},
 			want: "goodfood/:bigapple/books/:mybird",
 		},
+		{
+			name: "",
+			args: args{
+				method: "ApiV1Query_range",
+			},
+			want: "api/v1/query_range",
+		},
+		{
+			name: "",
+			args: args{
+				method: "GetQuery_range",
+			},
+			want: "query_range",
+		},
+		{
+			name: "",
+			args: args{
+				method: "GetQuery",
+			},
+			want: "query",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
