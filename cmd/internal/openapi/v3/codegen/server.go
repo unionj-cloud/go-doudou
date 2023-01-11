@@ -102,7 +102,7 @@ func (receiver *ServerOperationConverter) parseForm(form *v3.MediaType) (bodyPar
 		if stringutils.IsNotEmpty(gotype) {
 			continue
 		}
-		field := receiver.Generator.schema2Field(v, k)
+		field := receiver.Generator.schema2Field(v, k, nil, v3.UNKNOWN_EXAMPLE)
 		if !sliceutils.StringContains(schema.Required, k) {
 			field.Type = v3.ToOptional(field.Type)
 		}

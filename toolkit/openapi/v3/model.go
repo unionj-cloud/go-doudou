@@ -364,3 +364,11 @@ var IEnumMethods = []string{
 	"func UnmarshalJSON(bytes []byte) error",
 	"func MarshalJSON() ([]byte, error)",
 }
+
+type ExampleType int
+
+const (
+	UNKNOWN_EXAMPLE ExampleType = iota
+	JSON_EXAMPLE
+	TEXT_EXAMPLE
+)
