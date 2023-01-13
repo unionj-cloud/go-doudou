@@ -59,7 +59,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.0
-	github.com/go-redis/cache/v8 v8.4.3
+	github.com/go-redis/cache/v8 v8.4.4
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/btree v1.0.1
