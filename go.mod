@@ -12,7 +12,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/goccy/go-yaml v1.8.9
+	github.com/goccy/go-yaml v1.9.8
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jeremywohl/flatten v1.0.1
