@@ -1,6 +1,7 @@
 package cast
 
 import (
+	"github.com/shopspring/decimal"
 	"reflect"
 	"testing"
 )
@@ -850,6 +851,32 @@ func TestToIntOrDefault(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ToIntOrDefault(tt.args.s, tt.args.d); got != tt.want {
 				t.Errorf("ToIntOrDefault() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToDecimal(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want decimal.Decimal
+	}{
+		{
+			name: "",
+			args: args{
+				s: "2.43",
+			},
+			want: decimal.NewFromFloat(2.43),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToDecimal(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToDecimal() = %v, want %v", got, tt.want)
 			}
 		})
 	}

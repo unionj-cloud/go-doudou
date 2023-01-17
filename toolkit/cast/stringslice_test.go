@@ -2,6 +2,7 @@ package cast
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"testing"
 )
@@ -884,6 +885,90 @@ func TestToErrorSliceE(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToErrorSliceE() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToDecimalSlice(t *testing.T) {
+	type args struct {
+		s []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []decimal.Decimal
+	}{
+		{
+			name: "",
+			args: args{
+				s: []string{
+					"2.43",
+					"17.89",
+				},
+			},
+			want: []decimal.Decimal{
+				decimal.NewFromFloat(2.43),
+				decimal.NewFromFloat(17.89),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToDecimalSlice(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToDecimalSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToDecimalSliceE(t *testing.T) {
+	type args struct {
+		s []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []decimal.Decimal
+		wantErr bool
+	}{
+		{
+			name: "",
+			args: args{
+				s: []string{
+					"2.43",
+					"17.89",
+				},
+			},
+			want: []decimal.Decimal{
+				decimal.NewFromFloat(2.43),
+				decimal.NewFromFloat(17.89),
+			},
+			wantErr: false,
+		},
+		{
+			name: "",
+			args: args{
+				s: []string{
+					"2.43",
+					"17d.89",
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToDecimalSliceE(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ToDecimalSliceE() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil {
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("ToDecimalSliceE() got = %v, want %v", got, tt.want)
+				}
 			}
 		})
 	}

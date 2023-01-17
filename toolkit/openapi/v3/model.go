@@ -289,7 +289,8 @@ const (
 	// DateTimeF date-time
 	DateTimeF Format = "date-time"
 	// BinaryF binary
-	BinaryF Format = "binary"
+	BinaryF  Format = "binary"
+	DecimalF Format = "decimal"
 )
 
 var (
@@ -339,6 +340,10 @@ var (
 	FileArray = &Schema{
 		Type:  ArrayT,
 		Items: File,
+	}
+	Decimal = &Schema{
+		Type:   StringT,
+		Format: DecimalF,
 	}
 )
 

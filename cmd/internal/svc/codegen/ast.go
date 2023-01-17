@@ -65,6 +65,7 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 		result != "time.Time" &&
 		result != "v3.FileModel" &&
 		result != "multipart.FileHeader" &&
+		result != "decimal.Decimal" &&
 		result != "os.File" {
 		panic(fmt.Errorf("not support %s in svc.go file and vo, dto package", result))
 	}

@@ -71,6 +71,8 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return File
 	case "time.Time":
 		return Time
+	case "decimal.Decimal":
+		return Decimal
 	default:
 		return handleDefaultCase(ft)
 	}
@@ -134,39 +136,41 @@ func handleDefaultCase(ft string) *Schema {
 }
 
 var castFuncMap = map[string]string{
-	"bool":          "ToBool",
-	"float64":       "ToFloat64",
-	"float32":       "ToFloat32",
-	"int64":         "ToInt64",
-	"int32":         "ToInt32",
-	"int16":         "ToInt16",
-	"int8":          "ToInt8",
-	"int":           "ToInt",
-	"uint":          "ToUint",
-	"uint8":         "ToUint8",
-	"uint16":        "ToUint16",
-	"uint32":        "ToUint32",
-	"uint64":        "ToUint64",
-	"error":         "ToError",
-	"[]byte":        "ToByteSlice",
-	"[]rune":        "ToRuneSlice",
-	"[]interface{}": "ToInterfaceSlice",
-	"[]bool":        "ToBoolSlice",
-	"[]int":         "ToIntSlice",
-	"[]float64":     "ToFloat64Slice",
-	"[]float32":     "ToFloat32Slice",
-	"[]int64":       "ToInt64Slice",
-	"[]int32":       "ToInt32Slice",
-	"[]int16":       "ToInt16Slice",
-	"[]int8":        "ToInt8Slice",
-	"[]uint":        "ToUintSlice",
-	"[]uint8":       "ToUint8Slice",
-	"[]uint16":      "ToUint16Slice",
-	"[]uint32":      "ToUint32Slice",
-	"[]uint64":      "ToUint64Slice",
-	"[]error":       "ToErrorSlice",
-	"[][]byte":      "ToByteSliceSlice",
-	"[][]rune":      "ToRuneSliceSlice",
+	"bool":              "ToBool",
+	"float64":           "ToFloat64",
+	"float32":           "ToFloat32",
+	"int64":             "ToInt64",
+	"int32":             "ToInt32",
+	"int16":             "ToInt16",
+	"int8":              "ToInt8",
+	"int":               "ToInt",
+	"uint":              "ToUint",
+	"uint8":             "ToUint8",
+	"uint16":            "ToUint16",
+	"uint32":            "ToUint32",
+	"uint64":            "ToUint64",
+	"error":             "ToError",
+	"decimal.Decimal":   "ToDecimal",
+	"[]byte":            "ToByteSlice",
+	"[]rune":            "ToRuneSlice",
+	"[]interface{}":     "ToInterfaceSlice",
+	"[]bool":            "ToBoolSlice",
+	"[]int":             "ToIntSlice",
+	"[]float64":         "ToFloat64Slice",
+	"[]float32":         "ToFloat32Slice",
+	"[]int64":           "ToInt64Slice",
+	"[]int32":           "ToInt32Slice",
+	"[]int16":           "ToInt16Slice",
+	"[]int8":            "ToInt8Slice",
+	"[]uint":            "ToUintSlice",
+	"[]uint8":           "ToUint8Slice",
+	"[]uint16":          "ToUint16Slice",
+	"[]uint32":          "ToUint32Slice",
+	"[]uint64":          "ToUint64Slice",
+	"[]error":           "ToErrorSlice",
+	"[]decimal.Decimal": "ToDecimalSlice",
+	"[][]byte":          "ToByteSliceSlice",
+	"[][]rune":          "ToRuneSliceSlice",
 }
 
 func IsSupport(t string) bool {

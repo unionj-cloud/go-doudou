@@ -1,5 +1,7 @@
 package vo
 
+import "github.com/shopspring/decimal"
+
 //go:generate go-doudou name --file $GOFILE -o
 
 // 筛选条件
@@ -38,6 +40,7 @@ type PageRet struct {
 	PageSize int
 	Total    int
 	HasNext  bool
+	Price    decimal.Decimal
 }
 
 type UserVo struct {
