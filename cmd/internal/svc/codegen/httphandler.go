@@ -2,8 +2,6 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
@@ -70,22 +68,6 @@ var RouteAnnotationStore = framework.AnnotationStore{
 }
 `
 
-// GetShelves_ShelfBooks_Book
-// /shelves/:shelf/books/:book
-func pattern(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
-	splits := strings.Split(snake, "_")
-	head := strings.ToUpper(splits[0])
-	if sliceutils.StringContains(httpMethods, head) {
-		splits = splits[1:]
-	}
-	clean := sliceutils.StringFilter(splits, func(item string) bool {
-		return stringutils.IsNotEmpty(item)
-	})
-	return strings.Join(clean, "/")
-}
-
 func noSplitPattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	snake := strcase.ToSnake(method)
@@ -144,7 +126,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 
 	funcMap := make(map[string]interface{})
 	funcMap["httpMethod"] = httpMethod
-	funcMap["pattern"] = pattern
+	funcMap["pattern"] = astutils.Pattern
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["lower"] = strings.ToLower
 	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {

@@ -275,7 +275,15 @@ func (receiver *OpenAPICodeGenerator) GenGoDto(schemas map[string]v3.Schema, out
 	astutils.FixImport([]byte(source), output)
 }
 
-func (receiver *OpenAPICodeGenerator) schema2Field(schema *v3.Schema, name string) *astutils.FieldMeta {
+// TODO example2Schema converts example to *v3.Schema
+func (receiver *OpenAPICodeGenerator) example2Schema(example interface{}, exampleType v3.ExampleType) *v3.Schema {
+	return v3.Any
+}
+
+func (receiver *OpenAPICodeGenerator) schema2Field(schema *v3.Schema, name string, example interface{}, exampleType v3.ExampleType) *astutils.FieldMeta {
+	if schema == nil {
+		schema = receiver.example2Schema(example, exampleType)
+	}
 	var comments []string
 	if stringutils.IsNotEmpty(schema.Description) {
 		comments = append(comments, strings.Split(schema.Description, "\n")...)
@@ -303,16 +311,16 @@ func (receiver *OpenAPICodeGenerator) responseBody(endpoint, httpMethod string, 
 	}
 
 	if content.JSON != nil {
-		results = append(results, *receiver.schema2Field(content.JSON.Schema, "ret"))
+		results = append(results, *receiver.schema2Field(content.JSON.Schema, "ret", content.JSON.Example, v3.JSON_EXAMPLE))
 	} else if content.Stream != nil {
 		results = append(results, astutils.FieldMeta{
 			Name: "_downloadFile",
 			Type: "*os.File",
 		})
 	} else if content.TextPlain != nil {
-		results = append(results, *receiver.schema2Field(content.TextPlain.Schema, "ret"))
+		results = append(results, *receiver.schema2Field(content.TextPlain.Schema, "ret", content.TextPlain.Example, v3.TEXT_EXAMPLE))
 	} else if content.Default != nil {
-		results = append(results, *receiver.schema2Field(content.Default.Schema, "ret"))
+		results = append(results, *receiver.schema2Field(content.Default.Schema, "ret", content.Default.Example, v3.TEXT_EXAMPLE))
 	} else {
 		return nil, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
 	}
@@ -434,7 +442,7 @@ func (receiver *ClientOperationConverter) form(operation *v3.Operation) (bodyPar
 	content := operation.RequestBody.Content
 	if content.JSON != nil {
 	} else if content.FormURL != nil {
-		bodyParams = receiver.Generator.schema2Field(content.FormURL.Schema, "bodyParams")
+		bodyParams = receiver.Generator.schema2Field(content.FormURL.Schema, "bodyParams", content.FormURL.Example, v3.TEXT_EXAMPLE)
 		if !operation.RequestBody.Required && bodyParams != nil {
 			bodyParams.Type = v3.ToOptional(bodyParams.Type)
 		}
@@ -455,7 +463,7 @@ func (receiver *ClientOperationConverter) ConvertOperation(endpoint, httpMethod 
 	receiver.operationParams(operation.Parameters, &qSchema, &pathvars, &headervars)
 
 	if len(qSchema.Properties) > 0 {
-		qparams = receiver.Generator.schema2Field(&qSchema, "queryParams")
+		qparams = receiver.Generator.schema2Field(&qSchema, "queryParams", nil, v3.UNKNOWN_EXAMPLE)
 		if qSchema.Type == v3.ObjectT && len(qSchema.Required) == 0 {
 			qparams.Type = v3.ToOptional(qparams.Type)
 		}
@@ -535,7 +543,7 @@ func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (body
 
 	content := operation.RequestBody.Content
 	if content.JSON != nil {
-		bodyJSON = receiver.schema2Field(content.JSON.Schema, "bodyJSON")
+		bodyJSON = receiver.schema2Field(content.JSON.Schema, "bodyJSON", content.JSON.Example, v3.JSON_EXAMPLE)
 		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
@@ -551,12 +559,12 @@ func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (body
 		}
 		files = append(files, f)
 	} else if content.TextPlain != nil {
-		bodyJSON = receiver.schema2Field(content.TextPlain.Schema, "bodyJSON")
+		bodyJSON = receiver.schema2Field(content.TextPlain.Schema, "bodyJSON", content.TextPlain.Example, v3.TEXT_EXAMPLE)
 		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
 	} else if content.Default != nil {
-		bodyJSON = receiver.schema2Field(content.Default.Schema, "bodyJSON")
+		bodyJSON = receiver.schema2Field(content.Default.Schema, "bodyJSON", content.TextPlain.Example, v3.TEXT_EXAMPLE)
 		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
@@ -596,7 +604,7 @@ func (receiver *OpenAPICodeGenerator) parseFormData(formData *v3.MediaType) (bod
 		}
 	}
 	if len(aSchema.Properties) > 0 {
-		bodyParams = receiver.schema2Field(&aSchema, "bodyParams")
+		bodyParams = receiver.schema2Field(&aSchema, "bodyParams", nil, v3.UNKNOWN_EXAMPLE)
 	}
 	return
 }

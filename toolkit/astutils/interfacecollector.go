@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"regexp"
 	"strings"
 )
 
@@ -55,14 +56,32 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 	return nil
 }
 
-func pathVariables(method string) (ret []string) {
+// GetShelves_ShelfBooks_Book
+// /shelves/:shelf/books/:book
+func Pattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
-	splits := strings.Split(snake, "_")
+	re1, err := regexp.Compile("_?[A-Z]")
+	if err != nil {
+		panic(err)
+	}
+	method = re1.ReplaceAllStringFunc(method, func(s string) string {
+		if strings.HasPrefix(s, "_") {
+			return "/:" + strings.ToLower(strings.TrimPrefix(s, "_"))
+		} else {
+			return "/" + strings.ToLower(s)
+		}
+	})
+	splits := strings.Split(method, "/")[1:]
 	head := strings.ToUpper(splits[0])
 	if sliceutils.StringContains(httpMethods, head) {
 		splits = splits[1:]
 	}
+	return strings.Join(splits, "/")
+}
+
+func pathVariables(method string) (ret []string) {
+	endpoint := Pattern(method)
+	splits := strings.Split(endpoint, "/")
 	pvs := sliceutils.StringFilter(splits, func(item string) bool {
 		return stringutils.IsNotEmpty(item) && strings.HasPrefix(item, ":")
 	})

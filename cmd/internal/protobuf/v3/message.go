@@ -212,7 +212,7 @@ func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
 		return Uint64
 	case "bool":
 		return Bool
-	case "string", "error", "[]rune":
+	case "string", "error", "[]rune", "decimal.Decimal":
 		return String
 	case "[]byte", "v3.FileModel", "os.File":
 		return Bytes

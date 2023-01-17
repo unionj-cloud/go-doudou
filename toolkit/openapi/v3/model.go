@@ -289,7 +289,8 @@ const (
 	// DateTimeF date-time
 	DateTimeF Format = "date-time"
 	// BinaryF binary
-	BinaryF Format = "binary"
+	BinaryF  Format = "binary"
+	DecimalF Format = "decimal"
 )
 
 var (
@@ -340,6 +341,10 @@ var (
 		Type:  ArrayT,
 		Items: File,
 	}
+	Decimal = &Schema{
+		Type:   StringT,
+		Format: DecimalF,
+	}
 )
 
 type FileModel struct {
@@ -364,3 +369,11 @@ var IEnumMethods = []string{
 	"func UnmarshalJSON(bytes []byte) error",
 	"func MarshalJSON() ([]byte, error)",
 }
+
+type ExampleType int
+
+const (
+	UNKNOWN_EXAMPLE ExampleType = iota
+	JSON_EXAMPLE
+	TEXT_EXAMPLE
+)

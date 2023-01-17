@@ -36,7 +36,7 @@ func Pattern2Method(pattern string) string {
 	pattern = strings.TrimSuffix(strings.TrimPrefix(pattern, "/"), "/")
 	partials := strings.Split(pattern, "/")
 	var converted []string
-	nosymbolreg := regexp.MustCompile(`[^a-zA-Z0-9]`)
+	nosymbolreg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
 	for _, item := range partials {
 		if strings.HasPrefix(item, "{") && strings.HasSuffix(item, "}") {
 			item = strings.TrimSuffix(strings.TrimPrefix(item, "{"), "}")
@@ -102,7 +102,7 @@ func (receiver *ServerOperationConverter) parseForm(form *v3.MediaType) (bodyPar
 		if stringutils.IsNotEmpty(gotype) {
 			continue
 		}
-		field := receiver.Generator.schema2Field(v, k)
+		field := receiver.Generator.schema2Field(v, k, nil, v3.UNKNOWN_EXAMPLE)
 		if !sliceutils.StringContains(schema.Required, k) {
 			field.Type = v3.ToOptional(field.Type)
 		}

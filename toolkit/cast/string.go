@@ -3,6 +3,7 @@ package cast
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 	"strconv"
 )
 
@@ -144,4 +145,13 @@ func ToRuneSliceE(s string) ([]rune, error) {
 
 func ToByteSliceE(s string) ([]byte, error) {
 	return []byte(s), nil
+}
+
+func ToDecimal(s string) decimal.Decimal {
+	ret, _ := decimal.NewFromString(s)
+	return ret
+}
+
+func ToDecimalE(s string) (decimal.Decimal, error) {
+	return decimal.NewFromString(s)
 }

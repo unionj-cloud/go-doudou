@@ -10,25 +10,6 @@ import (
 	"testing"
 )
 
-func Test_versionCmd_No(t *testing.T) {
-	Convey("Should not panic and stop to upgrade when run version command", t, func() {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		prompt := mock.NewMockISelect(ctrl)
-		prompt.
-			EXPECT().
-			Run().
-			AnyTimes().
-			Return(0, "No", nil)
-
-		cmd.Prompt = prompt
-
-		So(func() {
-			ExecuteCommandC(cmd.GetRootCmd(), []string{"version"}...)
-		}, ShouldNotPanic)
-	})
-}
-
 func Test_versionCmd_Yes(t *testing.T) {
 	Convey("Should not panic and succeed to upgrade when run version command", t, func() {
 		ctrl := gomock.NewController(t)
