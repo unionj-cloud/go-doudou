@@ -77,7 +77,7 @@ require (
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.15.11
 	github.com/lithammer/shortuuid/v4 v4.0.0
-	github.com/mattn/go-colorable v0.1.12
+	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/miekg/dns v1.1.42
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
