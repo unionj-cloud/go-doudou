@@ -71,7 +71,7 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return File
 	case "time.Time":
 		return Time
-	case "decimal.Decimal":
+	case "decimal.Decimal": // simple treat decimal.Decimal as string
 		return Decimal
 	default:
 		return handleDefaultCase(ft)
