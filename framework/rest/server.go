@@ -86,13 +86,14 @@ func toMiddlewareFunc(m func(http.Handler) http.HandlerFunc) MiddlewareFunc {
 
 // RestServer wraps httpRouter router
 type RestServer struct {
-	bizRouter   *httprouter.RouteGroup
-	rootRouter  *httprouter.Router
-	gddRoutes   []Route
-	debugRoutes []Route
-	bizRoutes   []Route
-	middlewares []MiddlewareFunc
-	data        map[string]interface{}
+	bizRouter    *httprouter.RouteGroup
+	rootRouter   *httprouter.Router
+	gddRoutes    []Route
+	debugRoutes  []Route
+	bizRoutes    []Route
+	middlewares  []MiddlewareFunc
+	data         map[string]interface{}
+	panicHandler func(inner http.Handler) http.Handler
 }
 
 func (srv *RestServer) printRoutes() {
@@ -143,8 +144,9 @@ func NewRestServer(data ...map[string]interface{}) *RestServer {
 	rootRouter := httprouter.New()
 	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
 	srv := &RestServer{
-		bizRouter:  rootRouter.NewGroup(rr),
-		rootRouter: rootRouter,
+		bizRouter:    rootRouter.NewGroup(rr),
+		rootRouter:   rootRouter,
+		panicHandler: recovery,
 	}
 	srv.middlewares = append(srv.middlewares,
 		tracing,
@@ -168,6 +170,61 @@ func NewRestServer(data ...map[string]interface{}) *RestServer {
 	if len(data) > 0 {
 		srv.data = data[0]
 	}
+	return srv
+}
+
+type ServerOption func(server *RestServer)
+
+func WithPanicHandler(panicHandler func(inner http.Handler) http.Handler) ServerOption {
+	return func(server *RestServer) {
+		server.panicHandler = panicHandler
+	}
+}
+
+func WithUserData(userData map[string]interface{}) ServerOption {
+	return func(server *RestServer) {
+		server.data = userData
+	}
+}
+
+// NewRestServerWithOptions create a RestServer instance with options
+func NewRestServerWithOptions(options ...ServerOption) *RestServer {
+	rr := config.DefaultGddRouteRootPath
+	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
+		rr = config.GddRouteRootPath.Load()
+	}
+	if stringutils.IsEmpty(rr) {
+		rr = "/"
+	}
+	rootRouter := httprouter.New()
+	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
+	srv := &RestServer{
+		bizRouter:    rootRouter.NewGroup(rr),
+		rootRouter:   rootRouter,
+		panicHandler: recovery,
+	}
+	for _, fn := range options {
+		fn(srv)
+	}
+	srv.middlewares = append(srv.middlewares,
+		tracing,
+		metrics,
+	)
+	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
+		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
+		if err != nil {
+			panic(err)
+		}
+		srv.middlewares = append(srv.middlewares, toMiddlewareFunc(gzipMiddleware))
+	}
+	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
+		srv.middlewares = append(srv.middlewares, log)
+	}
+	srv.middlewares = append(srv.middlewares,
+		requestid.RequestIDHandler,
+		handlers.ProxyHeaders,
+		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
+	)
 	return srv
 }
 
@@ -374,7 +431,7 @@ func (srv *RestServer) Run() {
 			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), h, item.Name)
 		}
 	}
-	srv.middlewares = append(srv.middlewares, recovery)
+	srv.middlewares = append(srv.middlewares, srv.panicHandler)
 	for _, item := range srv.bizRoutes {
 		h := http.Handler(item.HandlerFunc)
 		for i := len(srv.middlewares) - 1; i >= 0; i-- {
