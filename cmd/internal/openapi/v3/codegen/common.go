@@ -320,7 +320,7 @@ func (receiver *OpenAPICodeGenerator) responseBody(endpoint, httpMethod string, 
 	} else if content.TextPlain != nil {
 		results = append(results, *receiver.schema2Field(content.TextPlain.Schema, "ret", content.TextPlain.Example, v3.TEXT_EXAMPLE))
 	} else if content.Default != nil {
-		results = append(results, *receiver.schema2Field(content.Default.Schema, "ret", content.TextPlain.Example, v3.TEXT_EXAMPLE))
+		results = append(results, *receiver.schema2Field(content.Default.Schema, "ret", content.Default.Example, v3.TEXT_EXAMPLE))
 	} else {
 		return nil, errors.Errorf("200 response content definition not support yet in api %s %s", httpMethod, endpoint)
 	}

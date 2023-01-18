@@ -53,7 +53,7 @@ func TestGenDocUploadFile(t *testing.T) {
 	}
 	svcfile := filepath.Join(testDir, "svc.go")
 	ic := astutils.BuildInterfaceCollector(svcfile, ExprStringP)
-
+	ParseDto(testDir, "vo")
 	tests := []struct {
 		name string
 		args args
@@ -113,5 +113,15 @@ func TestParseVo(t *testing.T) {
 			ParseDto(testDir, "vo")
 		}, ShouldNotPanic)
 		So(len(v3helper.Schemas), ShouldNotBeZeroValue)
+	})
+}
+
+func TestParseVo_Decimal(t *testing.T) {
+	Convey("Test Parse decimal.Decimal type", t, func() {
+		ParseDto(testDir, "dto")
+		schemas := v3helper.Schemas
+		laptopSchema := schemas["Laptop"]
+		priceSchema := laptopSchema.Properties["Price"]
+		So(priceSchema, ShouldResemble, v3helper.Decimal)
 	})
 }

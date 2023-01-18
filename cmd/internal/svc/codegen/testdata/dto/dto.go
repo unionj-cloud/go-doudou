@@ -4,6 +4,8 @@
  */
 package dto
 
+import "github.com/shopspring/decimal"
+
 type StringSliceWrapper struct {
 	Value []string
 }
@@ -32,4 +34,8 @@ type Target struct {
 	ScrapePool *string `json:"scrapePool"`
 
 	ScrapeURL *string `json:"scrapeURL"`
+}
+
+type Laptop struct {
+	Price decimal.Decimal
 }

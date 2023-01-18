@@ -2,6 +2,7 @@ package cast
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
 )
 
 func ToIntSliceE(s []string) ([]int, error) {
@@ -272,6 +273,27 @@ func ToInterfaceSliceE(s []string) ([]interface{}, error) {
 	var ret []interface{}
 	for _, item := range s {
 		ret = append(ret, item)
+	}
+	return ret, nil
+}
+
+func ToDecimalSlice(s []string) []decimal.Decimal {
+	var ret []decimal.Decimal
+	for _, item := range s {
+		d, _ := decimal.NewFromString(item)
+		ret = append(ret, d)
+	}
+	return ret
+}
+
+func ToDecimalSliceE(s []string) ([]decimal.Decimal, error) {
+	var ret []decimal.Decimal
+	for _, item := range s {
+		d, err := ToDecimalE(item)
+		if err != nil {
+			return nil, fmt.Errorf("unable to cast string slice %#v to []decimal.Decimal because of error %s", s, err)
+		}
+		ret = append(ret, d)
 	}
 	return ret, nil
 }
