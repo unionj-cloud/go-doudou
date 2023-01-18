@@ -9,7 +9,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
@@ -298,19 +297,13 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 	}
 }
 
+// GetShelves_ShelfBooks_Book
+// shelves/:shelf/books/:book
 func apiPattern(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(strings.ReplaceAll(method, "_", "_:"))
-	splits := strings.Split(snake, "_")
-	head := strings.ToUpper(splits[0])
-	if sliceutils.StringContains(httpMethods, head) {
-		splits = splits[1:]
-	}
-	clean := sliceutils.StringFilter(splits, func(item string) bool {
-		return stringutils.IsNotEmpty(item)
-	})
+	ret := astutils.Pattern(method)
+	splits := strings.Split(ret, "/")
 	var partials []string
-	for _, v := range clean {
+	for _, v := range splits {
 		if strings.HasPrefix(v, ":") {
 			partials = append(partials, "{"+strings.TrimPrefix(v, ":")+"}")
 		} else {
