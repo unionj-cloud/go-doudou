@@ -57,7 +57,7 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 }
 
 // GetShelves_ShelfBooks_Book
-// /shelves/:shelf/books/:book
+// shelves/:shelf/books/:book
 func Pattern(method string) string {
 	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
 	re1, err := regexp.Compile("_?[A-Z]")

@@ -35,4 +35,7 @@ type Usersvc interface {
 
 	// comment5
 	DownloadAvatar(ctx context.Context, userId interface{}, data []byte, price decimal.Decimal, userAttrs ...string) (*os.File, error)
+
+	GetQuery_range(ctx context.Context) error
+	GetShelves_ShelfBooks_Book(ctx context.Context) error
 }

@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
@@ -124,4 +125,32 @@ func TestParseVo_Decimal(t *testing.T) {
 		priceSchema := laptopSchema.Properties["Price"]
 		So(priceSchema, ShouldResemble, v3helper.Decimal)
 	})
+}
+
+func Test_pathsOf(t *testing.T) {
+	type args struct {
+		dir string
+		ic  astutils.InterfaceCollector
+	}
+	svcfile := filepath.Join(testDir, "svc.go")
+	ic := astutils.BuildInterfaceCollector(svcfile, ExprStringP)
+	ParseDto(testDir, "vo")
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "1",
+			args: args{
+				testDir,
+				ic,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			paths := pathsOf(tt.args.ic, 0)
+			fmt.Println(paths)
+		})
+	}
 }
