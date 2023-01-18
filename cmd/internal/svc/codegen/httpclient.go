@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"github.com/klauspost/compress/gzip"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
@@ -67,7 +68,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 	{{- if ne $p.Type "context.Context" }}
 	{{- $p.Name}} {{$p.Type}},
 	{{- end }}
-    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
+    {{- end }} options Options) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
@@ -147,7 +148,28 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
 		{{- else if not (isBuiltin $p)}}
-		_req.SetBody({{$p.Name}})
+		if options.GzipReqBody {
+			pr, pw := io.Pipe()
+			go func() {
+				gw := gzip.NewWriter(pw)
+				_err = json.NewEncoder(gw).Encode({{$p.Name}})
+				if _err != nil {
+					err = errors.Wrap(_err, "error")
+					return
+				}
+				_err = gw.Close()
+				if _err != nil {
+					err = errors.Wrap(_err, "error")
+					return
+				}
+				defer pw.CloseWithError(err)
+			}()
+			_req.SetHeader("Content-Type", "application/json")
+			_req.SetHeader("Content-Encoding", "gzip")
+			_req.SetBody(pr)
+		} else {
+			_req.SetBody({{$p.Name}})
+		}
 		{{- else if isSlice $p.Type }}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil { 
