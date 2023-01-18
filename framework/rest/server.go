@@ -151,6 +151,7 @@ func NewRestServer(data ...map[string]interface{}) *RestServer {
 	srv.middlewares = append(srv.middlewares,
 		tracing,
 		metrics,
+		gzipBody,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
 		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
@@ -209,6 +210,7 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 	srv.middlewares = append(srv.middlewares,
 		tracing,
 		metrics,
+		gzipBody,
 	)
 	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
 		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
