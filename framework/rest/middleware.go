@@ -7,6 +7,7 @@ import (
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"
 	"github.com/felixge/httpsnoop"
+	"github.com/klauspost/compress/gzip"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -250,6 +251,23 @@ func recovery(inner http.Handler) http.Handler {
 				http.Error(w, respErr, statusCode)
 			}
 		}()
+		inner.ServeHTTP(w, r)
+	})
+}
+
+// gzipBody handles gzip-ed request body
+func gzipBody(inner http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Handle gzip decoding of the body
+		if r.Header.Get("Content-Encoding") == "gzip" {
+			b, err := gzip.NewReader(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			defer b.Close()
+			r.Body = b
+		}
 		inner.ServeHTTP(w, r)
 	})
 }
