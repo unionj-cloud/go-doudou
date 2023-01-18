@@ -28,13 +28,17 @@ import (
 	"os"
 )
 
+type Options struct {
+	GzipReqBody bool
+}
+
 type I{{.Meta.Name}}Client interface {
 {{- range $m := .Meta.Methods }}
 	{{$m.Name}}(ctx context.Context, _headers map[string]string, {{- range $i, $p := $m.Params}}
 	{{- if ne $p.Type "context.Context" }}
 	{{- $p.Name}} {{$p.Type}},
 	{{- end }}
-    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
+    {{- end }} options Options) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }})

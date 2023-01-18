@@ -44,7 +44,7 @@ var appendTmpl = `
 	{{- if ne $p.Type "context.Context" }}
 	{{- $p.Name}} {{$p.Type}},
 	{{- end }}
-    {{- end }}) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
+    {{- end }} options Options) (_resp *resty.Response, {{- range $i, $r := $m.Results}}
                      {{- if $i}},{{end}}
                      {{- $r.Name}} {{$r.Type}}
                      {{- end }}) {
@@ -61,6 +61,7 @@ var appendTmpl = `
 				{{- end }}
 				{{- end }}
 				{{- end }}
+				options,
 			)
 			{{- range $r := $m.Results }}
 				{{- if eq $r.Type "error" }}
