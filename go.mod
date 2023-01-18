@@ -16,7 +16,7 @@ require (
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/jmoiron/sqlx v1.3.1
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
