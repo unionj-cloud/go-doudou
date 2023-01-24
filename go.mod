@@ -11,7 +11,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/goccy/go-yaml v1.9.8
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.1.3
