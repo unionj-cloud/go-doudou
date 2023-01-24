@@ -79,7 +79,7 @@ require (
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-runewidth v0.0.10 // indirect
-	github.com/miekg/dns v1.1.42
+	github.com/miekg/dns v1.1.50
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.8.0
