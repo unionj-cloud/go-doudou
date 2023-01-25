@@ -30,7 +30,7 @@ type {{.Name}} struct {
 }`
 
 // GenEntityGo generates structs code in entity pkg from database tables
-func GenEntityGo(dpath string, entity astutils.StructMeta) error {
+func GenEntityGo(dpath string, entity astutils.StructMeta) {
 	var (
 		err error
 		f   *os.File
@@ -47,5 +47,4 @@ func GenEntityGo(dpath string, entity astutils.StructMeta) error {
 	} else {
 		log.Warnf("file %s already exists", dfile)
 	}
-	return nil
 }
