@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"os"
 	"path/filepath"
@@ -66,16 +67,17 @@ func (d Ddl) Exec() {
 		tables = table.Struct2Table(timeoutCtx, d.Dir, d.Pre, existTables, db, d.Conf.Schema)
 	} else {
 		tables = table.Table2struct(timeoutCtx, d.Pre, d.Conf.Schema, existTables, db)
+		var entities []astutils.StructMeta
 		for _, item := range tables {
 			dfile := filepath.Join(d.Dir, strings.ToLower(item.Meta.Name)+".go")
 			if _, err = os.Stat(dfile); os.IsNotExist(err) {
-				if err = codegen.GenEntityGo(d.Dir, item.Meta); err != nil {
-					panic(errors.Wrap(err, caller.NewCaller().String()))
-				}
+				codegen.GenEntityGo(d.Dir, item.Meta)
+				entities = append(entities, item.Meta)
 			} else {
 				logrus.Warnf("file %s already exists", dfile)
 			}
 		}
+		codegen.GenDto(d.Dir, entities)
 	}
 
 	if d.Dao {
