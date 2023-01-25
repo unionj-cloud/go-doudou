@@ -36,7 +36,7 @@ require (
 )
 
 require (
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/go-github/v42 v42.0.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-sockaddr v1.0.2
