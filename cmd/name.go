@@ -32,7 +32,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	nameCmd.Flags().StringVarP(&file, "file", "f", "", "absolute path of vo file")
+	nameCmd.Flags().StringVarP(&file, "file", "f", "", "absolute path of dto file")
 	nameCmd.Flags().StringVarP(&strategy, "strategy", "s", "lowerCamel", `name of strategy, currently only support "lowerCamel" and "snake"`)
 	nameCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, "whether omit empty value or not")
 	nameCmd.Flags().BoolVar(&form, "form", false, "whether need form tag for https://github.com/go-playground/form")
