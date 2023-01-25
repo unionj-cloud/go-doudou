@@ -82,7 +82,7 @@ require (
 	github.com/miekg/dns v1.1.50
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/rbretecher/go-postman-collection v0.8.0
+	github.com/rbretecher/go-postman-collection v0.9.0
 	github.com/rs/zerolog v1.28.0
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 	github.com/sergi/go-diff v1.2.0 // indirect
