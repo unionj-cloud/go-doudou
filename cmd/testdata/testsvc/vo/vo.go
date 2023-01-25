@@ -1,6 +1,7 @@
 package vo
 
 //go:generate go-doudou name --file $GOFILE
+//go:generate go-doudou enum --file $GOFILE
 
 type PageFilter struct {
 	// 真实姓名，前缀匹配
@@ -43,3 +44,20 @@ type UserVo struct {
 	Phone string
 	Dept  string
 }
+
+type RoleEnum int
+
+const (
+	GUEST RoleEnum = iota
+	USER
+	ADMIN
+)
+
+type KeyboardLayout int
+
+const (
+	UNKNOWN KeyboardLayout = iota
+	QWERTZ
+	AZERTY
+	QWERTY
+)

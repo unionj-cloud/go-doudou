@@ -190,11 +190,11 @@ func ParseDtoGrpc(dir string, p v3.ProtoGenerator, dtoDir string) {
 	allMethods = make(map[string][]astutils.MethodMeta)
 	allConsts = make(map[string][]string)
 	for _, file := range files {
-		methods, consts := enumsOf(file)
-		for k, v := range methods {
+		sc := astutils.EnumsOf(file, ExprStringP)
+		for k, v := range sc.Methods {
 			allMethods[k] = append(allMethods[k], v...)
 		}
-		for k, v := range consts {
+		for k, v := range sc.Consts {
 			allConsts[k] = append(allConsts[k], v...)
 		}
 	}

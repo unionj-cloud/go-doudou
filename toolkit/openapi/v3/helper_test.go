@@ -265,14 +265,15 @@ func TestEnum(t *testing.T) {
 	}
 	sc := astutils.NewEnumCollector(astutils.ExprString)
 	ast.Walk(sc, root)
+	enumMap := make(map[string]astutils.EnumMeta)
 	for k, v := range sc.Methods {
 		if IsEnumType(v) {
 			em := astutils.EnumMeta{
 				Name:   k,
 				Values: sc.Consts[k],
 			}
-			sc.Enums[k] = em
+			enumMap[k] = em
 		}
 	}
-	require.Equal(t, 1, len(sc.Enums))
+	require.Equal(t, 1, len(enumMap))
 }

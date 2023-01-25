@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"go/ast"
+	"go/parser"
 	"go/token"
 	"strings"
 )
@@ -11,7 +12,6 @@ type EnumCollector struct {
 	Package    PackageMeta
 	exprString func(ast.Expr) string
 	Consts     map[string][]string
-	Enums      map[string]EnumMeta
 }
 
 // Visit traverse each node from source code
@@ -57,25 +57,26 @@ func (sc *EnumCollector) Collect(n ast.Node) ast.Visitor {
 				case *ast.Ident:
 					typeName = specType.Name
 				case nil:
-					if len(valueSpec.Values) > 0 {
-						switch valueExpr := valueSpec.Values[0].(type) {
-						case *ast.BasicLit:
-							switch valueExpr.Kind {
-							case token.INT:
-								typeName = "int"
-							case token.FLOAT:
-								typeName = "float64"
-							case token.IMAG:
-								typeName = "complex128"
-							case token.CHAR:
-								typeName = "rune"
-							case token.STRING:
-								typeName = "string"
-							default:
-								continue
-							}
-						}
-					}
+					// useless
+					//if len(valueSpec.Values) > 0 {
+					//	switch valueExpr := valueSpec.Values[0].(type) {
+					//	case *ast.BasicLit:
+					//		switch valueExpr.Kind {
+					//		case token.INT:
+					//			typeName = "int"
+					//		case token.FLOAT:
+					//			typeName = "float64"
+					//		case token.IMAG:
+					//			typeName = "complex128"
+					//		case token.CHAR:
+					//			typeName = "rune"
+					//		case token.STRING:
+					//			typeName = "string"
+					//		default:
+					//			continue
+					//		}
+					//	}
+					//}
 				}
 				sc.Consts[typeName] = append(sc.Consts[typeName], valueSpec.Names[0].Name)
 			}
@@ -91,6 +92,16 @@ func NewEnumCollector(exprString func(ast.Expr) string) *EnumCollector {
 		Package:    PackageMeta{},
 		exprString: exprString,
 		Consts:     make(map[string][]string),
-		Enums:      make(map[string]EnumMeta),
 	}
+}
+
+func EnumsOf(file string, exprString func(ast.Expr) string) *EnumCollector {
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := NewEnumCollector(exprString)
+	ast.Walk(sc, root)
+	return sc
 }

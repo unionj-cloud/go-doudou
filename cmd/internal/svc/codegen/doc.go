@@ -56,17 +56,6 @@ func schemasOf(vofile string) []v3.Schema {
 	return ret
 }
 
-func enumsOf(vofile string) (map[string][]astutils.MethodMeta, map[string][]string) {
-	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
-	if err != nil {
-		panic(err)
-	}
-	sc := astutils.NewEnumCollector(ExprStringP)
-	ast.Walk(sc, root)
-	return sc.Methods, sc.Consts
-}
-
 const (
 	get    = "GET"
 	post   = "POST"
@@ -441,11 +430,11 @@ func ParseDto(dir string, dtoDir string) {
 	allMethods = make(map[string][]astutils.MethodMeta)
 	allConsts = make(map[string][]string)
 	for _, file := range files {
-		methods, consts := enumsOf(file)
-		for k, v := range methods {
+		sc := astutils.EnumsOf(file, ExprStringP)
+		for k, v := range sc.Methods {
 			allMethods[k] = append(allMethods[k], v...)
 		}
-		for k, v := range consts {
+		for k, v := range sc.Consts {
 			allConsts[k] = append(allConsts[k], v...)
 		}
 	}
