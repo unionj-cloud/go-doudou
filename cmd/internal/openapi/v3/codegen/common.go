@@ -307,7 +307,12 @@ func (receiver *OpenAPICodeGenerator) responseBody(endpoint, httpMethod string, 
 
 	content := operation.Responses.Resp200.Content
 	if content == nil {
-		return nil, errors.Errorf("200 response content definition not found in api %s %s", httpMethod, endpoint)
+		logrus.Warnf("200 response content definition not found in api %s %s, using text/plain as default", httpMethod, endpoint)
+		content = &v3.Content{
+			TextPlain: &v3.MediaType{
+				Schema: v3.String,
+			},
+		}
 	}
 
 	if content.JSON != nil {
@@ -564,7 +569,7 @@ func (receiver *OpenAPICodeGenerator) requestBody(operation *v3.Operation) (body
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
 	} else if content.Default != nil {
-		bodyJSON = receiver.schema2Field(content.Default.Schema, "bodyJSON", content.TextPlain.Example, v3.TEXT_EXAMPLE)
+		bodyJSON = receiver.schema2Field(content.Default.Schema, "bodyJSON", content.Default.Example, v3.TEXT_EXAMPLE)
 		if !operation.RequestBody.Required && bodyJSON != nil {
 			bodyJSON.Type = v3.ToOptional(bodyJSON.Type)
 		}
