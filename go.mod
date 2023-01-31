@@ -57,8 +57,8 @@ require (
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.113.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-playground/universal-translator v0.18.0
-	github.com/go-playground/validator/v10 v10.11.0
+	github.com/go-playground/universal-translator v0.18.1
+	github.com/go-playground/validator/v10 v10.11.2
 	github.com/go-redis/cache/v8 v8.4.4
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
@@ -98,7 +98,6 @@ require (
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
 	golang.org/x/text v0.6.0
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
