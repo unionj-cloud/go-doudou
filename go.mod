@@ -29,7 +29,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
-	github.com/testcontainers/testcontainers-go v0.11.0
+	github.com/testcontainers/testcontainers-go v0.17.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	golang.org/x/tools v0.5.0
@@ -52,23 +52,17 @@ require (
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
 	github.com/armon/go-metrics v0.4.1
-	github.com/containerd/containerd v1.5.16 // indirect
-	github.com/docker/docker v20.10.7+incompatible // indirect
-	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.113.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/go-redis/cache/v8 v8.4.4
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/btree v1.0.1
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-msgpack v1.1.5
 	github.com/hashicorp/go-multierror v1.1.1
@@ -80,8 +74,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/miekg/dns v1.1.50
-	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.9.0
 	github.com/rs/zerolog v1.28.0
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
