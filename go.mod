@@ -52,7 +52,7 @@ require (
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.4.1
 	github.com/armon/go-metrics v0.4.1
-	github.com/containerd/containerd v1.5.16 // indirect
+	github.com/containerd/containerd v1.5.18 // indirect
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.113.0
