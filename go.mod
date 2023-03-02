@@ -55,7 +55,7 @@ require (
 	github.com/containerd/containerd v1.5.18 // indirect
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
-	github.com/getkin/kin-openapi v0.113.0
+	github.com/getkin/kin-openapi v0.114.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.2
