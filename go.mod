@@ -49,7 +49,7 @@ require (
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
-	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
+	github.com/apolloconfig/agollo/v4 v4.3.0
 	github.com/arl/statsviz v0.5.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/containerd/containerd v1.5.18 // indirect

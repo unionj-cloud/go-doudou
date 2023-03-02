@@ -244,8 +244,8 @@ github.com/antlr/antlr4 v0.0.0-20200124162019-2d7f727a00b7 h1:4IkFZAFQ87SeXXF6n+
 github.com/antlr/antlr4 v0.0.0-20200124162019-2d7f727a00b7/go.mod h1:T7PbCXFs94rrTttyxjbyT5+/1V8T2TYDejxUfHJjw1Y=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
-github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24 h1:ZMK8YXD82znWnBrn9XF7wlPFDXPdBrPphL6ZS2pIKqQ=
-github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24/go.mod h1:SuvTjtg0p4UlSzSbik+ibLRr6oR1xRsfy65QzP3GEAs=
+github.com/apolloconfig/agollo/v4 v4.3.0 h1:AarIBtpDE76jIevHUOzzgT9eLB5HPvIQ8oL+OpScOPU=
+github.com/apolloconfig/agollo/v4 v4.3.0/go.mod h1:SuvTjtg0p4UlSzSbik+ibLRr6oR1xRsfy65QzP3GEAs=
 github.com/arl/statsviz v0.5.1 h1:3HY0ZEB738JtguWsD1Tf1pFJZiCcWUmYRq/3OTYKaSI=
 github.com/arl/statsviz v0.5.1/go.mod h1:zDnjgRblGm1Dyd7J5YlbH7gM1/+HRC+SfkhZhQb5AnM=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
