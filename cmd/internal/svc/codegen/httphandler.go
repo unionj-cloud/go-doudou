@@ -3,6 +3,7 @@ package codegen
 import (
 	"bytes"
 	"github.com/unionj-cloud/go-doudou/v2/version"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,7 +38,7 @@ func Routes(handler {{.Meta.Name}}Handler) []rest.Route {
 		{{- range $m := .Meta.Methods }}
 		{
 			Name: "{{$m.Name}}",
-			Method: "{{$m.Name | httpMethod}}",
+			Method: "{{$m.HttpMethod}}",
 			Pattern: {{- if eq $.RoutePatternStrategy 1}}"/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}",{{- else }}"/{{$m.Name | pattern}}",{{- end }}
 			HandlerFunc: handler.{{$m.Name}},
 		},
@@ -69,7 +70,7 @@ var RouteAnnotationStore = framework.AnnotationStore{
 `
 
 func noSplitPattern(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
+	httpMethods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete}
 	snake := strcase.ToSnake(method)
 	splits := strings.Split(snake, "_")
 	head := strings.ToUpper(splits[0])
@@ -79,19 +80,6 @@ func noSplitPattern(method string) string {
 		}
 	}
 	return strings.ToLower(method)
-}
-
-func httpMethod(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
-	snake := strcase.ToSnake(method)
-	splits := strings.Split(snake, "_")
-	head := strings.ToUpper(splits[0])
-	for _, m := range httpMethods {
-		if head == m {
-			return m
-		}
-	}
-	return "POST"
 }
 
 // GenHttpHandler generates http handler interface and routes
@@ -125,8 +113,10 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 	defer f.Close()
 
 	funcMap := make(map[string]interface{})
-	funcMap["httpMethod"] = httpMethod
-	funcMap["pattern"] = astutils.Pattern
+	funcMap["pattern"] = func(input string) string {
+		_, endpoint := astutils.Pattern(input)
+		return endpoint
+	}
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["lower"] = strings.ToLower
 	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {

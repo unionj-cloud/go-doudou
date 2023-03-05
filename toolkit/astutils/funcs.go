@@ -383,6 +383,8 @@ type MethodMeta struct {
 	// Annotations of the method
 	Annotations     []Annotation
 	HasPathVariable bool
+	// HttpMethod only accepts GET, PUT, POST, DELETE
+	HttpMethod string
 }
 
 const methodTmpl = `func {{ if .Recv }}(receiver {{.Recv}}){{ end }} {{.Name}}({{- range $i, $p := .Params}}

@@ -45,8 +45,7 @@ var appendHttpHandlerImplTmpl = `
 		{{ $p.Name }}.StringSetter(paramsFromCtx.ByName("{{$p.Name}}"))
 		{{- else if $p.Type | isSupport }}
 		if casted, _err := cast.{{$p.Type | castFunc}}E(paramsFromCtx.ByName("{{$p.Name}}")); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		} else {
 			{{$p.Name}} = casted
 		}
@@ -54,14 +53,12 @@ var appendHttpHandlerImplTmpl = `
 		{{$p.Name}} = paramsFromCtx.ByName("{{$p.Name}}")
 		{{- end }}
 		if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		}
 		{{- else if or (eq $p.Type "*multipart.FileHeader") (eq $p.Type "[]*multipart.FileHeader") }}
 		{{- if not $multipartFormParsed }}
 		if _err := _req.ParseMultipartForm(32 << 20); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		}
 		{{- $multipartFormParsed = true }}
 		{{- end }}
@@ -76,8 +73,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- else if or (eq $p.Type "v3.FileModel") (eq $p.Type "*v3.FileModel") (eq $p.Type "[]v3.FileModel") (eq $p.Type "*[]v3.FileModel") (eq $p.Type "...v3.FileModel") }}
 		{{- if not $multipartFormParsed }}
 		if _err := _req.ParseMultipartForm(32 << 20); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		}
 		{{- $multipartFormParsed = true }}
 		{{- end }}
@@ -85,8 +81,7 @@ var appendHttpHandlerImplTmpl = `
 		if exists {
 			{{- if not (isOptional $p.Type) }}
 			if len({{$p.Name}}FileHeaders) == 0 {
-				http.Error(_writer, "no file uploaded for parameter {{$p.Name}}", http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(errors.New("no file uploaded for parameter {{$p.Name}}"))
 			}
 			{{- end }}
 			{{- if isSlice $p.Type }}
@@ -98,8 +93,7 @@ var appendHttpHandlerImplTmpl = `
 			for _, _fh :=range {{$p.Name}}FileHeaders {
 				_f, _err := _fh.Open()
 				if _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
+					rest.HandleBadRequestErr(_err)
 				}
 				{{- if isOptional $p.Type }}
 				*{{$p.Name}} = append(*{{$p.Name}}, v3.FileModel{
@@ -118,8 +112,7 @@ var appendHttpHandlerImplTmpl = `
 				_fh := {{$p.Name}}FileHeaders[0]
 				_f, _err := _fh.Open()
 				if _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
+					rest.HandleBadRequestErr(_err)
 				}
 				{{- if isOptional $p.Type }}
 				{{$p.Name}} = &v3.FileModel{
@@ -135,61 +128,68 @@ var appendHttpHandlerImplTmpl = `
 			}
 			{{- end}}
 		}{{- if not (isOptional $p.Type) }} else {
-			http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(errors.New("missing parameter {{$p.Name}}"))
 		}{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
 		{{$p.Name}} = _req.Context()
 		{{- else if not (isBuiltin $p)}}
-		{{- if isOptional $p.Type }}
-		if _req.Body != nil {
-			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
-				if _err != io.EOF {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return				
-				}
-			} else {
-				{{- if isStruct $p }}
-				if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
-				}
-				{{- else }}
-				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
-				}
-				{{- end }}
+		{{- if and (eq $m.HttpMethod "GET") (not $.Config.AllowGetWithReqBody) }}
+		{{- if not $formParsed }}
+		if _err := _req.ParseForm(); _err != nil {
+			rest.HandleBadRequestErr(_err)
+		}
+		{{- $formParsed = true }}
+		{{- end }}
+		if _err := rest.DecodeForm(&{{$p.Name}}, _req.Form); _err != nil {
+			rest.HandleBadRequestErr(_err)
+		} else {
+			{{- if isStruct $p }}
+			if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
+				rest.HandleBadRequestErr(_err)
 			}
+			{{- else }}
+			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- end }}
 		}
 		{{- else }}
-		if _req.Body == nil {
-			http.Error(_writer, "missing request body", http.StatusBadRequest)
-			return
-		} else {
-			if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return	
-			} else {
-				{{- if isStruct $p }}
-				if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
-				}
-				{{- else }}
-				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
-				}
-				{{- end }}
+		{{- if isOptional $p.Type }}
+		if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
+			if _err != io.EOF {
+				rest.HandleBadRequestErr(_err)				
 			}
+		} else {
+			{{- if isStruct $p }}
+			if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- else }}
+			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- end }}
 		}
+		{{- else }}
+		if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
+			rest.HandleBadRequestErr(_err)	
+		} else {
+			{{- if isStruct $p }}
+			if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- else }}
+			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- end }}
+		}
+		{{- end }}
 		{{- end }}
 		{{- else if isSlice $p.Type }}
 		{{- if not $formParsed }}
 		if _err := _req.ParseForm(); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		}
 		{{- $formParsed = true }}
 		{{- end }}
@@ -211,8 +211,7 @@ var appendHttpHandlerImplTmpl = `
 			}
 			{{- else if $p.Type | isSupport }}
 			if casted, _err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}"]); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(_err)
 			} else {
 				{{- if isOptional $p.Type }}
 				{{$p.Name}} = &casted
@@ -229,8 +228,7 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 			{{- end }}
 			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(_err)
 			}
 		} else {
 			if _, exists := _req.Form["{{$p.Name}}[]"]; exists {
@@ -251,8 +249,7 @@ var appendHttpHandlerImplTmpl = `
 				}
 				{{- else if $p.Type | isSupport }}
 				if casted, _err := cast.{{$p.Type | castFunc}}E(_req.Form["{{$p.Name}}[]"]); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
+					rest.HandleBadRequestErr(_err)
 				} else {
 					{{- if isOptional $p.Type }}
 					{{$p.Name}} = &casted
@@ -269,19 +266,16 @@ var appendHttpHandlerImplTmpl = `
 				{{- end }}
 				{{- end }}
 				if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusBadRequest)
-					return
+					rest.HandleBadRequestErr(_err)
 				}
 			}{{- if not (isOptional $p.Type) }} else {
-				http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(errors.New("missing parameter {{$p.Name}}"))
 			}{{- end }}
 		}
 		{{- else }}
 		{{- if not $formParsed }}
 		if _err := _req.ParseForm(); _err != nil {
-			http.Error(_writer, _err.Error(), http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(_err)
 		}
 		{{- $formParsed = true }}
 		{{- end }}
@@ -293,8 +287,7 @@ var appendHttpHandlerImplTmpl = `
 			{{ $p.Name }}.StringSetter(_req.FormValue("{{$p.Name}}"))
 			{{- else if $p.Type | isSupport }}
 			if casted, _err := cast.{{$p.Type | castFunc}}E(_req.FormValue("{{$p.Name}}")); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(_err)
 			} else {
 				{{- if isOptional $p.Type }}
 				{{$p.Name}} = &casted
@@ -311,12 +304,10 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 			{{- end }}
 			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", "{{$p.Name}}"); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusBadRequest)
-				return
+				rest.HandleBadRequestErr(_err)
 			}
 		}{{- if not (isOptional $p.Type) }} else {
-			http.Error(_writer, "missing parameter {{$p.Name}}", http.StatusBadRequest)
-			return
+			rest.HandleBadRequestErr(errors.New("missing parameter {{$p.Name}}"))
 		}{{- end }}
 		{{- end }}
 		{{- end }}
@@ -332,14 +323,7 @@ var appendHttpHandlerImplTmpl = `
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
-					if errors.Is({{ $r.Name }}, context.Canceled) {
-						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusBadRequest)
-					} else if _err, ok := {{ $r.Name }}.(*rest.BizError); ok {
-						http.Error(_writer, _err.Error(), _err.StatusCode)
-					} else {
-						http.Error(_writer, {{ $r.Name }}.Error(), http.StatusInternalServerError)
-					}
-					return
+					panic({{ $r.Name }})
 				}
 			{{- end }}
 		{{- end }}
@@ -347,15 +331,13 @@ var appendHttpHandlerImplTmpl = `
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "*os.File" }}
 				if {{$r.Name}} == nil {
-					http.Error(_writer, "No file returned", http.StatusInternalServerError)
-					return
+					rest.HandleInternalServerError(errors.New("No file returned"))
 				}
 				defer {{$r.Name}}.Close()
 				var _fi os.FileInfo
 				_fi, _err := {{$r.Name}}.Stat()
 				if _err != nil {
-					http.Error(_writer, _err.Error(), http.StatusInternalServerError)
-					return
+					rest.HandleInternalServerError(_err)
 				}
 				_writer.Header().Set("Content-Disposition", "attachment; filename="+_fi.Name())
 				_writer.Header().Set("Content-Type", "application/octet-stream")
@@ -368,7 +350,7 @@ var appendHttpHandlerImplTmpl = `
 			if _err := json.NewEncoder(_writer).Encode(struct{
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}
-				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Omitempty}},omitempty{{end}}"` + "`" + `
+				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Config.Omitempty}},omitempty{{end}}"` + "`" + `
 				{{- end }}
 				{{- end }}
 			}{
@@ -378,8 +360,7 @@ var appendHttpHandlerImplTmpl = `
 				{{- end }}
 				{{- end }}
 			}); _err != nil {
-				http.Error(_writer, _err.Error(), http.StatusInternalServerError)
-				return
+				rest.HandleInternalServerError(_err)
 			}
 		{{- end }}
     }
@@ -423,10 +404,16 @@ func New{{.Meta.Name}}Handler({{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{
 }
 `
 
+type GenHttpHandlerImplConfig struct {
+	Omitempty           bool
+	AllowGetWithReqBody bool
+	CaseConvertor       func(string) string
+}
+
 // GenHttpHandlerImpl generates http handler implementation
 // Parsed value from query string parameters or application/x-www-form-urlencoded form will be string type.
 // You may need to convert the type by yourself.
-func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bool, caseconvertor func(string) string) {
+func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHttpHandlerImplConfig) {
 	var (
 		err             error
 		modfile         string
@@ -491,7 +478,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 	funcMap["isSupport"] = v3helper.IsSupport
 	funcMap["isOptional"] = v3helper.IsOptional
 	funcMap["castFunc"] = v3helper.CastFunc
-	funcMap["convertCase"] = caseconvertor
+	funcMap["convertCase"] = config.CaseConvertor
 	funcMap["isVarargs"] = v3helper.IsVarargs
 	funcMap["toSlice"] = v3helper.ToSlice
 	funcMap["isSlice"] = v3helper.IsSlice
@@ -507,7 +494,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 		VoPackage      string
 		DtoPackage     string
 		Meta           astutils.InterfaceMeta
-		Omitempty      bool
+		Config         GenHttpHandlerImplConfig
 		Version        string
 	}{
 		ServicePackage: modName,
@@ -515,7 +502,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, omitempty bo
 		VoPackage:      modName + "/vo",
 		DtoPackage:     modName + "/dto",
 		Meta:           meta,
-		Omitempty:      omitempty,
+		Config:         config,
 		Version:        version.Release,
 	}); err != nil {
 		panic(err)

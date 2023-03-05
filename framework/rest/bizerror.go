@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"fmt"
+	"net/http"
 )
 
 // BizError is used for business error implemented error interface
@@ -38,7 +38,8 @@ func WithCause(cause error) BizErrorOption {
 // NewBizError is factory function for creating an instance of BizError struct
 func NewBizError(err error, opts ...BizErrorOption) BizError {
 	bz := BizError{
-		StatusCode: 500,
+		ErrCode:    1,
+		StatusCode: http.StatusInternalServerError,
 		ErrMsg:     err.Error(),
 	}
 	for _, fn := range opts {
@@ -49,13 +50,18 @@ func NewBizError(err error, opts ...BizErrorOption) BizError {
 
 // String function is used for printing string representation of a BizError instance
 func (b BizError) String() string {
-	if b.ErrCode > 0 {
-		return fmt.Sprintf("%d %s", b.ErrCode, b.ErrMsg)
-	}
 	return b.ErrMsg
 }
 
 // Error is used for implementing error interface
 func (b BizError) Error() string {
 	return b.String()
+}
+
+func HandleBadRequestErr(err error) {
+	panic(NewBizError(err, WithStatusCode(http.StatusBadRequest)))
+}
+
+func HandleInternalServerError(err error) {
+	panic(NewBizError(err))
 }

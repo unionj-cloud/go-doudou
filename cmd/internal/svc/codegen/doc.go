@@ -14,6 +14,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -56,14 +57,7 @@ func schemasOf(vofile string) []v3.Schema {
 	return ret
 }
 
-const (
-	get    = "GET"
-	post   = "POST"
-	put    = "PUT"
-	delete = "DELETE"
-)
-
-func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
+func operationOf(method astutils.MethodMeta, httpMethod string, config GenDocConfig) v3.Operation {
 	var ret v3.Operation
 	var params []v3.Parameter
 
@@ -77,8 +71,29 @@ func operationOf(method astutils.MethodMeta, httpMethod string) v3.Operation {
 			simpleCnt++
 		}
 	}
-	if httpMethod == post && simpleCnt == len(method.Params) {
+	if httpMethod == http.MethodPost && simpleCnt == len(method.Params) {
 		ret.RequestBody = postFormUrl(method)
+	} else if httpMethod == http.MethodGet && !config.AllowGetWithReqBody {
+		for _, item := range method.Params {
+			if item.Type == "context.Context" {
+				continue
+			}
+			pschema := v3.CopySchema(item)
+			v3.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
+			required := !v3.IsOptional(item.Type)
+			param := v3.Parameter{
+				Name:        strcase.ToLowerCamel(item.Name),
+				In:          v3.InQuery,
+				Schema:      &pschema,
+				Description: pschema.Description,
+				Required:    required,
+			}
+			if item.IsPathVariable {
+				param.Name = strings.ToLower(param.Name)
+				param.In = v3.InPath
+			}
+			params = append(params, param)
+		}
 	} else {
 		// Simple parameters such as v3.Int, v3.Int64, v3.Bool, v3.String, v3.Float32, v3.Float64 and corresponding Array type
 		// will be put into query parameter as url search params no matter what http method is.
@@ -289,8 +304,8 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 // GetShelves_ShelfBooks_Book
 // shelves/:shelf/books/:book
 func apiPattern(method string) string {
-	ret := astutils.Pattern(method)
-	splits := strings.Split(ret, "/")
+	_, endpoint := astutils.Pattern(method)
+	splits := strings.Split(endpoint, "/")
 	var partials []string
 	for _, v := range splits {
 		if strings.HasPrefix(v, ":") {
@@ -302,7 +317,7 @@ func apiPattern(method string) string {
 	return strings.Join(partials, "/")
 }
 
-func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[string]v3.Path {
+func pathsOf(ic astutils.InterfaceCollector, config GenDocConfig) map[string]v3.Path {
 	if len(ic.Interfaces) == 0 {
 		return nil
 	}
@@ -310,11 +325,11 @@ func pathsOf(ic astutils.InterfaceCollector, routePatternStrategy int) map[strin
 	inter := ic.Interfaces[0]
 	for _, method := range inter.Methods {
 		endpoint := fmt.Sprintf("/%s", apiPattern(method.Name))
-		if routePatternStrategy == 1 {
+		if config.RoutePatternStrategy == 1 {
 			endpoint = fmt.Sprintf("/%s/%s", strings.ToLower(inter.Name), noSplitPattern(method.Name))
 		}
-		hm := httpMethod(method.Name)
-		op := operationOf(method, hm)
+		hm, _ := astutils.Pattern(method.Name)
+		op := operationOf(method, hm, config)
 		if val, ok := pathmap[endpoint]; ok {
 			reflect.ValueOf(&val).Elem().FieldByName(strings.Title(strings.ToLower(hm))).Set(reflect.ValueOf(&op))
 			pathmap[endpoint] = val
@@ -336,9 +351,14 @@ func init() {
 }
 `
 
+type GenDocConfig struct {
+	RoutePatternStrategy int
+	AllowGetWithReqBody  bool
+}
+
 // GenDoc generates OpenAPI 3.0 description json file.
 // Not support alias type in vo or dto file.
-func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
+func GenDoc(dir string, ic astutils.InterfaceCollector, config GenDocConfig) {
 	var (
 		err     error
 		svcname string
@@ -369,7 +389,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, routePatternStrategy int
 	if fi != nil {
 		logrus.Warningln("file " + gofile + " will be overwritten")
 	}
-	paths = pathsOf(ic, routePatternStrategy)
+	paths = pathsOf(ic, config)
 	api = v3.API{
 		Openapi: "3.0.2",
 		Info: &v3.Info{

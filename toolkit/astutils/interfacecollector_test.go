@@ -98,7 +98,8 @@ func Test_pattern(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, Pattern(tt.args.method), "pattern(%v)", tt.args.method)
+			_, endpoint := Pattern(tt.args.method)
+			assert.Equalf(t, tt.want, endpoint, "pattern(%v)", tt.args.method)
 		})
 	}
 }

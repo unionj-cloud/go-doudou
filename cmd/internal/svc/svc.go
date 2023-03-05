@@ -86,6 +86,11 @@ type Svc struct {
 	PostmanCollectionPath string
 	// DotenvPath dotenv format config file disk path only for integration testing purpose
 	DotenvPath string
+
+	// AllowGetWithReqBody indicates whether allow get http request with request body.
+	// If true, when you defined a get api with struct type parameter in svc.go file,
+	// it will try to decode json format encoded request body.
+	AllowGetWithReqBody bool
 }
 
 func ValidateDataType(dir string) {
@@ -137,21 +142,33 @@ func (receiver *Svc) Http() {
 
 	codegen.GenMain(dir, ic)
 	codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
-	var caseconvertor func(string) string
+	var caseConvertor func(string) string
 	switch receiver.Jsonattrcase {
 	case "snake":
-		caseconvertor = strcase.ToSnake
+		caseConvertor = strcase.ToSnake
 	default:
-		caseconvertor = strcase.ToLowerCamel
+		caseConvertor = strcase.ToLowerCamel
 	}
-	codegen.GenHttpHandlerImpl(dir, ic, receiver.Omitempty, caseconvertor)
+	codegen.GenHttpHandlerImpl(dir, ic, codegen.GenHttpHandlerImplConfig{
+		Omitempty:           receiver.Omitempty,
+		AllowGetWithReqBody: receiver.AllowGetWithReqBody,
+		CaseConvertor:       caseConvertor,
+	})
 	if receiver.Client {
 		codegen.GenGoIClient(dir, ic)
-		codegen.GenGoClient(dir, ic, receiver.Env, receiver.RoutePatternStrategy, caseconvertor)
+		codegen.GenGoClient(dir, ic, codegen.GenGoClientConfig{
+			Env:                  receiver.Env,
+			RoutePatternStrategy: receiver.RoutePatternStrategy,
+			AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
+			CaseConvertor:        caseConvertor,
+		})
 		codegen.GenGoClientProxy(dir, ic)
 	}
 	codegen.GenSvcImpl(dir, ic)
-	codegen.GenDoc(dir, ic, receiver.RoutePatternStrategy)
+	codegen.GenDoc(dir, ic, codegen.GenDocConfig{
+		RoutePatternStrategy: receiver.RoutePatternStrategy,
+		AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
+	})
 }
 
 // ValidateRestApi is checking whether parameter types in each of service interface methods valid or not

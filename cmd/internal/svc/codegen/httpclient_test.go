@@ -35,7 +35,12 @@ func TestGenGoClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenGoClient(tt.args.dir, tt.args.ic, "", 1, strcase.ToLowerCamel)
+			GenGoClient(tt.args.dir, tt.args.ic, GenGoClientConfig{
+				Env:                  "",
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+				CaseConvertor:        strcase.ToLowerCamel,
+			})
 		})
 	}
 }
@@ -54,7 +59,12 @@ func TestGenGoClientPanic_Stat(t *testing.T) {
 		ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 		So(func() {
-			GenGoClient(testDir, ic, "", 1, strcase.ToLowerCamel)
+			GenGoClient(testDir, ic, GenGoClientConfig{
+				Env:                  "",
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+				CaseConvertor:        strcase.ToLowerCamel,
+			})
 		}, ShouldPanic)
 	})
 }
@@ -72,7 +82,12 @@ func TestGenGoClientPanic_Create(t *testing.T) {
 		ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 		So(func() {
-			GenGoClient(testDir, ic, "", 1, strcase.ToLowerCamel)
+			GenGoClient(testDir, ic, GenGoClientConfig{
+				Env:                  "",
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+				CaseConvertor:        strcase.ToLowerCamel,
+			})
 		}, ShouldPanic)
 	})
 }
@@ -90,7 +105,12 @@ func TestGenGoClientPanic_Open(t *testing.T) {
 		ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 		So(func() {
-			GenGoClient(testDir, ic, "", 1, strcase.ToLowerCamel)
+			GenGoClient(testDir, ic, GenGoClientConfig{
+				Env:                  "",
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+				CaseConvertor:        strcase.ToLowerCamel,
+			})
 		}, ShouldPanic)
 	})
 }
@@ -108,7 +128,12 @@ func TestGenGoClientPanic_MkdirAll(t *testing.T) {
 		ic := astutils.BuildInterfaceCollector(svcfile, astutils.ExprString)
 
 		So(func() {
-			GenGoClient(testDir, ic, "", 1, strcase.ToLowerCamel)
+			GenGoClient(testDir, ic, GenGoClientConfig{
+				Env:                  "",
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+				CaseConvertor:        strcase.ToLowerCamel,
+			})
 		}, ShouldPanic)
 	})
 }

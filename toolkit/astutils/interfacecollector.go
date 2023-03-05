@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"net/http"
 	"regexp"
 	"strings"
 )
@@ -58,8 +59,8 @@ func (ic *InterfaceCollector) Collect(n ast.Node) ast.Visitor {
 
 // GetShelves_ShelfBooks_Book
 // shelves/:shelf/books/:book
-func Pattern(method string) string {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE"}
+func Pattern(method string) (httpMethod string, endpoint string) {
+	httpMethods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete}
 	re1, err := regexp.Compile("_?[A-Z]")
 	if err != nil {
 		panic(err)
@@ -72,15 +73,16 @@ func Pattern(method string) string {
 		}
 	})
 	splits := strings.Split(method, "/")[1:]
+	httpMethod = httpMethods[1]
 	head := strings.ToUpper(splits[0])
 	if sliceutils.StringContains(httpMethods, head) {
+		httpMethod = head
 		splits = splits[1:]
 	}
-	return strings.Join(splits, "/")
+	return httpMethod, strings.Join(splits, "/")
 }
 
-func pathVariables(method string) (ret []string) {
-	endpoint := Pattern(method)
+func pathVariables(endpoint string) (ret []string) {
 	splits := strings.Split(endpoint, "/")
 	pvs := sliceutils.StringFilter(splits, func(item string) bool {
 		return stringutils.IsNotEmpty(item) && strings.HasPrefix(item, ":")
@@ -114,7 +116,8 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 			params = ic.field2Params(ft.Params.List)
 		}
 
-		pvs := pathVariables(mn)
+		httpMethod, endpoint := Pattern(mn)
+		pvs := pathVariables(endpoint)
 		for i := range params {
 			if sliceutils.StringContains(pvs, params[i].Name) {
 				params[i].IsPathVariable = true
@@ -132,6 +135,7 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 			Comments:        mComments,
 			Annotations:     annotations,
 			HasPathVariable: len(pvs) > 0,
+			HttpMethod:      httpMethod,
 		})
 	}
 	return methods
