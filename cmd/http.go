@@ -11,6 +11,7 @@ var client bool
 var doc bool
 var jsonattrcase string
 var routePatternStrategy int
+var allowGetWithReqBody bool
 
 // httpCmd generates scaffold code of restful service
 var httpCmd = &cobra.Command{
@@ -26,6 +27,7 @@ var httpCmd = &cobra.Command{
 			Jsonattrcase:         jsonattrcase,
 			Env:                  baseURLEnv,
 			RoutePatternStrategy: routePatternStrategy,
+			AllowGetWithReqBody:  allowGetWithReqBody,
 		}
 		s.Http()
 	},
@@ -41,4 +43,5 @@ func init() {
 	httpCmd.Flags().BoolVarP(&doc, "doc", "", false, `whether generate openapi 3.0 json document or not`)
 	httpCmd.Flags().StringVarP(&baseURLEnv, "env", "e", "", `base url environment variable name`)
 	httpCmd.Flags().IntVarP(&routePatternStrategy, "routePattern", "r", 0, "route pattern generate strategy. 0 means splitting each methods of service interface by slash / after converting to snake case. 1 means no splitting, only lowercase. recommend default value.")
+	httpCmd.Flags().BoolVarP(&allowGetWithReqBody, "allowGetWithReqBody", "", false, "Whether allow get http request with request body.")
 }

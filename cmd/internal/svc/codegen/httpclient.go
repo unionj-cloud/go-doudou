@@ -148,21 +148,45 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		{{- end }}
 		{{- else if eq $p.Type "context.Context" }}
 		{{- else if not (isBuiltin $p)}}
+		{{- if and (eq $m.HttpMethod "GET") (not $.Config.AllowGetWithReqBody) }}
+		{{$p.Name}}UrlValues, _err := rest.EncodeForm(&{{$p.Name}})
+		if _err != nil {
+			{{- range $r := $m.Results }}
+				{{- if eq $r.Type "error" }}
+			{{ $r.Name }} = errors.Wrap(_err, "error")
+				{{- end }}
+			{{- end }}
+			return
+		}
+		_req.SetQueryParamsFromValues({{$p.Name}}UrlValues)
+		{{- else }}
 		if options.GzipReqBody {
 			pr, pw := io.Pipe()
 			go func() {
 				gw := gzip.NewWriter(pw)
 				_err = json.NewEncoder(gw).Encode({{$p.Name}})
 				if _err != nil {
-					err = errors.Wrap(_err, "error")
+					{{- range $r := $m.Results }}
+						{{- if eq $r.Type "error" }}
+					{{ $r.Name }} = errors.Wrap(_err, "error")
+						{{- end }}
+					{{- end }}
 					return
 				}
 				_err = gw.Close()
 				if _err != nil {
-					err = errors.Wrap(_err, "error")
+					{{- range $r := $m.Results }}
+						{{- if eq $r.Type "error" }}
+					{{ $r.Name }} = errors.Wrap(_err, "error")
+						{{- end }}
+					{{- end }}
 					return
 				}
-				defer pw.CloseWithError(err)
+				{{- range $r := $m.Results }}
+					{{- if eq $r.Type "error" }}
+				defer pw.CloseWithError({{ $r.Name }})
+					{{- end }}
+				{{- end }}
 			}()
 			_req.SetHeader("Content-Type", "application/json")
 			_req.SetHeader("Content-Encoding", "gzip")
@@ -170,6 +194,7 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 		} else {
 			_req.SetBody({{$p.Name}})
 		}
+		{{- end }}
 		{{- else if isSlice $p.Type }}
 		{{- if isOptional $p.Type }}
 		if {{$p.Name}} != nil { 
@@ -227,13 +252,13 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 			{{- end }}
 		{{- end }}
 
-		{{- if eq $.RoutePatternStrategy 1}}
+		{{- if eq $.Config.RoutePatternStrategy 1}}
 		_path := "/{{$.Meta.Name | lower}}/{{$m.Name | noSplitPattern}}"
 		{{- else }}
 		_path := "/{{$m.Name | pattern}}"
 		{{- end }}
 
-		{{- if eq ($m.Name | httpMethod) "GET" }}
+		{{- if eq $m.HttpMethod "GET" }}
 		_req.SetQueryParamsFromValues(_urlValues)
 		{{- else }}
 		if _req.Body != nil {
@@ -324,8 +349,8 @@ func (receiver *{{.Meta.Name}}Client) SetClient(client *resty.Client) {
 {{- end }}
 
 func New{{.Meta.Name}}Client(opts ...restclient.RestClientOption) *{{.Meta.Name}}Client {
-	{{- if .Env }}
-	defaultProvider := restclient.NewServiceProvider("{{.Env}}")
+	{{- if .Config.Env }}
+	defaultProvider := restclient.NewServiceProvider("{{.Config.Env}}")
 	{{- else }}
 	defaultProvider := restclient.NewServiceProvider("{{.Meta.Name | toUpper}}")
 	{{- end }}
@@ -362,11 +387,19 @@ func New{{.Meta.Name}}Client(opts ...restclient.RestClientOption) *{{.Meta.Name}
 `
 
 func restyMethod(method string) string {
-	return strings.Title(strings.ToLower(httpMethod(method)))
+	hm, _ := astutils.Pattern(method)
+	return strings.Title(strings.ToLower(hm))
+}
+
+type GenGoClientConfig struct {
+	Env                  string
+	RoutePatternStrategy int
+	AllowGetWithReqBody  bool
+	CaseConvertor        func(string) string
 }
 
 // GenGoClient generates golang http client code from result of parsing svc.go file in project root path
-func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePatternStrategy int, caseconvertor func(string) string) {
+func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientConfig) {
 	var (
 		err        error
 		clientfile string
@@ -413,7 +446,6 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
-	funcMap["httpMethod"] = httpMethod
 	funcMap["pattern"] = apiPattern
 	funcMap["lower"] = strings.ToLower
 	funcMap["contains"] = strings.Contains
@@ -422,7 +454,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["isOptional"] = v3helper.IsOptional
-	funcMap["convertCase"] = caseconvertor
+	funcMap["convertCase"] = config.CaseConvertor
 	funcMap["isSlice"] = v3helper.IsSlice
 	funcMap["isVarargs"] = v3helper.IsVarargs
 	funcMap["IsEnum"] = v3helper.IsEnum
@@ -430,19 +462,17 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, env string, routePa
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		VoPackage            string
-		DtoPackage           string
-		Meta                 astutils.InterfaceMeta
-		Env                  string
-		RoutePatternStrategy int
-		Version              string
+		VoPackage  string
+		DtoPackage string
+		Meta       astutils.InterfaceMeta
+		Config     GenGoClientConfig
+		Version    string
 	}{
-		VoPackage:            modName + "/vo",
-		DtoPackage:           modName + "/dto",
-		Meta:                 meta,
-		Env:                  env,
-		RoutePatternStrategy: routePatternStrategy,
-		Version:              version.Release,
+		VoPackage:  modName + "/vo",
+		DtoPackage: modName + "/dto",
+		Meta:       meta,
+		Config:     config,
+		Version:    version.Release,
 	}); err != nil {
 		panic(err)
 	}

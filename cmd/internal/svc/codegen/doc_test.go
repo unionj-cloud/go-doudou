@@ -42,7 +42,10 @@ func TestGenDoc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenDoc(tt.args.dir, tt.args.ic, 1)
+			GenDoc(tt.args.dir, tt.args.ic, GenDocConfig{
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+			})
 		})
 	}
 }
@@ -69,7 +72,10 @@ func TestGenDocUploadFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GenDoc(tt.args.dir, tt.args.ic, 1)
+			GenDoc(tt.args.dir, tt.args.ic, GenDocConfig{
+				RoutePatternStrategy: 1,
+				AllowGetWithReqBody:  false,
+			})
 		})
 	}
 }
@@ -149,7 +155,10 @@ func Test_pathsOf(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := pathsOf(tt.args.ic, 0)
+			paths := pathsOf(tt.args.ic, GenDocConfig{
+				RoutePatternStrategy: 0,
+				AllowGetWithReqBody:  false,
+			})
 			fmt.Println(paths)
 		})
 	}
