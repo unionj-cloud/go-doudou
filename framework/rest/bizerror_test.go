@@ -14,7 +14,7 @@ func TestWithStatusCode(t *testing.T) {
 		So(bizError.StatusCode, ShouldEqual, 401)
 
 		Convey("Should output Unauthorised", func() {
-			So(bizError.String(), ShouldEqual, "Unauthorised")
+			So(bizError.Error(), ShouldEqual, "Unauthorised")
 		})
 	})
 }
@@ -27,10 +27,6 @@ func TestWithErrCode(t *testing.T) {
 
 		Convey("Should output 100401 Unauthorised", func() {
 			So(bizError.String(), ShouldEqual, "100401 Unauthorised")
-		})
-
-		Convey("Should have the same output with String()", func() {
-			So(bizError.Error(), ShouldEqual, bizError.String())
 		})
 	})
 }

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -50,12 +51,15 @@ func NewBizError(err error, opts ...BizErrorOption) BizError {
 
 // String function is used for printing string representation of a BizError instance
 func (b BizError) String() string {
+	if b.ErrCode > 0 {
+		return fmt.Sprintf("%d %s", b.ErrCode, b.ErrMsg)
+	}
 	return b.ErrMsg
 }
 
 // Error is used for implementing error interface
 func (b BizError) Error() string {
-	return b.String()
+	return b.ErrMsg
 }
 
 func HandleBadRequestErr(err error) {
