@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"crypto/subtle"
+	"encoding/json"
 	"fmt"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"
@@ -232,23 +233,36 @@ func recovery(inner http.Handler) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				statusCode := http.StatusInternalServerError
-				respErr := fmt.Sprintf("%v", e)
+				errCode := 1 // 1 indicates there is an error
+				message := fmt.Sprintf("%v", e)
 				if err, ok := e.(error); ok {
-					if errors.Is(err, context.Canceled) {
+					switch {
+					case errors.Is(err, context.Canceled):
 						statusCode = http.StatusBadRequest
-					} else {
-						var bizErr BizError
-						if errors.As(err, &bizErr) {
-							statusCode = bizErr.StatusCode
-							if bizErr.Cause != nil {
-								e = bizErr.Cause
-							}
-							respErr = bizErr.Error()
+					default:
+						var bizError BizError
+						if errors.As(err, &bizError) {
+							statusCode = bizError.StatusCode
+							errCode = bizError.ErrCode
+							message = bizError.Error()
 						}
 					}
 				}
+				w.WriteHeader(statusCode)
+				if stringutils.IsEmpty(message) {
+					message = http.StatusText(statusCode)
+				}
 				logger.Error().Msgf("panic: %+v\n\nstacktrace from panic: %s\n", e, string(debug.Stack()))
-				http.Error(w, respErr, statusCode)
+				if _err := json.NewEncoder(w).Encode(struct {
+					Code    int    `json:"code"`
+					Message string `json:"message"`
+				}{
+					Code:    errCode,
+					Message: message,
+				}); _err != nil {
+					http.Error(w, _err.Error(), http.StatusInternalServerError)
+					return
+				}
 			}
 		}()
 		inner.ServeHTTP(w, r)
