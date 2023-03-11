@@ -9,7 +9,7 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/felixge/httpsnoop v1.0.3
 	github.com/go-git/go-billy/v5 v5.4.1
-	github.com/go-git/go-git/v5 v5.4.2
+	github.com/go-git/go-git/v5 v5.6.0
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/goccy/go-yaml v1.10.0
@@ -48,7 +48,6 @@ require (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
 	github.com/apolloconfig/agollo/v4 v4.1.1-0.20220323095621-60ed86180f24
 	github.com/arl/statsviz v0.5.1
 	github.com/armon/go-metrics v0.4.1
@@ -74,7 +73,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/logutils v1.0.0
-	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.13
