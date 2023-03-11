@@ -8,6 +8,14 @@ import (
 var decoder = form.NewDecoder()
 var encoder = form.NewEncoder()
 
+func init() {
+	// frontend axios.js use [] by default
+	decoder.SetNamespacePrefix("[")
+	decoder.SetNamespaceSuffix("]")
+	encoder.SetNamespacePrefix("[")
+	encoder.SetNamespaceSuffix("]")
+}
+
 func GetFormDecoder() *form.Decoder {
 	return decoder
 }
