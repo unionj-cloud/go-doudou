@@ -26,6 +26,12 @@ var appendHttpHandlerImplTmpl = `
 			{{- range $p := $m.Params }}
 			{{- if isVarargs $p.Type }}
 			{{ $p.Name }} = new({{ $p.Type | toSlice }})
+			{{- else if eq $p.Type "context.Context"}}
+			{{ $p.Name }} {{ $p.Type }}
+			{{- else if and (eq $m.HttpMethod "GET") (not (isBuiltin $p)) }}
+			{{ $p.Name }}Wrapper struct {
+				{{ $p.Name | title }} {{ $p.Type }} ` + "`" + `form:"{{ $p.Name }}"` + "`" + `
+			}
 			{{- else }}
 			{{ $p.Name }} {{ $p.Type }}
 			{{- end }}
@@ -140,15 +146,15 @@ var appendHttpHandlerImplTmpl = `
 		}
 		{{- $formParsed = true }}
 		{{- end }}
-		if _err := rest.DecodeForm(&{{$p.Name}}, _req.Form); _err != nil {
+		if _err := rest.DecodeForm(&{{ $p.Name }}Wrapper, _req.Form); _err != nil {
 			rest.HandleBadRequestErr(_err)
 		} else {
 			{{- if isStruct $p }}
-			if _err := rest.ValidateStruct({{$p.Name}}); _err != nil {
+			if _err := rest.ValidateStruct({{ $p.Name }}Wrapper.{{ $p.Name | title }}); _err != nil {
 				rest.HandleBadRequestErr(_err)
 			}
 			{{- else }}
-			if _err := rest.ValidateVar({{$p.Name}}, "{{$p.ValidateTag}}", ""); _err != nil {
+			if _err := rest.ValidateVar({{ $p.Name }}Wrapper.{{ $p.Name | title }}, "{{$p.ValidateTag}}", ""); _err != nil {
 				rest.HandleBadRequestErr(_err)
 			}
 			{{- end }}
@@ -315,6 +321,10 @@ var appendHttpHandlerImplTmpl = `
 			{{- range $p := $m.Params }}
 			{{- if isVarargs $p.Type }}
 			*{{ $p.Name }}...,
+			{{- else if eq $p.Type "context.Context"}}
+			{{ $p.Name }},
+			{{- else if and (eq $m.HttpMethod "GET") (not (isBuiltin $p)) }}
+			{{ $p.Name }}Wrapper.{{ $p.Name | title }},
 			{{- else }}
 			{{ $p.Name }},
 			{{- end }}
@@ -347,7 +357,7 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		{{- end }}
 		{{- if not $done }}
-			if _err := json.NewEncoder(_writer).Encode(struct{
+			if _err := json.NewEncoder(_writer).Encode(struct {
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}
 				{{ $r.Name | toCamel }} {{ $r.Type }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Config.Omitempty}},omitempty{{end}}"` + "`" + `
@@ -485,6 +495,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	funcMap["IsEnum"] = v3helper.IsEnum
 	funcMap["TrimPrefix"] = strings.TrimPrefix
 	funcMap["ElementType"] = v3helper.ElementType
+	funcMap["title"] = strings.Title
 	if tpl, err = template.New("handlerimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}

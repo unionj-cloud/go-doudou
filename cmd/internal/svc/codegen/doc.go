@@ -72,6 +72,9 @@ func operationOf(method astutils.MethodMeta, httpMethod string, config GenDocCon
 		}
 	}
 	if (httpMethod == http.MethodPost || httpMethod == http.MethodPut) && simpleCnt == len(method.Params) {
+		if ret.RequestBody == nil {
+			ret.RequestBody = &v3.RequestBody{}
+		}
 		postFormUrl(ret.RequestBody, &params, method)
 	} else if httpMethod == http.MethodGet && !config.AllowGetWithReqBody {
 		for _, item := range method.Params {
@@ -269,6 +272,12 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 }
 
 func postFormUrl(reqBody *v3.RequestBody, params *[]v3.Parameter, method astutils.MethodMeta) {
+	if reqBody == nil {
+		panic("reqBody should not be nil")
+	}
+	if params == nil {
+		panic("params should not be nil")
+	}
 	title := method.Name + "Req"
 	reqSchema := v3.Schema{
 		Type:       v3.ObjectT,
