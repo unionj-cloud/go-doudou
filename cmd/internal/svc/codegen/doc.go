@@ -71,8 +71,8 @@ func operationOf(method astutils.MethodMeta, httpMethod string, config GenDocCon
 			simpleCnt++
 		}
 	}
-	if httpMethod == http.MethodPost && simpleCnt == len(method.Params) {
-		ret.RequestBody = postFormUrl(method)
+	if (httpMethod == http.MethodPost || httpMethod == http.MethodPut) && simpleCnt == len(method.Params) {
+		postFormUrl(ret.RequestBody, &params, method)
 	} else if httpMethod == http.MethodGet && !config.AllowGetWithReqBody {
 		for _, item := range method.Params {
 			if item.Type == "context.Context" {
@@ -268,7 +268,7 @@ func uploadFile(method astutils.MethodMeta) *v3.RequestBody {
 	}
 }
 
-func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
+func postFormUrl(reqBody *v3.RequestBody, params *[]v3.Parameter, method astutils.MethodMeta) {
 	title := method.Name + "Req"
 	reqSchema := v3.Schema{
 		Type:       v3.ObjectT,
@@ -280,10 +280,22 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 			continue
 		}
 		pschema := v3.CopySchema(item)
-		pschema.Description = strings.Join(item.Comments, "\n")
+		v3.RefAddDoc(&pschema, strings.Join(item.Comments, "\n"))
+		required := !v3.IsOptional(item.Type)
+		if item.IsPathVariable {
+			param := v3.Parameter{
+				Name:        strings.ToLower(strcase.ToLowerCamel(item.Name)),
+				In:          v3.InPath,
+				Schema:      &pschema,
+				Description: pschema.Description,
+				Required:    required,
+			}
+			*params = append(*params, param)
+			continue
+		}
 		prop := strcase.ToLowerCamel(item.Name)
 		reqSchema.Properties[prop] = &pschema
-		if !v3.IsOptional(item.Type) {
+		if required {
 			reqSchema.Required = append(reqSchema.Required, prop)
 		}
 	}
@@ -295,10 +307,8 @@ func postFormUrl(method astutils.MethodMeta) *v3.RequestBody {
 	}
 	var content v3.Content
 	reflect.ValueOf(&content).Elem().FieldByName("FormURL").Set(reflect.ValueOf(mt))
-	return &v3.RequestBody{
-		Content:  &content,
-		Required: len(reqSchema.Required) > 0,
-	}
+	reqBody.Content = &content
+	reqBody.Required = len(reqSchema.Required) > 0
 }
 
 // GetShelves_ShelfBooks_Book
