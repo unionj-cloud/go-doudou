@@ -97,7 +97,7 @@ func RewriteTag(config RewriteTagConfig) (string, error) {
 				if form {
 					if reForm.MatchString(field.Tag.Value) {
 						if extractFormPropName(field.Tag.Value) != "-" {
-							field.Tag.Value = re.ReplaceAllLiteralString(field.Tag.Value, formTag)
+							field.Tag.Value = reForm.ReplaceAllLiteralString(field.Tag.Value, formTag)
 						}
 					} else {
 						lastindex := strings.LastIndex(field.Tag.Value, "`")

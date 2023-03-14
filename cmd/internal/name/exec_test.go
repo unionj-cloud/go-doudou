@@ -343,3 +343,14 @@ func TestPanic2(t *testing.T) {
 		receiver.Exec()
 	})
 }
+
+func ExampleNameForm_Exec() {
+	receiver := Name{
+		File:      pathutils.Abs("testdata/vo.go"),
+		Strategy:  lowerCamelStrategy,
+		Omitempty: false,
+		Form:      true,
+	}
+	receiver.Exec()
+	// output:
+}
