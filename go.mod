@@ -32,7 +32,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
-	golang.org/x/tools v0.5.0
+	golang.org/x/tools v0.6.0
 )
 
 require (
@@ -52,6 +52,7 @@ require (
 	github.com/arl/statsviz v0.5.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/containerd/containerd v1.5.18 // indirect
+	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.115.0
@@ -73,10 +74,15 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/logutils v1.0.0
+	github.com/jackc/pgx/v5 v5.3.1 // indirect
+	github.com/kevinburke/ssh_config v1.1.0 // indirect
+	github.com/lib/pq v1.10.2 // indirect
 	github.com/klauspost/compress v1.16.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
+	github.com/microsoft/go-mssqldb v0.21.0 // indirect
 	github.com/miekg/dns v1.1.50
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
@@ -87,17 +93,19 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221024120645-0288f53fdaa8
-	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.7
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.5.1
-	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.23.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
-	golang.org/x/text v0.7.0
+	golang.org/x/text v0.9.0
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0
+	gorm.io/driver/clickhouse v0.5.0
+	gorm.io/driver/mysql v1.4.7
+	gorm.io/driver/postgres v1.5.0
+	gorm.io/driver/sqlite v1.4.4
+	gorm.io/driver/sqlserver v1.4.2
+	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 )

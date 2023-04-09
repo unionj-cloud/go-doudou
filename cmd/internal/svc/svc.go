@@ -137,7 +137,6 @@ func (receiver *Svc) Http() {
 	ValidateRestApi(dir, ic)
 
 	codegen.GenConfig(dir)
-	codegen.GenDb(dir)
 	codegen.GenHttpMiddleware(dir)
 
 	codegen.GenMain(dir, ic)
@@ -513,7 +512,6 @@ func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	ValidateRestApi(dir, ic)
 
 	codegen.GenConfig(dir)
-	codegen.GenDb(dir)
 
 	codegen.ParseDtoGrpc(dir, p, "vo")
 	codegen.ParseDtoGrpc(dir, p, "dto")
