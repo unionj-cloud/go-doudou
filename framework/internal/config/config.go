@@ -249,6 +249,28 @@ const (
 	// GddMemCIDRsAllowed If not set, allow any connection (default), otherwise specify all networks
 	// allowed connecting (you must specify IPv6/IPv4 separately)
 	GddMemCIDRsAllowed envVariable = "GDD_MEM_CIDRS_ALLOWED"
+
+	GddDBDisableAutoConfigure envVariable = "GDD_DB_DISABLEAUTOCONFIGURE"
+	GddDBDriver               envVariable = "GDD_DB_DRIVER"
+	GddDBDsn                  envVariable = "GDD_DB_DSN"
+	GddDBMaxIdleConns         envVariable = "GDD_DB_MAXIDLECONNS"
+	GddDBMaxOpenConns         envVariable = "GDD_DB_MAXOPENCONNS"
+	GddDBConnMaxLifetime      envVariable = "GDD_DB_CONNMAXLIFETIME"
+	GddDBConnMaxIdleTime      envVariable = "GDD_DB_CONNMAXIDLETIME"
+
+	GddDBMysqlSkipInitializeWithVersion envVariable = "GDD_DB_MYSQL_SKIPINITIALIZEWITHVERSION"
+	GddDBMysqlDefaultStringSize         envVariable = "GDD_DB_MYSQL_DEFAULTSTRINGSIZE"
+	//GddDBMysqlDefaultDatetimePrecision      envVariable = "GDD_DB_MYSQL_DEFAULTDATETIMEPRECISION"
+	GddDBMysqlDisableWithReturning          envVariable = "GDD_DB_MYSQL_DISABLEWITHRETURNING"
+	GddDBMysqlDisableDatetimePrecision      envVariable = "GDD_DB_MYSQL_DISABLEDATETIMEPRECISION"
+	GddDBMysqlDontSupportRenameIndex        envVariable = "GDD_DB_MYSQL_DONTSUPPORTRENAMEINDEX"
+	GddDBMysqlDontSupportRenameColumn       envVariable = "GDD_DB_MYSQL_DONTSUPPORTRENAMECOLUMN"
+	GddDBMysqlDontSupportForShareClause     envVariable = "GDD_DB_MYSQL_DONTSUPPORTFORSHARECLAUSE"
+	GddDBMysqlDontSupportNullAsDefaultValue envVariable = "GDD_DB_MYSQL_DONTSUPPORTNULLASDEFAULTVALUE"
+	GddDBMysqlDontSupportRenameColumnUnique envVariable = "GDD_DB_MYSQL_DONTSUPPORTRENAMECOLUMNUNIQUE"
+
+	GddDBPostgresPreferSimpleProtocol envVariable = "GDD_DB_POSTGRES_PREFERSIMPLEPROTOCOL"
+	GddDBPostgresWithoutReturning     envVariable = "GDD_DB_POSTGRES_WITHOUTRETURNING"
 )
 
 // Load loads value from environment variable

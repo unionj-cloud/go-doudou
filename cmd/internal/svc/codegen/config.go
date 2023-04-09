@@ -16,31 +16,25 @@ package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
-    "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 )
 
 type Config struct {
-	DbConf   DbConfig
+	BizConf BizConf
 }
 
-type DbConfig struct {
-	Driver  string ` + "`" + `default:"mysql"` + "`" + `
-	Host    string ` + "`" + `default:"localhost"` + "`" + `
-	Port    string ` + "`" + `default:"3306"` + "`" + `
-	User    string
-	Passwd  string
-	Schema  string
-	Charset string ` + "`" + `default:"utf8mb4"` + "`" + `
+type BizConf struct {
+	ApiSecret string ` + "`" + `split_words:"true"` + "`" + `
 }
 
 func LoadFromEnv() *Config {
-	var dbconf DbConfig
-	err := envconfig.Process("db", &dbconf)
+	var bizConf BizConf
+	err := envconfig.Process("biz", &bizConf)
 	if err != nil {
-		zlogger.Panic().Err(err).Msg("Error processing env")
+		errorx.Panic("Error processing environment variables")
 	}
 	return &Config{
-		dbconf,
+		BizConf: bizConf,
 	}
 }
 `

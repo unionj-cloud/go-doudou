@@ -91,4 +91,26 @@ const (
 	DefaultGddMemHost           = ""
 	DefaultGddMemCIDRsAllowed   = ""
 	DefaultGddMemLogDisable     = false
+
+	DefaultGddDBDisableAutoConfigure = false
+	DefaultGddDBDriver               = ""
+	DefaultGddDBDsn                  = ""
+	DefaultGddDBMaxIdleConns         = 2
+	DefaultGddDBMaxOpenConns         = -1
+	DefaultGddDBConnMaxLifetime      = -1
+	DefaultGddDBConnMaxIdleTime      = -1
+
+	DefaultGddDBMysqlSkipInitializeWithVersion = false
+	DefaultGddDBMysqlDefaultStringSize         = 0
+	//DefaultGddDBMysqlDefaultDatetimePrecision      envVariable = "GDD_DB_MYSQL_DEFAULTDATETIMEPRECISION"
+	DefaultGddDBMysqlDisableWithReturning          = false
+	DefaultGddDBMysqlDisableDatetimePrecision      = false
+	DefaultGddDBMysqlDontSupportRenameIndex        = false
+	DefaultGddDBMysqlDontSupportRenameColumn       = false
+	DefaultGddDBMysqlDontSupportForShareClause     = false
+	DefaultGddDBMysqlDontSupportNullAsDefaultValue = false
+	DefaultGddDBMysqlDontSupportRenameColumnUnique = false
+
+	DefaultGddDBPostgresPreferSimpleProtocol = false
+	DefaultGddDBPostgresWithoutReturning     = false
 )
