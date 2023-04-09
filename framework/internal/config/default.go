@@ -1,6 +1,9 @@
 package config
 
-import "github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
+import (
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
+	"gorm.io/gorm/logger"
+)
 
 const FrameworkName = "go-doudou"
 
@@ -99,6 +102,11 @@ const (
 	DefaultGddDBMaxOpenConns         = -1
 	DefaultGddDBConnMaxLifetime      = -1
 	DefaultGddDBConnMaxIdleTime      = -1
+
+	DefaultGddDBLogSlowThreshold             = "200ms"
+	DefaultGddDBLogIgnoreRecordNotFoundError = false
+	DefaultGddDBLogParameterizedQueries      = false
+	DefaultGddDBLogLevel                     = logger.Warn
 
 	DefaultGddDBMysqlSkipInitializeWithVersion = false
 	DefaultGddDBMysqlDefaultStringSize         = 0
