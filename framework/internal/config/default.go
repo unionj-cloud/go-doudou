@@ -121,4 +121,8 @@ const (
 
 	DefaultGddDBPostgresPreferSimpleProtocol = false
 	DefaultGddDBPostgresWithoutReturning     = false
+
+	DefaultGddZkServers          = ""
+	DefaultGddZkSequence         = false
+	DefaultGddZkDirectoryPattern = "/registry/%s/providers"
 )

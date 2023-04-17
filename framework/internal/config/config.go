@@ -262,7 +262,7 @@ const (
 	GddDBLogIgnoreRecordNotFoundError envVariable = "GDD_DB_LOG_IGNORERECORDNOTFOUNDERROR"
 	GddDBLogParameterizedQueries      envVariable = "GDD_DB_LOG_PARAMETERIZEDQUERIES"
 	GddDBLogLevel                     envVariable = "GDD_DB_LOG_LEVEL"
-	
+
 	GddDBMysqlSkipInitializeWithVersion envVariable = "GDD_DB_MYSQL_SKIPINITIALIZEWITHVERSION"
 	GddDBMysqlDefaultStringSize         envVariable = "GDD_DB_MYSQL_DEFAULTSTRINGSIZE"
 	//GddDBMysqlDefaultDatetimePrecision      envVariable = "GDD_DB_MYSQL_DEFAULTDATETIMEPRECISION"
@@ -276,6 +276,10 @@ const (
 
 	GddDBPostgresPreferSimpleProtocol envVariable = "GDD_DB_POSTGRES_PREFERSIMPLEPROTOCOL"
 	GddDBPostgresWithoutReturning     envVariable = "GDD_DB_POSTGRES_WITHOUTRETURNING"
+
+	GddZkServers          envVariable = "GDD_ZK_SERVERS"
+	GddZkSequence         envVariable = "GDD_ZK_SEQUENCE"
+	GddZkDirectoryPattern envVariable = "GDD_ZK_DIRECTORY_PATTERN"
 )
 
 // Load loads value from environment variable

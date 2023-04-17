@@ -2,6 +2,7 @@ package serversets
 
 import (
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	"path"
 	"strings"
 	"time"
@@ -10,9 +11,6 @@ import (
 )
 
 var (
-	// BaseDirectory is the Zookeeper namespace that all nodes made by this package will live.
-	// This path must begin with '/'
-	BaseDirectory = "/discovery"
 
 	// MemberPrefix is prefix for the Zookeeper sequential ephemeral nodes.
 	// member_ is used by Finagle server sets.
@@ -22,8 +20,8 @@ var (
 // BaseZnodePath allows for a custom Zookeeper directory structure.
 // This function should return the path where you want the service's members to live.
 // Default is `BaseDirectory + "/" + environment + "/" + service` where the default base directory is `/discovery`
-var BaseZnodePath = func(environment Environment, service string) string {
-	return BaseDirectory + "/" + string(environment) + "/" + service
+var BaseZnodePath = func(service string) string {
+	return fmt.Sprintf(config.GddZkDirectoryPattern.LoadOrDefault(config.DefaultGddZkDirectoryPattern), service)
 }
 
 // An Environment is the test/staging/production state of the service.
@@ -32,8 +30,10 @@ type Environment string
 // Typically used environments
 const (
 	Local      Environment = "local"
+	Dev        Environment = "dev"
 	Production Environment = "prod"
 	Test       Environment = "test"
+	Uat        Environment = "uat"
 	Staging    Environment = "staging"
 )
 
@@ -80,7 +80,7 @@ func (ss *ServerSet) connectToZookeeper() (*zk.Conn, <-chan zk.Event, error) {
 
 // directoryPath returns the base path of where all the ephemeral nodes will live.
 func (ss *ServerSet) directoryPath() string {
-	return BaseZnodePath(ss.environment, ss.service)
+	return BaseZnodePath(ss.service)
 }
 
 func splitPaths(fullPath string) []string {
@@ -123,7 +123,6 @@ func (ss *ServerSet) createFullPath(connection *zk.Conn) error {
 // Mimics finagle serverset structure.
 type entity struct {
 	ServiceEndpoint     endpoint            `json:"serviceEndpoint"`
-	AdditionalEndpoints map[string]endpoint `json:"additionalEndpoints"` // unused
 	Status              string              `json:"status"`
 }
 
@@ -135,7 +134,6 @@ type endpoint struct {
 func newEntity(host string, port int) *entity {
 	return &entity{
 		ServiceEndpoint:     endpoint{host, port},
-		AdditionalEndpoints: make(map[string]endpoint),
 		Status:              statusAlive,
 	}
 }

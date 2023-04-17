@@ -3,6 +3,9 @@ package serversets
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"net/url"
 	"sync"
 	"time"
 
@@ -112,6 +115,89 @@ func (ss *ServerSet) RegisterEndpoint(host string, port int, ping func() error) 
 	return endpoint, nil
 }
 
+func (ss *ServerSet) RegisterEndpointWithMeta(host string, port int, ping func() error, meta map[string]interface{}) (*Endpoint, error) {
+	endpoint := &Endpoint{
+		ServerSet:  ss,
+		PingRate:   time.Second,
+		CloseEvent: make(chan struct{}, 1),
+		done:       make(chan struct{}),
+		host:       host,
+		port:       port,
+		ping:       ping,
+		alive:      true,
+	}
+
+	if ping != nil {
+		endpoint.alive = endpoint.ping() == nil
+	}
+
+	connection, sessionEvents, err := ss.connectToZookeeper()
+	if err != nil {
+		return nil, err
+	}
+
+	err = endpoint.updateWithMeta(connection, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// spawn goroutine to deal with connection/session issues.
+	endpoint.wg.Add(1)
+	go func() {
+		defer endpoint.wg.Done()
+		for {
+			select {
+			case event := <-sessionEvents:
+				if event.Type == zk.EventSession && event.State == zk.StateExpired {
+					connection.Close()
+					connection = nil
+				}
+			case <-endpoint.done:
+				connection.Close()
+				return
+			}
+
+			if connection == nil {
+				connection, sessionEvents, err = ss.connectToZookeeper()
+				if err != nil {
+					panic(fmt.Errorf("unable to reconnect to zookeeper after session expired: %v", err))
+				}
+
+				err = endpoint.updateWithMeta(connection, meta)
+				if err != nil {
+					panic(fmt.Errorf("unable to reregister endpoint after session expired: %v", err))
+				}
+			}
+		}
+	}()
+
+	if ping != nil {
+		endpoint.wg.Add(1)
+		go func() {
+			defer endpoint.wg.Done()
+			for {
+				select {
+				case <-time.After(endpoint.PingRate):
+				case <-endpoint.done:
+					return
+				}
+
+				alive := endpoint.ping() == nil
+				if alive != endpoint.alive {
+					endpoint.alive = alive
+					err := endpoint.updateWithMeta(connection, meta)
+
+					if err != nil {
+						panic(fmt.Errorf("unable to reregister after ping change: %v", err))
+					}
+				}
+			}
+		}()
+	}
+
+	return endpoint, nil
+}
+
 // Close blocks until the client connection to Zookeeper is closed.
 // If already called, will simply return, even if in the process of closing.
 func (ep *Endpoint) Close() {
@@ -141,22 +227,51 @@ func (ep *Endpoint) update(connection *zk.Conn) error {
 	}
 
 	entityData, _ := json.Marshal(newEntity(ep.host, ep.port))
+	entityMap := make(map[string]interface{})
+	json.Unmarshal(entityData, &entityMap)
 
 	var err error
-	ep.key, err = ep.ServerSet.registerEndpoint(connection, entityData)
+	ep.key, err = ep.ServerSet.registerEndpoint(connection, entityMap)
 
 	return err
 }
 
-func (ss *ServerSet) registerEndpoint(connection *zk.Conn, data []byte) (string, error) {
+func (ep *Endpoint) updateWithMeta(connection *zk.Conn, meta map[string]interface{}) error {
+	// don't create/remove the node if we're dead
+	if !ep.alive {
+		if ep.key != "" {
+			err := connection.Delete(ep.key, 0)
+			ep.key = ""
+			return err
+		}
+
+		return nil
+	}
+
+	entityData := newEntity(ep.host, ep.port)
+	meta["serviceEndpoint"] = entityData.ServiceEndpoint
+	meta["status"] = entityData.Status
+
+	var err error
+	ep.key, err = ep.ServerSet.registerEndpoint(connection, meta)
+
+	return err
+}
+
+func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]interface{}) (string, error) {
 	err := ss.createFullPath(connection)
 	if err != nil {
 		return "", err
 	}
-
+	flags := zk.FlagEphemeral
+	if cast.ToBoolOrDefault(config.GddZkSequence.Load(), config.DefaultGddZkSequence) {
+		flags = zk.FlagEphemeral | zk.FlagSequence
+	}
+	memberPath := url.PathEscape(fmt.Sprintf("%s://%s:%s/%s", meta["scheme"], meta["host"], meta["port"], meta["service"]))
+	data, _ := json.Marshal(meta)
 	return connection.Create(
-		ss.directoryPath()+"/"+MemberPrefix,
+		ss.directoryPath()+"/"+memberPath,
 		data,
-		zk.FlagEphemeral|zk.FlagSequence,
+		int32(flags),
 		zk.WorldACL(zk.PermAll))
 }
