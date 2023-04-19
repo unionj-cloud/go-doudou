@@ -267,7 +267,10 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 	if cast.ToBoolOrDefault(config.GddZkSequence.Load(), config.DefaultGddZkSequence) {
 		flags = zk.FlagEphemeral | zk.FlagSequence
 	}
-	memberPath := url.PathEscape(fmt.Sprintf("%s://%s:%s/%s", meta["scheme"], meta["host"], meta["port"], meta["service"]))
+	var querystring url.Values
+	querystring.Set("group", meta["group"].(string))
+	querystring.Set("version", meta["version"].(string))
+	memberPath := url.PathEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
 	data, _ := json.Marshal(meta)
 	return connection.Create(
 		ss.directoryPath()+"/"+memberPath,

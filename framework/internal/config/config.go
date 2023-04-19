@@ -132,7 +132,9 @@ const (
 	// GddRouteRootPath sets root path for all routes
 	GddRouteRootPath envVariable = "GDD_ROUTE_ROOT_PATH"
 	// GddServiceName sets service name
-	GddServiceName envVariable = "GDD_SERVICE_NAME"
+	GddServiceName    envVariable = "GDD_SERVICE_NAME"
+	GddServiceGroup   envVariable = "GDD_SERVICE_GROUP"
+	GddServiceVersion envVariable = "GDD_SERVICE_VERSION"
 	// GddHost sets bind host for http server
 	GddHost envVariable = "GDD_HOST"
 	// GddPort sets bind port for http server

@@ -10,13 +10,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"google.golang.org/grpc"
-	"net/http"
 	"os"
 	"runtime"
 	"sort"
@@ -51,16 +49,11 @@ func registerService(service string, port uint64, scheme string, userData ...map
 	metadata["port"] = strconv.Itoa(int(port))
 	metadata["service"] = service
 	populateMeta(metadata, strings.HasPrefix(scheme, "http"), userData...)
-	pingFunction := func() error {
-		c := http.Client{Timeout: time.Duration(3) * time.Second}
-		_, err := c.Get(fmt.Sprintf("%s://%s:%s%s", metadata["scheme"], metadata["host"], metadata["port"], metadata["rootPath"]))
-		return errorx.Handle(err)
-	}
 	serverSet := newServerSet()
 	endpoint, err := serverSet.RegisterEndpointWithMeta(
 		host,
 		int(port),
-		pingFunction,
+		nil,
 		metadata)
 	if err != nil {
 		zlogger.Panic().Err(err).Msgf("[go-doudou] register %s to zookeeper failed", service)
@@ -81,10 +74,10 @@ func populateMeta(meta map[string]interface{}, isRest bool, userData ...map[stri
 			weight = w
 		}
 	}
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
+	group := config.GddServiceGroup.LoadOrDefault(config.DefaultGddServiceGroup)
+	version := config.GddServiceGroup.LoadOrDefault(config.DefaultGddServiceVersion)
+	meta["group"] = group
+	meta["version"] = version
 	meta["registerAt"] = time.Now().Local().Format(constants.FORMAT8)
 	meta["goVer"] = runtime.Version()
 	meta["weight"] = weight
@@ -97,6 +90,7 @@ func populateMeta(meta map[string]interface{}, isRest bool, userData ...map[stri
 	if stringutils.IsNotEmpty(buildTime) {
 		meta["buildTime"] = buildTime
 	}
+	rr := config.GddRouteRootPath.LoadOrDefault(config.DefaultGddRouteRootPath)
 	if stringutils.IsNotEmpty(rr) && isRest {
 		meta["rootPath"] = rr
 	}
