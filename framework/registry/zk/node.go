@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_zk"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/serversets"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
@@ -13,9 +15,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"go.etcd.io/etcd/client/v3/naming/endpoints"
-	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"google.golang.org/grpc"
+	"net/url"
 	"os"
 	"runtime"
 	"sort"
@@ -28,8 +29,9 @@ import (
 
 var restEndpoint *serversets.Endpoint
 var grpcEndpoint *serversets.Endpoint
+var providers map[string]registry.IServiceProvider
 
-func newServerSet() *serversets.ServerSet {
+func newServerSet(service string) *serversets.ServerSet {
 	zkServers := config.GddZkServers.LoadOrDefault(config.DefaultGddZkServers)
 	if stringutils.IsEmpty(zkServers) {
 		zlogger.Panic().Msg("[go-doudou] env GDD_ZK_SERVERS is not set")
@@ -39,7 +41,7 @@ func newServerSet() *serversets.ServerSet {
 	if stringutils.IsEmpty(environment) {
 		environment = "dev"
 	}
-	return serversets.New(serversets.Environment(environment), config.GetServiceName(), zookeepers)
+	return serversets.New(serversets.Environment(environment), service, zookeepers)
 }
 
 func registerService(service string, port uint64, scheme string, userData ...map[string]interface{}) *serversets.Endpoint {
@@ -49,8 +51,8 @@ func registerService(service string, port uint64, scheme string, userData ...map
 	metadata["host"] = host
 	metadata["port"] = strconv.Itoa(int(port))
 	metadata["service"] = service
-	populateMeta(metadata, strings.HasPrefix(scheme, "http"), userData...)
-	serverSet := newServerSet()
+	populateMeta(metadata, userData...)
+	serverSet := newServerSet(service)
 	endpoint, err := serverSet.RegisterEndpointWithMeta(
 		host,
 		int(port),
@@ -62,7 +64,7 @@ func registerService(service string, port uint64, scheme string, userData ...map
 	return endpoint
 }
 
-func populateMeta(meta map[string]interface{}, isRest bool, userData ...map[string]interface{}) {
+func populateMeta(meta map[string]interface{}, userData ...map[string]interface{}) {
 	buildTime := buildinfo.BuildTime
 	if stringutils.IsNotEmpty(buildinfo.BuildTime) {
 		if t, err := time.Parse(constants.FORMAT15, buildinfo.BuildTime); err == nil {
@@ -91,10 +93,7 @@ func populateMeta(meta map[string]interface{}, isRest bool, userData ...map[stri
 	if stringutils.IsNotEmpty(buildTime) {
 		meta["buildTime"] = buildTime
 	}
-	rr := config.GddRouteRootPath.LoadOrDefault(config.DefaultGddRouteRootPath)
-	if stringutils.IsNotEmpty(rr) && isRest {
-		meta["rootPath"] = rr
-	}
+	meta["rootPath"] = config.GddRouteRootPath.LoadOrDefault(config.DefaultGddRouteRootPath)
 	for _, item := range userData {
 		for k, v := range item {
 			meta[k] = fmt.Sprint(v)
@@ -137,6 +136,7 @@ type Watcher interface {
 	Endpoints() []string
 	Event() <-chan struct{}
 	IsClosed() bool
+	Close()
 }
 
 // RRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
@@ -145,8 +145,6 @@ type RRServiceProvider struct {
 	lock     sync.Mutex
 	watcher  Watcher
 	target   string
-	ctx      context.Context
-	cancel   context.CancelFunc
 	curState atomic.Value
 }
 
@@ -162,60 +160,27 @@ type state struct {
 }
 
 func (r *RRServiceProvider) watch() {
-	allUps := make(map[string]*endpoints.Update)
 	for {
 		select {
-		case <-r.ctx.Done():
-			return
-		case ups, ok := <-r.wch:
-			if !ok {
-				return
-			}
-
-			for _, up := range ups {
-				switch up.Op {
-				case endpoints.Add:
-					allUps[up.Key] = up
-				case endpoints.Delete:
-					delete(allUps, up.Key)
-				}
-			}
-
-			addrs := convertToAddress(allUps)
+		case <-r.watcher.Event():
+			addrs := convertToAddress(r.watcher.Endpoints())
 			r.curState.Store(state{addresses: addrs})
 		}
-	}
 
-	r.watcher.Endpoints()
-
-	go func() {
-		for {
-			select {
-			case <-watch.Event():
-				t.SetEndpoints(watch.Endpoints())
-			}
-
-			if watch.IsClosed() {
-				break
-			}
+		if r.watcher.IsClosed() {
+			break
 		}
-
-		watcherClosed()
-	}()
+	}
 }
 
-func convertToAddress(ups map[string]*endpoints.Update) (addrs []*address) {
+func convertToAddress(ups []string) (addrs []*address) {
 	for _, up := range ups {
-		weight := 1
-		var rootPath string
-		if metadata, ok := up.Endpoint.Metadata.(map[string]interface{}); !ok {
-			zlogger.Error().Msg("[go-doudou] zookeeper endpoint metadata is not map[string]string type")
-		} else {
-			weight = int(metadata["weight"].(float64))
-			rootPath = metadata["rootPath"].(string)
-		}
+		unescaped, _ := url.PathUnescape(up)
+		u, _ := url.Parse(unescaped)
+		weight := cast.ToIntOrDefault(u.Query().Get("weight"), 1)
+		rootPath := u.Query().Get("rootPath")
 		addr := &address{
-			addr:     up.Endpoint.Addr,
+			addr:     u.Host,
 			rootPath: rootPath,
 			weight:   weight,
 		}
@@ -242,20 +207,24 @@ func (n *RRServiceProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s%s", selected.addr, selected.rootPath)
 }
 
-func (n *RRServiceProvider) Close() {
+func (r *RRServiceProvider) Close() {
+	r.watcher.Close()
 }
 
 // NewRRServiceProvider creates new RRServiceProvider instance
-func NewRRServiceProvider(serviceName string) *RRServiceProvider {
-	serverSet := newServerSet()
+func NewRRServiceProvider(service string) *RRServiceProvider {
+	serverSet := newServerSet(service)
 	watcher, err := serverSet.Watch()
 	if err != nil {
 		errorx.Panic(err.Error())
 	}
 	r := &RRServiceProvider{
 		watcher: watcher,
-		target:  serviceName,
+		target:  service,
 	}
+	defer func() {
+		providers[service] = r
+	}()
 	go r.watch()
 	return r
 }
@@ -296,7 +265,7 @@ func NewSWRRServiceProvider(serviceName string) *SWRRServiceProvider {
 }
 
 func NewSWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-	return NewGrpcClientConn(service, "zookeeper_weight_balancer", dialOptions...)
+	return NewGrpcClientConn(service, "zk_weight_balancer", dialOptions...)
 }
 
 func NewRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
@@ -304,19 +273,18 @@ func NewRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.C
 }
 
 func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-	onceZk.Do(func() {
-		InitZkCli()
-	})
-	zookeeperResolver, err := resolver.NewBuilder(ZkCli)
+	serverSet := newServerSet(service)
+	watcher, err := serverSet.Watch()
 	if err != nil {
-		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create zookeeper resolver")
+		errorx.Panic(err.Error())
 	}
-	dialOptions = append(dialOptions,
-		grpc.WithBlock(),
-		grpc.WithResolvers(zookeeperResolver),
-		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "`+lb+`"}`),
-	)
-	serverAddr := fmt.Sprintf("zookeeper:///%s", service)
+	grpc_resolver_zk.AddZkConfig(grpc_resolver_zk.ZkConfig{
+		Label:       service,
+		ServiceName: service,
+		Watcher:     watcher,
+	})
+	serverAddr := fmt.Sprintf("zk://%s/", service)
+	dialOptions = append(dialOptions, grpc.WithBlock(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "`+lb+`"}`))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	grpcConn, err := grpc.DialContext(ctx, serverAddr, dialOptions...)
@@ -324,4 +292,15 @@ func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption
 		zlogger.Panic().Err(err).Msgf("[go-doudou] failed to connect to server %s", serverAddr)
 	}
 	return grpcConn
+}
+
+var shutdownOnce sync.Once
+
+// CloseProviders you must call CloseProviders when program is shutting down, otherwise goroutine will leak
+func CloseProviders() {
+	shutdownOnce.Do(func() {
+		for _, p := range providers {
+			p.Close()
+		}
+	})
 }

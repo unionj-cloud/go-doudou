@@ -6,6 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 
@@ -270,6 +271,8 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 	var querystring url.Values
 	querystring.Set("group", meta["group"].(string))
 	querystring.Set("version", meta["version"].(string))
+	querystring.Set("weight", strconv.Itoa(meta["weight"].(int)))
+	querystring.Set("rootPath", meta["rootPath"].(string))
 	memberPath := url.PathEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
 	data, _ := json.Marshal(meta)
 	return connection.Create(

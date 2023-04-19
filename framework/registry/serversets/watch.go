@@ -3,10 +3,7 @@ package serversets
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"sort"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -143,7 +140,7 @@ func (w *Watch) Close() {
 	close(w.done)
 	w.wg.Wait()
 
-	// the goroutine watching for events must be terminted
+	// the goroutine watching for events must be terminated
 	// before we close this channel, since it might still be sending events.
 	close(w.event)
 	return
@@ -176,10 +173,6 @@ func (w *Watch) updateEndpoints(connection *zk.Conn, keys []string) ([]string, e
 	endpoints := make([]string, 0, len(keys))
 
 	for _, k := range keys {
-		if !strings.HasPrefix(k, MemberPrefix) {
-			continue
-		}
-
 		e, err := w.getEndpoint(connection, k)
 		if err != nil {
 			return nil, err
@@ -190,8 +183,8 @@ func (w *Watch) updateEndpoints(connection *zk.Conn, keys []string) ([]string, e
 			continue
 		}
 
-		if e.Status == statusAlive {
-			endpoints = append(endpoints, net.JoinHostPort(e.ServiceEndpoint.Host, strconv.Itoa(e.ServiceEndpoint.Port)))
+		if e["status"] == statusAlive {
+			endpoints = append(endpoints, k)
 		}
 	}
 
@@ -200,7 +193,7 @@ func (w *Watch) updateEndpoints(connection *zk.Conn, keys []string) ([]string, e
 
 }
 
-func (w *Watch) getEndpoint(connection *zk.Conn, key string) (*entity, error) {
+func (w *Watch) getEndpoint(connection *zk.Conn, key string) (map[string]interface{}, error) {
 
 	data, _, err := connection.Get(w.serverSet.directoryPath() + "/" + key)
 	if err == zk.ErrNoNode {
@@ -221,7 +214,7 @@ func (w *Watch) getEndpoint(connection *zk.Conn, key string) (*entity, error) {
 		return w.getEndpoint(connection, key)
 	}
 
-	e := &entity{}
+	e := make(map[string]interface{})
 	err = json.Unmarshal(data, &e)
 	if err != nil {
 		return nil, err
