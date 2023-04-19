@@ -11,6 +11,7 @@ import (
 
 type IServiceProvider interface {
 	SelectServer() string
+	Close()
 }
 
 func NewRest(data ...map[string]interface{}) {

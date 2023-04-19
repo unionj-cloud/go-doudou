@@ -10,6 +10,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
@@ -131,16 +132,21 @@ func ShutdownGrpc() {
 	}
 }
 
+// A Watcher represents how a serverset.Watch is used so it can be stubbed out for tests.
+type Watcher interface {
+	Endpoints() []string
+	Event() <-chan struct{}
+	IsClosed() bool
+}
+
 // RRServiceProvider is a simple round-robin load balance implementation for IServiceProvider
 type RRServiceProvider struct {
 	current  uint64
 	lock     sync.Mutex
-	c        *clientv3.Client
+	watcher  Watcher
 	target   string
-	wch      endpoints.WatchChannel
 	ctx      context.Context
 	cancel   context.CancelFunc
-	wg       sync.WaitGroup
 	curState atomic.Value
 }
 
@@ -156,8 +162,6 @@ type state struct {
 }
 
 func (r *RRServiceProvider) watch() {
-	defer r.wg.Done()
-
 	allUps := make(map[string]*endpoints.Update)
 	for {
 		select {
@@ -181,6 +185,23 @@ func (r *RRServiceProvider) watch() {
 			r.curState.Store(state{addresses: addrs})
 		}
 	}
+
+	r.watcher.Endpoints()
+
+	go func() {
+		for {
+			select {
+			case <-watch.Event():
+				t.SetEndpoints(watch.Endpoints())
+			}
+
+			if watch.IsClosed() {
+				break
+			}
+		}
+
+		watcherClosed()
+	}()
 }
 
 func convertToAddress(ups map[string]*endpoints.Update) (addrs []*address) {
@@ -221,25 +242,20 @@ func (n *RRServiceProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s%s", selected.addr, selected.rootPath)
 }
 
+func (n *RRServiceProvider) Close() {
+}
+
 // NewRRServiceProvider creates new RRServiceProvider instance
 func NewRRServiceProvider(serviceName string) *RRServiceProvider {
-	onceZk.Do(func() {
-		InitZkCli()
-	})
+	serverSet := newServerSet()
+	watcher, err := serverSet.Watch()
+	if err != nil {
+		errorx.Panic(err.Error())
+	}
 	r := &RRServiceProvider{
-		c:      ZkCli,
-		target: serviceName,
+		watcher: watcher,
+		target:  serviceName,
 	}
-	r.ctx, r.cancel = context.WithCancel(context.Background())
-	em, err := endpoints.NewManager(r.c, r.target)
-	if err != nil {
-		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create endpoint manager")
-	}
-	r.wch, err = em.NewWatchChannel(r.ctx)
-	if err != nil {
-		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create watch channel")
-	}
-	r.wg.Add(1)
 	go r.watch()
 	return r
 }
