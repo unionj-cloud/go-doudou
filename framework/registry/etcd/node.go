@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/interfaces"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -29,7 +29,7 @@ var onceEtcd sync.Once
 var EtcdCli *clientv3.Client
 var restLease clientv3.LeaseID
 var grpcLease clientv3.LeaseID
-var providers map[string]registry.IServiceProvider
+var providers map[string]interfaces.IServiceProvider
 
 func InitEtcdCli() {
 	etcdEndpoints := config.GddEtcdEndpoints.LoadOrDefault(config.DefaultGddEtcdEndpoints)

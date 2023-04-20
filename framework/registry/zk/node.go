@@ -6,8 +6,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_zk"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
-	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/interfaces"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/serversets"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
@@ -29,7 +29,7 @@ import (
 
 var restEndpoint *serversets.Endpoint
 var grpcEndpoint *serversets.Endpoint
-var providers map[string]registry.IServiceProvider
+var providers map[string]interfaces.IServiceProvider
 
 func newServerSet(service string) *serversets.ServerSet {
 	zkServers := config.GddZkServers.LoadOrDefault(config.DefaultGddZkServers)
@@ -162,13 +162,16 @@ type state struct {
 func (r *RRServiceProvider) watch() {
 	for {
 		select {
-		case <-r.watcher.Event():
+		case _, ok := <-r.watcher.Event():
+			if !ok {
+				return
+			}
 			addrs := convertToAddress(r.watcher.Endpoints())
 			r.curState.Store(state{addresses: addrs})
 		}
 
 		if r.watcher.IsClosed() {
-			break
+			return
 		}
 	}
 }
@@ -211,7 +214,9 @@ func (r *RRServiceProvider) Close() {
 	r.watcher.Close()
 }
 
-// NewRRServiceProvider creates new RRServiceProvider instance
+// NewRRServiceProvider creates new RRServiceProvider instance.
+// If you don't need it, You should call Close to release resource.
+// You can also call CloseProviders to close all at one shot
 func NewRRServiceProvider(service string) *RRServiceProvider {
 	serverSet := newServerSet(service)
 	watcher, err := serverSet.Watch()

@@ -6,8 +6,10 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/zk"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"go.etcd.io/etcd/client/v3"
 	"net/http"
@@ -137,7 +139,7 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 			var provider registry.IServiceProvider
 			for _, mode := range modes {
 				switch mode {
-				case "nacos":
+				case constants.SD_NACOS:
 					cluster := config.GddNacosClusterName.LoadOrDefault(config.DefaultGddNacosClusterName)
 					group := config.GddNacosGroupName.LoadOrDefault(config.DefaultGddNacosGroupName)
 					_, err := nacos.NamingClient.GetService(vo.GetServiceParam{
@@ -155,7 +157,7 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 					}
 					provider = nacos.NewWRRServiceProvider(serviceName, nacos.WithNacosClusters([]string{cluster}), nacos.WithNacosGroupName(group))
 					proxyConfig.ProviderStore.Add(serviceName, provider)
-				case "etcd":
+				case constants.SD_ETCD:
 					getResponse, err := etcd.EtcdCli.Get(r.Context(), serviceName+"/", clientv3.WithPrefix())
 					if err != nil || getResponse.Count == 0 {
 						continue
@@ -166,6 +168,14 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 						}
 					}
 					provider = etcd.NewSWRRServiceProvider(serviceName)
+					proxyConfig.ProviderStore.Add(serviceName, provider)
+				case constants.SD_ZK:
+					if value, ok := proxyConfig.ProviderStore.Get(serviceName); ok {
+						if provider, ok = value.(*zk.SWRRServiceProvider); ok {
+							break
+						}
+					}
+					provider = zk.NewSWRRServiceProvider(serviceName)
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				default:
 				}

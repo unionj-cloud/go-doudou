@@ -50,6 +50,9 @@ type ServiceProvider struct {
 	server string
 }
 
+func (s *ServiceProvider) Close() {
+}
+
 // SelectServer return service address from environment variable
 func (s *ServiceProvider) SelectServer() string {
 	return s.server

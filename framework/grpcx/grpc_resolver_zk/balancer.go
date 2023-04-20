@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/balancer/base"
 )
 
-const Name = "nacos_weight_balancer"
+const Name = "zk_weight_balancer"
 
 func newBuilder() balancer.Builder {
 	return base.NewBalancerBuilder(Name, &wPickerBuilder{}, base.Config{HealthCheck: true})
@@ -23,7 +23,7 @@ func init() {
 type wPickerBuilder struct{}
 
 func (*wPickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
-	zlogger.Debug().Msgf("[go-doudou] nacos_weight_balancer Picker: Build called with info: %v", info)
+	zlogger.Debug().Msgf("[go-doudou] zk_weight_balancer Picker: Build called with info: %v", info)
 	if len(info.ReadySCs) == 0 {
 		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
@@ -73,7 +73,6 @@ func (a conns) Less(i, j int) bool {
 	return a[i].Weight < a[j].Weight
 }
 
-// Chooser from naming_client package in nacos-sdk-go
 type Chooser struct {
 	data   []conn
 	totals []int

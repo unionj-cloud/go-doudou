@@ -1,11 +1,9 @@
 package grpc_resolver_zk
 
 import (
-	"context"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"google.golang.org/grpc/attributes"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 	"net/url"
 	"strings"
@@ -18,8 +16,7 @@ func init() {
 }
 
 type ZkResolver struct {
-	cancelFunc context.CancelFunc
-	watcher    Watcher
+	watcher Watcher
 }
 
 func (r *ZkResolver) Build(url resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
@@ -28,13 +25,9 @@ func (r *ZkResolver) Build(url resolver.Target, cc resolver.ClientConn, opts res
 	if err != nil {
 		return nil, errors.Wrap(err, "Wrong URL")
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	pipe := make(chan []serviceInfo)
-	go watchZkService(ctx, config.Watcher, pipe)
-	go populateEndpoints(ctx, cc, pipe)
-
-	return &ZkResolver{cancelFunc: cancel, watcher: config.Watcher}, nil
+	zkResolver := &ZkResolver{watcher: config.Watcher}
+	go zkResolver.watchZkService(cc)
+	return zkResolver, nil
 }
 
 func (r *ZkResolver) Scheme() string {
@@ -45,7 +38,6 @@ func (r *ZkResolver) ResolveNow(resolver.ResolveNowOptions) {}
 
 func (r *ZkResolver) Close() {
 	r.watcher.Close()
-	r.cancelFunc()
 }
 
 type serviceInfo struct {
@@ -53,39 +45,28 @@ type serviceInfo struct {
 	Weight  int
 }
 
-func watchZkService(ctx context.Context, watcher Watcher, out chan<- []serviceInfo) {
-	res := make(chan []serviceInfo)
-	quit := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-watcher.Event():
-				addrs := convertToAddress(watcher.Endpoints())
-				res <- addrs
-			case <-quit:
-				return
-			}
-			if watcher.IsClosed() {
-				return
-			}
-		}
-	}()
+func (r *ZkResolver) watchZkService(clientConn resolver.ClientConn) {
 	for {
-		// If in the below select both channels have values that can be read,
-		// Go picks one pseudo-randomly.
-		// But when the context is canceled we want to act upon it immediately.
-		if ctx.Err() != nil {
-			// Close quit so the goroutine returns and doesn't leak.
-			// Do NOT close res because that can lead to panics in the goroutine.
-			// res will be garbage collected at some point.
-			close(quit)
-			return
-		}
 		select {
-		case ee := <-res:
-			out <- ee
-		case <-ctx.Done():
-			close(quit)
+		case _, ok := <-r.watcher.Event():
+			if !ok {
+				return
+			}
+			services := convertToAddress(r.watcher.Endpoints())
+			connsSet := make(map[serviceInfo]struct{}, len(services))
+			for _, c := range services {
+				connsSet[c] = struct{}{}
+			}
+			addrs := make([]resolver.Address, 0, len(connsSet))
+			for c := range connsSet {
+				addr := resolver.Address{Addr: c.Address,
+					BalancerAttributes: attributes.New(WeightAttributeKey{}, WeightAddrInfo{Weight: c.Weight})}
+				addrs = append(addrs, addr)
+			}
+			clientConn.UpdateState(resolver.State{Addresses: addrs})
+		}
+
+		if r.watcher.IsClosed() {
 			return
 		}
 	}
@@ -99,27 +80,4 @@ func convertToAddress(ups []string) (addrs []serviceInfo) {
 		addrs = append(addrs, serviceInfo{Address: u.Host, Weight: weight})
 	}
 	return
-}
-
-func populateEndpoints(ctx context.Context, clientConn resolver.ClientConn, input <-chan []serviceInfo) {
-	for {
-		select {
-		case cc := <-input:
-			connsSet := make(map[serviceInfo]struct{}, len(cc))
-			for _, c := range cc {
-				connsSet[c] = struct{}{}
-			}
-			conns := make([]resolver.Address, 0, len(connsSet))
-			for c := range connsSet {
-				add := resolver.Address{Addr: c.Address,
-					BalancerAttributes: attributes.New(WeightAttributeKey{}, WeightAddrInfo{Weight: c.Weight})}
-				//fmt.Printf("%v/n", add)
-				conns = append(conns, add)
-			}
-			clientConn.UpdateState(resolver.State{Addresses: conns})
-		case <-ctx.Done():
-			grpclog.Info("[Zk resolver] Watch has been finished")
-			return
-		}
-	}
 }
