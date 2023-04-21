@@ -12,7 +12,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/goccy/go-yaml v1.10.0
+	github.com/goccy/go-yaml v1.11.0
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jeremywohl/flatten v1.0.1
@@ -27,7 +27,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
@@ -90,7 +90,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -109,13 +109,13 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
-	github.com/moby/sys/mountinfo v0.4.1 // indirect
+	github.com/moby/sys/mountinfo v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.0.2 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/paulmach/orb v0.7.1 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
@@ -199,7 +199,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/microsoft/go-mssqldb v0.21.0 // indirect
-	github.com/miekg/dns v1.1.50
+	github.com/miekg/dns v1.1.53
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.9.0
