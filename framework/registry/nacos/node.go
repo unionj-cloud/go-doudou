@@ -298,6 +298,9 @@ func (n *RRServiceProvider) SelectServer() string {
 	return fmt.Sprintf("http://%s:%d%s", selected.Ip, selected.Port, selected.Metadata["rootPath"])
 }
 
+func (n *RRServiceProvider) Close() {
+}
+
 // NewRRServiceProvider creates new ServiceProvider instance
 func NewRRServiceProvider(serviceName string, opts ...NacosProviderOption) *RRServiceProvider {
 	onceNacos.Do(func() {
@@ -338,6 +341,9 @@ func (n *WRRServiceProvider) SelectServer() string {
 		return ""
 	}
 	return fmt.Sprintf("http://%s:%d%s", instance.Ip, instance.Port, instance.Metadata["rootPath"])
+}
+
+func (n *WRRServiceProvider) Close() {
 }
 
 // NewWRRServiceProvider creates new ServiceProvider instance

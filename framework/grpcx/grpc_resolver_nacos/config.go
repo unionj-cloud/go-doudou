@@ -15,22 +15,22 @@ type NacosInstance = model.Instance
 type NacosService = model.Service
 
 type NacosConfig struct {
-	Label              string //用做寻找配置的标签
-	ServiceName        string //标记服务名称
-	Clusters           []string
-	GroupName          string
-	NacosClient        NacosClient
+	Label       string //用做寻找配置的标签
+	ServiceName string //标记服务名称
+	Clusters    []string
+	GroupName   string
+	NacosClient NacosClient
 }
 
 var NacosConfigs = make(map[string]*NacosConfig)
 
+// AddNacosConfig is not thread-safe
 func AddNacosConfig(config NacosConfig) {
-	//NacosConfigs.Store(config.Label, &config)
 	NacosConfigs[config.Label] = &config
 }
 
+// DelNacosConfig is not thread-safe
 func DelNacosConfig(label string) {
-	//NacosConfigs.Delete(label)
 	delete(NacosConfigs, label)
 }
 

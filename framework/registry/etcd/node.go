@@ -6,6 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
+	"github.com/unionj-cloud/go-doudou/v2/framework/registry/interfaces"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -28,6 +29,7 @@ var onceEtcd sync.Once
 var EtcdCli *clientv3.Client
 var restLease clientv3.LeaseID
 var grpcLease clientv3.LeaseID
+var providers = map[string]interfaces.IServiceProvider{}
 
 func InitEtcdCli() {
 	etcdEndpoints := config.GddEtcdEndpoints.LoadOrDefault(config.DefaultGddEtcdEndpoints)
@@ -194,6 +196,9 @@ var shutdownOnce sync.Once
 func CloseEtcdClient() {
 	shutdownOnce.Do(func() {
 		if EtcdCli != nil {
+			for _, p := range providers {
+				p.Close()
+			}
 			EtcdCli.Close()
 			EtcdCli = nil
 			zlogger.Info().Msg("[go-doudou] etcd client closed")
@@ -210,7 +215,6 @@ type RRServiceProvider struct {
 	wch      endpoints.WatchChannel
 	ctx      context.Context
 	cancel   context.CancelFunc
-	wg       sync.WaitGroup
 	curState atomic.Value
 }
 
@@ -226,13 +230,9 @@ type state struct {
 }
 
 func (r *RRServiceProvider) watch() {
-	defer r.wg.Done()
-
 	allUps := make(map[string]*endpoints.Update)
 	for {
 		select {
-		case <-r.ctx.Done():
-			return
 		case ups, ok := <-r.wch:
 			if !ok {
 				return
@@ -250,6 +250,12 @@ func (r *RRServiceProvider) watch() {
 			addrs := convertToAddress(allUps)
 			r.curState.Store(state{addresses: addrs})
 		}
+	}
+}
+
+func (r *RRServiceProvider) Close() {
+	if r != nil {
+		r.cancel()
 	}
 }
 
@@ -277,6 +283,9 @@ func convertToAddress(ups map[string]*endpoints.Update) (addrs []*address) {
 func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
@@ -301,6 +310,9 @@ func NewRRServiceProvider(serviceName string) *RRServiceProvider {
 		target: serviceName,
 	}
 	r.ctx, r.cancel = context.WithCancel(context.Background())
+	defer func() {
+		providers[serviceName] = r
+	}()
 	em, err := endpoints.NewManager(r.c, r.target)
 	if err != nil {
 		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create endpoint manager")
@@ -309,7 +321,6 @@ func NewRRServiceProvider(serviceName string) *RRServiceProvider {
 	if err != nil {
 		zlogger.Panic().Err(err).Msg("[go-doudou] failed to create watch channel")
 	}
-	r.wg.Add(1)
 	go r.watch()
 	return r
 }
@@ -323,6 +334,9 @@ type SWRRServiceProvider struct {
 func (n *SWRRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)

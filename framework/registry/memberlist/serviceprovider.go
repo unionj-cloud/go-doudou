@@ -156,6 +156,9 @@ func (m *RRServiceProvider) SelectServer() string {
 	return selected.baseUrl
 }
 
+func (m *RRServiceProvider) Close() {
+}
+
 // NewRRServiceProvider create an RRServiceProvider instance
 func NewRRServiceProvider(name string) *RRServiceProvider {
 	sp := &RRServiceProvider{
@@ -217,6 +220,9 @@ func (m *SWRRServiceProvider) SelectServer() string {
 	}
 	selected.currentWeight -= total
 	return selected.baseUrl
+}
+
+func (m *SWRRServiceProvider) Close() {
 }
 
 // NewSWRRServiceProvider create an SWRRServiceProvider instance

@@ -103,8 +103,8 @@ func watchNacosService(ctx context.Context, config *NacosConfig, out chan<- []se
 			return
 		}
 		select {
-		case ee := <-res:
-			out <- ee
+		case out <- <-res:
+			continue
 		case <-ctx.Done():
 			close(quit)
 			return
