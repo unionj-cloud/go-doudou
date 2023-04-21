@@ -136,6 +136,7 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 			}
 			serviceName := parts[1]
 			modes := strings.Split(os.Getenv("GDD_SERVICE_DISCOVERY_MODE"), ",")
+			// TODO call Close method to release resource
 			var provider registry.IServiceProvider
 			for _, mode := range modes {
 				switch mode {

@@ -29,7 +29,7 @@ import (
 
 var restEndpoint *serversets.Endpoint
 var grpcEndpoint *serversets.Endpoint
-var providers map[string]interfaces.IServiceProvider
+var providers = map[string]interfaces.IServiceProvider{}
 
 func newServerSet(service string) *serversets.ServerSet {
 	zkServers := config.GddZkServers.LoadOrDefault(config.DefaultGddZkServers)
@@ -78,7 +78,7 @@ func populateMeta(meta map[string]interface{}, userData ...map[string]interface{
 		}
 	}
 	group := config.GddServiceGroup.LoadOrDefault(config.DefaultGddServiceGroup)
-	version := config.GddServiceGroup.LoadOrDefault(config.DefaultGddServiceVersion)
+	version := config.GddServiceVersion.LoadOrDefault(config.DefaultGddServiceVersion)
 	meta["group"] = group
 	meta["version"] = version
 	meta["registerAt"] = time.Now().Local().Format(constants.FORMAT8)
@@ -159,15 +159,20 @@ type state struct {
 	addresses []*address
 }
 
+func (r *RRServiceProvider) updateState() {
+	addrs := convertToAddress(r.watcher.Endpoints())
+	r.curState.Store(state{addresses: addrs})
+}
+
 func (r *RRServiceProvider) watch() {
+	r.updateState()
 	for {
 		select {
 		case _, ok := <-r.watcher.Event():
 			if !ok {
 				return
 			}
-			addrs := convertToAddress(r.watcher.Endpoints())
-			r.curState.Store(state{addresses: addrs})
+			r.updateState()
 		}
 
 		if r.watcher.IsClosed() {
@@ -196,6 +201,9 @@ func convertToAddress(ups []string) (addrs []*address) {
 func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
@@ -243,6 +251,9 @@ type SWRRServiceProvider struct {
 func (n *SWRRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)

@@ -45,25 +45,30 @@ type serviceInfo struct {
 	Weight  int
 }
 
+func (r *ZkResolver) updateState(clientConn resolver.ClientConn) {
+	services := convertToAddress(r.watcher.Endpoints())
+	connsSet := make(map[serviceInfo]struct{}, len(services))
+	for _, c := range services {
+		connsSet[c] = struct{}{}
+	}
+	addrs := make([]resolver.Address, 0, len(connsSet))
+	for c := range connsSet {
+		addr := resolver.Address{Addr: c.Address,
+			BalancerAttributes: attributes.New(WeightAttributeKey{}, WeightAddrInfo{Weight: c.Weight})}
+		addrs = append(addrs, addr)
+	}
+	clientConn.UpdateState(resolver.State{Addresses: addrs})
+}
+
 func (r *ZkResolver) watchZkService(clientConn resolver.ClientConn) {
+	r.updateState(clientConn)
 	for {
 		select {
 		case _, ok := <-r.watcher.Event():
 			if !ok {
 				return
 			}
-			services := convertToAddress(r.watcher.Endpoints())
-			connsSet := make(map[serviceInfo]struct{}, len(services))
-			for _, c := range services {
-				connsSet[c] = struct{}{}
-			}
-			addrs := make([]resolver.Address, 0, len(connsSet))
-			for c := range connsSet {
-				addr := resolver.Address{Addr: c.Address,
-					BalancerAttributes: attributes.New(WeightAttributeKey{}, WeightAddrInfo{Weight: c.Weight})}
-				addrs = append(addrs, addr)
-			}
-			clientConn.UpdateState(resolver.State{Addresses: addrs})
+			r.updateState(clientConn)
 		}
 
 		if r.watcher.IsClosed() {

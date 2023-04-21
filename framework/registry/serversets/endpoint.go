@@ -268,7 +268,7 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 	if cast.ToBoolOrDefault(config.GddZkSequence.Load(), config.DefaultGddZkSequence) {
 		flags = zk.FlagEphemeral | zk.FlagSequence
 	}
-	var querystring url.Values
+	querystring := url.Values{}
 	querystring.Set("group", meta["group"].(string))
 	querystring.Set("version", meta["version"].(string))
 	querystring.Set("weight", strconv.Itoa(meta["weight"].(int)))

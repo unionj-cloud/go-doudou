@@ -29,7 +29,7 @@ var onceEtcd sync.Once
 var EtcdCli *clientv3.Client
 var restLease clientv3.LeaseID
 var grpcLease clientv3.LeaseID
-var providers map[string]interfaces.IServiceProvider
+var providers = map[string]interfaces.IServiceProvider{}
 
 func InitEtcdCli() {
 	etcdEndpoints := config.GddEtcdEndpoints.LoadOrDefault(config.DefaultGddEtcdEndpoints)
@@ -283,6 +283,9 @@ func convertToAddress(ups map[string]*endpoints.Update) (addrs []*address) {
 func (n *RRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
@@ -331,6 +334,9 @@ type SWRRServiceProvider struct {
 func (n *SWRRServiceProvider) SelectServer() string {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	if n.curState.Load() == nil {
+		return ""
+	}
 	instances := n.curState.Load().(state).addresses
 	if len(instances) == 0 {
 		zlogger.Error().Msgf("[go-doudou] %s server not found", n.target)
