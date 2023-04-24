@@ -25,7 +25,7 @@ func load(data []byte) error {
 		currentEnv[key] = true
 	}
 	for k, v := range flat {
-		upperK := strings.ToUpper(k)
+		upperK := strings.ToUpper(strings.ReplaceAll(k, "-", ""))
 		if !currentEnv[upperK] {
 			_ = os.Setenv(upperK, fmt.Sprint(v))
 		}

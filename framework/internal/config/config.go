@@ -165,8 +165,7 @@ const (
 
 	GddNacosNamespaceId         envVariable = "GDD_NACOS_NAMESPACE_ID"
 	GddNacosTimeoutMs           envVariable = "GDD_NACOS_TIMEOUT_MS"
-	GddNacosNotLoadCacheAtStart envVariable = "GDD_NACOS_NOT_LOAD_CACHE_AT_START"
-	GddNacosNotloadcacheatstart envVariable = "GDD_NACOS_NOTLOADCACHEATSTART"
+	GddNacosNotLoadCacheAtStart envVariable = "GDD_NACOS_NOTLOADCACHEATSTART"
 	GddNacosLogDir              envVariable = "GDD_NACOS_LOG_DIR"
 	GddNacosCacheDir            envVariable = "GDD_NACOS_CACHE_DIR"
 	GddNacosLogLevel            envVariable = "GDD_NACOS_LOG_LEVEL"
