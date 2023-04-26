@@ -3,6 +3,9 @@ package serversets
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"sort"
 	"sync"
 	"time"
@@ -44,17 +47,17 @@ func (ss *ServerSet) Watch() (*Watch, error) {
 
 	connection, sessionEvents, err := ss.connectToZookeeper()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 
 	keys, watchEvents, err := watch.watch(connection)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 
 	watch.endpoints, err = watch.updateEndpoints(connection, keys)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 
 	// spawn a goroutine to deal with session disconnects and watch events
@@ -175,17 +178,12 @@ func (w *Watch) updateEndpoints(connection *zk.Conn, keys []string) ([]string, e
 	for _, k := range keys {
 		e, err := w.getEndpoint(connection, k)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, caller.NewCaller().String())
 		}
-
 		if e == nil {
-			// znode not found
 			continue
 		}
-
-		if e["status"] == statusAlive {
-			endpoints = append(endpoints, k)
-		}
+		endpoints = append(endpoints, k)
 	}
 
 	sort.Strings(endpoints)
@@ -202,7 +200,7 @@ func (w *Watch) getEndpoint(connection *zk.Conn, key string) (map[string]interfa
 
 	if err != nil {
 		// most likely some sort of zk connection error
-		return nil, err
+		return nil, errors.Wrap(err, caller.NewCaller().String())
 	}
 
 	// Found this SOH check while browsing the docker/libkv source
@@ -215,12 +213,14 @@ func (w *Watch) getEndpoint(connection *zk.Conn, key string) (map[string]interfa
 	}
 
 	e := make(map[string]interface{})
+	if len(data) == 0 {
+		return e, nil
+	}
 	err = json.Unmarshal(data, &e)
 	if err != nil {
-		return nil, err
+		zlogger.Warn().Err(errors.Wrap(err, caller.NewCaller().String())).Msgf("Parse znode json data error")
 	}
-
-	return e, err
+	return e, nil
 }
 
 // triggerEvent will queue up something in the Event channel if there isn't already something there.

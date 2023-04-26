@@ -273,7 +273,7 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 	querystring.Set("version", meta["version"].(string))
 	querystring.Set("weight", strconv.Itoa(meta["weight"].(int)))
 	querystring.Set("rootPath", meta["rootPath"].(string))
-	memberPath := url.PathEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
+	memberPath := url.QueryEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
 	data, _ := json.Marshal(meta)
 	return connection.Create(
 		ss.directoryPath()+"/"+memberPath,

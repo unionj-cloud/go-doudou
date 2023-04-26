@@ -183,7 +183,7 @@ func (r *RRServiceProvider) watch() {
 
 func convertToAddress(ups []string) (addrs []*address) {
 	for _, up := range ups {
-		unescaped, _ := url.PathUnescape(up)
+		unescaped, _ := url.QueryUnescape(up)
 		u, _ := url.Parse(unescaped)
 		weight := cast.ToIntOrDefault(u.Query().Get("weight"), 1)
 		rootPath := u.Query().Get("rootPath")
