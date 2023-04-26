@@ -79,7 +79,7 @@ func (r *ZkResolver) watchZkService(clientConn resolver.ClientConn) {
 
 func convertToAddress(ups []string) (addrs []serviceInfo) {
 	for _, up := range ups {
-		unescaped, _ := url.PathUnescape(up)
+		unescaped, _ := url.QueryUnescape(up)
 		u, _ := url.Parse(unescaped)
 		weight := cast.ToIntOrDefault(u.Query().Get("weight"), 1)
 		addrs = append(addrs, serviceInfo{Address: u.Host, Weight: weight})

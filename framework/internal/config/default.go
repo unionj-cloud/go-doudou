@@ -21,8 +21,8 @@ const (
 	DefaultGddReadTimeout        = "15s"
 	DefaultGddIdleTimeout        = "60s"
 	DefaultGddServiceName        = ""
-	DefaultGddServiceGroup       = "default"
-	DefaultGddServiceVersion     = "v0.0.1"
+	DefaultGddServiceGroup       = ""
+	DefaultGddServiceVersion     = ""
 	DefaultGddRouteRootPath      = ""
 	DefaultGddHost               = ""
 	DefaultGddPort               = 6060
