@@ -144,7 +144,7 @@ type RRServiceProvider struct {
 	current  uint64
 	lock     sync.Mutex
 	watcher  Watcher
-	target   string
+	target   ServiceConfig
 	curState atomic.Value
 }
 
@@ -160,7 +160,7 @@ type state struct {
 }
 
 func (r *RRServiceProvider) updateState() {
-	addrs := convertToAddress(r.watcher.Endpoints())
+	addrs := r.convertToAddress(r.watcher.Endpoints())
 	r.curState.Store(state{addresses: addrs})
 }
 
@@ -181,12 +181,17 @@ func (r *RRServiceProvider) watch() {
 	}
 }
 
-func convertToAddress(ups []string) (addrs []*address) {
+func (r *RRServiceProvider) convertToAddress(ups []string) (addrs []*address) {
 	for _, up := range ups {
 		unescaped, _ := url.QueryUnescape(up)
 		u, _ := url.Parse(unescaped)
 		weight := cast.ToIntOrDefault(u.Query().Get("weight"), 1)
 		rootPath := u.Query().Get("rootPath")
+		group := u.Query().Get("group")
+		version := u.Query().Get("version")
+		if group != r.target.Group || version != r.target.Version {
+			continue
+		}
 		addr := &address{
 			addr:     u.Host,
 			rootPath: rootPath,
@@ -222,21 +227,28 @@ func (r *RRServiceProvider) Close() {
 	r.watcher.Close()
 }
 
+type ServiceConfig struct {
+	Name    string
+	Group   string
+	Version string
+}
+
 // NewRRServiceProvider creates new RRServiceProvider instance.
 // If you don't need it, You should call Close to release resource.
 // You can also call CloseProviders to close all at one shot
-func NewRRServiceProvider(service string) *RRServiceProvider {
-	serverSet := newServerSet(service)
+// NewRRServiceProvider is not thread-safe
+func NewRRServiceProvider(conf ServiceConfig) *RRServiceProvider {
+	serverSet := newServerSet(conf.Name)
 	watcher, err := serverSet.Watch()
 	if err != nil {
 		errorx.Panic(err.Error())
 	}
 	r := &RRServiceProvider{
 		watcher: watcher,
-		target:  service,
+		target:  conf,
 	}
 	defer func() {
-		providers[service] = r
+		providers[conf.Name] = r
 	}()
 	go r.watch()
 	return r
@@ -274,32 +286,36 @@ func (n *SWRRServiceProvider) SelectServer() string {
 }
 
 // NewSWRRServiceProvider creates new SWRRServiceProvider instance
-func NewSWRRServiceProvider(serviceName string) *SWRRServiceProvider {
+func NewSWRRServiceProvider(conf ServiceConfig) *SWRRServiceProvider {
 	return &SWRRServiceProvider{
-		RRServiceProvider: NewRRServiceProvider(serviceName),
+		RRServiceProvider: NewRRServiceProvider(conf),
 	}
 }
 
-func NewSWRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-	return NewGrpcClientConn(service, "zk_weight_balancer", dialOptions...)
+// NewSWRRGrpcClientConn is not thread-safe
+func NewSWRRGrpcClientConn(conf ServiceConfig, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(conf, "zk_weight_balancer", dialOptions...)
 }
 
-func NewRRGrpcClientConn(service string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-	return NewGrpcClientConn(service, "round_robin", dialOptions...)
+// NewRRGrpcClientConn is not thread-safe
+func NewRRGrpcClientConn(conf ServiceConfig, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	return NewGrpcClientConn(conf, "round_robin", dialOptions...)
 }
 
-func NewGrpcClientConn(service string, lb string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
-	serverSet := newServerSet(service)
+func NewGrpcClientConn(conf ServiceConfig, lb string, dialOptions ...grpc.DialOption) *grpc.ClientConn {
+	serverSet := newServerSet(conf.Name)
 	watcher, err := serverSet.Watch()
 	if err != nil {
 		errorx.Panic(err.Error())
 	}
 	grpc_resolver_zk.AddZkConfig(grpc_resolver_zk.ZkConfig{
-		Label:       service,
-		ServiceName: service,
+		Label:       conf.Name,
+		ServiceName: conf.Name,
 		Watcher:     watcher,
+		Group:       conf.Group,
+		Version:     conf.Version,
 	})
-	serverAddr := fmt.Sprintf("zk://%s/", service)
+	serverAddr := fmt.Sprintf("zk://%s/", conf.Name)
 	dialOptions = append(dialOptions, grpc.WithBlock(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "`+lb+`"}`))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

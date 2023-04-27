@@ -176,7 +176,13 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 							break
 						}
 					}
-					provider = zk.NewSWRRServiceProvider(serviceName)
+					group := config.GddServiceGroup.LoadOrDefault(config.DefaultGddServiceGroup)
+					version := config.GddServiceVersion.LoadOrDefault(config.DefaultGddServiceVersion)
+					provider = zk.NewSWRRServiceProvider(zk.ServiceConfig{
+						Name:    serviceName,
+						Group:   group,
+						Version: version,
+					})
 					proxyConfig.ProviderStore.Add(serviceName, provider)
 				default:
 				}

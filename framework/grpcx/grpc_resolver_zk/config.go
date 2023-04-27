@@ -18,10 +18,13 @@ type ZkConfig struct {
 	Label       string //用做寻找配置的标签
 	ServiceName string //标记服务名称
 	Watcher     Watcher
+	Group       string
+	Version     string
 }
 
 var ZkConfigs = make(map[string]*ZkConfig)
 
+// AddZkConfig is not thread-safe
 func AddZkConfig(config ZkConfig) {
 	//ZkConfigs.Store(config.Label, &config)
 	ZkConfigs[config.Label] = &config
