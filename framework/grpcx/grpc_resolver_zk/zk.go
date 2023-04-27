@@ -16,7 +16,7 @@ func init() {
 }
 
 type ZkResolver struct {
-	watcher Watcher
+	*ZkConfig
 }
 
 func (r *ZkResolver) Build(url resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
@@ -25,7 +25,9 @@ func (r *ZkResolver) Build(url resolver.Target, cc resolver.ClientConn, opts res
 	if err != nil {
 		return nil, errors.Wrap(err, "Wrong URL")
 	}
-	zkResolver := &ZkResolver{watcher: config.Watcher}
+	zkResolver := &ZkResolver{
+		ZkConfig: config,
+	}
 	go zkResolver.watchZkService(cc)
 	return zkResolver, nil
 }
@@ -37,7 +39,7 @@ func (r *ZkResolver) Scheme() string {
 func (r *ZkResolver) ResolveNow(resolver.ResolveNowOptions) {}
 
 func (r *ZkResolver) Close() {
-	r.watcher.Close()
+	r.Watcher.Close()
 }
 
 type serviceInfo struct {
@@ -46,7 +48,7 @@ type serviceInfo struct {
 }
 
 func (r *ZkResolver) updateState(clientConn resolver.ClientConn) {
-	services := convertToAddress(r.watcher.Endpoints())
+	services := r.convertToAddress(r.Watcher.Endpoints())
 	connsSet := make(map[serviceInfo]struct{}, len(services))
 	for _, c := range services {
 		connsSet[c] = struct{}{}
@@ -64,24 +66,29 @@ func (r *ZkResolver) watchZkService(clientConn resolver.ClientConn) {
 	r.updateState(clientConn)
 	for {
 		select {
-		case _, ok := <-r.watcher.Event():
+		case _, ok := <-r.Watcher.Event():
 			if !ok {
 				return
 			}
 			r.updateState(clientConn)
 		}
 
-		if r.watcher.IsClosed() {
+		if r.Watcher.IsClosed() {
 			return
 		}
 	}
 }
 
-func convertToAddress(ups []string) (addrs []serviceInfo) {
+func (r *ZkResolver) convertToAddress(ups []string) (addrs []serviceInfo) {
 	for _, up := range ups {
 		unescaped, _ := url.QueryUnescape(up)
 		u, _ := url.Parse(unescaped)
 		weight := cast.ToIntOrDefault(u.Query().Get("weight"), 1)
+		group := u.Query().Get("group")
+		version := u.Query().Get("version")
+		if group != r.Group || version != r.Version {
+			continue
+		}
 		addrs = append(addrs, serviceInfo{Address: u.Host, Weight: weight})
 	}
 	return
