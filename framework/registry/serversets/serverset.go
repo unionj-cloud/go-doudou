@@ -20,7 +20,8 @@ var (
 // BaseZnodePath allows for a custom Zookeeper directory structure.
 // This function should return the path where you want the service's members to live.
 // Default is `BaseDirectory + "/" + environment + "/" + service` where the default base directory is `/discovery`
-var BaseZnodePath = func(service string) string {
+// TODO decide how to make use of Environment
+var BaseZnodePath = func(_ Environment, service string) string {
 	return fmt.Sprintf(config.GddZkDirectoryPattern.LoadOrDefault(config.DefaultGddZkDirectoryPattern), service)
 }
 
@@ -80,7 +81,7 @@ func (ss *ServerSet) connectToZookeeper() (*zk.Conn, <-chan zk.Event, error) {
 
 // directoryPath returns the base path of where all the ephemeral nodes will live.
 func (ss *ServerSet) directoryPath() string {
-	return BaseZnodePath(ss.service)
+	return BaseZnodePath(ss.environment, ss.service)
 }
 
 func splitPaths(fullPath string) []string {
@@ -122,8 +123,8 @@ func (ss *ServerSet) createFullPath(connection *zk.Conn) error {
 // structure of the data in each member znode
 // Mimics finagle serverset structure.
 type entity struct {
-	ServiceEndpoint     endpoint            `json:"serviceEndpoint"`
-	Status              string              `json:"status"`
+	ServiceEndpoint endpoint `json:"serviceEndpoint"`
+	Status          string   `json:"status"`
 }
 
 type endpoint struct {
@@ -133,8 +134,8 @@ type endpoint struct {
 
 func newEntity(host string, port int) *entity {
 	return &entity{
-		ServiceEndpoint:     endpoint{host, port},
-		Status:              statusAlive,
+		ServiceEndpoint: endpoint{host, port},
+		Status:          statusAlive,
 	}
 }
 
