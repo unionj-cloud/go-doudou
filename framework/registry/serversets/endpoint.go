@@ -269,10 +269,27 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 		flags = zk.FlagEphemeral | zk.FlagSequence
 	}
 	querystring := url.Values{}
-	querystring.Set("group", meta["group"].(string))
-	querystring.Set("version", meta["version"].(string))
-	querystring.Set("weight", strconv.Itoa(meta["weight"].(int)))
-	querystring.Set("rootPath", meta["rootPath"].(string))
+	if meta["group"] != nil {
+		querystring.Set("group", meta["group"].(string))
+	}
+	if meta["version"] != nil {
+		querystring.Set("version", meta["version"].(string))
+	}
+	if meta["weight"] != nil {
+		querystring.Set("weight", strconv.Itoa(meta["weight"].(int)))
+	}
+	if meta["rootPath"] != nil {
+		querystring.Set("rootPath", meta["rootPath"].(string))
+	}
+	if meta["serviceEndpoint"] != nil {
+		serviceEndpoint := meta["serviceEndpoint"].(map[string]interface{})
+		if meta["host"] == nil {
+			meta["host"] = serviceEndpoint["host"]
+		}
+		if meta["port"] == nil {
+			meta["port"] = serviceEndpoint["port"]
+		}
+	}
 	memberPath := url.QueryEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
 	data, _ := json.Marshal(meta)
 	return connection.Create(
