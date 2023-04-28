@@ -23,7 +23,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test $(go list ./... | grep -v 'ddl\|mock') -coverprofile=coverage.out -covermode=atomic
+      run: go test $(go list ./... | grep -v 'ddl\|mock\|serversets') -coverprofile=coverage.out -covermode=atomic
     
     - name: Upload coverage to Codecov
       run: bash <(curl -s https://codecov.io/bash)

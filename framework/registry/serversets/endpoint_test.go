@@ -23,7 +23,7 @@ func TestEndpointSameName(t *testing.T) {
 
 	<-watch.Event()
 
-	ep2, err := set.RegisterEndpoint("localhost", 1, nil)
+	ep2, err := set.RegisterEndpoint("localhost", 2, nil)
 	if err != nil {
 		t.Fatalf("registration failure: %v", err)
 	}

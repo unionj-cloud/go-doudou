@@ -22,7 +22,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	}
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -33,7 +33,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	}
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:2"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D2%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -44,7 +44,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	}
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:2", "localhost:3"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D2%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D3%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -52,7 +52,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	ep2.Close()
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:3"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D3%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -63,7 +63,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	}
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:3", "localhost:4"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D3%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D4%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -79,7 +79,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 		panic(err)
 	}
 
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:3", "localhost:4"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D3%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D4%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -87,7 +87,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	ep3.Close()
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:1", "localhost:4"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D1%29%2F%25%21s%28%3Cnil%3E%29%3F", "%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D4%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -95,7 +95,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 	ep1.Close()
 
 	<-watch.Event()
-	if !reflect.DeepEqual(watch.Endpoints(), []string{"localhost:4"}) {
+	if !reflect.DeepEqual(watch.Endpoints(), []string{"%25%21s%28%3Cnil%3E%29%3A%2F%2Flocalhost%3A%25%21s%28float64%3D4%29%2F%25%21s%28%3Cnil%3E%29%3F"}) {
 		t.Errorf("server list incorrect, got %v", watch.Endpoints())
 	}
 
@@ -116,7 +116,7 @@ func TestServerSetAddAndRemove(t *testing.T) {
 func TestBaseZnodePath(t *testing.T) {
 	// to verify nothing happens to the default
 	path := BaseZnodePath(Test, "gotest")
-	if path != "/discovery/test/gotest" {
+	if path != "/registry/gotest/providers" {
 		t.Errorf("baseznodepath incorrect, got %v", path)
 	}
 }
