@@ -282,12 +282,12 @@ func (ss *ServerSet) registerEndpoint(connection *zk.Conn, meta map[string]inter
 		querystring.Set("rootPath", meta["rootPath"].(string))
 	}
 	if meta["serviceEndpoint"] != nil {
-		serviceEndpoint := meta["serviceEndpoint"].(map[string]interface{})
+		serviceEndpoint := meta["serviceEndpoint"].(endpoint)
 		if meta["host"] == nil {
-			meta["host"] = serviceEndpoint["host"]
+			meta["host"] = serviceEndpoint.Host
 		}
 		if meta["port"] == nil {
-			meta["port"] = serviceEndpoint["port"]
+			meta["port"] = serviceEndpoint.Port
 		}
 	}
 	memberPath := url.QueryEscape(fmt.Sprintf("%s://%s:%s/%s?%s", meta["scheme"], meta["host"], meta["port"], meta["service"], querystring.Encode()))
