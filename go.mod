@@ -212,7 +212,7 @@ require (
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221024120645-0288f53fdaa8
 	go.etcd.io/etcd/client/v3 v3.5.7
-	go.uber.org/automaxprocs v1.5.1
+	go.uber.org/automaxprocs v1.5.2
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
 	golang.org/x/text v0.9.0
