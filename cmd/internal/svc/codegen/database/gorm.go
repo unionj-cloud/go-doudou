@@ -27,8 +27,10 @@ func (gen *GormGenerator) svcImplGo() {
 }
 
 func (gen *GormGenerator) dto() {
-	//TODO implement me
-	panic("implement me")
+
+
+
+
 }
 
 func (gen *GormGenerator) GenService() {
