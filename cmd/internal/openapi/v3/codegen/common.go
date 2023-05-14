@@ -52,7 +52,7 @@ func clean(str string) string {
 }
 
 func toCamel(str string) string {
-	return strcase.ToCamel(clean(str))
+	return stringutils.ToCamel(clean(str))
 }
 
 func (receiver OpenAPICodeGenerator) APIComments() []string {

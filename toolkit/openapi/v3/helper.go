@@ -325,6 +325,10 @@ func LoadAPI(file string) API {
 		if err != nil {
 			panic(err)
 		}
+		doc1Json, _ := json.Marshal(doc1)
+		root, _ := os.Getwd()
+		spec := filepath.Join(root, "swaggerV2ToV3"+filepath.Ext(file))
+		os.WriteFile(spec, doc1Json, os.ModePerm)
 		copier.DeepCopy(doc1, &api)
 	}
 	return api

@@ -3,6 +3,7 @@ package stringutils
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // IsEmpty asserts s is empty
@@ -25,4 +26,26 @@ func ContainsI(s string, substr string) bool {
 func HasPrefixI(s, prefix string) bool {
 	re := regexp.MustCompile(`(?i)^` + prefix)
 	return re.MatchString(s)
+}
+
+func ToTitle(s string) string {
+	str := []rune(s)
+	return strings.ToUpper(string(str[0])) + string(str[1:])
+}
+
+var symbolre = regexp.MustCompile("[。？！，、；：“”‘’（）《》【】~!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\\s]")
+
+func ToCamel(s string) string {
+	parts := symbolre.Split(s, -1)
+	var convertedParts []string
+	for _, v := range parts {
+		if IsNotEmpty(v) {
+			convertedParts = append(convertedParts, ToTitle(v))
+		}
+	}
+	ret := strings.Join(convertedParts, "")
+	if !unicode.IsUpper(rune(ret[0])) {
+		ret = "A" + ret
+	}
+	return ret
 }

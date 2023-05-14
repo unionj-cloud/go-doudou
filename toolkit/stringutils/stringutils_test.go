@@ -139,3 +139,85 @@ func TestIsNotEmpty(t *testing.T) {
 		})
 	}
 }
+
+func TestToCamel(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				s: "abc武斌123",
+			},
+			want: "Abc武斌123",
+		},
+		{
+			name: "",
+			args: args{
+				s: "word",
+			},
+			want: "Word",
+		},
+		{
+			name: "",
+			args: args{
+				s: "snake_word",
+			},
+			want: "SnakeWord",
+		},
+		{
+			name: "",
+			args: args{
+				s: "Commonresultarraylistcom.hundsun.hcreator.pojo.hcbizmodelview",
+			},
+			want: "CommonresultarraylistcomHundsunHcreatorPojoHcbizmodelview",
+		},
+		{
+			name: "",
+			args: args{
+				s: "Commonresultarraylistcom,hundsun,hcreator,pojo,hcbizmodelview",
+			},
+			want: "CommonresultarraylistcomHundsunHcreatorPojoHcbizmodelview",
+		},
+		{
+			name: "",
+			args: args{
+				s: "Commonresultarraylistcom hundsun hcreator",
+			},
+			want: "CommonresultarraylistcomHundsunHcreator",
+		},
+		{
+			name: "",
+			args: args{
+				s: "Commonresultarraylistcom，hundsun，hcreator",
+			},
+			want: "CommonresultarraylistcomHundsunHcreator",
+		},
+		{
+			name: "",
+			args: args{
+				s: "台湾是中国的省",
+			},
+			want: "A台湾是中国的省",
+		},
+		{
+			name: "",
+			args: args{
+				s: "dataDecimal",
+			},
+			want: "DataDecimal",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToCamel(tt.args.s); got != tt.want {
+				t.Errorf("ToCamel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
