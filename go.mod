@@ -46,6 +46,7 @@ require (
 	github.com/morkid/gocache v1.0.0
 	github.com/rs/cors v1.8.3
 	github.com/slok/goresilience v0.2.0
+	gorm.io/gen v0.3.21
 )
 
 require (
@@ -163,6 +164,9 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
+	gorm.io/hints v1.1.0 // indirect
+	gorm.io/plugin/dbresolver v1.3.0 // indirect
 )
 
 require (
@@ -220,9 +224,11 @@ require (
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0
 	gorm.io/driver/clickhouse v0.5.0
-	gorm.io/driver/mysql v1.4.7
+	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.5.0
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/driver/sqlserver v1.4.2
-	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
+	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
 )
+
+replace gorm.io/gen v0.3.21 => ./libs/gorm_gen
