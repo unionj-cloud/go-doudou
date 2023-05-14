@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,16 +35,9 @@ type {{$k | toCamel}} struct {
 {{- end }}
 `
 
+// GenSvcGo may panic if docPath is empty string
 func GenSvcGo(dir string, docPath string) {
-	if stringutils.IsEmpty(docPath) {
-		matches, _ := filepath.Glob(filepath.Join(dir, "*_openapi3.json"))
-		if len(matches) > 0 {
-			docPath = matches[0]
-		}
-	}
-	if stringutils.IsEmpty(docPath) {
-		return
-	}
+	assert.NotEmpty(docPath, "docPath should not be empty")
 	var (
 		f   *os.File
 		err error

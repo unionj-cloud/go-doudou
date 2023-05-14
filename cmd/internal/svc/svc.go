@@ -11,6 +11,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
@@ -91,6 +93,14 @@ type Svc struct {
 	// If true, when you defined a get api with struct type parameter in svc.go file,
 	// it will try to decode json format encoded request body.
 	AllowGetWithReqBody bool
+
+	DbConfig *DbConfig
+}
+
+type DbConfig struct {
+	Driver string
+	Dsn    string
+	Orm    string
 }
 
 func ValidateDataType(dir string) {
@@ -241,7 +251,26 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 func (receiver *Svc) Init() {
 	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner)
 	// generate or overwrite svc.go file
-	server.GenSvcGo(receiver.dir, receiver.DocPath)
+	if receiver.DbConfig != nil {
+		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
+		assert.NotNil(gen, "Unknown orm kind")
+		gen.SetConfig(database.OrmGeneratorConfig{
+			Driver: receiver.DbConfig.Driver,
+			Dsn:    receiver.DbConfig.Dsn,
+			Dir:    receiver.dir,
+		})
+		gen.GenService()
+	} else {
+		if stringutils.IsEmpty(receiver.DocPath) {
+			matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
+			if len(matches) > 0 {
+				receiver.DocPath = matches[0]
+			}
+		}
+		if stringutils.IsNotEmpty(receiver.DocPath) {
+			server.GenSvcGo(receiver.dir, receiver.DocPath)
+		}
+	}
 }
 
 type SvcOption func(svc *Svc)
@@ -261,6 +290,12 @@ func WithModName(modName string) SvcOption {
 func WithDocPath(docfile string) SvcOption {
 	return func(svc *Svc) {
 		svc.DocPath = docfile
+	}
+}
+
+func WithDbConfig(dbConfig *DbConfig) SvcOption {
+	return func(svc *Svc) {
+		svc.DbConfig = dbConfig
 	}
 }
 
