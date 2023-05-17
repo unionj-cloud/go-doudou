@@ -13,7 +13,7 @@ func TestInitProj(t *testing.T) {
 	os.MkdirAll(dir, os.ModePerm)
 	defer os.RemoveAll(dir)
 	assert.NotPanics(t, func() {
-		InitProj(dir, "testinit", executils.CmdRunner{})
+		InitProj(dir, "testinit", executils.CmdRunner{}, true)
 	})
 }
 

@@ -5,6 +5,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/iancoleman/strcase"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -282,6 +285,111 @@ func (g *Generator) Execute() {
 	g.info("Generate code done.")
 }
 
+// GenerateSvcGo ...
+func (g *Generator) GenerateSvcGo() {
+	g.info("Start generating svc.go.")
+
+	if err := g.generateSvcGoFile(); err != nil {
+		g.db.Logger.Error(context.Background(), "generate svc.go fail: %s", err)
+		panic("generate model struct fail")
+	}
+
+	g.info("Generate code svc.go done.")
+}
+
+func (g *Generator) filterNewModels(meta astutils.InterfaceMeta) []*generate.QueryStructMeta {
+	models := make([]*generate.QueryStructMeta, 0, len(g.models))
+	for _, data := range g.models {
+		if data == nil || !data.Generated {
+			continue
+		}
+		targets := []string{
+			fmt.Sprintf("Post%s", data.ModelStructName),
+			fmt.Sprintf("Get%s_Id", data.ModelStructName),
+			fmt.Sprintf("Put%s", data.ModelStructName),
+			fmt.Sprintf("Delete%s_Id", data.ModelStructName),
+			fmt.Sprintf("Get%ss", data.ModelStructName),
+		}
+		count := 0
+		for _, method := range meta.Methods {
+			if sliceutils.StringContains(targets, method.Name) {
+				count++
+			}
+		}
+		if count == 0 {
+			models = append(models, data)
+		}
+	}
+	return models
+}
+
+// generateSvcGoFile generate svc.go code and save to file
+func (g *Generator) generateSvcGoFile() error {
+	if len(g.models) == 0 {
+		return nil
+	}
+	svcFile := filepath.Join(g.RootDir, "svc.go")
+	fi, err := os.Stat(svcFile)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	var interfaceMeta astutils.InterfaceMeta
+	var f *os.File
+	if fi != nil {
+		ic := astutils.BuildInterfaceCollector(svcFile, astutils.ExprString)
+		if len(ic.Interfaces) > 0 {
+			interfaceMeta = ic.Interfaces[0]
+		}
+		g.info("New content will be append to svc.go file")
+		if f, err = os.OpenFile(svcFile, os.O_APPEND, os.ModePerm); err != nil {
+			return err
+		}
+		defer f.Close()
+	} else {
+		if f, err = os.Create(svcFile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		var buf bytes.Buffer
+		if err = render(tmpl.Svc, &buf, struct {
+			InterfaceName string
+			DtoPackage    string
+		}{
+			InterfaceName: strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir))),
+			DtoPackage:    g.Config.dtoPkgPath,
+		}); err != nil {
+			return err
+		}
+		if err = ioutil.WriteFile(svcFile, buf.Bytes(), 0640); err != nil {
+			return err
+		}
+	}
+	models := g.filterNewModels(interfaceMeta)
+	var buf bytes.Buffer
+	for _, model := range models {
+		if err = render(tmpl.AppendSvc, &buf, model); err != nil {
+			return err
+		}
+	}
+	var original []byte
+	if original, err = ioutil.ReadAll(f); err != nil {
+		return err
+	}
+	original = bytes.TrimSpace(original)
+	last := bytes.LastIndexByte(original, '}')
+	original = append(original[:last], buf.Bytes()...)
+	original = append(original, '}')
+	if err = g.outputWithOpt(svcFile, original, &imports.Options{
+		TabWidth:  8,
+		TabIndent: true,
+		Comments:  true,
+		Fragment:  true,
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 // info logger
 func (g *Generator) info(logInfos ...string) {
 	for _, l := range logInfos {
@@ -557,7 +665,12 @@ func (g *Generator) fillModelPkgPath(filePath string) {
 
 // output format and output
 func (g *Generator) output(fileName string, content []byte) error {
-	result, err := imports.Process(fileName, content, nil)
+	return g.outputWithOpt(fileName, content, nil)
+}
+
+// output format and output
+func (g *Generator) outputWithOpt(fileName string, content []byte, opt *imports.Options) error {
+	result, err := imports.Process(fileName, content, opt)
 	if err != nil {
 		lines := strings.Split(string(content), "\n")
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
@@ -694,11 +807,11 @@ func (g *Generator) fillDtoPkgPath(filePath string) {
 		Dir:  filePath,
 	})
 	if err != nil {
-		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", err)
+		g.db.Logger.Warn(context.Background(), "parse dto pkg path fail: %s", err)
 		return
 	}
 	if len(pkgs) == 0 {
-		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: got 0 packages")
+		g.db.Logger.Warn(context.Background(), "parse dto pkg path fail: got 0 packages")
 		return
 	}
 	g.Config.dtoPkgPath = pkgs[0].PkgPath

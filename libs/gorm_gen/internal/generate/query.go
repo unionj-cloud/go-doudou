@@ -39,6 +39,8 @@ type QueryStructMeta struct {
 	ModelMethods    []*parser.Method // user custom method bind to db base struct
 
 	interfaceMode bool
+
+	PriKeyType string
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements

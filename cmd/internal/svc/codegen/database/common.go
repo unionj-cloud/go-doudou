@@ -1,6 +1,6 @@
 package database
 
-var OrmGeneratorRegistry map[OrmKind]IOrmGenerator
+var OrmGeneratorRegistry = make(map[OrmKind]IOrmGenerator)
 
 type OrmKind string
 
@@ -25,6 +25,6 @@ type IOrmGenerator interface {
 	svcGo()
 	svcImplGo()
 	dto()
-	SetConfig(conf OrmGeneratorConfig)
+	Initialize(conf OrmGeneratorConfig)
 	GenService()
 }

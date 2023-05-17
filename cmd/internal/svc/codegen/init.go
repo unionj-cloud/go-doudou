@@ -38,7 +38,11 @@ type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
 	// You can also add annotations here like @role(admin) to add meta data to routes for 
 	// implementing your own middlewares
-	PageUsers(ctx context.Context, query dto.PageQuery) (data dto.PageRet, err error)
+	PostUser(ctx context.Context, user dto.User) (data int32, err error)
+	GetUser_Id(ctx context.Context, id int32) (data dto.User, err error)
+	PutUser(ctx context.Context, user dto.User) error
+	DeleteUser_Id(ctx context.Context, id int32) error
+	GetUsers(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
 }
 `
 
@@ -50,46 +54,34 @@ package dto
 
 //go:generate go-doudou name --file $GOFILE
 
-type PageFilter struct {
-	// 真实姓名，前缀匹配
-	Name string
-	// 所属部门ID
-	Dept int
-}
-
-type Order struct {
-	Col  string
-	Sort string
-}
-
-type Page struct {
-	// 排序规则
-	Orders []Order
-	// 页码
-	PageNo int
-	// 每页行数
-	Size int
-}
-
-// 分页筛选条件
-type PageQuery struct {
-	Filter PageFilter
-	Page   Page
-}
-
-type PageRet struct {
-	Items    interface{}
-	PageNo   int
-	PageSize int
-	Total    int
-	HasNext  bool
-}
-
-type UserDto struct {
-	Id    int
+type User struct {
+	Id    int32
 	Name  string
 	Phone string
 	Dept  string
+}
+
+// Page result wrapper
+type Page struct {
+	Items      interface{}
+	Page       int64
+	Size       int64
+	MaxPage    int64
+	TotalPages int64
+	Total      int64
+	Last       bool
+	First      bool
+	Visible    int64
+}
+
+// Parameter struct
+type Parameter struct {
+	Page    string
+	Size    string
+	Sort    string
+	Order   string
+	Fields  string
+	Filters interface{}
 }
 `
 
@@ -187,7 +179,7 @@ func getGoVersionNum(goVersion string) string {
 // InitProj inits a service project
 // dir is root path
 // modName is module name
-func InitProj(dir string, modName string, runner executils.Runner) {
+func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool) {
 	var (
 		err       error
 		svcName   string
@@ -275,34 +267,36 @@ func InitProj(dir string, modName string, runner executils.Runner) {
 		logrus.Warnf("file %s already exists", dtofile)
 	}
 
-	svcName = strcase.ToCamel(filepath.Base(dir))
-	svcfile = filepath.Join(dir, "svc.go")
-	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-		if f, err = os.Open(modfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		reader := bufio.NewReader(f)
-		firstLine, _ = reader.ReadString('\n')
-		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	if genSvcGo {
+		svcName = strcase.ToCamel(filepath.Base(dir))
+		svcfile = filepath.Join(dir, "svc.go")
+		if _, err = os.Stat(svcfile); os.IsNotExist(err) {
+			if f, err = os.Open(modfile); err != nil {
+				panic(err)
+			}
+			defer f.Close()
+			reader := bufio.NewReader(f)
+			firstLine, _ = reader.ReadString('\n')
+			modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 
-		if f, err = os.Create(svcfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
+			if f, err = os.Create(svcfile); err != nil {
+				panic(err)
+			}
+			defer f.Close()
 
-		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
-		_ = tpl.Execute(f, struct {
-			DtoPackage string
-			SvcName    string
-			Version    string
-		}{
-			DtoPackage: modName + "/dto",
-			SvcName:    svcName,
-			Version:    version.Release,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", svcfile)
+			tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
+			_ = tpl.Execute(f, struct {
+				DtoPackage string
+				SvcName    string
+				Version    string
+			}{
+				DtoPackage: modName + "/dto",
+				SvcName:    svcName,
+				Version:    version.Release,
+			})
+		} else {
+			logrus.Warnf("file %s already exists", svcfile)
+		}
 	}
 
 	dockerfile := filepath.Join(dir, "Dockerfile")

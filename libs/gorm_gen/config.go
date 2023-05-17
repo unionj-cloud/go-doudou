@@ -30,6 +30,7 @@ const (
 type Config struct {
 	db *gorm.DB // db connection
 
+	RootDir      string // project root path
 	OutPath      string // query code path
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
@@ -47,7 +48,7 @@ type Config struct {
 
 	queryPkgName   string // generated query code's package name
 	modelPkgPath   string // model pkg path in target project
-	dtoPkgPath     string // model pkg path in target project
+	dtoPkgPath     string // dto pkg path in target project
 	dbNameOpts     []model.SchemaNameOpt
 	importPkgPaths []string
 

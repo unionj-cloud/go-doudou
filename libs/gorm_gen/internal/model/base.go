@@ -175,6 +175,7 @@ type Field struct {
 	GORMTag          field.GormTag
 	CustomGenType    string
 	Relation         *field.Relation
+	PriKey           bool
 }
 
 // Tags ...

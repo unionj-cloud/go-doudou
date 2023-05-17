@@ -36,6 +36,15 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, err
 	}
 
+	fields := getFields(db, conf, columns)
+	priKeyType := "string"
+	for _, field := range fields {
+		if field.PriKey {
+			priKeyType = field.Type
+			break
+		}
+	}
+
 	return (&QueryStructMeta{
 		db:              db,
 		Source:          model.Table,
@@ -47,7 +56,8 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		S:               strings.ToLower(structName[0:1]),
 		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
 		ImportPkgPaths:  conf.ImportPkgPaths,
-		Fields:          getFields(db, conf, columns),
+		Fields:          fields,
+		PriKeyType:      priKeyType,
 	}).addMethodFromAddMethodOpt(conf.GetModelMethods()...), nil
 }
 

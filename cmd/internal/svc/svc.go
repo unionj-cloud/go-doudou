@@ -249,12 +249,12 @@ func getNonBasicTypes(params []astutils.FieldMeta) []string {
 
 // Init inits a project
 func (receiver *Svc) Init() {
-	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner)
+	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner, receiver.DbConfig == nil)
 	// generate or overwrite svc.go file
 	if receiver.DbConfig != nil {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
 		assert.NotNil(gen, "Unknown orm kind")
-		gen.SetConfig(database.OrmGeneratorConfig{
+		gen.Initialize(database.OrmGeneratorConfig{
 			Driver: receiver.DbConfig.Driver,
 			Dsn:    receiver.DbConfig.Dsn,
 			Dir:    receiver.dir,

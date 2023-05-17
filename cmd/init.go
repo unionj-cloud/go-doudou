@@ -47,6 +47,6 @@ func init() {
 	initCmd.Flags().StringVarP(&modName, "mod", "m", "", `Module name`)
 	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 	initCmd.Flags().StringVar(&dbOrm, "db_orm", "gorm", `Specify your preferable orm, currently only support gorm`)
-	initCmd.Flags().StringVar(&dbDriver, "db_driver", "", `Choose one database driver from "mysql", "postgres", "sqlite", "sqlserver", "tidb", "clickhouse"`)
+	initCmd.Flags().StringVar(&dbDriver, "db_driver", "", `Choose one database driver from "mysql", "postgres", "sqlite", "sqlserver", "tidb"`)
 	initCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
 }
