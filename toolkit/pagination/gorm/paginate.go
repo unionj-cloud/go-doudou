@@ -4,10 +4,8 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
-	"net/http"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -27,19 +25,12 @@ type ResponseContext interface {
 
 // RequestContext interface
 type RequestContext interface {
-	Request(interface{}) ResponseContext
+	Request(Parameter) ResponseContext
 }
 
 // Pagination gorm paginate struct
 type Pagination struct {
 	Config *Config
-}
-
-// Response return page of results
-//
-// Deprecated: Response must not be used. Use With instead
-func (p *Pagination) Response(stmt *gorm.DB, req interface{}, res interface{}) Page {
-	return p.With(stmt).Request(req).Response(res)
 }
 
 // With func
@@ -77,10 +68,10 @@ type reqContext struct {
 	Pagination *Pagination
 }
 
-func (r reqContext) Request(req interface{}) ResponseContext {
+func (r reqContext) Request(parameter Parameter) ResponseContext {
 	var response ResponseContext = &resContext{
 		Statement:  r.Statement,
-		Request:    req,
+		Parameter:  parameter,
 		Pagination: r.Pagination,
 	}
 
@@ -90,7 +81,7 @@ func (r reqContext) Request(req interface{}) ResponseContext {
 type resContext struct {
 	Pagination  *Pagination
 	Statement   *gorm.DB
-	Request     interface{}
+	Parameter   Parameter
 	cachePrefix string
 	fieldList   []string
 }
@@ -128,7 +119,8 @@ func (r resContext) Response(res interface{}) Page {
 	}
 
 	page := Page{}
-	pr := parseRequest(r.Request, *p.Config)
+	param := parameter(r.Parameter)
+	pr := parseRequest(&param, *p.Config)
 	causes := createCauses(pr)
 	cKey := ""
 	var adapter gocache.AdapterInterface
@@ -225,9 +217,6 @@ func (r resContext) Response(res interface{}) Page {
 	if page.TotalPages < 1 {
 		page.TotalPages = 1
 	}
-	if page.MaxPage < 1 {
-		page.MaxPage = 1
-	}
 	if page.Total < 1 {
 		page.MaxPage = 0
 		page.TotalPages = 0
@@ -265,18 +254,11 @@ func New(params ...interface{}) *Pagination {
 }
 
 // parseRequest func
-func parseRequest(r interface{}, config Config) pageRequest {
+func parseRequest(param *parameter, config Config) pageRequest {
 	pr := pageRequest{
 		Config: *defaultConfig(&config),
 	}
-	if netHTTP, isNetHTTP := r.(http.Request); isNetHTTP {
-		parsingNetHTTPRequest(&netHTTP, &pr)
-	} else {
-		if netHTTPp, isNetHTTPp := r.(*http.Request); isNetHTTPp {
-			parsingNetHTTPRequest(netHTTPp, &pr)
-		}
-	}
-
+	parsingQueryString(param, &pr)
 	return pr
 }
 
@@ -318,55 +300,6 @@ func createCauses(p pageRequest) requestQuery {
 	query.Params = params
 
 	return query
-}
-
-// parsingNetHTTPRequest func
-func parsingNetHTTPRequest(r *http.Request, p *pageRequest) {
-	param := &parameter{}
-	if r.Method == "" {
-		r.Method = "GET"
-	}
-	if strings.ToUpper(r.Method) == "POST" {
-		body, err := ioutil.ReadAll(r.Body)
-		if nil != err {
-			body = []byte("{}")
-		}
-		defer r.Body.Close()
-		if !p.Config.CustomParamEnabled {
-			var postData parameter
-			if err := p.Config.JSONUnmarshal(body, &postData); nil == err {
-				param = &postData
-			} else {
-				log.Println(err.Error())
-			}
-		} else {
-			var postData map[string]string
-			if err := p.Config.JSONUnmarshal(body, &postData); nil == err {
-				generateParams(param, p.Config, func(key string) string {
-					value, _ := postData[key]
-					return value
-				})
-			} else {
-				log.Println(err.Error())
-			}
-		}
-	} else if strings.ToUpper(r.Method) == "GET" {
-		query := r.URL.Query()
-		if !p.Config.CustomParamEnabled {
-			param.Size = query.Get("size")
-			param.Page = query.Get("page")
-			param.Sort = query.Get("sort")
-			param.Order = query.Get("order")
-			param.Filters = query.Get("filters")
-			param.Fields = query.Get("fields")
-		} else {
-			generateParams(param, p.Config, func(key string) string {
-				return query.Get(key)
-			})
-		}
-	}
-
-	parsingQueryString(param, p)
 }
 
 func parsingQueryString(param *parameter, p *pageRequest) {
@@ -759,6 +692,8 @@ type Page struct {
 	First      bool        `json:"first"`
 	Visible    int64       `json:"visible"`
 }
+
+type Parameter parameter
 
 // parameter struct
 type parameter struct {

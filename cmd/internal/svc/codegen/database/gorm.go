@@ -32,8 +32,7 @@ func (gg *GormGenerator) svcGo() {
 }
 
 func (gg *GormGenerator) svcImplGo() {
-	//TODO implement me
-	panic("implement me")
+	//gg.g.GenerateSvcImplGo()
 }
 
 func (gg *GormGenerator) dto() {
@@ -82,13 +81,22 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		errorx.Panic(err.Error())
 	}
 	g := gen.NewGenerator(gen.Config{
-		RootDir:        gg.Dir,
-		OutPath:        gg.Dir + "/query",
-		FieldNullable:  false,
-		FieldCoverable: true,
-		FieldSignable:  true,
-		Mode:           gen.WithDefaultQuery | gen.WithQueryInterface,
+		RootDir:       gg.Dir,
+		OutPath:       gg.Dir + "/query",
+		Mode:          gen.WithDefaultQuery | gen.WithQueryInterface,
+		FieldNullable: true,
+		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
+		FieldCoverable: false,
+		// if you want to generate field with unsigned integer type, set FieldSignable true
+		FieldSignable: false,
+		// if you want to generate index tags from database, set FieldWithIndexTag true
+		FieldWithIndexTag: true,
+		// if you want to generate type tags from database, set FieldWithTypeTag true
+		FieldWithTypeTag: true,
+		// if you need unit tests for query code, set WithUnitTest true
+		WithUnitTest: false,
 	})
+	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
 	g.UseDB(db)
 	g.ApplyBasic(g.GenerateAllTable()...)
 	gg.g = g

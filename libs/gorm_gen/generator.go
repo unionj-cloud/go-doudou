@@ -8,6 +8,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"go/ast"
+	"go/token"
 	"io"
 	"io/ioutil"
 	"log"
@@ -23,6 +25,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	goparser "go/parser"
 	"gorm.io/gen/helper"
 	"gorm.io/gen/internal/generate"
 	"gorm.io/gen/internal/model"
@@ -273,8 +276,8 @@ func (g *Generator) Execute() {
 	}
 
 	if err := g.generateDtoFile(); err != nil {
-		g.db.Logger.Error(context.Background(), "generate model struct fail: %s", err)
-		panic("generate model struct fail")
+		g.db.Logger.Error(context.Background(), "generate dto struct fail: %s", err)
+		panic("generate dto struct fail")
 	}
 
 	if err := g.generateQueryFile(); err != nil {
@@ -291,10 +294,22 @@ func (g *Generator) GenerateSvcGo() {
 
 	if err := g.generateSvcGoFile(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate svc.go fail: %s", err)
-		panic("generate model struct fail")
+		panic("generate svc.go fail")
 	}
 
 	g.info("Generate code svc.go done.")
+}
+
+// GenerateSvcImplGo ...
+func (g *Generator) GenerateSvcImplGo() {
+	g.info("Start generating svcimpl.go.")
+
+	if err := g.generateSvcImplGoFile(); err != nil {
+		g.db.Logger.Error(context.Background(), "generate svcimpl.go fail: %s", err)
+		panic("generate svcimpl.go fail")
+	}
+
+	g.info("Generate code svcimpl.go done.")
 }
 
 func (g *Generator) filterNewModels(meta astutils.InterfaceMeta) []*generate.QueryStructMeta {
@@ -380,6 +395,76 @@ func (g *Generator) generateSvcGoFile() error {
 	original = append(original[:last], buf.Bytes()...)
 	original = append(original, '}')
 	if err = g.outputWithOpt(svcFile, original, &imports.Options{
+		TabWidth:  8,
+		TabIndent: true,
+		Comments:  true,
+		Fragment:  true,
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// generateSvcImplGoFile generate svcimpl.go code and save to file
+func (g *Generator) generateSvcImplGoFile() error {
+	if len(g.models) == 0 {
+		return nil
+	}
+	svcImplFile := filepath.Join(g.RootDir, "svcimpl.go")
+	fi, err := os.Stat(svcImplFile)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	var interfaceMeta astutils.InterfaceMeta
+	interfaceMeta.Name = strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir)))
+	var f *os.File
+	if fi != nil {
+		fset := token.NewFileSet()
+		root, err := goparser.ParseFile(fset, svcImplFile, nil, goparser.ParseComments)
+		if err != nil {
+			panic(err)
+		}
+		sc := astutils.NewStructCollector(astutils.ExprString)
+		ast.Walk(sc, root)
+		interfaceMeta.Methods = sc.Methods[interfaceMeta.Name+"Impl"]
+		g.info("New content will be append to svcimpl.go file")
+		if f, err = os.OpenFile(svcImplFile, os.O_APPEND, os.ModePerm); err != nil {
+			return err
+		}
+		defer f.Close()
+	} else {
+		if f, err = os.Create(svcImplFile); err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		var buf bytes.Buffer
+		if err = render(tmpl.SvcImpl, &buf, struct {
+			InterfaceName string
+		}{
+			InterfaceName: interfaceMeta.Name,
+		}); err != nil {
+			return err
+		}
+		if err = ioutil.WriteFile(svcImplFile, buf.Bytes(), 0640); err != nil {
+			return err
+		}
+	}
+	models := g.filterNewModels(interfaceMeta)
+	var buf bytes.Buffer
+	for _, model := range models {
+		if err = render(tmpl.AppendSvcImpl, &buf, model); err != nil {
+			return err
+		}
+	}
+	var original []byte
+	if original, err = ioutil.ReadAll(f); err != nil {
+		return err
+	}
+	original = bytes.TrimSpace(original)
+	last := bytes.LastIndexByte(original, '}')
+	original = append(original[:last], buf.Bytes()...)
+	original = append(original, '}')
+	if err = g.outputWithOpt(svcImplFile, original, &imports.Options{
 		TabWidth:  8,
 		TabIndent: true,
 		Comments:  true,
