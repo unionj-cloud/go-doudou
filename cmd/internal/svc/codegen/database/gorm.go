@@ -55,6 +55,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Dir = conf.Dir
 	gg.Driver = conf.Driver
 	gg.Dsn = conf.Dsn
+	gg.Client = false
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {
@@ -95,7 +96,11 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		WithUnitTest: false,
 	})
 	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
+	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
-	g.ApplyBasic(g.GenerateAllTable()...)
+	g.ApplyBasic(g.GenerateAllTable(
+		gen.FieldType(conf.Soft, "gorm.DeletedAt"),
+		gen.FieldGenType(conf.Soft, "Time"),
+	)...)
 	gg.g = g
 }

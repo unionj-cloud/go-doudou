@@ -12,6 +12,7 @@ var modName string
 var dbDriver string
 var dbDsn string
 var dbOrm string
+var dbSoft string
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -32,6 +33,7 @@ var initCmd = &cobra.Command{
 			Driver: dbDriver,
 			Dsn:    dbDsn,
 			Orm:    dbOrm,
+			Soft:   dbSoft,
 		}
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
@@ -49,4 +51,5 @@ func init() {
 	initCmd.Flags().StringVar(&dbOrm, "db_orm", "gorm", `Specify your preferable orm, currently only support gorm`)
 	initCmd.Flags().StringVar(&dbDriver, "db_driver", "", `Choose one database driver from "mysql", "postgres", "sqlite", "sqlserver", "tidb"`)
 	initCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
+	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 }

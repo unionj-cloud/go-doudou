@@ -30,6 +30,7 @@ type OrmGeneratorConfig struct {
 	Driver string
 	Dsn    string
 	Dir    string
+	Soft   string
 }
 
 type IOrmGenerator interface {
@@ -74,29 +75,10 @@ func (b *AbstractBaseGenerator) Initialize(conf OrmGeneratorConfig) {
 }
 
 func (b *AbstractBaseGenerator) GenService() {
-	envfile := filepath.Join(b.Dir, ".env")
-	var ef *os.File
-	if _, err := os.Stat(envfile); os.IsNotExist(err) {
-		if ef, err = os.Create(envfile); err != nil {
-			panic(err)
-		}
-		defer ef.Close()
-	} else {
-		if ef, err = os.OpenFile(envfile, os.O_APPEND|os.O_WRONLY, os.ModePerm); err != nil {
-			panic(err)
-		}
-		defer ef.Close()
-	}
-	envContent := `GDD_DB_DRIVER=` + b.Driver + `
-GDD_DB_DSN=` + b.Dsn
-	if _, err := ef.WriteString(envContent); err != nil {
-		panic(err)
-	}
-
 	b.dto()
 
 	wd, _ := os.Getwd()
-	os.Chdir(b.Dir)
+	os.Chdir(filepath.Join(b.Dir, "dto"))
 	err := b.runner.Run("go", "generate", "./...")
 	if err != nil {
 		panic(err)

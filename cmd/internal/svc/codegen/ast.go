@@ -61,6 +61,8 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	result := ExprStringP(expr.X) + "." + expr.Sel.Name
 	if !strings.HasPrefix(result, "vo.") &&
 		!strings.HasPrefix(result, "dto.") &&
+		!strings.HasPrefix(result, "gorm.") &&
+		!strings.HasPrefix(result, "customtypes.") &&
 		result != "context.Context" &&
 		result != "time.Time" &&
 		result != "v3.FileModel" &&

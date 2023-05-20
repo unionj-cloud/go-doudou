@@ -100,6 +100,7 @@ type DbConfig struct {
 	Driver string
 	Dsn    string
 	Orm    string
+	Soft   string
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -170,6 +171,7 @@ func (receiver *Svc) Init() {
 			Driver: receiver.DbConfig.Driver,
 			Dsn:    receiver.DbConfig.Dsn,
 			Dir:    receiver.dir,
+			Soft:   receiver.DbConfig.Soft,
 		})
 		gen.GenService()
 	} else {

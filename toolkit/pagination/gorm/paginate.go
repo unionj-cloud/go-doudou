@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"log"
 	"math"
 	"reflect"
@@ -132,7 +133,7 @@ func (r resContext) Response(res interface{}) Page {
 		hasAdapter = true
 		if cKey != "" && adapter.IsValid(cKey) {
 			if cache, err := adapter.Get(cKey); nil == err {
-				page.Items = res
+				page.Items, _ = sliceutils.ConvertAny2Interface(res)
 				if err := p.Config.JSONUnmarshal([]byte(cache), &page); nil == err {
 					return page
 				}
@@ -201,7 +202,7 @@ func (r resContext) Response(res interface{}) Page {
 
 	rs := result.Find(res)
 
-	page.Items = res
+	page.Items, _ = sliceutils.ConvertAny2Interface(res)
 	f := float64(page.Total) / float64(causes.Limit)
 	if math.Mod(f, 1.0) > 0 {
 		f = f + 1
@@ -381,7 +382,11 @@ func generateParams(param *parameter, config Config, getValue func(string) strin
 	param.Page = findValue(config.PageParams, "page")
 	param.Size = findValue(config.SizeParams, "size")
 	param.Order = findValue(config.OrderParams, "order")
-	param.Filters = findValue(config.FilterParams, "filters")
+	filters := findValue(config.FilterParams, "filters")
+	iface := []interface{}{}
+	if err := config.JSONUnmarshal([]byte(filters), &iface); nil == err {
+		param.Filters = iface
+	}
 	param.Fields = findValue(config.FieldsParams, "fields")
 }
 
@@ -682,27 +687,27 @@ type pageFilters struct {
 
 // Page result wrapper
 type Page struct {
-	Items      interface{} `json:"items"`
-	Page       int64       `json:"page"`
-	Size       int64       `json:"size"`
-	MaxPage    int64       `json:"max_page"`
-	TotalPages int64       `json:"total_pages"`
-	Total      int64       `json:"total"`
-	Last       bool        `json:"last"`
-	First      bool        `json:"first"`
-	Visible    int64       `json:"visible"`
+	Items      []interface{} `json:"items"`
+	Page       int64         `json:"page"`
+	Size       int64         `json:"size"`
+	MaxPage    int64         `json:"max_page"`
+	TotalPages int64         `json:"total_pages"`
+	Total      int64         `json:"total"`
+	Last       bool          `json:"last"`
+	First      bool          `json:"first"`
+	Visible    int64         `json:"visible"`
 }
 
 type Parameter parameter
 
 // parameter struct
 type parameter struct {
-	Page    string      `json:"page"`
-	Size    string      `json:"size"`
-	Sort    string      `json:"sort"`
-	Order   string      `json:"order"`
-	Fields  string      `json:"fields"`
-	Filters interface{} `json:"filters"`
+	Page    string        `json:"page"`
+	Size    string        `json:"size"`
+	Sort    string        `json:"sort"`
+	Order   string        `json:"order"`
+	Fields  string        `json:"fields"`
+	Filters []interface{} `json:"filters"`
 }
 
 // query struct

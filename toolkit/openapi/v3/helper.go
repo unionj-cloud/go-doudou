@@ -69,7 +69,7 @@ func SchemaOf(field astutils.FieldMeta) *Schema {
 		return Float64
 	case "multipart.FileHeader", "v3.FileModel":
 		return File
-	case "time.Time":
+	case "time.Time", "customtypes.Time":
 		return Time
 	case "decimal.Decimal": // simple treat decimal.Decimal as string
 		return Decimal

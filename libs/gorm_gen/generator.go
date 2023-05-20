@@ -712,7 +712,16 @@ func (g *Generator) generateModelFile() error {
 			defer pool.Done()
 
 			var buf bytes.Buffer
-			err := render(tmpl.Model, &buf, data)
+			funcMap := make(map[string]interface{})
+			funcMap["convert"] = func(s string) string {
+				return strings.ReplaceAll(s, "time.Time", "customtypes.Time")
+			}
+			t, err := template.New(tmpl.Model).Funcs(funcMap).Parse(tmpl.Model)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			err = t.Execute(&buf, data)
 			if err != nil {
 				errChan <- err
 				return
@@ -875,7 +884,16 @@ func (g *Generator) generateDtoFile() error {
 			}
 
 			var buf bytes.Buffer
-			err = render(tmpl.Dto, &buf, data)
+			funcMap := make(map[string]interface{})
+			funcMap["convert"] = func(s string) string {
+				return strings.ReplaceAll(s, "time.Time", "customtypes.Time")
+			}
+			t, err := template.New(tmpl.Dto).Funcs(funcMap).Parse(tmpl.Dto)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			err = t.Execute(&buf, data)
 			if err != nil {
 				errChan <- err
 				return

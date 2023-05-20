@@ -123,10 +123,13 @@ func takeArg(arg interface{}, kind reflect.Kind) (val reflect.Value, ok bool) {
 
 // ConvertAny2Interface converts interface src to interface slice
 func ConvertAny2Interface(src interface{}) ([]interface{}, error) {
-	if reflect.TypeOf(src).Kind() != reflect.Slice {
+	data := reflect.ValueOf(src)
+	if data.Type().Kind() == reflect.Ptr {
+		data = data.Elem()
+	}
+	if data.Type().Kind() != reflect.Slice {
 		return nil, errors.New("Src not slice")
 	}
-	data := reflect.ValueOf(src)
 	ret := make([]interface{}, data.Len())
 	for i := 0; i < data.Len(); i++ {
 		ret[i] = data.Index(i).Interface()

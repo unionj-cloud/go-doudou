@@ -24,7 +24,7 @@ type {{.ModelStructName}} struct {
 {{.ColumnComment}}
     */
 	{{end -}}
-    {{.Name}} {{.Type}} ` +
+    {{.Name}} {{.Type | convert}} ` +
 	"{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}" +
 	`{{end}}
 }
