@@ -452,7 +452,13 @@ func (g *Generator) generateSvcImplGoFile() error {
 	models := g.filterNewModels(interfaceMeta)
 	var buf bytes.Buffer
 	for _, model := range models {
-		if err = render(tmpl.AppendSvcImpl, &buf, model); err != nil {
+		if err = render(tmpl.AppendSvcImpl, &buf, struct {
+			*generate.QueryStructMeta
+			InterfaceName string
+		}{
+			QueryStructMeta: model,
+			InterfaceName:   interfaceMeta.Name,
+		}); err != nil {
 			return err
 		}
 	}
@@ -460,10 +466,29 @@ func (g *Generator) generateSvcImplGoFile() error {
 	if original, err = ioutil.ReadAll(f); err != nil {
 		return err
 	}
-	original = bytes.TrimSpace(original)
-	last := bytes.LastIndexByte(original, '}')
-	original = append(original[:last], buf.Bytes()...)
-	original = append(original, '}')
+	original = append(original, buf.Bytes()...)
+
+	confPkg := g.GetPkgPath(filepath.Join(g.RootDir, "config"))
+	dtoPkg := g.GetPkgPath(filepath.Join(g.RootDir, "dto"))
+	queryPkg := g.GetPkgPath(g.OutPath)
+
+	// fix import block
+	var importBuf bytes.Buffer
+	if err = render(tmpl.SvcImplImport, &importBuf, struct {
+		ConfigPackage string
+		DtoPackage    string
+		ModelPackage  string
+		QueryPackage  string
+	}{
+		ConfigPackage: confPkg,
+		DtoPackage:    dtoPkg,
+		ModelPackage:  g.modelPkgPath,
+		QueryPackage:  queryPkg,
+	}); err != nil {
+		return err
+	}
+	original = astutils.AppendImportStatements(original, importBuf.Bytes())
+
 	if err = g.outputWithOpt(svcImplFile, original, &imports.Options{
 		TabWidth:  8,
 		TabIndent: true,
@@ -900,4 +925,20 @@ func (g *Generator) fillDtoPkgPath(filePath string) {
 		return
 	}
 	g.Config.dtoPkgPath = pkgs[0].PkgPath
+}
+
+func (g *Generator) GetPkgPath(filePath string) string {
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  filePath,
+	})
+	if err != nil {
+		g.db.Logger.Warn(context.Background(), "parse pkg path fail: %s", err)
+		return ""
+	}
+	if len(pkgs) == 0 {
+		g.db.Logger.Warn(context.Background(), "parse pkg path fail: got 0 packages")
+		return ""
+	}
+	return pkgs[0].PkgPath
 }

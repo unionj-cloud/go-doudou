@@ -5,15 +5,24 @@ package service
 
 import ()
 
-var _ {{.InterfaceName.Name}} = (*{{.InterfaceName.Name}}Impl)(nil)
-
-type {{.InterfaceName.Name}}Impl struct {
-	conf *config.Config
+func init() {
+	query.SetDefault(database.Db)
 }
 
-func New{{.InterfaceName.Name}}(conf *config.Config) *{{.InterfaceName.Name}}Impl {
-	return &{{.InterfaceName.Name}}Impl{
+var _ {{.InterfaceName}} = (*{{.InterfaceName}}Impl)(nil)
+
+type {{.InterfaceName}}Impl struct {
+	conf *config.Config
+	pg   *paginate.Pagination
+}
+
+func New{{.InterfaceName}}(conf *config.Config) *{{.InterfaceName}}Impl {
+	pg := paginate.New(&paginate.Config{
+		FieldSelectorEnabled: true,
+	})
+	return &{{.InterfaceName}}Impl{
 		conf: conf,
+		pg:   pg,
 	}
 }
 `

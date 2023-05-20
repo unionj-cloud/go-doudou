@@ -52,7 +52,7 @@ const dtoTmpl = `/**
 */
 package dto
 
-//go:generate go-doudou name --file $GOFILE
+//go:generate go-doudou name --file $GOFILE --form
 
 type User struct {
 	Id    int32
@@ -475,7 +475,9 @@ func gitIgnore(dir string) {
 	}
 }
 
-// gitInit inits git repository
+// gitInit inits git repository.
+// Reinitialized existing Git repository is safe
+// https://stackoverflow.com/questions/5149694/does-running-git-init-twice-initialize-a-repository-or-reinitialize-an-existing
 func gitInit(dir string) {
 	fs := osfs.New(dir)
 	dot, _ := fs.Chroot(".git")

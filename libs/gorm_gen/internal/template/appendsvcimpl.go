@@ -3,22 +3,48 @@ package template
 const AppendSvcImpl = `
 // Post{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error)
+func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
+	m := &model.{{.ModelStructName}}{}
+	copier.Copy(m, body)
+	u := query.{{.ModelStructName}}
+	err = u.WithContext(ctx).Create(m)
+	data = m.ID
+	return
+}
 
 // Get{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error)
+func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error) {
+	u := query.{{.ModelStructName}}
+	m, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
+	copier.Copy(&data, m)
+	return
+}
 
 // Put{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Put{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) error
+func (receiver *{{.InterfaceName}}Impl) Put{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
+	m := &model.{{.ModelStructName}}{}
+	copier.Copy(m, body)
+	u := query.{{.ModelStructName}}
+	_, err = u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
+	return
+}
 
 // Delete{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Delete{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) error
+func (receiver *{{.InterfaceName}}Impl) Delete{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (err error) {
+	u := query.{{.ModelStructName}}
+	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).Delete()
+	return
+}
 
 // Get{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Get{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
+func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error) {
+	paginated := receiver.pg.With(database.Db.Model(&model.{{.ModelStructName}}{})).Request(paginate.Parameter(parameter)).Response(&[]model.{{.ModelStructName}}{})
+	data = dto.Page(paginated)
+	return
+}
 
 `

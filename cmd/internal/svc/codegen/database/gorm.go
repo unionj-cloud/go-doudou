@@ -2,6 +2,7 @@ package database
 
 import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -15,16 +16,19 @@ const (
 )
 
 func init() {
-	RegisterOrmGenerator(GormKind, &GormGenerator{})
+	gg := &GormGenerator{}
+	ag := &AbstractBaseGenerator{
+		impl:   gg,
+		runner: executils.CmdRunner{},
+	}
+	gg.AbstractBaseGenerator = ag
+	RegisterOrmGenerator(GormKind, gg)
 }
 
 var _ IOrmGenerator = (*GormGenerator)(nil)
 
 type GormGenerator struct {
-	Driver string
-	Dsn    string
-	Dir    string
-	g      *gen.Generator
+	*AbstractBaseGenerator
 }
 
 func (gg *GormGenerator) svcGo() {
@@ -32,17 +36,11 @@ func (gg *GormGenerator) svcGo() {
 }
 
 func (gg *GormGenerator) svcImplGo() {
-	//gg.g.GenerateSvcImplGo()
+	gg.g.GenerateSvcImplGo()
 }
 
 func (gg *GormGenerator) dto() {
 	gg.g.Execute()
-}
-
-func (gg *GormGenerator) GenService() {
-	gg.dto()
-	gg.svcGo()
-	gg.svcImplGo()
 }
 
 const (
