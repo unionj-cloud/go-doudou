@@ -56,7 +56,6 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 			for _, item := range spec.Specs {
 				typeSpec := item.(*ast.TypeSpec)
 				typeName := typeSpec.Name.Name
-				logrus.Printf("Type: name=%s\n", typeName)
 				switch specType := typeSpec.Type.(type) {
 				case *ast.StructType:
 					structmeta := NewStructMeta(specType, sc.exprString)
