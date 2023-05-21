@@ -11,7 +11,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/go-sql-driver/mysql v1.7.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/goccy/go-yaml v1.11.0
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/iancoleman/strcase v0.2.0
@@ -44,7 +44,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/morkid/gocache v1.0.0
-	github.com/rs/cors v1.8.3
+	github.com/rs/cors v1.9.0
 	github.com/slok/goresilience v0.2.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
@@ -187,7 +187,7 @@ require (
 	github.com/google/btree v1.1.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -203,7 +203,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/microsoft/go-mssqldb v0.21.0 // indirect
-	github.com/miekg/dns v1.1.53
+	github.com/miekg/dns v1.1.54
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/rbretecher/go-postman-collection v0.9.0
@@ -216,7 +216,7 @@ require (
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221024120645-0288f53fdaa8
 	go.etcd.io/etcd/client/v3 v3.5.7
-	go.uber.org/automaxprocs v1.5.1
+	go.uber.org/automaxprocs v1.5.2
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
 	golang.org/x/text v0.9.0
@@ -225,7 +225,7 @@ require (
 	gorm.io/driver/clickhouse v0.5.0
 	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.5.0
-	gorm.io/driver/sqlite v1.4.4
+	gorm.io/driver/sqlite v1.5.0
 	gorm.io/driver/sqlserver v1.4.2
 	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
 )
