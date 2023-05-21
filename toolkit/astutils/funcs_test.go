@@ -331,7 +331,6 @@ func TestGetImportStatements(t *testing.T) {
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
-	"{{.VoPackage}}"
 	"github.com/pkg/errors"
 )`
 	ret := GetImportStatements([]byte(input))
@@ -351,7 +350,6 @@ func TestAppendImportStatements(t *testing.T) {
 
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
-	"{{.VoPackage}}"
 )
 
 type UsersvcHandlerImpl struct {
@@ -391,7 +389,6 @@ type UsersvcHandlerImpl struct {
 
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
-	"{{.VoPackage}}"
 
 	"github.com/pkg/errors"
 )

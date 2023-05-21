@@ -1,13 +1,11 @@
 package codegen
 
 import (
-	"bufio"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
@@ -37,16 +35,13 @@ func main() {
 // GenMain generates main function
 func GenMain(dir string, ic astutils.InterfaceCollector) {
 	var (
-		err       error
-		modfile   string
-		modName   string
-		mainfile  string
-		firstLine string
-		f         *os.File
-		tpl       *template.Template
-		cmdDir    string
-		svcName   string
-		alias     string
+		err      error
+		mainfile string
+		f        *os.File
+		tpl      *template.Template
+		cmdDir   string
+		svcName  string
+		alias    string
 	)
 	cmdDir = filepath.Join(dir, "cmd")
 	if err = MkdirAll(cmdDir, os.ModePerm); err != nil {
@@ -57,13 +52,9 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 	alias = ic.Package.Name
 	mainfile = filepath.Join(cmdDir, "main.go")
 	if _, err = Stat(mainfile); os.IsNotExist(err) {
-		modfile = filepath.Join(dir, "go.mod")
-		if f, err = Open(modfile); err != nil {
-			panic(err)
-		}
-		reader := bufio.NewReader(f)
-		firstLine, _ = reader.ReadString('\n')
-		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+		servicePkg := astutils.GetPkgPath(dir)
+		cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
+		httpsrvPkg := astutils.GetPkgPath(filepath.Join(dir, "transport", "httpsrv"))
 
 		if f, err = Create(mainfile); err != nil {
 			panic(err)
@@ -81,9 +72,9 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 			ServiceAlias   string
 			Version        string
 		}{
-			ServicePackage: modName,
-			ConfigPackage:  modName + "/config",
-			HttpPackage:    modName + "/transport/httpsrv",
+			ServicePackage: servicePkg,
+			ConfigPackage:  cfgPkg,
+			HttpPackage:    httpsrvPkg,
 			SvcName:        svcName,
 			ServiceAlias:   alias,
 			Version:        version.Release,

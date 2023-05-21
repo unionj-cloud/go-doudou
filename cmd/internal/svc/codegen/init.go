@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
@@ -63,7 +62,7 @@ type User struct {
 
 // Page result wrapper
 type Page struct {
-	Items      interface{}
+	Items      []interface{}
 	Page       int64
 	Size       int64
 	MaxPage    int64
@@ -81,7 +80,7 @@ type Parameter struct {
 	Sort    string
 	Order   string
 	Fields  string
-	Filters interface{}
+	Filters []interface{}
 }
 `
 
@@ -184,11 +183,9 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 		err       error
 		svcName   string
 		svcfile   string
-		modfile   string
 		dtodir    string
 		dtofile   string
 		goVersion string
-		firstLine string
 		f         *os.File
 		tpl       *template.Template
 		envfile   string
@@ -210,7 +207,7 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 	if stringutils.IsEmpty(modName) {
 		modName = filepath.Base(dir)
 	}
-	modfile = filepath.Join(dir, "go.mod")
+	modfile := filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {
 		if f, err = os.Create(modfile); err != nil {
 			panic(err)
@@ -271,14 +268,6 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 		svcName = strcase.ToCamel(filepath.Base(dir))
 		svcfile = filepath.Join(dir, "svc.go")
 		if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-			if f, err = os.Open(modfile); err != nil {
-				panic(err)
-			}
-			defer f.Close()
-			reader := bufio.NewReader(f)
-			firstLine, _ = reader.ReadString('\n')
-			modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
-
 			if f, err = os.Create(svcfile); err != nil {
 				panic(err)
 			}
@@ -290,7 +279,7 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 				SvcName    string
 				Version    string
 			}{
-				DtoPackage: modName + "/dto",
+				DtoPackage: filepath.Join(modName, "dto"),
 				SvcName:    svcName,
 				Version:    version.Release,
 			})
@@ -330,14 +319,11 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 func InitSvc(dir string) {
 	var (
 		err       error
-		modName   string
 		svcName   string
 		svcfile   string
-		modfile   string
 		dtodir    string
 		dtofile   string
 		goVersion string
-		firstLine string
 		f         *os.File
 		tpl       *template.Template
 		envfile   string
@@ -351,8 +337,8 @@ func InitSvc(dir string) {
 	gitIgnore(dir)
 
 	goVersion = getGoVersionNum(runtime.Version())
-	modName = filepath.Base(dir)
-	modfile = filepath.Join(dir, "go.mod")
+	modName := filepath.Base(dir)
+	modfile := filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {
 		if f, err = os.Create(modfile); err != nil {
 			panic(err)
@@ -412,14 +398,6 @@ func InitSvc(dir string) {
 	svcName = strcase.ToCamel(filepath.Base(dir))
 	svcfile = filepath.Join(dir, "svc.go")
 	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-		if f, err = os.Open(modfile); err != nil {
-			panic(err)
-		}
-		reader := bufio.NewReader(f)
-		firstLine, _ = reader.ReadString('\n')
-		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
-		fmt.Println(modName)
-
 		if f, err = os.Create(svcfile); err != nil {
 			panic(err)
 		}
@@ -431,7 +409,7 @@ func InitSvc(dir string) {
 			SvcName    string
 			Version    string
 		}{
-			DtoPackage: modName + "/dto",
+			DtoPackage: filepath.Join(modName, "dto"),
 			SvcName:    svcName,
 			Version:    version.Release,
 		})

@@ -8,12 +8,12 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
-	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"os/exec"
@@ -101,6 +101,7 @@ type DbConfig struct {
 	Dsn    string
 	Orm    string
 	Soft   string
+	Grpc   bool
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -113,6 +114,10 @@ func (receiver *Svc) GetWatcher() *watcher.Watcher {
 
 func (receiver *Svc) GetDir() string {
 	return receiver.dir
+}
+
+func (receiver *Svc) SetRunner(runner executils.Runner) {
+	receiver.runner = runner
 }
 
 // Http generates main function, config files, db connection function, http routes, http handlers, service interface and service implementation
@@ -158,6 +163,11 @@ func (receiver *Svc) Http() {
 		RoutePatternStrategy: receiver.RoutePatternStrategy,
 		AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
 	})
+	runner := receiver.runner
+	if runner == nil {
+		runner = executils.CmdRunner{}
+	}
+	runner.Run("go", "mod", "tidy")
 }
 
 // Init inits a project
@@ -172,6 +182,7 @@ func (receiver *Svc) Init() {
 			Dsn:    receiver.DbConfig.Dsn,
 			Dir:    receiver.dir,
 			Soft:   receiver.DbConfig.Soft,
+			Grpc:   receiver.DbConfig.Grpc,
 		})
 		gen.GenService()
 	} else {
@@ -459,9 +470,7 @@ func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	validate.ValidateDataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.ValidateRestApi(dir, ic)
-
 	codegen.GenConfig(dir)
-
 	codegen.ParseDtoGrpc(dir, p, "vo")
 	codegen.ParseDtoGrpc(dir, p, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
@@ -476,5 +485,11 @@ func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
 	codegen.GenMainGrpc(dir, ic, grpcSvc)
+	codegen.FixModGrpc(dir)
 	codegen.GenMethodAnnotationStore(dir, ic)
+	runner := receiver.runner
+	if runner == nil {
+		runner = executils.CmdRunner{}
+	}
+	runner.Run("go", "mod", "tidy")
 }

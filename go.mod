@@ -46,7 +46,10 @@ require (
 	github.com/morkid/gocache v1.0.0
 	github.com/rs/cors v1.8.3
 	github.com/slok/goresilience v0.2.0
-	gorm.io/gen v0.3.21
+	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
+	gorm.io/hints v1.1.0
+	gorm.io/plugin/dbresolver v1.3.0
 )
 
 require (
@@ -163,10 +166,6 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
-	gorm.io/hints v1.1.0 // indirect
-	gorm.io/plugin/dbresolver v1.3.0 // indirect
 )
 
 require (
@@ -230,5 +229,3 @@ require (
 	gorm.io/driver/sqlserver v1.4.2
 	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
 )
-
-replace gorm.io/gen v0.3.21 => ./libs/gorm_gen

@@ -1,9 +1,12 @@
 package astutils
 
 import (
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"golang.org/x/tools/go/packages"
 	"path/filepath"
 	"strings"
 )
@@ -45,4 +48,20 @@ func CollectStructsInFolder(dir string, sc *StructCollector) {
 		}
 		ast.Walk(sc, root)
 	}
+}
+
+func GetPkgPath(filePath string) string {
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  filePath,
+	})
+	if err != nil {
+		errorx.Wrap(err)
+		return ""
+	}
+	if len(pkgs) == 0 {
+		errorx.Wrap(errors.New("no package found"))
+		return ""
+	}
+	return pkgs[0].PkgPath
 }

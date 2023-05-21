@@ -1,12 +1,11 @@
 package codegen
 
 import (
-	"bufio"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
@@ -57,9 +56,6 @@ func GenDb(dir string) {
 		f         *os.File
 		tpl       *template.Template
 		dbDir     string
-		modfile   string
-		modName   string
-		firstLine string
 	)
 	dbDir = filepath.Join(dir, "db")
 	if err = MkdirAll(dbDir, os.ModePerm); err != nil {
@@ -68,14 +64,7 @@ func GenDb(dir string) {
 
 	dbfile = filepath.Join(dbDir, "db.go")
 	if _, err = Stat(dbfile); os.IsNotExist(err) {
-		modfile = filepath.Join(dir, "go.mod")
-		if f, err = Open(modfile); err != nil {
-			panic(err)
-		}
-		reader := bufio.NewReader(f)
-		firstLine, _ = reader.ReadString('\n')
-		modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
-
+		cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
 		if f, err = Create(dbfile); err != nil {
 			panic(err)
 		}
@@ -88,7 +77,7 @@ func GenDb(dir string) {
 			ConfigPackage string
 			Version       string
 		}{
-			ConfigPackage: modName + "/config",
+			ConfigPackage: cfgPkg,
 			Version:       version.Release,
 		})
 	} else {

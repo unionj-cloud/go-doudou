@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
@@ -41,7 +40,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 )
 
@@ -409,10 +407,6 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 		clientDir  string
 		fi         os.FileInfo
 		source     string
-		modfile    string
-		modName    string
-		firstLine  string
-		modf       *os.File
 		meta       astutils.InterfaceMeta
 	)
 	clientDir = filepath.Join(dir, "client")
@@ -435,13 +429,7 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 
 	_ = copier.DeepCopy(ic.Interfaces[0], &meta)
 
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
@@ -462,14 +450,12 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		VoPackage  string
 		DtoPackage string
 		Meta       astutils.InterfaceMeta
 		Config     GenGoClientConfig
 		Version    string
 	}{
-		VoPackage:  modName + "/vo",
-		DtoPackage: modName + "/dto",
+		DtoPackage: dtoPkg,
 		Meta:       meta,
 		Config:     config,
 		Version:    version.Release,

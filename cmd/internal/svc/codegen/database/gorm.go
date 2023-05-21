@@ -1,13 +1,15 @@
 package database
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/gorm_gen"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gen"
 	"gorm.io/gorm"
 )
 
@@ -43,6 +45,14 @@ func (gg *GormGenerator) dto() {
 	gg.g.Execute()
 }
 
+func (gg *GormGenerator) svcImplGrpc(grpcService v3.Service) {
+	gg.g.GenerateSvcImplGrpc(grpcService)
+}
+
+func (gg *GormGenerator) ProtoFieldNamingFn() func(string) string {
+	return strcase.ToLowerCamel
+}
+
 const (
 	driverMysql     = "mysql"
 	driverPostgres  = "postgres"
@@ -56,6 +66,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Driver = conf.Driver
 	gg.Dsn = conf.Dsn
 	gg.Client = false
+	gg.Grpc = conf.Grpc
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {

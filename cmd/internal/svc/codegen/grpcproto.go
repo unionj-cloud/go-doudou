@@ -1,12 +1,11 @@
 package codegen
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3Helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
 	"go/ast"
 	"go/parser"
@@ -88,10 +87,6 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerato
 		fi        os.FileInfo
 		tpl       *template.Template
 		f         *os.File
-		modfile   string
-		modf      *os.File
-		modName   string
-		firstLine string
 		grpcDir   string
 	)
 	grpcDir = filepath.Join(dir, "transport/grpc")
@@ -110,15 +105,8 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerato
 		panic(err)
 	}
 	defer f.Close()
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
-
-	service = p.NewService(svcname, modName+"/transport/grpc")
+	servicePkg := astutils.GetPkgPath(dir)
+	service = p.NewService(svcname, servicePkg+"/transport/grpc")
 	service.Comments = ic.Interfaces[0].Comments
 	for _, method := range ic.Interfaces[0].Methods {
 		service.Rpcs = append(service.Rpcs, p.NewRpc(method))

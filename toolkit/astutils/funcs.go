@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/format"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -106,11 +108,25 @@ func FixImport(src []byte, file string) {
 		TabIndent: true,
 		Comments:  true,
 		Fragment:  true,
-	}); err == nil {
+	}); err != nil {
+		lines := strings.Split(string(src), "\n")
+		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+		startLine, endLine := errLine-5, errLine+5
+		fmt.Println("Format fail:", errLine, err)
+		if startLine < 0 {
+			startLine = 0
+		}
+		if endLine > len(lines)-1 {
+			endLine = len(lines) - 1
+		}
+		for i := startLine; i <= endLine; i++ {
+			fmt.Println(i, lines[i])
+		}
+		errorx.Wrap(fmt.Errorf("cannot format file: %w", err))
+	} else {
 		_ = ioutil.WriteFile(file, res, os.ModePerm)
 		return
 	}
-	logrus.Error(err)
 	_ = ioutil.WriteFile(file, src, os.ModePerm)
 }
 

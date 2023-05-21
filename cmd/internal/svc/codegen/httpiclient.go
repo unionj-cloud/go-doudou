@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
@@ -22,7 +21,6 @@ package client
 import (
 	"context"
 	"github.com/go-resty/resty/v2"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
@@ -57,10 +55,6 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 		clientDir  string
 		fi         os.FileInfo
 		source     string
-		modfile    string
-		modName    string
-		firstLine  string
-		modf       *os.File
 		meta       astutils.InterfaceMeta
 	)
 	clientDir = filepath.Join(dir, "client")
@@ -80,20 +74,11 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	defer f.Close()
-
 	err = copier.DeepCopy(ic.Interfaces[0], &meta)
 	if err != nil {
 		panic(err)
 	}
-
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
-
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if tpl, err = template.New("iclient.go.tmpl").Parse(iclientTmpl); err != nil {
 		panic(err)
 	}
@@ -103,8 +88,7 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 		Meta       astutils.InterfaceMeta
 		Version    string
 	}{
-		VoPackage:  modName + "/vo",
-		DtoPackage: modName + "/dto",
+		DtoPackage: dtoPkg,
 		Meta:       meta,
 		Version:    version.Release,
 	}); err != nil {
