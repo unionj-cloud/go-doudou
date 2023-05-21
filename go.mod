@@ -225,7 +225,7 @@ require (
 	gorm.io/driver/clickhouse v0.5.0
 	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.5.0
-	gorm.io/driver/sqlite v1.5.0
+	gorm.io/driver/sqlite v1.4.4
 	gorm.io/driver/sqlserver v1.4.2
 	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
 )
