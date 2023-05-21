@@ -63,7 +63,8 @@ func init() {
 		},
 	)
 	gormConf := &gorm.Config{
-		Logger: newLogger,
+		Logger:                                   newLogger,
+		DisableForeignKeyConstraintWhenMigrating: true,
 	}
 	dsn := config.GddDBDsn.Load()
 	if stringutils.IsEmpty(dsn) {

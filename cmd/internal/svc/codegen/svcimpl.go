@@ -1,28 +1,22 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	v3 "github.com/unionj-cloud/go-doudou/v2/cmd/internal/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
 var svcimportTmpl = `
 	"context"
 	"{{.ConfigPackage}}"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 	"github.com/jmoiron/sqlx"
 	"github.com/brianvoe/gofakeit/v6"
@@ -74,7 +68,6 @@ func New{{.Meta.Name}}(conf *config.Config) *{{.Meta.Name}}Impl {
 var svcimportTmplGrpc = `
 	"context"
 	"{{.ConfigPackage}}"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 	pb "{{.PbPackage}}"
 `
@@ -150,10 +143,7 @@ func New{{.Meta.Name}}(conf *config.Config) *{{.Meta.Name}}Impl {
 func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	var (
 		err         error
-		modfile     string
-		modName     string
 		svcimplfile string
-		firstLine   string
 		f           *os.File
 		tpl         *template.Template
 		buf         bytes.Buffer
@@ -166,13 +156,8 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	if err != nil {
 		panic(err)
 	}
-	modfile = filepath.Join(dir, "go.mod")
-	if f, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(f)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if _, err = os.Stat(svcimplfile); os.IsNotExist(err) {
 		if f, err = os.Create(svcimplfile); err != nil {
 			panic(err)
@@ -187,13 +172,8 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		defer f.Close()
 		tmpl = appendPart
 
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, svcimplfile, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
 		sc := astutils.NewStructCollector(astutils.ExprString)
-		ast.Walk(sc, root)
+		astutils.CollectStructsInFolder(dir, sc)
 		if implementations, exists := sc.Methods[meta.Name+"Impl"]; exists {
 			var notimplemented []astutils.MethodMeta
 			for _, item := range meta.Methods {
@@ -224,9 +204,8 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		Meta          astutils.InterfaceMeta
 		Version       string
 	}{
-		VoPackage:     modName + "/vo",
-		DtoPackage:    modName + "/dto",
-		ConfigPackage: modName + "/config",
+		DtoPackage:    dtoPkg,
+		ConfigPackage: cfgPkg,
 		SvcPackage:    ic.Package.Name,
 		Meta:          meta,
 		Version:       version.Release,
@@ -248,9 +227,8 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		VoPackage     string
 		DtoPackage    string
 	}{
-		VoPackage:     modName + "/vo",
-		DtoPackage:    modName + "/dto",
-		ConfigPackage: modName + "/config",
+		DtoPackage:    dtoPkg,
+		ConfigPackage: cfgPkg,
 	}); err != nil {
 		panic(err)
 	}
@@ -271,10 +249,7 @@ func convert(m v3.Message) string {
 func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Service) {
 	var (
 		err         error
-		modfile     string
-		modName     string
 		svcimplfile string
-		firstLine   string
 		f           *os.File
 		tpl         *template.Template
 		buf         bytes.Buffer
@@ -287,13 +262,6 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if err != nil {
 		panic(err)
 	}
-	modfile = filepath.Join(dir, "go.mod")
-	if f, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(f)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
 	if _, err = os.Stat(svcimplfile); os.IsNotExist(err) {
 		if f, err = os.Create(svcimplfile); err != nil {
 			panic(err)
@@ -308,13 +276,8 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		defer f.Close()
 		tmpl = appendPartGrpc
 
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, svcimplfile, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
 		sc := astutils.NewStructCollector(astutils.ExprString)
-		ast.Walk(sc, root)
+		astutils.CollectStructsInFolder(dir, sc)
 		if implementations, exists := sc.Methods[meta.Name+"Impl"]; exists {
 			var notimplemented []v3.Rpc
 			for _, item := range grpcSvc.Rpcs {
@@ -338,6 +301,9 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if tpl, err = template.New("svcimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
+	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
+	pbPkg := astutils.GetPkgPath(filepath.Join(dir, "transport", "grpc"))
 	if err = tpl.Execute(&buf, struct {
 		ConfigPackage string
 		VoPackage     string
@@ -348,10 +314,9 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		GrpcSvc       v3.Service
 		Version       string
 	}{
-		VoPackage:     modName + "/vo",
-		DtoPackage:    modName + "/dto",
-		ConfigPackage: modName + "/config",
-		PbPackage:     modName + "/transport/grpc",
+		DtoPackage:    dtoPkg,
+		ConfigPackage: cfgPkg,
+		PbPackage:     pbPkg,
 		SvcPackage:    ic.Package.Name,
 		Meta:          meta,
 		GrpcSvc:       grpcSvc,
@@ -375,10 +340,9 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		DtoPackage    string
 		PbPackage     string
 	}{
-		VoPackage:     modName + "/vo",
-		DtoPackage:    modName + "/dto",
-		ConfigPackage: modName + "/config",
-		PbPackage:     modName + "/transport/grpc",
+		DtoPackage:    dtoPkg,
+		ConfigPackage: cfgPkg,
+		PbPackage:     pbPkg,
 	}); err != nil {
 		panic(err)
 	}

@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
@@ -9,9 +8,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -388,7 +384,6 @@ var importTmpl = `
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 	"github.com/pkg/errors"
 `
@@ -426,12 +421,8 @@ type GenHttpHandlerImplConfig struct {
 func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHttpHandlerImplConfig) {
 	var (
 		err             error
-		modfile         string
-		modName         string
-		firstLine       string
 		handlerimplfile string
 		f               *os.File
-		modf            *os.File
 		tpl             *template.Template
 		buf             bytes.Buffer
 		httpDir         string
@@ -471,13 +462,8 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 		tmpl = initHttpHandlerImplTmpl
 	}
 
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	servicePkg := astutils.GetPkgPath(dir)
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
@@ -508,10 +494,9 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 		Config         GenHttpHandlerImplConfig
 		Version        string
 	}{
-		ServicePackage: modName,
+		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
-		VoPackage:      modName + "/vo",
-		DtoPackage:     modName + "/dto",
+		DtoPackage:     dtoPkg,
 		Meta:           meta,
 		Config:         config,
 		Version:        version.Release,
@@ -533,10 +518,9 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 		VoPackage      string
 		DtoPackage     string
 	}{
-		ServicePackage: modName,
+		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
-		VoPackage:      modName + "/vo",
-		DtoPackage:     modName + "/dto",
+		DtoPackage:    dtoPkg,
 	}); err != nil {
 		panic(err)
 	}
@@ -545,19 +529,8 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 }
 
 func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string) {
-	var files []string
-	err := filepath.Walk(httpDir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
-	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
-	for _, file := range files {
-		root, err := parser.ParseFile(token.NewFileSet(), file, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
-		ast.Walk(sc, root)
-	}
+	astutils.CollectStructsInFolder(httpDir, sc)
 	if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
 		var notimplemented []astutils.MethodMeta
 		for _, item := range meta.Methods {

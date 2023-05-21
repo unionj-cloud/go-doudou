@@ -14,7 +14,7 @@ const (
 	DefaultGddLogLevel           = "info"
 	DefaultGddLogFormat          = "text"
 	DefaultGddLogReqEnable       = false
-	DefaultGddLogCaller          = false
+	DefaultGddLogCaller          = true
 	DefaultGddLogDiscard         = false
 	DefaultGddGraceTimeout       = "15s"
 	DefaultGddWriteTimeout       = "15s"

@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
@@ -14,7 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
@@ -34,7 +32,6 @@ var cpimportTmpl = `
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
 	"time"
-	"{{.VoPackage}}"
 	"{{.DtoPackage}}"
 `
 
@@ -187,10 +184,6 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		buf             bytes.Buffer
 		clientDir       string
 		fi              os.FileInfo
-		modfile         string
-		modName         string
-		firstLine       string
-		modf            *os.File
 		meta            astutils.InterfaceMeta
 		clientProxyTmpl string
 		importBuf       bytes.Buffer
@@ -226,13 +219,9 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		clientProxyTmpl = baseTmpl
 	}
 
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	servicePkg := astutils.GetPkgPath(dir)
+	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 
 	funcMap := make(map[string]interface{})
 	funcMap["isVarargs"] = v3helper.IsVarargs
@@ -248,10 +237,9 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		SvcName        string
 		Version        string
 	}{
-		VoPackage:      modName + "/vo",
-		DtoPackage:     modName + "/dto",
+		DtoPackage:     dtoPkg,
 		Meta:           meta,
-		ServicePackage: modName,
+		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
 		SvcName:        ic.Interfaces[0].Name,
 		Version:        version.Release,
@@ -273,9 +261,8 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		VoPackage     string
 		DtoPackage    string
 	}{
-		VoPackage:     modName + "/vo",
-		DtoPackage:    modName + "/dto",
-		ConfigPackage: modName + "/config",
+		DtoPackage:    dtoPkg,
+		ConfigPackage: cfgPkg,
 	}); err != nil {
 		panic(err)
 	}

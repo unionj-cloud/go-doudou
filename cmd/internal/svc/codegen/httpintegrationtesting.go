@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/rbretecher/go-postman-collection"
@@ -141,12 +140,8 @@ func capital(input string) string {
 func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postmanCollectionPath, dotenvPath string) {
 	var (
 		err                error
-		modfile            string
-		modName            string
-		firstLine          string
 		testFile           string
 		f                  *os.File
-		modf               *os.File
 		tpl                *template.Template
 		buf                bytes.Buffer
 		fi                 os.FileInfo
@@ -176,13 +171,8 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		defer f.Close()
 		tmpl = initIntegrationTestingTmpl
 	}
-	modfile = filepath.Join(dir, "go.mod")
-	if modf, err = os.Open(modfile); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(modf)
-	firstLine, _ = reader.ReadString('\n')
-	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+
+	servicePkg := astutils.GetPkgPath(dir)
 
 	funcMap := make(map[string]interface{})
 	funcMap["toEndpoint"] = toEndpoint
@@ -203,7 +193,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		SvcName        string
 		Responses      []*postman.Response
 	}{
-		ServicePackage: modName,
+		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
 		Version:        version.Release,
 		DotenvPath:     relDotenv,
@@ -224,7 +214,7 @@ func GenHttpIntegrationTesting(dir string, ic astutils.InterfaceCollector, postm
 		ServicePackage string
 		ServiceAlias   string
 	}{
-		ServicePackage: modName,
+		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
 	}); err != nil {
 		panic(err)

@@ -3,6 +3,7 @@ package copier
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"reflect"
 )
 
@@ -13,7 +14,7 @@ func DeepCopy(src, target interface{}) error {
 	}
 	b, err := json.Marshal(src)
 	if err != nil {
-		return err
+		return errorx.Wrap(err)
 	}
 	if reflect.ValueOf(target).Kind() != reflect.Ptr {
 		return errors.New("Target should be a pointer")

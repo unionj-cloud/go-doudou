@@ -43,8 +43,13 @@ require (
 	github.com/hashicorp/go-sockaddr v1.0.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/manifoldco/promptui v0.9.0
+	github.com/morkid/gocache v1.0.0
 	github.com/rs/cors v1.9.0
 	github.com/slok/goresilience v0.2.0
+	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
+	gorm.io/hints v1.1.0
+	gorm.io/plugin/dbresolver v1.3.0
 )
 
 require (
@@ -56,7 +61,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1704 // indirect
-	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/antlr/antlr4 v0.0.0-20200124162019-2d7f727a00b7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
@@ -161,7 +166,6 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
@@ -192,7 +196,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/jackc/pgx/v5 v5.3.1 // indirect
-	github.com/klauspost/compress v1.16.0
+	github.com/klauspost/compress v1.16.3
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-colorable v0.1.13
@@ -219,9 +223,9 @@ require (
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0
 	gorm.io/driver/clickhouse v0.5.0
-	gorm.io/driver/mysql v1.4.7
+	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.5.0
 	gorm.io/driver/sqlite v1.5.0
 	gorm.io/driver/sqlserver v1.4.2
-	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
+	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
 )

@@ -8,6 +8,10 @@ func Panic(msg string) {
 	zlogger.Panic().Msg(msg)
 }
 
-func Log(err error) {
+func Wrap(err error) error {
+	if err == nil {
+		return nil
+	}
 	zlogger.Error().Err(err).Msg(err.Error())
+	return err
 }
