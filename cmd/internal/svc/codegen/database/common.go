@@ -8,7 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gorm_gen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"io/ioutil"
 	"os"
@@ -44,6 +44,8 @@ type IOrmGenerator interface {
 	svcImplGo()
 	svcImplGrpc(v3.Service)
 	dto()
+	orm()
+	fix()
 	Initialize(conf OrmGeneratorConfig)
 	GenService()
 	ProtoFieldNamingFn() func(string) string
@@ -55,7 +57,7 @@ type AbstractBaseGenerator struct {
 	Driver              string
 	Dsn                 string
 	Dir                 string
-	g                   *gen.Generator
+	g                   *gormgen.Generator
 	Jsonattrcase        string
 	Omitempty           bool
 	AllowGetWithReqBody bool
@@ -64,6 +66,14 @@ type AbstractBaseGenerator struct {
 	Env                 string
 	impl                IOrmGenerator
 	runner              executils.Runner
+}
+
+func (b *AbstractBaseGenerator) fix() {
+	b.impl.fix()
+}
+
+func (b *AbstractBaseGenerator) orm() {
+	b.impl.orm()
 }
 
 func (b *AbstractBaseGenerator) ProtoFieldNamingFn() func(string) string {
@@ -126,6 +136,7 @@ func (b *AbstractBaseGenerator) GenService() {
 
 	codegen.GenConfig(b.Dir)
 
+	b.orm()
 	b.svcImplGo()
 
 	codegen.GenHttpMiddleware(b.Dir)
@@ -180,9 +191,14 @@ func (b *AbstractBaseGenerator) GenService() {
 		codegen.GenMethodAnnotationStore(b.Dir, ic)
 	}
 
-	wd, _ = os.Getwd()
+	b.fix()
+	b.goModTidy()
+}
+
+func (b *AbstractBaseGenerator) goModTidy() {
+	wd, _ := os.Getwd()
 	os.Chdir(filepath.Join(b.Dir))
-	err = b.runner.Run("go", "mod", "tidy")
+	err := b.runner.Run("go", "mod", "tidy")
 	if err != nil {
 		panic(err)
 	}

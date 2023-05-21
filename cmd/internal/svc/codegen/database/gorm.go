@@ -4,7 +4,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gorm_gen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -42,11 +42,36 @@ func (gg *GormGenerator) svcImplGo() {
 }
 
 func (gg *GormGenerator) dto() {
-	gg.g.Execute()
+	gg.g.GenerateDtoFile()
 }
 
 func (gg *GormGenerator) svcImplGrpc(grpcService v3.Service) {
 	gg.g.GenerateSvcImplGrpc(grpcService)
+}
+
+func (gg *GormGenerator) orm() {
+	gg.g.Execute()
+}
+
+func (gg *GormGenerator) fix() {
+	//dir, _ := filepath.Abs(gg.Dir)
+	//var files []string
+	//err := filepath.Walk(dir, astutils.Visit(&files))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//for _, file := range files {
+	//	if filepath.Ext(file) != ".go" {
+	//		continue
+	//	}
+	//	source, err := ioutil.ReadFile(file)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	fileContent := string(source)
+	//	fileContent = strings.ReplaceAll(fileContent, "gorm.io/gen", "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen")
+	//	ioutil.WriteFile(file, []byte(fileContent), os.ModePerm)
+	//}
 }
 
 func (gg *GormGenerator) ProtoFieldNamingFn() func(string) string {
@@ -90,10 +115,10 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	if err != nil {
 		errorx.Panic(err.Error())
 	}
-	g := gen.NewGenerator(gen.Config{
+	g := gormgen.NewGenerator(gormgen.Config{
 		RootDir:       gg.Dir,
 		OutPath:       gg.Dir + "/query",
-		Mode:          gen.WithDefaultQuery | gen.WithQueryInterface,
+		Mode:          gormgen.WithDefaultQuery | gormgen.WithQueryInterface,
 		FieldNullable: true,
 		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
 		FieldCoverable: false,
@@ -110,8 +135,8 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
 	g.ApplyBasic(g.GenerateAllTable(
-		gen.FieldType(conf.Soft, "gorm.DeletedAt"),
-		gen.FieldGenType(conf.Soft, "Time"),
+		gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
+		gormgen.FieldGenType(conf.Soft, "Time"),
 	)...)
 	gg.g = g
 }
