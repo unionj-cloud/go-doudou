@@ -9,9 +9,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -545,19 +542,8 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 }
 
 func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string) {
-	var files []string
-	err := filepath.Walk(httpDir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
-	}
 	sc := astutils.NewStructCollector(astutils.ExprString)
-	for _, file := range files {
-		root, err := parser.ParseFile(token.NewFileSet(), file, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
-		ast.Walk(sc, root)
-	}
+	astutils.CollectStructsInFolder(httpDir, sc)
 	if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
 		var notimplemented []astutils.MethodMeta
 		for _, item := range meta.Methods {

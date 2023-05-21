@@ -9,9 +9,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -170,6 +167,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	if f, err = os.Open(modfile); err != nil {
 		panic(err)
 	}
+	defer f.Close()
 	reader := bufio.NewReader(f)
 	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
@@ -187,13 +185,8 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		defer f.Close()
 		tmpl = appendPart
 
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, svcimplfile, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
 		sc := astutils.NewStructCollector(astutils.ExprString)
-		ast.Walk(sc, root)
+		astutils.CollectStructsInFolder(dir, sc)
 		if implementations, exists := sc.Methods[meta.Name+"Impl"]; exists {
 			var notimplemented []astutils.MethodMeta
 			for _, item := range meta.Methods {
@@ -291,6 +284,7 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if f, err = os.Open(modfile); err != nil {
 		panic(err)
 	}
+	defer f.Close()
 	reader := bufio.NewReader(f)
 	firstLine, _ = reader.ReadString('\n')
 	modName = strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
@@ -308,13 +302,8 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		defer f.Close()
 		tmpl = appendPartGrpc
 
-		fset := token.NewFileSet()
-		root, err := parser.ParseFile(fset, svcimplfile, nil, parser.ParseComments)
-		if err != nil {
-			panic(err)
-		}
 		sc := astutils.NewStructCollector(astutils.ExprString)
-		ast.Walk(sc, root)
+		astutils.CollectStructsInFolder(dir, sc)
 		if implementations, exists := sc.Methods[meta.Name+"Impl"]; exists {
 			var notimplemented []v3.Rpc
 			for _, item := range grpcSvc.Rpcs {

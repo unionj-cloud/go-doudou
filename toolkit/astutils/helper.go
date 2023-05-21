@@ -1,6 +1,10 @@
 package astutils
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"path/filepath"
 	"strings"
 )
 
@@ -22,4 +26,23 @@ func ElementType(t string) string {
 		return strings.TrimPrefix(t, "...")
 	}
 	return t[strings.Index(t, "]")+1:]
+}
+
+func CollectStructsInFolder(dir string, sc *StructCollector) {
+	dir, _ = filepath.Abs(dir)
+	var files []string
+	err := filepath.Walk(dir, Visit(&files))
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		if filepath.Ext(file) != ".go" {
+			continue
+		}
+		root, err := parser.ParseFile(token.NewFileSet(), file, nil, parser.ParseComments)
+		if err != nil {
+			panic(err)
+		}
+		ast.Walk(sc, root)
+	}
 }
