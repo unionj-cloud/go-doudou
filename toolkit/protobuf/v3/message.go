@@ -220,7 +220,7 @@ func (receiver ProtoGenerator) MessageOf(ft string) ProtobufType {
 		return Float
 	case "float64":
 		return Double
-	case "time.Time", "gorm.DeletedAt":
+	case "time.Time", "gorm.DeletedAt", "customtypes.Time":
 		//ImportStore["google/protobuf/timestamp.proto"] = struct{}{}
 		//return Time
 		return String
