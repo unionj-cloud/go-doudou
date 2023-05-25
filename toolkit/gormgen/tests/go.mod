@@ -11,6 +11,7 @@ require (
 	gorm.io/gorm v1.24.3
 	gorm.io/hints v1.1.1 // indirect
 	gorm.io/plugin/dbresolver v1.4.0
+	github.com/unionj-cloud/go-doudou/v2 main
 )
 
-replace gorm.io/gen => ../
+replace github.com/unionj-cloud/go-doudou/v2 main => ../../../

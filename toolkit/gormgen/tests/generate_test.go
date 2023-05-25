@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
+	gen "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/tests/diy_method"

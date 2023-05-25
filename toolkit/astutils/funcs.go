@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/format"
@@ -122,7 +122,7 @@ func FixImport(src []byte, file string) {
 		for i := startLine; i <= endLine; i++ {
 			fmt.Println(i, lines[i])
 		}
-		errorx.Wrap(fmt.Errorf("cannot format file: %w", err))
+		errors.WithStack(fmt.Errorf("cannot format file: %w", err))
 	} else {
 		_ = ioutil.WriteFile(file, res, os.ModePerm)
 		return

@@ -1,7 +1,7 @@
 package diy_method
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
+	gen "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	"time"
 )
 

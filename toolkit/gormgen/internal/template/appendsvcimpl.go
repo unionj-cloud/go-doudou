@@ -4,42 +4,58 @@ const AppendSvcImpl = `
 // Post{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
-	m := &model.{{.ModelStructName}}{}
-	copier.Copy(m, body)
-	u := query.{{.ModelStructName}}
-	err = errorx.Wrap(u.WithContext(ctx).Create(m))
+	m := model.{{.ModelStructName}}(body)
+	u := receiver.q.{{.ModelStructName}}
+	err = errors.WithStack(u.WithContext(ctx).Create(&m))
 	data = m.ID
+	return
+}
+
+// Post{{.ModelStructName}}s {{.StructComment}}
+` + NotEditMarkForGDDShort + `
+func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error) {
+	list := make([]*model.{{.ModelStructName}}, 0, len(body))
+	for _, item := range body {
+		m := model.{{.ModelStructName}}(item)
+		list = append(list, &m)
+	}
+	u := receiver.q.{{.ModelStructName}}
+	if err = errors.WithStack(u.WithContext(ctx).Create(list...)); err != nil {
+		return
+	}
+	data = make([]{{.PriKeyType}}, 0, len(list))
+	for _, item := range list {
+		data = append(data, item.ID)
+	}
 	return
 }
 
 // Get{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error) {
-	u := query.{{.ModelStructName}}
+	u := receiver.q.{{.ModelStructName}}
 	m, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
-	err = errorx.Wrap(err)
-	copier.Copy(&data, m)
-	return
+	if err != nil {
+		return dto.{{.ModelStructName}}{}, errors.WithStack(err)
+	}
+	return dto.{{.ModelStructName}}(*m), nil
 }
 
 // Put{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) Put{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
-	m := &model.{{.ModelStructName}}{}
-	copier.Copy(m, body)
-	u := query.{{.ModelStructName}}
+	m := model.{{.ModelStructName}}(body)
+	u := receiver.q.{{.ModelStructName}}
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
-	err = errorx.Wrap(err)
-	return
+	return errors.WithStack(err)
 }
 
 // Delete{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) Delete{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (err error) {
-	u := query.{{.ModelStructName}}
+	u := receiver.q.{{.ModelStructName}}
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).Delete()
-	err = errorx.Wrap(err)
-	return
+	return errors.WithStack(err)
 }
 
 // Get{{.ModelStructName}}s {{.StructComment}}

@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"io"
@@ -390,7 +390,7 @@ func (g *Generator) generateSvcGoFile() error {
 	svcFile := filepath.Join(g.RootDir, "svc.go")
 	fi, err := os.Stat(svcFile)
 	if err != nil && !os.IsNotExist(err) {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	var interfaceMeta astutils.InterfaceMeta
 	var f *os.File
@@ -401,7 +401,7 @@ func (g *Generator) generateSvcGoFile() error {
 		}
 		g.info("New content will be append to svc.go file")
 		if f, err = os.OpenFile(svcFile, os.O_APPEND, os.ModePerm); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 		defer f.Close()
 	} else {
@@ -417,22 +417,22 @@ func (g *Generator) generateSvcGoFile() error {
 			InterfaceName: strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir))),
 			DtoPackage:    g.Config.dtoPkgPath,
 		}); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 		if err = ioutil.WriteFile(svcFile, buf.Bytes(), 0640); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	models := g.filterNewModels(interfaceMeta)
 	var buf bytes.Buffer
 	for _, model := range models {
 		if err = render(tmpl.AppendSvc, &buf, model); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	var original []byte
 	if original, err = ioutil.ReadAll(f); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	original = bytes.TrimSpace(original)
 	last := bytes.LastIndexByte(original, '}')
@@ -444,7 +444,7 @@ func (g *Generator) generateSvcGoFile() error {
 		Comments:  true,
 		Fragment:  true,
 	}); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -457,7 +457,7 @@ func (g *Generator) generateSvcImplGoFile() error {
 	svcImplFile := filepath.Join(g.RootDir, "svcimpl.go")
 	fi, err := os.Stat(svcImplFile)
 	if err != nil && !os.IsNotExist(err) {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	var interfaceMeta astutils.InterfaceMeta
 	interfaceMeta.Name = strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir)))
@@ -468,7 +468,7 @@ func (g *Generator) generateSvcImplGoFile() error {
 		interfaceMeta.Methods = sc.Methods[interfaceMeta.Name+"Impl"]
 		g.info("New content will be append to svcimpl.go file")
 		if f, err = os.OpenFile(svcImplFile, os.O_APPEND, os.ModePerm); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 		defer f.Close()
 	} else {
@@ -482,10 +482,10 @@ func (g *Generator) generateSvcImplGoFile() error {
 		}{
 			InterfaceName: interfaceMeta.Name,
 		}); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 		if err = ioutil.WriteFile(svcImplFile, buf.Bytes(), 0640); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	models := g.filterNewModels(interfaceMeta)
@@ -498,12 +498,12 @@ func (g *Generator) generateSvcImplGoFile() error {
 			QueryStructMeta: model,
 			InterfaceName:   interfaceMeta.Name,
 		}); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	var original []byte
 	if original, err = ioutil.ReadAll(f); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	original = append(original, buf.Bytes()...)
 
@@ -524,7 +524,7 @@ func (g *Generator) generateSvcImplGoFile() error {
 		ModelPackage:  g.modelPkgPath,
 		QueryPackage:  queryPkg,
 	}); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	original = astutils.AppendImportStatements(original, importBuf.Bytes())
 
@@ -534,7 +534,7 @@ func (g *Generator) generateSvcImplGoFile() error {
 		Comments:  true,
 		Fragment:  true,
 	}); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -579,7 +579,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	}
 	select {
 	case err = <-errChan:
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	case <-pool.AsyncWaitAll():
 	}
 
@@ -592,23 +592,23 @@ func (g *Generator) generateQueryFile() (err error) {
 		"ImportPkgPaths": importPkgs,
 	})
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	if g.judgeMode(WithDefaultQuery) {
 		err = render(tmpl.DefaultQuery, &buf, g)
 		if err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	err = render(tmpl.QueryMethod, &buf, g)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	g.info("generate query file: " + g.OutFile)
 
@@ -626,7 +626,7 @@ func (g *Generator) generateQueryFile() (err error) {
 		}
 		err = render(tmpl.DIYMethodTestBasic, &buf, nil)
 		if err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 		err = render(tmpl.QueryMethodTest, &buf, g)
 		if err != nil {
@@ -660,7 +660,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		"ImportPkgPaths": importPkgs,
 	})
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	data.QueryStructMeta = data.QueryStructMeta.IfaceMode(g.judgeMode(WithQueryInterface))
 
@@ -670,26 +670,26 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 	err = render(structTmpl, &buf, data.QueryStructMeta)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	if g.judgeMode(WithQueryInterface) {
 		err = render(tmpl.TableQueryIface, &buf, data)
 		if err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 
 	for _, method := range data.Interfaces {
 		err = render(tmpl.DIYMethod, &buf, method)
 		if err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 
 	err = render(tmpl.CRUDMethod, &buf, data.QueryStructMeta)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))
@@ -709,18 +709,18 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Paths(),
 	})
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	err = render(tmpl.CRUDMethodTest, &buf, data.QueryStructMeta)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	for _, method := range data.Interfaces {
 		err = render(tmpl.DIYMethodTest, &buf, method)
 		if err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -736,7 +736,7 @@ func (g *Generator) generateModelFile() error {
 
 	modelOutPath, err := g.getModelOutputPath()
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
@@ -789,7 +789,7 @@ func (g *Generator) generateModelFile() error {
 	}
 	select {
 	case err = <-errChan:
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	case <-pool.AsyncWaitAll():
 		g.fillModelPkgPath(modelOutPath)
 	}
@@ -866,7 +866,7 @@ func (g *Generator) pushQueryStructMeta(meta *generate.QueryStructMeta) (*genInf
 func render(tmpl string, wr io.Writer, data interface{}) error {
 	t, err := template.New(tmpl).Parse(tmpl)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	return t.Execute(wr, data)
 }
@@ -898,7 +898,7 @@ func (g *Generator) generateDtoFile() error {
 
 	dtoOutPath, err := g.getDtoOutputPath()
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 
 	if err = os.MkdirAll(dtoOutPath, os.ModePerm); err != nil {
@@ -952,7 +952,7 @@ func (g *Generator) generateDtoFile() error {
 	}
 	select {
 	case err = <-errChan:
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	case <-pool.AsyncWaitAll():
 		g.fillDtoPkgPath(dtoOutPath)
 	}
@@ -1010,7 +1010,7 @@ func (g *Generator) generateSvcImplGrpc(grpcService v3.Service) error {
 	svcImplFile := filepath.Join(g.RootDir, "svcimpl.go")
 	_, err := os.Stat(svcImplFile)
 	if err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	var interfaceMeta astutils.InterfaceMeta
 	interfaceMeta.Name = strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir)))
@@ -1028,12 +1028,12 @@ func (g *Generator) generateSvcImplGrpc(grpcService v3.Service) error {
 			QueryStructMeta: model,
 			InterfaceName:   interfaceMeta.Name,
 		}); err != nil {
-			return errorx.Wrap(err)
+			return errors.WithStack(err)
 		}
 	}
 	var original []byte
 	if original, err = ioutil.ReadFile(svcImplFile); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	original = append(original, buf.Bytes()...)
 
@@ -1046,7 +1046,7 @@ func (g *Generator) generateSvcImplGrpc(grpcService v3.Service) error {
 	}{
 		TransportGrpcPackage: transGrpcPkg,
 	}); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	original = astutils.AppendImportStatements(original, importBuf.Bytes())
 	original = astutils.GrpcRelatedModify(original, interfaceMeta.Name, grpcService.Name)
@@ -1056,7 +1056,7 @@ func (g *Generator) generateSvcImplGrpc(grpcService v3.Service) error {
 		Comments:  true,
 		Fragment:  true,
 	}); err != nil {
-		return errorx.Wrap(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
