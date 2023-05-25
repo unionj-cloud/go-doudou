@@ -2,7 +2,6 @@ package astutils
 
 import (
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -56,11 +55,11 @@ func GetPkgPath(filePath string) string {
 		Dir:  filePath,
 	})
 	if err != nil {
-		errorx.Wrap(err)
+		errors.WithStack(err)
 		return ""
 	}
 	if len(pkgs) == 0 {
-		errorx.Wrap(errors.New("no package found"))
+		errors.WithStack(errors.New("no package found"))
 		return ""
 	}
 	return pkgs[0].PkgPath

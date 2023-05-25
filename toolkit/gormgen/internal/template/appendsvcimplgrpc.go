@@ -9,7 +9,22 @@ func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}Rpc(ctx context.
 	data, err := receiver.Post{{.ModelStructName}}(ctx, body)
 	return &pb.Post{{.ModelStructName}}RpcResponse{
 		Data: data,
-	}, errorx.Wrap(err)
+	}, errors.WithStack(err)
+}
+
+// Post{{.ModelStructName}}sRpc {{.StructComment}}
+` + NotEditMarkForGDDShort + `
+func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}sRpc(ctx context.Context, request *pb.Post{{.ModelStructName}}sRpcRequest) (*pb.Post{{.ModelStructName}}sRpcResponse, error) {
+	list := make([]dto.{{.ModelStructName}}, 0, len(request.Body))
+	for _, item := range request.Body {
+		var d dto.{{.ModelStructName}}
+		jsoncopier.DeepCopy(item, &d)
+		list = append(list, d)
+	}
+	data, err := receiver.Post{{.ModelStructName}}s(ctx, list)
+	return &pb.Post{{.ModelStructName}}sRpcResponse{
+		Data: data,
+	}, errors.WithStack(err)
 }
 
 // Get{{.ModelStructName}}IdRpc {{.StructComment}}
@@ -17,7 +32,7 @@ func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}Rpc(ctx context.
 func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}IdRpc(ctx context.Context, request *pb.Get{{.ModelStructName}}IdRpcRequest) (*pb.{{.ModelStructName}}, error) {
 	data, err := receiver.Get{{.ModelStructName}}_Id(ctx, request.Id)
 	if err != nil {
-		return nil, errorx.Wrap(err)
+		return nil, errors.WithStack(err)
 	}
 	var ret pb.{{.ModelStructName}}
 	jsoncopier.DeepCopy(data, &ret)
@@ -29,13 +44,13 @@ func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}IdRpc(ctx context
 func (receiver *{{.InterfaceName}}Impl) Put{{.ModelStructName}}Rpc(ctx context.Context, request *pb.{{.ModelStructName}}) (*emptypb.Empty, error) {
 	var body dto.{{.ModelStructName}}
 	jsoncopier.DeepCopy(request, &body)
-	return &emptypb.Empty{}, errorx.Wrap(receiver.Put{{.ModelStructName}}(ctx, body))
+	return &emptypb.Empty{}, errors.WithStack(receiver.Put{{.ModelStructName}}(ctx, body))
 }
 
 // Delete{{.ModelStructName}}IdRpc {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) Delete{{.ModelStructName}}IdRpc(ctx context.Context, request *pb.Delete{{.ModelStructName}}IdRpcRequest) (*emptypb.Empty, error) {
-	return &emptypb.Empty{}, errorx.Wrap(receiver.Delete{{.ModelStructName}}_Id(ctx, request.Id))
+	return &emptypb.Empty{}, errors.WithStack(receiver.Delete{{.ModelStructName}}_Id(ctx, request.Id))
 }
 
 // Get{{.ModelStructName}}sRpc {{.StructComment}}
@@ -45,7 +60,7 @@ func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}sRpc(ctx context.
 	for _, item := range request.Filters {
 		str := wrappers.StringValue{}
 		if err := anypb.UnmarshalTo(item, &str, proto.UnmarshalOptions{}); err != nil {
-			return nil, errorx.Wrap(err)
+			return nil, errors.WithStack(err)
 		}
 		filters = append(filters, str.Value)
 	}
@@ -54,17 +69,16 @@ func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}sRpc(ctx context.
 	parameter.Filters = filters
 	data, err := receiver.Get{{.ModelStructName}}s(ctx, parameter)
 	if err != nil {
-		return nil, errorx.Wrap(err)
+		return nil, errors.WithStack(err)
 	}
 	items := make([]*anypb.Any, 0, len(data.Items))
 	for _, item := range data.Items {
-		var d dto.{{.ModelStructName}}
-		copier.Copy(&d, item)
+		d := dto.{{.ModelStructName}}(item.(model.{{.ModelStructName}}))
 		var msg pb.{{.ModelStructName}}
 		jsoncopier.DeepCopy(d, &msg)
 		a, err := anypb.New(&msg)
 		if err != nil {
-			return nil, errorx.Wrap(err)
+			return nil, errors.WithStack(err)
 		}
 		items = append(items, a)
 	}

@@ -5,6 +5,10 @@ const AppendSvc = `
 ` + NotEditMarkForGDDShort + `
 Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error)
 
+// Post{{.ModelStructName}}s {{.StructComment}}
+` + NotEditMarkForGDDShort + `
+Post{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error)
+
 // Get{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error)
