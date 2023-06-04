@@ -13,6 +13,7 @@ import (
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"log"
 	"os"
 	"strings"
@@ -65,6 +66,12 @@ func init() {
 	gormConf := &gorm.Config{
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
+	}
+	tablePrefix := strings.TrimSuffix(config.GddDBTablePrefix.LoadOrDefault(config.DefaultGddDBTablePrefix), ".")
+	if stringutils.IsNotEmpty(tablePrefix) {
+		gormConf.NamingStrategy = schema.NamingStrategy{
+			TablePrefix: tablePrefix + ".",
+		}
 	}
 	dsn := config.GddDBDsn.Load()
 	if stringutils.IsEmpty(dsn) {

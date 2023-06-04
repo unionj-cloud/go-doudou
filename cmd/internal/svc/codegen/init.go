@@ -37,9 +37,9 @@ type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
 	// You can also add annotations here like @role(admin) to add meta data to routes for 
 	// implementing your own middlewares
-	PostUser(ctx context.Context, user dto.User) (data int32, err error)
-	GetUser_Id(ctx context.Context, id int32) (data dto.User, err error)
-	PutUser(ctx context.Context, user dto.User) error
+	PostUser(ctx context.Context, user dto.GddUser) (data int32, err error)
+	GetUser_Id(ctx context.Context, id int32) (data dto.GddUser, err error)
+	PutUser(ctx context.Context, user dto.GddUser) error
 	DeleteUser_Id(ctx context.Context, id int32) error
 	GetUsers(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
 }
@@ -53,7 +53,7 @@ package dto
 
 //go:generate go-doudou name --file $GOFILE --form
 
-type User struct {
+type GddUser struct {
 	Id    int32
 	Name  string
 	Phone string

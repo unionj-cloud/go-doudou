@@ -254,6 +254,7 @@ const (
 	GddDBDisableAutoConfigure envVariable = "GDD_DB_DISABLEAUTOCONFIGURE"
 	GddDBDriver               envVariable = "GDD_DB_DRIVER"
 	GddDBDsn                  envVariable = "GDD_DB_DSN"
+	GddDBTablePrefix          envVariable = "GDD_DB_TABLE_PREFIX"
 	GddDBMaxIdleConns         envVariable = "GDD_DB_POOL_MAXIDLECONNS"
 	GddDBMaxOpenConns         envVariable = "GDD_DB_POOL_MAXOPENCONNS"
 	GddDBConnMaxLifetime      envVariable = "GDD_DB_POOL_CONNMAXLIFETIME"
