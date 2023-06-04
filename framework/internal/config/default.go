@@ -100,6 +100,7 @@ const (
 	DefaultGddDBDisableAutoConfigure = false
 	DefaultGddDBDriver               = ""
 	DefaultGddDBDsn                  = ""
+	DefaultGddDBTablePrefix          = ""
 	DefaultGddDBMaxIdleConns         = 2
 	DefaultGddDBMaxOpenConns         = -1
 	DefaultGddDBConnMaxLifetime      = -1

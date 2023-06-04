@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/docker/docker/pkg/fileutils"
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
@@ -32,11 +33,12 @@ func GetOrmGenerator(kind OrmKind) IOrmGenerator {
 }
 
 type OrmGeneratorConfig struct {
-	Driver string
-	Dsn    string
-	Dir    string
-	Soft   string
-	Grpc   bool
+	Driver      string
+	Dsn         string
+	TablePrefix string
+	Dir         string
+	Soft        string
+	Grpc        bool
 }
 
 type IOrmGenerator interface {
@@ -56,6 +58,7 @@ var _ IOrmGenerator = (*AbstractBaseGenerator)(nil)
 type AbstractBaseGenerator struct {
 	Driver              string
 	Dsn                 string
+	TablePrefix         string
 	Dir                 string
 	g                   *gormgen.Generator
 	Jsonattrcase        string
@@ -103,6 +106,9 @@ func (b *AbstractBaseGenerator) Initialize(conf OrmGeneratorConfig) {
 
 func (b *AbstractBaseGenerator) GenService() {
 	envfile := filepath.Join(b.Dir, ".env")
+	if _, err := os.Stat(envfile); err != nil {
+		fileutils.CreateIfNotExists(envfile, false)
+	}
 	envSource, err := ioutil.ReadFile(envfile)
 	if err != nil {
 		panic(err)

@@ -99,9 +99,11 @@ type Svc struct {
 type DbConfig struct {
 	Driver string
 	Dsn    string
-	Orm    string
-	Soft   string
-	Grpc   bool
+	// or schema for pg
+	TablePrefix string
+	Orm         string
+	Soft        string
+	Grpc        bool
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -178,11 +180,12 @@ func (receiver *Svc) Init() {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
 		assert.NotNil(gen, "Unknown orm kind")
 		gen.Initialize(database.OrmGeneratorConfig{
-			Driver: receiver.DbConfig.Driver,
-			Dsn:    receiver.DbConfig.Dsn,
-			Dir:    receiver.dir,
-			Soft:   receiver.DbConfig.Soft,
-			Grpc:   receiver.DbConfig.Grpc,
+			Driver:      receiver.DbConfig.Driver,
+			Dsn:         receiver.DbConfig.Dsn,
+			TablePrefix: receiver.DbConfig.TablePrefix,
+			Dir:         receiver.dir,
+			Soft:        receiver.DbConfig.Soft,
+			Grpc:        receiver.DbConfig.Grpc,
 		})
 		gen.GenService()
 	} else {

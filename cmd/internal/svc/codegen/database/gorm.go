@@ -6,11 +6,13 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
+	"strings"
 )
 
 const (
@@ -92,6 +94,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Dsn = conf.Dsn
 	gg.Client = false
 	gg.Grpc = conf.Grpc
+	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {
@@ -105,6 +108,9 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 			DSN: gg.Dsn,
 		}
 		db, err = gorm.Open(postgres.New(conf))
+		if stringutils.IsNotEmpty(gg.TablePrefix) {
+			db.Exec(`set search_path='` + gg.TablePrefix + `'`)
+		}
 	case driverSqlite:
 		db, err = gorm.Open(sqlite.Open(gg.Dsn))
 	case driverSqlserver:
@@ -130,6 +136,9 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		FieldWithTypeTag: true,
 		// if you need unit tests for query code, set WithUnitTest true
 		WithUnitTest: false,
+	})
+	g.WithTableNameStrategy(func(tableName string) (targetTableName string) {
+		return gg.TablePrefix + "." + tableName
 	})
 	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
