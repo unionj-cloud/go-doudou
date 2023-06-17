@@ -5,6 +5,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"gorm.io/driver/mysql"
@@ -138,8 +139,23 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		WithUnitTest: false,
 	})
 	g.WithTableNameStrategy(func(tableName string) (targetTableName string) {
-		return gg.TablePrefix + "." + tableName
+		if stringutils.IsNotEmpty(gg.TablePrefix) {
+			return gg.TablePrefix + "." + tableName
+		}
+		return tableName
 	})
+	g.WithOpts(gormgen.FieldGORMTag("", func(tag field.GormTag) field.GormTag {
+		if defaultTag, ok := tag["default"]; ok {
+			if len(defaultTag) > 0 {
+				t := defaultTag[0]
+				idx := strings.Index(t, "::")
+				if idx > -1 {
+					tag.Set("default", t[:idx])
+				}
+			}
+		}
+		return tag
+	}))
 	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
