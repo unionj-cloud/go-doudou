@@ -361,35 +361,6 @@ func parsingQueryString(param *parameter, p *pageRequest) {
 	createFilters(param.Filters, p)
 }
 
-func generateParams(param *parameter, config Config, getValue func(string) string) {
-	findValue := func(keys []string, defaultKey string) string {
-		found := false
-		value := ""
-		for _, key := range keys {
-			value = getValue(key)
-			if value != "" {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return getValue(defaultKey)
-		}
-		return value
-	}
-
-	param.Sort = findValue(config.SortParams, "sort")
-	param.Page = findValue(config.PageParams, "page")
-	param.Size = findValue(config.SizeParams, "size")
-	param.Order = findValue(config.OrderParams, "order")
-	filters := findValue(config.FilterParams, "filters")
-	iface := []interface{}{}
-	if err := config.JSONUnmarshal([]byte(filters), &iface); nil == err {
-		param.Filters = iface
-	}
-	param.Fields = findValue(config.FieldsParams, "fields")
-}
-
 //gocyclo:ignore
 func arrayToFilter(arr []interface{}, config Config) pageFilters {
 	filters := pageFilters{

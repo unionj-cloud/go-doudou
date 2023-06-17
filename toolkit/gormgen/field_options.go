@@ -141,6 +141,10 @@ var (
 	// FieldGORMTag specify GORM tag
 	FieldGORMTag = func(columnName string, gormTag func(tag field.GormTag) field.GormTag) model.ModifyFieldOpt {
 		return func(m *model.Field) *model.Field {
+			if columnName == "" {
+				m.GORMTag = gormTag(m.GORMTag)
+				return m
+			}
 			if m.ColumnName == columnName {
 				m.GORMTag = gormTag(m.GORMTag)
 			}
