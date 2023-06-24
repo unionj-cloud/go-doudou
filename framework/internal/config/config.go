@@ -22,6 +22,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func LoadConfigFromLocal() {
@@ -416,3 +417,5 @@ func ServiceDiscoveryMap() map[string]struct{} {
 	}
 	return modemap
 }
+
+var PrintLock sync.Mutex

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package rate provides a rate limiter.
+// Package memrate provides a rate limiter.
 package memrate
 
 import (
@@ -129,7 +129,7 @@ func (lim *Limiter) Allow() bool {
 
 // AllowN reports whether n events may happen at time now.
 // Use this method if you intend to drop / skip events that exceed the rate limit.
-// Otherwise use Reserve or Wait.
+// Otherwise, use Reserve or Wait.
 func (lim *Limiter) AllowN(now time.Time, n int) bool {
 	return lim.reserveN(now, n, 0).ok
 }

@@ -78,6 +78,7 @@ func (srv *GrpcServer) printServices() {
 // Run runs grpc server
 func (srv *GrpcServer) Run() {
 	banner.Print()
+	config.PrintLock.Lock()
 	register.NewGrpc(srv.data)
 	port := config.DefaultGddGrpcPort
 	if p, err := cast.ToIntE(config.GddGrpcPort.Load()); err == nil {
@@ -90,13 +91,13 @@ func (srv *GrpcServer) Run() {
 	reflection.Register(srv)
 	srv.printServices()
 	go func() {
-		logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
-		logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
 		if err := srv.Serve(lis); err != nil {
 			logger.Error().Msgf("failed to serve: %v", err)
 		}
 	}()
-
+	logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
+	logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
+	config.PrintLock.Unlock()
 	defer func() {
 		register.ShutdownGrpc()
 
