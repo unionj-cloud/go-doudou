@@ -17,10 +17,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"time"
 )
 
 var startAt time.Time
+var reflectionRegisterOnce sync.Once
 
 func init() {
 	startAt = time.Now()
@@ -77,6 +79,11 @@ func (srv *GrpcServer) printServices() {
 
 // Run runs grpc server
 func (srv *GrpcServer) Run() {
+	srv.RunWithPipe(nil)
+}
+
+// RunWithPipe runs grpc server
+func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
 	banner.Print()
 	config.PrintLock.Lock()
 	register.NewGrpc(srv.data)
@@ -95,6 +102,13 @@ func (srv *GrpcServer) Run() {
 			logger.Error().Msgf("failed to serve: %v", err)
 		}
 	}()
+	if pipe != nil {
+		go func() {
+			if err := srv.Serve(pipe); err != nil {
+				logger.Error().Msgf("failed to serve: %v", err)
+			}
+		}()
+	}
 	logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
 	logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
 	config.PrintLock.Unlock()
