@@ -17,10 +17,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"time"
 )
 
 var startAt time.Time
+var reflectionRegisterOnce sync.Once
 
 func init() {
 	startAt = time.Now()
@@ -33,8 +35,14 @@ type GrpcServer struct {
 
 func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 	server := GrpcServer{}
-	server.Server = grpc.NewServer(opt...)
+	if len(opt) > 0 {
+		server.Server = grpc.NewServer(opt...)
+	}
 	return &server
+}
+
+func NewEmptyGrpcServer() *GrpcServer {
+	return NewGrpcServer()
 }
 
 func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
@@ -77,7 +85,13 @@ func (srv *GrpcServer) printServices() {
 
 // Run runs grpc server
 func (srv *GrpcServer) Run() {
+	srv.RunWithPipe(nil)
+}
+
+// RunWithPipe runs grpc server
+func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
 	banner.Print()
+	config.PrintLock.Lock()
 	register.NewGrpc(srv.data)
 	port := config.DefaultGddGrpcPort
 	if p, err := cast.ToIntE(config.GddGrpcPort.Load()); err == nil {
@@ -90,13 +104,20 @@ func (srv *GrpcServer) Run() {
 	reflection.Register(srv)
 	srv.printServices()
 	go func() {
-		logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
-		logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
 		if err := srv.Serve(lis); err != nil {
 			logger.Error().Msgf("failed to serve: %v", err)
 		}
 	}()
-
+	if pipe != nil {
+		go func() {
+			if err := srv.Serve(pipe); err != nil {
+				logger.Error().Msgf("failed to serve: %v", err)
+			}
+		}()
+	}
+	logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
+	logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
+	config.PrintLock.Unlock()
 	defer func() {
 		register.ShutdownGrpc()
 

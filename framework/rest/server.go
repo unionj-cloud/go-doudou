@@ -292,8 +292,6 @@ func (srv *RestServer) newHttpServer() *http.Server {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
-		logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 		if err := httpServer.ListenAndServe(); err != nil {
 			logger.Error().Err(err).Msg("")
 		}
@@ -305,6 +303,7 @@ func (srv *RestServer) newHttpServer() *http.Server {
 // Run runs http server
 func (srv *RestServer) Run() {
 	banner.Print()
+	config.PrintLock.Lock()
 	register.NewRest(srv.data)
 	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
 	if manage {
@@ -452,6 +451,9 @@ func (srv *RestServer) Run() {
 	}
 	srv.printRoutes()
 	httpServer := srv.newHttpServer()
+	logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
+	logger.Info().Msgf("Http server started in %s", time.Since(startAt))
+	config.PrintLock.Unlock()
 	defer func() {
 		register.ShutdownRest()
 		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
