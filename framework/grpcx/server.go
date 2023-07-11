@@ -35,8 +35,14 @@ type GrpcServer struct {
 
 func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
 	server := GrpcServer{}
-	server.Server = grpc.NewServer(opt...)
+	if len(opt) > 0 {
+		server.Server = grpc.NewServer(opt...)
+	}
 	return &server
+}
+
+func NewEmptyGrpcServer() *GrpcServer {
+	return NewGrpcServer()
 }
 
 func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
