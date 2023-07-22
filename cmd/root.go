@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/modular"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
@@ -32,6 +33,8 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	customFormatter.FullTimestamp = true
 	logrus.SetFormatter(customFormatter)
+
+	rootCmd.AddCommand(modular.GetWorkCmd())
 }
 
 func GetRootCmd() *cobra.Command {

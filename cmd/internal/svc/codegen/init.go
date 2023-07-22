@@ -1,21 +1,14 @@
 package codegen
 
 import (
-	"fmt"
-	"github.com/go-git/go-billy/v5/osfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/cache"
-	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/common"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 	"text/template"
 )
 
@@ -111,22 +104,6 @@ require (
 	github.com/unionj-cloud/go-doudou/v2 ` + version.Release + `
 )`
 
-const gitignoreTmpl = `# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-**/*.local
-.DS_Store
-.idea`
-
 const envTmpl = ``
 
 const dockerignorefileTmpl = `**/*.local
@@ -168,13 +145,6 @@ COPY .env* ./
 ENTRYPOINT ["/repo/api"]
 `
 
-func getGoVersionNum(goVersion string) string {
-	vnums := sliceutils.StringSlice2InterfaceSlice(strings.Split(strings.TrimPrefix(strings.TrimSpace(goVersion), "go"), "."))
-	nums := make([]interface{}, 2)
-	copy(nums, vnums)
-	return fmt.Sprintf("%s.%s", nums...)
-}
-
 // InitProj inits a service project
 // dir is root path
 // modName is module name
@@ -189,21 +159,19 @@ func InitProj(dir string, modName string, runner executils.Runner, genSvcGo bool
 		f         *os.File
 		tpl       *template.Template
 		envfile   string
-		out       []byte
 	)
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
 	_ = os.MkdirAll(dir, os.ModePerm)
 
-	gitInit(dir)
-	gitIgnore(dir)
+	common.InitGitRepo(dir)
+	common.GitIgnore(dir)
 
-	if out, err = runner.Output("go", "version"); err != nil {
+	goVersion, err = common.GetGoVersionNum(runner)
+	if err != nil {
 		panic(err)
 	}
-	// go version go1.13 darwin/amd64
-	goVersion = getGoVersionNum(strings.Split(strings.TrimSpace(string(out)), " ")[2])
 	if stringutils.IsEmpty(modName) {
 		modName = filepath.Base(dir)
 	}
@@ -333,10 +301,13 @@ func InitSvc(dir string) {
 	}
 	_ = os.MkdirAll(dir, os.ModePerm)
 
-	gitInit(dir)
-	gitIgnore(dir)
+	common.InitGitRepo(dir)
+	common.GitIgnore(dir)
 
-	goVersion = getGoVersionNum(runtime.Version())
+	goVersion, err = common.GetGoVersionNum(executils.CmdRunner{})
+	if err != nil {
+		panic(err)
+	}
 	modName := filepath.Base(dir)
 	modfile := filepath.Join(dir, "go.mod")
 	if _, err = os.Stat(modfile); os.IsNotExist(err) {
@@ -429,37 +400,4 @@ func InitSvc(dir string) {
 	} else {
 		logrus.Warnf("file %s already exists", dockerfile)
 	}
-}
-
-// gitIgnore adds .gitignore file
-func gitIgnore(dir string) {
-	var (
-		gitignorefile string
-		err           error
-		f             *os.File
-		tpl           *template.Template
-	)
-	gitignorefile = filepath.Join(dir, ".gitignore")
-	if _, err = os.Stat(gitignorefile); os.IsNotExist(err) {
-		if f, err = os.Create(gitignorefile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New(".gitignore.tmpl").Parse(gitignoreTmpl)
-		_ = tpl.Execute(f, nil)
-	} else {
-		logrus.Warnf("file %s already exists", ".gitignore")
-	}
-}
-
-// gitInit inits git repository.
-// Reinitialized existing Git repository is safe
-// https://stackoverflow.com/questions/5149694/does-running-git-init-twice-initialize-a-repository-or-reinitialize-an-existing
-func gitInit(dir string) {
-	fs := osfs.New(dir)
-	dot, _ := fs.Chroot(".git")
-	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
-
-	_, _ = git.Init(storage, fs)
 }
