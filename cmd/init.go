@@ -15,6 +15,7 @@ var dbOrm string
 var dbSoft string
 var dbGrpc bool
 var dbTablePrefix string
+var module bool
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -30,7 +31,7 @@ var initCmd = &cobra.Command{
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		options := []svc.SvcOption{svc.WithModName(modName), svc.WithDocPath(docfile)}
+		options := []svc.SvcOption{svc.WithModName(modName), svc.WithDocPath(docfile), svc.WithModule(module)}
 		dbConf := svc.DbConfig{
 			Driver:      dbDriver,
 			Dsn:         dbDsn,
@@ -50,6 +51,7 @@ var initCmd = &cobra.Command{
 func init() {
 	svcCmd.AddCommand(initCmd)
 
+	initCmd.Flags().BoolVar(&module, "module", false, `If true, a module will be initialized for building modular application`)
 	initCmd.Flags().StringVarP(&modName, "mod", "m", "", `Module name`)
 	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 	initCmd.Flags().StringVar(&dbOrm, "db_orm", "gorm", `Specify your preferable orm, currently only support gorm`)

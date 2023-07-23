@@ -119,7 +119,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 	}
 	funcMap["noSplitPattern"] = noSplitPattern
 	funcMap["lower"] = strings.ToLower
-	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
+	if tpl, err = template.New(httpHandlerTmpl).Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {

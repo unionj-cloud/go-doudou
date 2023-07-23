@@ -94,6 +94,8 @@ type Svc struct {
 	AllowGetWithReqBody bool
 
 	DbConfig *DbConfig
+
+	module bool
 }
 
 type DbConfig struct {
@@ -174,7 +176,13 @@ func (receiver *Svc) Http() {
 
 // Init inits a project
 func (receiver *Svc) Init() {
-	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner, receiver.DbConfig == nil)
+	codegen.InitProj(codegen.InitProjConfig{
+		Dir:      receiver.dir,
+		ModName:  receiver.ModName,
+		Runner:   receiver.runner,
+		GenSvcGo: receiver.DbConfig == nil,
+		Module:   receiver.module,
+	})
 	// generate or overwrite svc.go file
 	if receiver.DbConfig != nil {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
@@ -224,6 +232,12 @@ func WithDocPath(docfile string) SvcOption {
 func WithDbConfig(dbConfig *DbConfig) SvcOption {
 	return func(svc *Svc) {
 		svc.DbConfig = dbConfig
+	}
+}
+
+func WithModule(module bool) SvcOption {
+	return func(svc *Svc) {
+		svc.module = module
 	}
 }
 
