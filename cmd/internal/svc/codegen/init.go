@@ -3,6 +3,7 @@ package codegen
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
@@ -287,11 +288,11 @@ func InitProj(conf InitProjConfig) {
 	}
 
 	if module {
-		ParseDto(dir, "vo")
-		ParseDto(dir, "dto")
-		validate.ValidateDataType(dir)
+		parser.ParseDto(dir, "vo")
+		parser.ParseDto(dir, "dto")
+		validate.DataType(dir)
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-		validate.ValidateRestApi(dir, ic)
+		validate.RestApi(dir, ic)
 		genHttp(dir, ic)
 
 		// TODO

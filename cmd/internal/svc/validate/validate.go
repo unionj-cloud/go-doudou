@@ -3,7 +3,7 @@ package validate
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
@@ -12,14 +12,14 @@ import (
 	"strings"
 )
 
-func ValidateDataType(dir string) {
-	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), codegen.ExprStringP)
+func DataType(dir string) {
+	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), parser.ExprStringP)
 	vodir := filepath.Join(dir, "vo")
 	var files []string
 	if _, err := os.Stat(vodir); !os.IsNotExist(err) {
 		_ = filepath.Walk(vodir, astutils.Visit(&files))
 		for _, file := range files {
-			astutils.BuildStructCollector(file, codegen.ExprStringP)
+			astutils.BuildStructCollector(file, parser.ExprStringP)
 		}
 	}
 	dtodir := filepath.Join(dir, "dto")
@@ -27,24 +27,24 @@ func ValidateDataType(dir string) {
 		files = nil
 		_ = filepath.Walk(dtodir, astutils.Visit(&files))
 		for _, file := range files {
-			astutils.BuildStructCollector(file, codegen.ExprStringP)
+			astutils.BuildStructCollector(file, parser.ExprStringP)
 		}
 	}
 }
 
-// ValidateRestApi is checking whether parameter types in each of service interface methods valid or not
+// RestApi is checking whether parameter types in each of service interface methods valid or not
 // Only support at most one golang non-built-in type as parameter in a service interface method
 // because go-doudou cannot put more than one parameter into request body except v3.FileModel.
 // If there are v3.FileModel parameters, go-doudou will assume you want a multipart/form-data api
 // Support struct, map[string]ANY, built-in type and corresponding slice only
 // Not support anonymous struct as parameter
-func ValidateRestApi(dir string, ic astutils.InterfaceCollector) {
+func RestApi(dir string, ic astutils.InterfaceCollector) {
 	if len(ic.Interfaces) == 0 {
 		panic(errors.New("no service interface found"))
 	}
 	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
-		codegen.ParseDto(dir, "vo")
-		codegen.ParseDto(dir, "dto")
+		parser.ParseDto(dir, "vo")
+		parser.ParseDto(dir, "dto")
 	}
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)

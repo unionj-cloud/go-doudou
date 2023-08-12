@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	v3Helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"path/filepath"
 	"sort"
@@ -80,14 +76,14 @@ func toComment(comments []string) string {
 	return strings.TrimSuffix(b.String(), "\n")
 }
 
-func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerator) (service v3.Service, protoFile string) {
+func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p protov3.ProtoGenerator) (service protov3.Service, protoFile string) {
 	var (
-		err       error
-		svcname   string
-		fi        os.FileInfo
-		tpl       *template.Template
-		f         *os.File
-		grpcDir   string
+		err     error
+		svcname string
+		fi      os.FileInfo
+		tpl     *template.Template
+		f       *os.File
+		grpcDir string
 	)
 	grpcDir = filepath.Join(dir, "transport/grpc")
 	if err = os.MkdirAll(grpcDir, os.ModePerm); err != nil {
@@ -111,17 +107,17 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerato
 	for _, method := range ic.Interfaces[0].Methods {
 		service.Rpcs = append(service.Rpcs, p.NewRpc(method))
 	}
-	for k := range v3.ImportStore {
+	for k := range protov3.ImportStore {
 		service.Imports = append(service.Imports, k)
 	}
 	sort.Strings(service.Imports)
-	for _, v := range v3.MessageStore {
+	for _, v := range protov3.MessageStore {
 		service.Messages = append(service.Messages, v)
 	}
 	sort.SliceStable(service.Messages, func(i, j int) bool {
 		return service.Messages[i].Name < service.Messages[j].Name
 	})
-	for _, v := range v3.EnumStore {
+	for _, v := range protov3.EnumStore {
 		service.Enums = append(service.Enums, v)
 	}
 	sort.SliceStable(service.Enums, func(i, j int) bool {
@@ -138,66 +134,4 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p v3.ProtoGenerato
 		panic(err)
 	}
 	return
-}
-
-func messagesOf(vofile string, p v3.ProtoGenerator) []v3.Message {
-	fset := token.NewFileSet()
-	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
-	if err != nil {
-		panic(err)
-	}
-	sc := astutils.NewStructCollector(ExprStringP)
-	ast.Walk(sc, root)
-	structs := sc.DocFlatEmbed()
-	var ret []v3.Message
-	for _, item := range structs {
-		ret = append(ret, p.NewMessage(item))
-	}
-	return ret
-}
-
-func ParseDtoGrpc(dir string, p v3.ProtoGenerator, dtoDir string) {
-	var (
-		err        error
-		messages   []v3.Message
-		allMethods map[string][]astutils.MethodMeta
-		allConsts  map[string][]string
-	)
-	vodir := filepath.Join(dir, dtoDir)
-	if _, err = os.Stat(vodir); os.IsNotExist(err) {
-		return
-	}
-	var files []string
-	err = filepath.Walk(vodir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
-	}
-	for _, file := range files {
-		v3.MessageNames = append(v3.MessageNames, getSchemaNames(file)...)
-	}
-	allMethods = make(map[string][]astutils.MethodMeta)
-	allConsts = make(map[string][]string)
-	for _, file := range files {
-		sc := astutils.EnumsOf(file, ExprStringP)
-		for k, v := range sc.Methods {
-			allMethods[k] = append(allMethods[k], v...)
-		}
-		for k, v := range sc.Consts {
-			allConsts[k] = append(allConsts[k], v...)
-		}
-	}
-	for k, v := range allMethods {
-		if v3Helper.IsEnumType(v) {
-			v3.EnumStore[k] = p.NewEnum(astutils.EnumMeta{
-				Name:   k,
-				Values: allConsts[k],
-			})
-		}
-	}
-	for _, file := range files {
-		messages = append(messages, messagesOf(file, p)...)
-	}
-	for _, item := range messages {
-		v3.MessageStore[item.Name] = item
-	}
 }

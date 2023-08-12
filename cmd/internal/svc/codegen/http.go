@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"github.com/iancoleman/strcase"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 )
 
@@ -13,5 +14,5 @@ func genHttp(dir string, ic astutils.InterfaceCollector) {
 		CaseConvertor: strcase.ToLowerCamel,
 	})
 	GenSvcImpl(dir, ic)
-	GenDoc(dir, ic, GenDocConfig{})
+	parser.GenDoc(dir, ic, parser.GenDocConfig{})
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
@@ -23,11 +24,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-)
-
-const (
-	split = iota
-	nosplit
 )
 
 //go:generate mockgen -destination ../../mock/mock_svc.go -package mock -source=./svc.go
@@ -128,12 +124,12 @@ func (receiver *Svc) SetRunner(runner executils.Runner) {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
-	codegen.ParseDto(dir, "vo")
-	codegen.ParseDto(dir, "dto")
-	validate.ValidateDataType(dir)
+	parser.ParseDto(dir, "vo")
+	parser.ParseDto(dir, "dto")
+	validate.DataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validate.ValidateRestApi(dir, ic)
+	validate.RestApi(dir, ic)
 
 	codegen.GenConfig(dir)
 	codegen.GenHttpMiddleware(dir)
@@ -163,7 +159,7 @@ func (receiver *Svc) Http() {
 		codegen.GenGoClientProxy(dir, ic)
 	}
 	codegen.GenSvcImpl(dir, ic)
-	codegen.GenDoc(dir, ic, codegen.GenDocConfig{
+	parser.GenDoc(dir, ic, parser.GenDocConfig{
 		RoutePatternStrategy: receiver.RoutePatternStrategy,
 		AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
 	})
@@ -484,12 +480,12 @@ func (receiver *Svc) Upgrade(version string) {
 
 func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
 	dir := receiver.dir
-	validate.ValidateDataType(dir)
+	validate.DataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validate.ValidateRestApi(dir, ic)
+	validate.RestApi(dir, ic)
 	codegen.GenConfig(dir)
-	codegen.ParseDtoGrpc(dir, p, "vo")
-	codegen.ParseDtoGrpc(dir, p, "dto")
+	parser.ParseDtoGrpc(dir, p, "vo")
+	parser.ParseDtoGrpc(dir, p, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 	if err := receiver.runner.Run("protoc", "--proto_path=.",

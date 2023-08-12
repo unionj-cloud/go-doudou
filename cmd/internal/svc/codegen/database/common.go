@@ -5,6 +5,7 @@ import (
 	"github.com/docker/docker/pkg/fileutils"
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -136,9 +137,9 @@ func (b *AbstractBaseGenerator) GenService() {
 
 	b.svcGo()
 
-	validate.ValidateDataType(b.Dir)
+	validate.DataType(b.Dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(b.Dir, "svc.go"), astutils.ExprString)
-	validate.ValidateRestApi(b.Dir, ic)
+	validate.RestApi(b.Dir, ic)
 
 	codegen.GenConfig(b.Dir)
 
@@ -169,13 +170,13 @@ func (b *AbstractBaseGenerator) GenService() {
 		})
 		codegen.GenGoClientProxy(b.Dir, ic)
 	}
-	codegen.GenDoc(b.Dir, ic, codegen.GenDocConfig{
+	parser.GenDoc(b.Dir, ic, parser.GenDocConfig{
 		AllowGetWithReqBody: b.AllowGetWithReqBody,
 	})
 
 	if b.Grpc {
 		p := v3.NewProtoGenerator(v3.WithFieldNamingFunc(b.ProtoFieldNamingFn()))
-		codegen.ParseDtoGrpc(b.Dir, p, "dto")
+		parser.ParseDtoGrpc(b.Dir, p, "dto")
 		grpcSvc, protoFile := codegen.GenGrpcProto(b.Dir, ic, p)
 		protoFile, _ = filepath.Rel(b.Dir, protoFile)
 		fmt.Println(protoFile)
