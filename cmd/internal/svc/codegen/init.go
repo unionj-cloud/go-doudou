@@ -198,6 +198,11 @@ func InitProj(conf InitProjConfig) {
 	} else {
 		logrus.Warnf("file %s already exists", modfile)
 	}
+	if module {
+		if err = runner.Run("go", "work", "use", filepath.Base(dir)); err != nil {
+			panic(err)
+		}
+	}
 
 	envfile = filepath.Join(dir, ".env")
 	if _, err = os.Stat(envfile); os.IsNotExist(err) {
@@ -227,7 +232,7 @@ func InitProj(conf InitProjConfig) {
 		}
 		defer f.Close()
 
-		tpl, _ = template.New("dto.go.tmpl").Parse(dtoTmpl)
+		tpl, _ = template.New(dtoTmpl).Parse(dtoTmpl)
 		_ = tpl.Execute(f, struct {
 			Version string
 		}{
@@ -246,7 +251,7 @@ func InitProj(conf InitProjConfig) {
 			}
 			defer f.Close()
 
-			tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
+			tpl, _ = template.New(svcTmpl).Parse(svcTmpl)
 			_ = tpl.Execute(f, struct {
 				DtoPackage string
 				SvcName    string
@@ -288,7 +293,6 @@ func InitProj(conf InitProjConfig) {
 	}
 
 	if module {
-		parser.ParseDto(dir, "vo")
 		parser.ParseDto(dir, "dto")
 		validate.DataType(dir)
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
@@ -297,8 +301,8 @@ func InitProj(conf InitProjConfig) {
 
 		// TODO
 		// genGrpc(dir, ic)
-		genPlugin(dir, ic)
-		genMainModule(dir)
+		//genPlugin(dir, ic)
+		//genMainModule(dir)
 	}
 }
 

@@ -433,7 +433,7 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, config GenDocConfig) {
 	if err != nil {
 		panic(err)
 	}
-	if tpl, err = template.New("doc.go.tmpl").Parse(gofileTmpl); err != nil {
+	if tpl, err = template.New(gofileTmpl).Parse(gofileTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {

@@ -186,7 +186,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 
 	funcMap := make(map[string]interface{})
 	funcMap["toCamel"] = strcase.ToCamel
-	if tpl, err = template.New("svcimpl.go.tmpl").Funcs(funcMap).Parse(tmpl); err != nil {
+	if tpl, err = template.New(tmpl).Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&buf, struct {
@@ -212,7 +212,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, buf.Bytes()...)
-	if tpl, err = template.New("simportimpl.go.tmpl").Parse(svcimportTmpl); err != nil {
+	if tpl, err = template.New(svcimportTmpl).Parse(svcimportTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&importBuf, struct {

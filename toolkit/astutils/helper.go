@@ -55,12 +55,15 @@ func GetPkgPath(filePath string) string {
 		Dir:  filePath,
 	})
 	if err != nil {
-		errors.WithStack(err)
-		return ""
+		panic(err)
 	}
 	if len(pkgs) == 0 {
-		errors.WithStack(errors.New("no package found"))
-		return ""
+		panic(errors.New("no package found"))
+	}
+	if len(pkgs[0].Errors) > 0 {
+		for _, err = range pkgs[0].Errors {
+			panic(err)
+		}
 	}
 	return pkgs[0].PkgPath
 }

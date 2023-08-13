@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+const testDir = "testdata"
+
 func TestGenConfig(t *testing.T) {
 	dir := testDir + "config"
 	InitSvc(dir)

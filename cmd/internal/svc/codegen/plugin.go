@@ -12,24 +12,24 @@ import (
 
 func genPlugin(dir string, ic astutils.InterfaceCollector) {
 	var (
-		err      error
-		mainfile string
-		f        *os.File
-		tpl      *template.Template
-		cmdDir   string
+		err        error
+		pluginFile string
+		f          *os.File
+		tpl        *template.Template
+		pluginDir  string
 	)
-	cmdDir = filepath.Join(dir, "cmd")
-	if err = MkdirAll(cmdDir, os.ModePerm); err != nil {
+	pluginDir = filepath.Join(dir, "plugin")
+	if err = MkdirAll(pluginDir, os.ModePerm); err != nil {
 		panic(err)
 	}
-	mainfile = filepath.Join(cmdDir, "main.go")
-	if _, err = Stat(mainfile); os.IsNotExist(err) {
-		if f, err = Create(mainfile); err != nil {
+	pluginFile = filepath.Join(pluginDir, "plugin.go")
+	if _, err = Stat(pluginFile); os.IsNotExist(err) {
+		if f, err = Create(pluginFile); err != nil {
 			panic(err)
 		}
 		defer f.Close()
 
-		if tpl, err = template.New(templates.MainModuleTmpl).Parse(templates.MainModuleTmpl); err != nil {
+		if tpl, err = template.New(templates.PluginTmpl).Parse(templates.PluginTmpl); err != nil {
 			panic(err)
 		}
 
@@ -59,6 +59,6 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 			panic(err)
 		}
 	} else {
-		logrus.Warnf("file %s already exists", mainfile)
+		logrus.Warnf("file %s already exists", pluginFile)
 	}
 }

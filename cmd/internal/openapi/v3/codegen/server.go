@@ -230,7 +230,7 @@ func (receiver *OpenAPICodeGenerator) GenGoInterface(output string, paths map[st
 	funcMap["restyMethod"] = RestyMethod
 	funcMap["toUpper"] = strings.ToUpper
 	funcMap["isOptional"] = IsOptional
-	tpl, _ := template.New("svc.go.tmpl").Funcs(funcMap).Parse(svcTmpl)
+	tpl, _ := template.New(svcTmpl).Funcs(funcMap).Parse(svcTmpl)
 	var sqlBuf bytes.Buffer
 	_ = tpl.Execute(&sqlBuf, struct {
 		Meta       astutils.InterfaceMeta

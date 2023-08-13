@@ -192,7 +192,7 @@ func (receiver *Svc) Init() {
 			Grpc:        receiver.DbConfig.Grpc,
 		})
 		gen.GenService()
-	} else {
+	} else if !receiver.module {
 		if stringutils.IsEmpty(receiver.DocPath) {
 			matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
 			if len(matches) > 0 {
