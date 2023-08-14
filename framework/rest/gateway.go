@@ -126,12 +126,12 @@ func Proxy(proxyConfig ProxyConfig) func(inner http.Handler) http.Handler {
 	return func(inner http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if isWebSocket(r) || r.Header.Get(HeaderAccept) == "text/event-stream" {
-				http.Error(w, fmt.Sprintf("not support"), http.StatusBadGateway)
+				http.Error(w, "not support", http.StatusBadGateway)
 				return
 			}
 			parts := strings.Split(r.URL.Path, "/")
 			if len(parts) <= 1 {
-				http.Error(w, fmt.Sprintf("request url must be prefixed / + service name"), http.StatusBadGateway)
+				http.Error(w, "request url must be prefixed / + service name", http.StatusBadGateway)
 				return
 			}
 			serviceName := parts[1]
