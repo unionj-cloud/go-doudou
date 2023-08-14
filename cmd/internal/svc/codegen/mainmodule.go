@@ -1,12 +1,14 @@
 package codegen
 
 import (
+	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -17,6 +19,7 @@ func genMainModule(dir string) {
 		f        *os.File
 		tpl      *template.Template
 		cmdDir   string
+		buf      bytes.Buffer
 	)
 	cmdDir = filepath.Join(dir, "cmd")
 	if err = MkdirAll(cmdDir, os.ModePerm); err != nil {
@@ -33,7 +36,7 @@ func genMainModule(dir string) {
 			panic(err)
 		}
 		pluginPkg := astutils.GetPkgPath(filepath.Join(dir, "plugin"))
-		if err = tpl.Execute(f, struct {
+		if err = tpl.Execute(&buf, struct {
 			PluginPackage string
 			Version       string
 		}{
@@ -42,6 +45,7 @@ func genMainModule(dir string) {
 		}); err != nil {
 			panic(err)
 		}
+		astutils.FixImport([]byte(strings.TrimSpace(buf.String())), mainfile)
 	} else {
 		logrus.Warnf("file %s already exists", mainfile)
 	}

@@ -96,6 +96,14 @@ type RestServer struct {
 	panicHandler func(inner http.Handler) http.Handler
 }
 
+func path2key(method, path string) string {
+	var sb strings.Builder
+	sb.WriteString(method)
+	sb.WriteString(":")
+	sb.WriteString(path)
+	return sb.String()
+}
+
 func (srv *RestServer) printRoutes() {
 	if !framework.CheckDev() {
 		return
@@ -110,14 +118,19 @@ func (srv *RestServer) printRoutes() {
 	all = append(all, srv.bizRoutes...)
 	all = append(all, srv.gddRoutes...)
 	all = append(all, srv.debugRoutes...)
+	routes := make(map[string]struct{})
 	for _, r := range all {
-		if strings.HasPrefix(r.Pattern, gddPathPrefix) || strings.HasPrefix(r.Pattern, debugPathPrefix) {
-			data = append(data, []string{r.Name, r.Method, r.Pattern})
-		} else {
-			data = append(data, []string{r.Name, r.Method, path.Clean(rr + r.Pattern)})
+		key := path2key(r.Method, r.Pattern)
+		_, ok := routes[key]
+		if !ok {
+			routes[key] = struct{}{}
+			if strings.HasPrefix(r.Pattern, gddPathPrefix) || strings.HasPrefix(r.Pattern, debugPathPrefix) {
+				data = append(data, []string{r.Name, r.Method, r.Pattern})
+			} else {
+				data = append(data, []string{r.Name, r.Method, path.Clean(rr + r.Pattern)})
+			}
 		}
 	}
-
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 	table.SetHeader([]string{"Name", "Method", "Pattern"})

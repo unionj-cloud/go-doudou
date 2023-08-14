@@ -1,12 +1,14 @@
 package codegen
 
 import (
+	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -17,6 +19,7 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 		f          *os.File
 		tpl        *template.Template
 		pluginDir  string
+		buf        bytes.Buffer
 	)
 	pluginDir = filepath.Join(dir, "plugin")
 	if err = MkdirAll(pluginDir, os.ModePerm); err != nil {
@@ -39,7 +42,7 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 		transGrpcPkg := astutils.GetPkgPath(filepath.Join(dir, "transport", "grpc"))
 		svcName := ic.Interfaces[0].Name
 		alias := ic.Package.Name
-		if err = tpl.Execute(f, struct {
+		if err = tpl.Execute(&buf, struct {
 			ServicePackage       string
 			ConfigPackage        string
 			TransportGrpcPackage string
@@ -58,6 +61,7 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 		}); err != nil {
 			panic(err)
 		}
+		astutils.FixImport([]byte(strings.TrimSpace(buf.String())), pluginFile)
 	} else {
 		logrus.Warnf("file %s already exists", pluginFile)
 	}

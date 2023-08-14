@@ -43,7 +43,7 @@ type ISvc interface {
 	DoWatch()
 	Run(watch bool)
 	Upgrade(version string)
-	Grpc(p v3.ProtoGenerator)
+	Grpc()
 }
 
 // Svc wraps all config properties for commands
@@ -91,7 +91,8 @@ type Svc struct {
 
 	DbConfig *DbConfig
 
-	module bool
+	module         bool
+	protoGenerator v3.ProtoGenerator
 }
 
 type DbConfig struct {
@@ -173,11 +174,12 @@ func (receiver *Svc) Http() {
 // Init inits a project
 func (receiver *Svc) Init() {
 	codegen.InitProj(codegen.InitProjConfig{
-		Dir:      receiver.dir,
-		ModName:  receiver.ModName,
-		Runner:   receiver.runner,
-		GenSvcGo: receiver.DbConfig == nil,
-		Module:   receiver.module,
+		Dir:            receiver.dir,
+		ModName:        receiver.ModName,
+		Runner:         receiver.runner,
+		GenSvcGo:       receiver.DbConfig == nil,
+		Module:         receiver.module,
+		ProtoGenerator: receiver.protoGenerator,
 	})
 	// generate or overwrite svc.go file
 	if receiver.DbConfig != nil {
@@ -234,6 +236,12 @@ func WithDbConfig(dbConfig *DbConfig) SvcOption {
 func WithModule(module bool) SvcOption {
 	return func(svc *Svc) {
 		svc.module = module
+	}
+}
+
+func WithProtoGenerator(protoGenerator v3.ProtoGenerator) SvcOption {
+	return func(svc *Svc) {
+		svc.protoGenerator = protoGenerator
 	}
 }
 
@@ -478,15 +486,15 @@ func (receiver *Svc) Upgrade(version string) {
 	}
 }
 
-func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
+func (receiver *Svc) Grpc() {
 	dir := receiver.dir
 	validate.DataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.RestApi(dir, ic)
 	codegen.GenConfig(dir)
-	parser.ParseDtoGrpc(dir, p, "vo")
-	parser.ParseDtoGrpc(dir, p, "dto")
-	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
+	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "vo")
+	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
+	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 	if err := receiver.runner.Run("protoc", "--proto_path=.",
 		"--go_out=.",

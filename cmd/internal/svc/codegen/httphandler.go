@@ -68,8 +68,6 @@ var RouteAnnotationStore = framework.AnnotationStore{
 }
 `
 
-
-
 // GenHttpHandler generates http handler interface and routes
 func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
@@ -79,7 +77,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 		tpl         *template.Template
 		httpDir     string
 		source      string
-		sqlBuf      bytes.Buffer
+		buf         bytes.Buffer
 		fi          os.FileInfo
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
@@ -110,7 +108,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 	if tpl, err = template.New(httpHandlerTmpl).Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
 		panic(err)
 	}
-	if err = tpl.Execute(&sqlBuf, struct {
+	if err = tpl.Execute(&buf, struct {
 		RoutePatternStrategy int
 		Meta                 astutils.InterfaceMeta
 		Version              string
@@ -121,6 +119,6 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 	}); err != nil {
 		panic(err)
 	}
-	source = strings.TrimSpace(sqlBuf.String())
+	source = strings.TrimSpace(buf.String())
 	astutils.FixImport([]byte(source), handlerfile)
 }

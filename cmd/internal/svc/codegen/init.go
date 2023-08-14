@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
@@ -9,8 +10,10 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/common"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -142,11 +145,12 @@ ENTRYPOINT ["/repo/api"]
 `
 
 type InitProjConfig struct {
-	Dir      string
-	ModName  string
-	Runner   executils.Runner
-	GenSvcGo bool
-	Module   bool
+	Dir            string
+	ModName        string
+	Runner         executils.Runner
+	GenSvcGo       bool
+	Module         bool
+	ProtoGenerator v3.ProtoGenerator
 }
 
 // InitProj inits a service project
@@ -164,14 +168,16 @@ func InitProj(conf InitProjConfig) {
 		tpl       *template.Template
 		envfile   string
 	)
-	dir, modName, runner, genSvcGo, module := conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module
+	dir, modName, runner, genSvcGo, module, protoGenerator := conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
 	_ = os.MkdirAll(dir, os.ModePerm)
 
-	common.InitGitRepo(dir)
-	common.GitIgnore(dir)
+	if !module {
+		common.InitGitRepo(dir)
+		common.GitIgnore(dir)
+	}
 
 	goVersion, err = common.GetGoVersionNum(runner)
 	if err != nil {
@@ -298,11 +304,20 @@ func InitProj(conf InitProjConfig) {
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 		validate.RestApi(dir, ic)
 		genHttp(dir, ic)
-
-		// TODO
-		// genGrpc(dir, ic)
-		//genPlugin(dir, ic)
-		//genMainModule(dir)
+		genGrpc(dir, ic, runner, protoGenerator)
+		genPlugin(dir, ic)
+		genMainModule(dir)
+		mainMainFile := filepath.Join(filepath.Dir(dir), "main", "cmd", "main.go")
+		fileContent, err := ioutil.ReadFile(mainMainFile)
+		if err != nil {
+			panic(err)
+		}
+		pluginPkg := astutils.GetPkgPath(filepath.Join(dir, "plugin"))
+		original := astutils.AppendImportStatements(fileContent, []byte(fmt.Sprintf(`_ "%s"`, pluginPkg)))
+		astutils.FixImport(original, mainMainFile)
+		if err = runner.Run("go", "work", "sync"); err != nil {
+			panic(err)
+		}
 	}
 }
 

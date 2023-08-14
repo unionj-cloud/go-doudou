@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
@@ -43,6 +45,12 @@ var initCmd = &cobra.Command{
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
 		}
+		fn := strcase.ToLowerCamel
+		switch naming {
+		case "snake":
+			fn = strcase.ToSnake
+		}
+		options = append(options, svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},
@@ -60,4 +68,5 @@ func init() {
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
+	initCmd.Flags().StringVarP(&naming, "naming", "n", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
 }
