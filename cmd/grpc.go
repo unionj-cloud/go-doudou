@@ -15,13 +15,13 @@ var grpcCmd = &cobra.Command{
 	Short: "generate grpc service",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		s := svc.NewSvc("")
 		fn := strcase.ToLowerCamel
 		switch naming {
 		case "snake":
 			fn = strcase.ToSnake
 		}
-		s.Grpc(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn)))
+		s := svc.NewSvc("", svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
+		s.Grpc()
 	},
 }
 

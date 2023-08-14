@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"github.com/radovskyb/watcher"
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"os"
 	"os/exec"
@@ -168,7 +169,7 @@ func Test_checkIc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -194,7 +195,7 @@ func Test_checkIc2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -220,7 +221,7 @@ func Test_checkIc1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -246,7 +247,7 @@ func Test_checkIc_no_interface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -272,7 +273,7 @@ func Test_checkIc_input_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -298,7 +299,7 @@ func Test_checkIc_output_anonystruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Panics(t, func() {
-				svc.ValidateRestApi(testDir, ic)
+				validate.RestApi(testDir, ic)
 			})
 		})
 	}
@@ -322,13 +323,13 @@ func TestSvc_Shutdown(t *testing.T) {
 
 func Test_validateDataType(t *testing.T) {
 	assert.NotPanics(t, func() {
-		svc.ValidateDataType(testDir)
+		validate.DataType(testDir)
 	})
 }
 
 func Test_validateDataType_shouldpanic(t *testing.T) {
 	assert.Panics(t, func() {
-		svc.ValidateDataType(pathutils.Abs("testdata1"))
+		validate.DataType(pathutils.Abs("testdata1"))
 	})
 }
 

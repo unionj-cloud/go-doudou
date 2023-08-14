@@ -184,9 +184,11 @@ type Router struct {
 	// unrecovered panics.
 	PanicHandler func(http.ResponseWriter, *http.Request, interface{})
 
-	registeredPaths map[string][]string
+	// key is method
+	registeredPaths map[string]struct{}
 	handlers        map[string]Handle
 	dynamicHandlers []map[*urlpath.Path]Handle
+	methodPaths     map[string]struct{}
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -202,9 +204,10 @@ func New() *Router {
 	r := &Router{
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
-		registeredPaths:        make(map[string][]string),
+		registeredPaths:        make(map[string]struct{}),
 		handlers:               make(map[string]Handle),
 		dynamicHandlers:        make([]map[*urlpath.Path]Handle, len(httpMethods)),
+		methodPaths:            make(map[string]struct{}),
 	}
 	for i := range httpMethods {
 		r.dynamicHandlers[i] = make(map[*urlpath.Path]Handle)
@@ -347,7 +350,7 @@ func (r *Router) Handle(method, path string, handle Handle, name ...string) {
 		panic("unknown http method")
 	}
 	_, f := r.registeredPaths[method]
-	r.registeredPaths[method] = append(r.registeredPaths[method], path)
+	r.registeredPaths[method] = struct{}{}
 	if !f {
 		r.globalAllowed = r.allowed("*", "")
 	}
@@ -357,11 +360,16 @@ func (r *Router) Handle(method, path string, handle Handle, name ...string) {
 		}
 		handle = r.saveMatchedRoutePath(name[0], handle)
 	}
-	if strings.Contains(path, "*") || strings.Contains(path, ":") {
-		pt := urlpath.New(path)
-		r.dynamicHandlers[idx][&pt] = handle
-	} else {
-		r.handlers[path2key(method, path)] = handle
+	key := path2key(method, path)
+	_, ok := r.methodPaths[key]
+	if !ok {
+		r.methodPaths[key] = struct{}{}
+		if strings.Contains(path, "*") || strings.Contains(path, ":") {
+			pt := urlpath.New(path)
+			r.dynamicHandlers[idx][&pt] = handle
+		} else {
+			r.handlers[key] = handle
+		}
 	}
 }
 

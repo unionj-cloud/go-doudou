@@ -5,14 +5,15 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/executils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
@@ -23,11 +24,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-)
-
-const (
-	split = iota
-	nosplit
 )
 
 //go:generate mockgen -destination ../../mock/mock_svc.go -package mock -source=./svc.go
@@ -47,7 +43,7 @@ type ISvc interface {
 	DoWatch()
 	Run(watch bool)
 	Upgrade(version string)
-	Grpc(p v3.ProtoGenerator)
+	Grpc()
 }
 
 // Svc wraps all config properties for commands
@@ -94,6 +90,9 @@ type Svc struct {
 	AllowGetWithReqBody bool
 
 	DbConfig *DbConfig
+
+	module         bool
+	protoGenerator v3.ProtoGenerator
 }
 
 type DbConfig struct {
@@ -126,12 +125,12 @@ func (receiver *Svc) SetRunner(runner executils.Runner) {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
-	codegen.ParseDto(dir, "vo")
-	codegen.ParseDto(dir, "dto")
-	validate.ValidateDataType(dir)
+	parser.ParseDto(dir, "vo")
+	parser.ParseDto(dir, "dto")
+	validate.DataType(dir)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validate.ValidateRestApi(dir, ic)
+	validate.RestApi(dir, ic)
 
 	codegen.GenConfig(dir)
 	codegen.GenHttpMiddleware(dir)
@@ -161,7 +160,7 @@ func (receiver *Svc) Http() {
 		codegen.GenGoClientProxy(dir, ic)
 	}
 	codegen.GenSvcImpl(dir, ic)
-	codegen.GenDoc(dir, ic, codegen.GenDocConfig{
+	parser.GenDoc(dir, ic, parser.GenDocConfig{
 		RoutePatternStrategy: receiver.RoutePatternStrategy,
 		AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
 	})
@@ -174,7 +173,14 @@ func (receiver *Svc) Http() {
 
 // Init inits a project
 func (receiver *Svc) Init() {
-	codegen.InitProj(receiver.dir, receiver.ModName, receiver.runner, receiver.DbConfig == nil)
+	codegen.InitProj(codegen.InitProjConfig{
+		Dir:            receiver.dir,
+		ModName:        receiver.ModName,
+		Runner:         receiver.runner,
+		GenSvcGo:       receiver.DbConfig == nil,
+		Module:         receiver.module,
+		ProtoGenerator: receiver.protoGenerator,
+	})
 	// generate or overwrite svc.go file
 	if receiver.DbConfig != nil {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
@@ -188,7 +194,7 @@ func (receiver *Svc) Init() {
 			Grpc:        receiver.DbConfig.Grpc,
 		})
 		gen.GenService()
-	} else {
+	} else if !receiver.module {
 		if stringutils.IsEmpty(receiver.DocPath) {
 			matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
 			if len(matches) > 0 {
@@ -224,6 +230,18 @@ func WithDocPath(docfile string) SvcOption {
 func WithDbConfig(dbConfig *DbConfig) SvcOption {
 	return func(svc *Svc) {
 		svc.DbConfig = dbConfig
+	}
+}
+
+func WithModule(module bool) SvcOption {
+	return func(svc *Svc) {
+		svc.module = module
+	}
+}
+
+func WithProtoGenerator(protoGenerator v3.ProtoGenerator) SvcOption {
+	return func(svc *Svc) {
+		svc.protoGenerator = protoGenerator
 	}
 }
 
@@ -468,15 +486,15 @@ func (receiver *Svc) Upgrade(version string) {
 	}
 }
 
-func (receiver *Svc) Grpc(p v3.ProtoGenerator) {
+func (receiver *Svc) Grpc() {
 	dir := receiver.dir
-	validate.ValidateDataType(dir)
+	validate.DataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validate.ValidateRestApi(dir, ic)
+	validate.RestApi(dir, ic)
 	codegen.GenConfig(dir)
-	codegen.ParseDtoGrpc(dir, p, "vo")
-	codegen.ParseDtoGrpc(dir, p, "dto")
-	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, p)
+	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "vo")
+	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
+	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 	if err := receiver.runner.Run("protoc", "--proto_path=.",
 		"--go_out=.",

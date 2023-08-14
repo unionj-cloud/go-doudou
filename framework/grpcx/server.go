@@ -34,15 +34,13 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(opt ...grpc.ServerOption) *GrpcServer {
-	server := GrpcServer{}
-	if len(opt) > 0 {
-		server.Server = grpc.NewServer(opt...)
+	return &GrpcServer{
+		Server: grpc.NewServer(opt...),
 	}
-	return &server
 }
 
 func NewEmptyGrpcServer() *GrpcServer {
-	return NewGrpcServer()
+	return &GrpcServer{}
 }
 
 func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption) *GrpcServer {
@@ -90,6 +88,9 @@ func (srv *GrpcServer) Run() {
 
 // RunWithPipe runs grpc server
 func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
+	if srv.Server == nil {
+		return
+	}
 	banner.Print()
 	config.PrintLock.Lock()
 	register.NewGrpc(srv.data)

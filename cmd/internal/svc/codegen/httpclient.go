@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
@@ -434,13 +435,13 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
-	funcMap["pattern"] = apiPattern
+	funcMap["pattern"] = parser.ApiPattern
 	funcMap["lower"] = strings.ToLower
 	funcMap["contains"] = strings.Contains
 	funcMap["isBuiltin"] = v3helper.IsBuiltin
 	funcMap["restyMethod"] = restyMethod
 	funcMap["toUpper"] = strings.ToUpper
-	funcMap["noSplitPattern"] = noSplitPattern
+	funcMap["noSplitPattern"] = parser.NoSplitPattern
 	funcMap["isOptional"] = v3helper.IsOptional
 	funcMap["convertCase"] = config.CaseConvertor
 	funcMap["isSlice"] = v3helper.IsSlice

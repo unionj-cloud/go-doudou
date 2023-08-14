@@ -28,7 +28,7 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.11.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
@@ -157,8 +157,9 @@ require (
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
@@ -218,8 +219,8 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.7
 	go.uber.org/automaxprocs v1.5.2
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee
-	golang.org/x/text v0.9.0
+	golang.org/x/exp v0.0.0-20220909182711-5c715a9e8561
+	golang.org/x/text v0.12.0
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0
 	gorm.io/driver/clickhouse v0.5.0

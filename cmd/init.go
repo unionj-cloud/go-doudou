@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
@@ -15,6 +17,7 @@ var dbOrm string
 var dbSoft string
 var dbGrpc bool
 var dbTablePrefix string
+var module bool
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -30,7 +33,7 @@ var initCmd = &cobra.Command{
 		if svcdir, err = pathutils.FixPath(svcdir, ""); err != nil {
 			logrus.Panicln(err)
 		}
-		options := []svc.SvcOption{svc.WithModName(modName), svc.WithDocPath(docfile)}
+		options := []svc.SvcOption{svc.WithModName(modName), svc.WithDocPath(docfile), svc.WithModule(module)}
 		dbConf := svc.DbConfig{
 			Driver:      dbDriver,
 			Dsn:         dbDsn,
@@ -42,6 +45,12 @@ var initCmd = &cobra.Command{
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
 		}
+		fn := strcase.ToLowerCamel
+		switch naming {
+		case "snake":
+			fn = strcase.ToSnake
+		}
+		options = append(options, svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},
@@ -50,6 +59,7 @@ var initCmd = &cobra.Command{
 func init() {
 	svcCmd.AddCommand(initCmd)
 
+	initCmd.Flags().BoolVar(&module, "module", false, `If true, a module will be initialized for building modular application`)
 	initCmd.Flags().StringVarP(&modName, "mod", "m", "", `Module name`)
 	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 	initCmd.Flags().StringVar(&dbOrm, "db_orm", "gorm", `Specify your preferable orm, currently only support gorm`)
@@ -58,4 +68,5 @@ func init() {
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
+	initCmd.Flags().StringVarP(&naming, "naming", "n", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
 }

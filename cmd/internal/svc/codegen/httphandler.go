@@ -2,14 +2,13 @@ package codegen
 
 import (
 	"bytes"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 
-	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 )
@@ -69,19 +68,6 @@ var RouteAnnotationStore = framework.AnnotationStore{
 }
 `
 
-func noSplitPattern(method string) string {
-	httpMethods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete}
-	snake := strcase.ToSnake(method)
-	splits := strings.Split(snake, "_")
-	head := strings.ToUpper(splits[0])
-	for _, m := range httpMethods {
-		if head == m {
-			return strings.ToLower(method[len(m):])
-		}
-	}
-	return strings.ToLower(method)
-}
-
 // GenHttpHandler generates http handler interface and routes
 func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStrategy int) {
 	var (
@@ -91,7 +77,7 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 		tpl         *template.Template
 		httpDir     string
 		source      string
-		sqlBuf      bytes.Buffer
+		buf         bytes.Buffer
 		fi          os.FileInfo
 	)
 	httpDir = filepath.Join(dir, "transport/httpsrv")
@@ -117,12 +103,12 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 		_, endpoint := astutils.Pattern(input)
 		return endpoint
 	}
-	funcMap["noSplitPattern"] = noSplitPattern
+	funcMap["noSplitPattern"] = parser.NoSplitPattern
 	funcMap["lower"] = strings.ToLower
-	if tpl, err = template.New("handler.go.tmpl").Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
+	if tpl, err = template.New(httpHandlerTmpl).Funcs(funcMap).Parse(httpHandlerTmpl); err != nil {
 		panic(err)
 	}
-	if err = tpl.Execute(&sqlBuf, struct {
+	if err = tpl.Execute(&buf, struct {
 		RoutePatternStrategy int
 		Meta                 astutils.InterfaceMeta
 		Version              string
@@ -133,6 +119,6 @@ func GenHttpHandler(dir string, ic astutils.InterfaceCollector, routePatternStra
 	}); err != nil {
 		panic(err)
 	}
-	source = strings.TrimSpace(sqlBuf.String())
+	source = strings.TrimSpace(buf.String())
 	astutils.FixImport([]byte(source), handlerfile)
 }
