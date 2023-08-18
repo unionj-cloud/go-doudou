@@ -377,15 +377,18 @@ func (r *Router) Handle(method, path string, handle Handle, name ...string) {
 // request handle.
 // The Params are available in the request context under ParamsKey.
 func (r *Router) Handler(method, path string, handler http.Handler, name ...string) {
-	r.Handle(method, path,
-		func(w http.ResponseWriter, req *http.Request, p Params) {
-			if len(p) > 0 {
-				req = req.WithContext(context.WithValue(req.Context(), ParamsKey, p))
-			}
-			handler.ServeHTTP(w, req)
-		},
-		name...,
-	)
+	methods := []string{method, http.MethodOptions}
+	for _, m := range methods {
+		r.Handle(m, path,
+			func(w http.ResponseWriter, req *http.Request, p Params) {
+				if len(p) > 0 {
+					req = req.WithContext(context.WithValue(req.Context(), ParamsKey, p))
+				}
+				handler.ServeHTTP(w, req)
+			},
+			name...,
+		)
+	}
 }
 
 // HandlerFunc is an adapter which allows the usage of an http.HandlerFunc as a

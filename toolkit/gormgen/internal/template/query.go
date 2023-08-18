@@ -39,7 +39,7 @@ type Query struct{
 
 func (q *Query) Available() bool { return q.db != nil }
 
-func (q *Query) clone(db *gorm.DB) *Query {
+func (q *Query) Clone(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
 		{{range $name,$d :=.Data -}}
@@ -80,12 +80,12 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx  {
 }
 
 func (q *Query) Transaction(fc func(tx *Query) error, opts ...*sql.TxOptions) error {
-	return q.db.Transaction(func(tx *gorm.DB) error { return fc(q.clone(tx)) }, opts...)
+	return q.db.Transaction(func(tx *gorm.DB) error { return fc(q.Clone(tx)) }, opts...)
 }
 
 func (q *Query) Begin(opts ...*sql.TxOptions) *QueryTx {
 	tx := q.db.Begin(opts...)
-	return &QueryTx{Query: q.clone(tx), Error: tx.Error}
+	return &QueryTx{Query: q.Clone(tx), Error: tx.Error}
 }
 
 type QueryTx struct {

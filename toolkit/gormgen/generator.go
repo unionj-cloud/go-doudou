@@ -337,11 +337,11 @@ func (g *Generator) filterNewModels(meta astutils.InterfaceMeta) []*generate.Que
 			continue
 		}
 		targets := []string{
-			fmt.Sprintf("Post%s", data.ModelStructName),
-			fmt.Sprintf("Get%s_Id", data.ModelStructName),
-			fmt.Sprintf("Put%s", data.ModelStructName),
-			fmt.Sprintf("Delete%s_Id", data.ModelStructName),
-			fmt.Sprintf("Get%ss", data.ModelStructName),
+			fmt.Sprintf("PostGen%s", data.ModelStructName),
+			fmt.Sprintf("GetGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("PutGen%s", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("GetGen%ss", data.ModelStructName),
 		}
 		count := 0
 		for _, method := range meta.Methods {
@@ -363,11 +363,11 @@ func (g *Generator) filterNewModelsGrpc(meta astutils.InterfaceMeta) []*generate
 			continue
 		}
 		targets := []string{
-			fmt.Sprintf("Post%sRpc", data.ModelStructName),
-			fmt.Sprintf("Get%sIdRpc", data.ModelStructName),
-			fmt.Sprintf("Put%sRpc", data.ModelStructName),
-			fmt.Sprintf("Delete%sIdRpc", data.ModelStructName),
-			fmt.Sprintf("Get%ssRpc", data.ModelStructName),
+			fmt.Sprintf("PostGen%sRpc", data.ModelStructName),
+			fmt.Sprintf("GetGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("PutGen%sRpc", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("GetGen%ssRpc", data.ModelStructName),
 		}
 		count := 0
 		for _, method := range meta.Methods {

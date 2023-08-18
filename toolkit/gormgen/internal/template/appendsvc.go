@@ -1,28 +1,28 @@
 package template
 
 const AppendSvc = `
-// Post{{.ModelStructName}} {{.StructComment}}
+// PostGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error)
+PostGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error)
 
-// Post{{.ModelStructName}}s {{.StructComment}}
+// PostGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Post{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error)
+PostGen{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error)
 
-// Get{{.ModelStructName}}_Id {{.StructComment}}
+// GetGen{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error)
+GetGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error)
 
-// Put{{.ModelStructName}} {{.StructComment}}
+// PutGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Put{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) error
+PutGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) error
 
-// Delete{{.ModelStructName}}_Id {{.StructComment}}
+// DeleteGen{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Delete{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) error
+DeleteGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) error
 
-// Get{{.ModelStructName}}s {{.StructComment}}
+// GetGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-Get{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
+GetGen{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
 
 `
