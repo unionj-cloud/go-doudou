@@ -22,6 +22,7 @@ type ResponseContext interface {
 	Cache(string) ResponseContext
 	Fields([]string) ResponseContext
 	Response(interface{}) Page
+	Error() error
 }
 
 // RequestContext interface
@@ -85,6 +86,11 @@ type resContext struct {
 	Parameter   Parameter
 	cachePrefix string
 	fieldList   []string
+	error       error
+}
+
+func (r *resContext) Error() error {
+	return r.error
 }
 
 func (r *resContext) Cache(prefix string) ResponseContext {
@@ -97,7 +103,7 @@ func (r *resContext) Fields(fields []string) ResponseContext {
 	return r
 }
 
-func (r resContext) Response(res interface{}) Page {
+func (r *resContext) Response(res interface{}) Page {
 	p := r.Pagination
 	query := r.Statement
 	p.Config = defaultConfig(p.Config)
@@ -188,6 +194,10 @@ func (r resContext) Response(res interface{}) Page {
 	result = result.Count(&page.Total).
 		Limit(causes.Limit).
 		Offset(causes.Offset)
+	if result.Error != nil {
+		r.error = result.Error
+		return page
+	}
 
 	if nil != query.Statement.Preloads {
 		for table, args := range query.Statement.Preloads {
@@ -201,6 +211,10 @@ func (r resContext) Response(res interface{}) Page {
 	}
 
 	rs := result.Find(res)
+	if result.Error != nil {
+		r.error = result.Error
+		return page
+	}
 
 	page.Items, _ = sliceutils.ConvertAny2Interface(res)
 	f := float64(page.Total) / float64(causes.Limit)

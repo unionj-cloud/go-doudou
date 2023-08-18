@@ -100,6 +100,7 @@ type DbConfig struct {
 	Dsn    string
 	// or schema for pg
 	TablePrefix string
+	TableGlob   string
 	Orm         string
 	Soft        string
 	Grpc        bool
@@ -189,6 +190,7 @@ func (receiver *Svc) Init() {
 			Driver:      receiver.DbConfig.Driver,
 			Dsn:         receiver.DbConfig.Dsn,
 			TablePrefix: receiver.DbConfig.TablePrefix,
+			TableGlob:   receiver.DbConfig.TableGlob,
 			Dir:         receiver.dir,
 			Soft:        receiver.DbConfig.Soft,
 			Grpc:        receiver.DbConfig.Grpc,

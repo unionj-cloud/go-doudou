@@ -25,6 +25,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/helper"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/generate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
@@ -141,6 +142,28 @@ func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{
 		panic(fmt.Errorf("get all tables fail: %w", err))
 	}
 
+	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
+
+	tableModels = make([]interface{}, len(tableList))
+	for i, tableName := range tableList {
+		tableModels[i] = g.GenerateModel(tableName, opts...)
+	}
+	return tableModels
+}
+
+// GenerateTablesByGlob generate all tables filterd by glob syntax in db
+func (g *Generator) GenerateTablesByGlob(gl glob.Glob, opts ...ModelOpt) (tableModels []interface{}) {
+	tableList, err := g.db.Migrator().GetTables()
+	if err != nil {
+		panic(fmt.Errorf("get all tables fail: %w", err))
+	}
+	filteredTables := make([]string, 0)
+	for _, item := range tableList {
+		if gl.Match(item) {
+			filteredTables = append(filteredTables, item)
+		}
+	}
+	tableList = filteredTables
 	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
 
 	tableModels = make([]interface{}, len(tableList))

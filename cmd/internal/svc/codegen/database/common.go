@@ -37,6 +37,7 @@ type OrmGeneratorConfig struct {
 	Driver      string
 	Dsn         string
 	TablePrefix string
+	TableGlob   string
 	Dir         string
 	Soft        string
 	Grpc        bool
@@ -60,6 +61,7 @@ type AbstractBaseGenerator struct {
 	Driver              string
 	Dsn                 string
 	TablePrefix         string
+	TableGlob           string
 	Dir                 string
 	g                   *gormgen.Generator
 	Jsonattrcase        string
