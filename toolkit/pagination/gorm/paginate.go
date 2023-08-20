@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"log"
 	"math"
@@ -126,7 +127,11 @@ func (r *resContext) Response(res interface{}) Page {
 	}
 
 	page := Page{}
-	pr := parseRequest(r.Parameter, *p.Config)
+	pr, err := parseRequest(r.Parameter, *p.Config)
+	if err != nil {
+		r.error = err
+		return page
+	}
 	causes := createCauses(pr)
 	cKey := ""
 	var adapter gocache.AdapterInterface
@@ -268,19 +273,25 @@ func New(params ...interface{}) *Pagination {
 }
 
 // parseRequest func
-func parseRequest(param IParameter, config Config) pageRequest {
+func parseRequest(param IParameter, config Config) (pageRequest, error) {
 	pr := pageRequest{
 		Config: *defaultConfig(&config),
 	}
-	parsingQueryString(param, &pr)
-	return pr
+	err := parsingQueryString(param, &pr)
+	if err != nil {
+		return pageRequest{}, err
+	}
+	return pr, nil
 }
 
 // createFilters func
-func createFilters(filterParams interface{}, p *pageRequest) {
-	f, ok := filterParams.([]interface{})
+func createFilters(filterParams interface{}, p *pageRequest) error {
 	s, ok2 := filterParams.(string)
-	if ok {
+	if reflect.ValueOf(filterParams).Kind() == reflect.Slice {
+		f, err := sliceutils.ConvertAny2Interface(filterParams)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		p.Filters = arrayToFilter(f, p.Config)
 		p.Filters.Fields = p.Fields
 	} else if ok2 {
@@ -290,6 +301,7 @@ func createFilters(filterParams interface{}, p *pageRequest) {
 		}
 		p.Filters.Fields = p.Fields
 	}
+	return nil
 }
 
 // createCauses func
@@ -316,7 +328,7 @@ func createCauses(p pageRequest) requestQuery {
 	return query
 }
 
-func parsingQueryString(param IParameter, p *pageRequest) {
+func parsingQueryString(param IParameter, p *pageRequest) error {
 	p.Size = param.GetSize()
 
 	if p.Size == 0 {
@@ -365,7 +377,7 @@ func parsingQueryString(param IParameter, p *pageRequest) {
 		}
 	}
 
-	createFilters(param.GetFilters(), p)
+	return createFilters(param.GetFilters(), p)
 }
 
 //gocyclo:ignore
