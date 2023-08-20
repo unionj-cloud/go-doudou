@@ -2,7 +2,6 @@ package database
 
 import (
 	"github.com/gobwas/glob"
-	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
@@ -78,10 +77,6 @@ func (gg *GormGenerator) fix() {
 	//}
 }
 
-func (gg *GormGenerator) ProtoFieldNamingFn() func(string) string {
-	return strcase.ToLowerCamel
-}
-
 const (
 	driverMysql     = "mysql"
 	driverPostgres  = "postgres"
@@ -98,6 +93,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Grpc = conf.Grpc
 	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
 	gg.TableGlob = conf.TableGlob
+	gg.CaseConverter = conf.CaseConverter
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {
@@ -158,7 +154,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		}
 		return tag
 	}))
-	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
+	g.WithJSONTagNameStrategy(func(n string) string { return gg.CaseConverter(n) + ",omitempty" })
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
 	var models []interface{}

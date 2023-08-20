@@ -27,7 +27,7 @@ type ResponseContext interface {
 
 // RequestContext interface
 type RequestContext interface {
-	Request(Parameter) ResponseContext
+	Request(IParameter) ResponseContext
 }
 
 // Pagination gorm paginate struct
@@ -70,7 +70,7 @@ type reqContext struct {
 	Pagination *Pagination
 }
 
-func (r reqContext) Request(parameter Parameter) ResponseContext {
+func (r reqContext) Request(parameter IParameter) ResponseContext {
 	var response ResponseContext = &resContext{
 		Statement:  r.Statement,
 		Parameter:  parameter,
@@ -83,7 +83,7 @@ func (r reqContext) Request(parameter Parameter) ResponseContext {
 type resContext struct {
 	Pagination  *Pagination
 	Statement   *gorm.DB
-	Parameter   Parameter
+	Parameter   IParameter
 	cachePrefix string
 	fieldList   []string
 	error       error
@@ -126,8 +126,7 @@ func (r *resContext) Response(res interface{}) Page {
 	}
 
 	page := Page{}
-	param := parameter(r.Parameter)
-	pr := parseRequest(&param, *p.Config)
+	pr := parseRequest(r.Parameter, *p.Config)
 	causes := createCauses(pr)
 	cKey := ""
 	var adapter gocache.AdapterInterface
@@ -192,8 +191,8 @@ func (r *resContext) Response(res interface{}) Page {
 	}
 
 	result = result.Count(&page.Total).
-		Limit(causes.Limit).
-		Offset(causes.Offset)
+		Limit(int(causes.Limit)).
+		Offset(int(causes.Offset))
 	if result.Error != nil {
 		r.error = result.Error
 		return page
@@ -269,7 +268,7 @@ func New(params ...interface{}) *Pagination {
 }
 
 // parseRequest func
-func parseRequest(param *parameter, config Config) pageRequest {
+func parseRequest(param IParameter, config Config) pageRequest {
 	pr := pageRequest{
 		Config: *defaultConfig(&config),
 	}
@@ -317,27 +316,21 @@ func createCauses(p pageRequest) requestQuery {
 	return query
 }
 
-func parsingQueryString(param *parameter, p *pageRequest) {
-	if i, e := strconv.Atoi(param.Size); nil == e {
-		p.Size = i
-	}
+func parsingQueryString(param IParameter, p *pageRequest) {
+	p.Size = param.GetSize()
 
 	if p.Size == 0 {
 		if p.Config.DefaultSize > 0 {
-			p.Size = int(p.Config.DefaultSize)
+			p.Size = p.Config.DefaultSize
 		} else {
 			p.Size = 10
 		}
 	}
 
-	if i, e := strconv.Atoi(param.Page); nil == e {
-		p.Page = i
-	} else {
-		p.Page = 0
-	}
+	p.Page = param.GetPage()
 
-	if param.Sort != "" {
-		sorts := strings.Split(param.Sort, ",")
+	if param.GetSort() != "" {
+		sorts := strings.Split(param.GetSort(), ",")
 		for _, col := range sorts {
 			if col == "" {
 				continue
@@ -347,7 +340,7 @@ func parsingQueryString(param *parameter, p *pageRequest) {
 				Column:    col,
 				Direction: "ASC",
 			}
-			if strings.ToUpper(param.Order) == "DESC" {
+			if strings.ToUpper(param.GetOrder()) == "DESC" {
 				so.Direction = "DESC"
 			}
 
@@ -360,9 +353,9 @@ func parsingQueryString(param *parameter, p *pageRequest) {
 		}
 	}
 
-	if param.Fields != "" {
+	if param.GetFields() != "" {
 		re := regexp.MustCompile(`[^A-z0-9_\.,]+`)
-		if fields := strings.Split(param.Fields, ","); len(fields) > 0 {
+		if fields := strings.Split(param.GetFields(), ","); len(fields) > 0 {
 			for i := range fields {
 				fieldByte := re.ReplaceAll([]byte(fields[i]), []byte(""))
 				if field := string(fieldByte); field != "" {
@@ -372,7 +365,7 @@ func parsingQueryString(param *parameter, p *pageRequest) {
 		}
 	}
 
-	createFilters(param.Filters, p)
+	createFilters(param.GetFilters(), p)
 }
 
 //gocyclo:ignore
@@ -616,25 +609,16 @@ func contains(source []string, value string) bool {
 	return found
 }
 
+func FieldAs(tableName, colName string) string {
+	return strcase.ToSnake(fmt.Sprintf("%s_%s", tableName, colName))
+}
+
 func fieldName(field string) string {
 	slices := strings.Split(field, ".")
 	if len(slices) == 1 {
 		return field
 	}
-	newSlices := []string{}
-	if len(slices) > 0 {
-		newSlices = append(newSlices, strcase.ToCamel(slices[0]))
-		for k, s := range slices {
-			if k > 0 {
-				newSlices = append(newSlices, s)
-			}
-		}
-	}
-	if len(newSlices) == 0 {
-		return field
-	}
-	return strings.Join(newSlices, "__")
-
+	return FieldAs(slices[0], slices[1])
 }
 
 // Config for customize pagination result
@@ -683,16 +667,14 @@ type Page struct {
 	Visible    int64         `json:"visible"`
 }
 
-type Parameter parameter
-
-// parameter struct
-type parameter struct {
-	Page    string        `json:"page"`
-	Size    string        `json:"size"`
-	Sort    string        `json:"sort"`
-	Order   string        `json:"order"`
-	Fields  string        `json:"fields"`
-	Filters []interface{} `json:"filters"`
+type IParameter interface {
+	GetPage() int64
+	GetSize() int64
+	GetSort() string
+	GetOrder() string
+	GetFields() string
+	GetFilters() interface{}
+	IParameterInstance()
 }
 
 // query struct
@@ -701,14 +683,14 @@ type requestQuery struct {
 	Wheres      []string
 	Params      []interface{}
 	Sorts       []sortOrder
-	Limit       int
-	Offset      int
+	Limit       int64
+	Offset      int64
 }
 
 // pageRequest struct
 type pageRequest struct {
-	Size    int
-	Page    int
+	Size    int64
+	Page    int64
 	Sorts   []sortOrder
 	Filters pageFilters
 	Config  Config `json:"-"`
