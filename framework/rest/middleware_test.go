@@ -16,7 +16,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr/mock"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	httpMock "github.com/unionj-cloud/go-doudou/v2/framework/rest/mock"

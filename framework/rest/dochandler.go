@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"net/http"
 )
@@ -19,21 +18,15 @@ func docRoutes() []Route {
 			Pattern: "/go-doudou/doc",
 			HandlerFunc: func(_writer http.ResponseWriter, _req *http.Request) {
 				var (
-					tpl    *template.Template
-					err    error
-					buf    bytes.Buffer
-					scheme string
+					tpl *template.Template
+					err error
+					buf bytes.Buffer
 				)
 				if tpl, err = template.New("onlinedoc.tmpl").Parse(onlinedocTmpl); err != nil {
 					panic(err)
 				}
-				if _req.TLS == nil {
-					scheme = "http"
-				} else {
-					scheme = "https"
-				}
 				doc := Oas
-				docUrl := fmt.Sprintf("%s://%s/go-doudou/openapi.json", scheme, _req.Host)
+				docUrl := "openapi.json"
 				if err = tpl.Execute(&buf, struct {
 					Doc    string
 					DocUrl string

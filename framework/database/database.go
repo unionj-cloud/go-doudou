@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	driverMysql      = "mysql"
-	driverPostgres   = "postgres"
-	driverSqlite     = "sqlite"
-	driverSqlserver  = "sqlserver"
-	driverTidb       = "tidb"
-	driverClickhouse = "clickhouse"
+	DriverMysql      = "mysql"
+	DriverPostgres   = "postgres"
+	DriverSqlite     = "sqlite"
+	DriverSqlserver  = "sqlserver"
+	DriverTidb       = "tidb"
+	DriverClickhouse = "clickhouse"
 )
 
 var Db *gorm.DB
@@ -82,7 +82,7 @@ func init() {
 		errorx.Panic("Database driver is missing")
 	}
 	switch driver {
-	case driverMysql, driverTidb:
+	case DriverMysql, DriverTidb:
 		conf := mysql.Config{
 			DSN:                           dsn, // data source name
 			SkipInitializeWithVersion:     cast.ToBoolOrDefault(config.GddDBMysqlSkipInitializeWithVersion.Load(), config.DefaultGddDBMysqlSkipInitializeWithVersion),
@@ -96,18 +96,18 @@ func init() {
 			DontSupportRenameColumnUnique: cast.ToBoolOrDefault(config.GddDBMysqlDontSupportRenameColumnUnique.Load(), config.DefaultGddDBMysqlDontSupportRenameColumnUnique),
 		}
 		Db, err = gorm.Open(mysql.New(conf), gormConf)
-	case driverPostgres:
+	case DriverPostgres:
 		conf := postgres.Config{
 			DSN:                  dsn,
 			PreferSimpleProtocol: cast.ToBoolOrDefault(config.GddDBPostgresPreferSimpleProtocol.Load(), config.DefaultGddDBPostgresPreferSimpleProtocol),
 			WithoutReturning:     cast.ToBoolOrDefault(config.GddDBPostgresWithoutReturning.Load(), config.DefaultGddDBPostgresWithoutReturning),
 		}
 		Db, err = gorm.Open(postgres.New(conf), gormConf)
-	case driverSqlite:
+	case DriverSqlite:
 		Db, err = gorm.Open(sqlite.Open(dsn), gormConf)
-	case driverSqlserver:
+	case DriverSqlserver:
 		Db, err = gorm.Open(sqlserver.Open(dsn), gormConf)
-	case driverClickhouse:
+	case DriverClickhouse:
 		Db, err = gorm.Open(clickhouse.Open(dsn), gormConf)
 	default:
 		errorx.Panic("Not support driver")
@@ -139,4 +139,122 @@ func init() {
 		maxIdleTime = config.DefaultGddDBConnMaxIdleTime
 	}
 	sqlDB.SetConnMaxIdleTime(maxIdleTime)
+}
+
+func NewDb(conf config.Config) (db *gorm.DB) {
+	var err error
+	slowThreshold, _ := time.ParseDuration("200ms")
+	if stringutils.IsNotEmpty(conf.Db.Log.SlowThreshold) {
+		if value, err := time.ParseDuration(conf.Db.Log.SlowThreshold); err == nil {
+			slowThreshold = value
+		} else {
+			zlogger.Error().Err(err).Msg(err.Error())
+		}
+	}
+	logLevel := logger.Warn
+	if stringutils.IsNotEmpty(conf.Db.Log.Level) {
+		switch strings.ToLower(conf.Db.Log.Level) {
+		case "silent":
+			logLevel = logger.Silent
+		case "error":
+			logLevel = logger.Error
+		case "warn":
+			logLevel = logger.Warn
+		case "info":
+			logLevel = logger.Info
+		}
+	}
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             slowThreshold,
+			LogLevel:                  logLevel,
+			IgnoreRecordNotFoundError: conf.Db.Log.IgnoreRecordNotFoundError,
+			ParameterizedQueries:      conf.Db.Log.ParameterizedQueries,
+			Colorful:                  false,
+		},
+	)
+	gormConf := &gorm.Config{
+		Logger:                                   newLogger,
+		DisableForeignKeyConstraintWhenMigrating: true,
+	}
+	tablePrefix := strings.TrimSuffix(conf.Db.Table.Prefix, ".")
+	if stringutils.IsNotEmpty(tablePrefix) {
+		gormConf.NamingStrategy = schema.NamingStrategy{
+			TablePrefix: tablePrefix + ".",
+		}
+	}
+	dsn := conf.Db.Dsn
+	if stringutils.IsEmpty(dsn) {
+		return
+	}
+	driver := conf.Db.Driver
+	if stringutils.IsEmpty(driver) {
+		errorx.Panic("Database driver is missing")
+	}
+	switch driver {
+	case DriverMysql, DriverTidb:
+		conf := mysql.Config{
+			DSN:                           dsn, // data source name
+			SkipInitializeWithVersion:     conf.Db.Mysql.SkipInitializeWithVersion,
+			DefaultStringSize:             uint(conf.Db.Mysql.DefaultStringSize),
+			DisableWithReturning:          conf.Db.Mysql.DisableWithReturning,
+			DisableDatetimePrecision:      conf.Db.Mysql.DisableDatetimePrecision,
+			DontSupportRenameIndex:        conf.Db.Mysql.DontSupportRenameIndex,
+			DontSupportRenameColumn:       conf.Db.Mysql.DontSupportRenameColumn,
+			DontSupportForShareClause:     conf.Db.Mysql.DontSupportForShareClause,
+			DontSupportNullAsDefaultValue: conf.Db.Mysql.DontSupportNullAsDefaultValue,
+			DontSupportRenameColumnUnique: conf.Db.Mysql.DontSupportRenameColumnUnique,
+		}
+		db, err = gorm.Open(mysql.New(conf), gormConf)
+	case DriverPostgres:
+		conf := postgres.Config{
+			DSN:                  dsn,
+			PreferSimpleProtocol: conf.Db.Postgres.PreferSimpleProtocol,
+			WithoutReturning:     conf.Db.Postgres.WithoutReturning,
+		}
+		db, err = gorm.Open(postgres.New(conf), gormConf)
+	case DriverSqlite:
+		db, err = gorm.Open(sqlite.Open(dsn), gormConf)
+	case DriverSqlserver:
+		db, err = gorm.Open(sqlserver.Open(dsn), gormConf)
+	case DriverClickhouse:
+		db, err = gorm.Open(clickhouse.Open(dsn), gormConf)
+	default:
+		errorx.Panic("Not support driver")
+	}
+	if err != nil {
+		errorx.Panic(err.Error())
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		errorx.Panic(err.Error())
+	}
+	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxIdleConns(conf.Db.Pool.MaxIdleConns)
+
+	// SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetMaxOpenConns(conf.Db.Pool.MaxOpenConns)
+
+	maxLifetime := time.Duration(-1)
+	if stringutils.IsNotEmpty(conf.Db.Pool.ConnMaxLifetime) {
+		if value, err := time.ParseDuration(conf.Db.Pool.ConnMaxLifetime); err == nil {
+			maxLifetime = value
+		} else {
+			zlogger.Error().Err(err).Msg(err.Error())
+		}
+	}
+	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetConnMaxLifetime(maxLifetime)
+
+	maxIdleTime := time.Duration(-1)
+	if stringutils.IsNotEmpty(conf.Db.Pool.ConnMaxIdleTime) {
+		if value, err := time.ParseDuration(conf.Db.Pool.ConnMaxIdleTime); err == nil {
+			maxIdleTime = value
+		} else {
+			zlogger.Error().Err(err).Msg(err.Error())
+		}
+	}
+	sqlDB.SetConnMaxIdleTime(maxIdleTime)
+	return
 }

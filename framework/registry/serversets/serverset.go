@@ -2,7 +2,7 @@ package serversets
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"path"
 	"strings"
 	"time"
