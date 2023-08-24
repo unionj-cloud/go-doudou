@@ -25,6 +25,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/helper"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/generate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
@@ -141,6 +142,28 @@ func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{
 		panic(fmt.Errorf("get all tables fail: %w", err))
 	}
 
+	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
+
+	tableModels = make([]interface{}, len(tableList))
+	for i, tableName := range tableList {
+		tableModels[i] = g.GenerateModel(tableName, opts...)
+	}
+	return tableModels
+}
+
+// GenerateTablesByGlob generate all tables filterd by glob syntax in db
+func (g *Generator) GenerateTablesByGlob(gl glob.Glob, opts ...ModelOpt) (tableModels []interface{}) {
+	tableList, err := g.db.Migrator().GetTables()
+	if err != nil {
+		panic(fmt.Errorf("get all tables fail: %w", err))
+	}
+	filteredTables := make([]string, 0)
+	for _, item := range tableList {
+		if gl.Match(item) {
+			filteredTables = append(filteredTables, item)
+		}
+	}
+	tableList = filteredTables
 	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
 
 	tableModels = make([]interface{}, len(tableList))
@@ -337,11 +360,11 @@ func (g *Generator) filterNewModels(meta astutils.InterfaceMeta) []*generate.Que
 			continue
 		}
 		targets := []string{
-			fmt.Sprintf("Post%s", data.ModelStructName),
-			fmt.Sprintf("Get%s_Id", data.ModelStructName),
-			fmt.Sprintf("Put%s", data.ModelStructName),
-			fmt.Sprintf("Delete%s_Id", data.ModelStructName),
-			fmt.Sprintf("Get%ss", data.ModelStructName),
+			fmt.Sprintf("PostGen%s", data.ModelStructName),
+			fmt.Sprintf("GetGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("PutGen%s", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("GetGen%ss", data.ModelStructName),
 		}
 		count := 0
 		for _, method := range meta.Methods {
@@ -363,11 +386,11 @@ func (g *Generator) filterNewModelsGrpc(meta astutils.InterfaceMeta) []*generate
 			continue
 		}
 		targets := []string{
-			fmt.Sprintf("Post%sRpc", data.ModelStructName),
-			fmt.Sprintf("Get%sIdRpc", data.ModelStructName),
-			fmt.Sprintf("Put%sRpc", data.ModelStructName),
-			fmt.Sprintf("Delete%sIdRpc", data.ModelStructName),
-			fmt.Sprintf("Get%ssRpc", data.ModelStructName),
+			fmt.Sprintf("PostGen%sRpc", data.ModelStructName),
+			fmt.Sprintf("GetGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("PutGen%sRpc", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("GetGen%ssRpc", data.ModelStructName),
 		}
 		count := 0
 		for _, method := range meta.Methods {

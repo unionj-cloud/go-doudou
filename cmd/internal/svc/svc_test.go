@@ -137,7 +137,7 @@ func TestSvc_Http(t *testing.T) {
 			s.Client = tt.fields.Client
 			s.Omitempty = tt.fields.Omitempty
 			s.Doc = tt.fields.Doc
-			s.Jsonattrcase = tt.fields.Jsonattrcase
+			s.JsonCase = tt.fields.Jsonattrcase
 			assert.NotPanics(t, func() {
 				receiver.Init()
 			})

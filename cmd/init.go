@@ -17,6 +17,7 @@ var dbOrm string
 var dbSoft string
 var dbGrpc bool
 var dbTablePrefix string
+var dbTableGlob string
 var module bool
 
 // initCmd initializes the service
@@ -38,6 +39,7 @@ var initCmd = &cobra.Command{
 			Driver:      dbDriver,
 			Dsn:         dbDsn,
 			TablePrefix: dbTablePrefix,
+			TableGlob:   dbTableGlob,
 			Orm:         dbOrm,
 			Soft:        dbSoft,
 			Grpc:        dbGrpc,
@@ -50,7 +52,7 @@ var initCmd = &cobra.Command{
 		case "snake":
 			fn = strcase.ToSnake
 		}
-		options = append(options, svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
+		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},
@@ -68,5 +70,6 @@ func init() {
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
-	initCmd.Flags().StringVarP(&naming, "naming", "n", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
+	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
+	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
 }

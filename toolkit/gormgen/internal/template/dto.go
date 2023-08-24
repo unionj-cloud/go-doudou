@@ -14,8 +14,6 @@ import (
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
-//go:generate go-doudou name --file $GOFILE
-
 // {{.ModelStructName}} {{.StructComment}}
 type {{.ModelStructName}} struct {
     {{range .Fields}}
@@ -24,7 +22,7 @@ type {{.ModelStructName}} struct {
 {{.ColumnComment}}
     */
 	{{end -}}
-    {{.Name}} {{.Type | convert}} ` +
+    {{.Name}} {{.Type | convert}} ` + "`{{.Tags}}` " +
 	"{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}" +
 	`{{end}}
 }

@@ -1,9 +1,9 @@
 package template
 
 const AppendSvcImpl = `
-// Post{{.ModelStructName}} {{.StructComment}}
+// PostGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
+func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
 	m := model.{{.ModelStructName}}(body)
 	u := receiver.q.{{.ModelStructName}}
 	err = errors.WithStack(u.WithContext(ctx).Create(&m))
@@ -11,9 +11,9 @@ func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}(ctx context.Con
 	return
 }
 
-// Post{{.ModelStructName}}s {{.StructComment}}
+// PostGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error) {
+func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error) {
 	list := make([]*model.{{.ModelStructName}}, 0, len(body))
 	for _, item := range body {
 		m := model.{{.ModelStructName}}(item)
@@ -30,9 +30,9 @@ func (receiver *{{.InterfaceName}}Impl) Post{{.ModelStructName}}s(ctx context.Co
 	return
 }
 
-// Get{{.ModelStructName}}_Id {{.StructComment}}
+// GetGen{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error) {
+func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error) {
 	u := receiver.q.{{.ModelStructName}}
 	m, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -41,27 +41,27 @@ func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}_Id(ctx context.C
 	return dto.{{.ModelStructName}}(*m), nil
 }
 
-// Put{{.ModelStructName}} {{.StructComment}}
+// PutGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Put{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
+func (receiver *{{.InterfaceName}}Impl) PutGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
 	m := model.{{.ModelStructName}}(body)
 	u := receiver.q.{{.ModelStructName}}
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
 	return errors.WithStack(err)
 }
 
-// Delete{{.ModelStructName}}_Id {{.StructComment}}
+// DeleteGen{{.ModelStructName}}_Id {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Delete{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (err error) {
+func (receiver *{{.InterfaceName}}Impl) DeleteGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (err error) {
 	u := receiver.q.{{.ModelStructName}}
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).Delete()
 	return errors.WithStack(err)
 }
 
-// Get{{.ModelStructName}}s {{.StructComment}}
+// GetGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) Get{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error) {
-	paginated := receiver.pg.With(database.Db.Model(&model.{{.ModelStructName}}{})).Request(paginate.Parameter(parameter)).Response(&[]model.{{.ModelStructName}}{})
+func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error) {
+	paginated := receiver.pg.With(database.Db.Model(&model.{{.ModelStructName}}{})).Request(parameter).Response(&[]model.{{.ModelStructName}}{})
 	data = dto.Page(paginated)
 	return
 }

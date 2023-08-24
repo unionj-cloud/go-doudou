@@ -2,7 +2,6 @@ package svc
 
 import (
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
@@ -58,8 +57,6 @@ type Svc struct {
 	Omitempty bool
 	// Doc indicates whether generate OpenAPI 3.0 json doc file
 	Doc bool
-	// Jsonattrcase is attribute case converter name when marshal structs to json
-	Jsonattrcase string
 	// DocPath is OpenAPI 3.0 json doc file path used for generating client code
 	DocPath string
 	// Env is service base url environment variable name used for generating client code
@@ -93,6 +90,9 @@ type Svc struct {
 
 	module         bool
 	protoGenerator v3.ProtoGenerator
+
+	JsonCase      string
+	CaseConverter func(string) string
 }
 
 type DbConfig struct {
@@ -100,6 +100,7 @@ type DbConfig struct {
 	Dsn    string
 	// or schema for pg
 	TablePrefix string
+	TableGlob   string
 	Orm         string
 	Soft        string
 	Grpc        bool
@@ -137,17 +138,10 @@ func (receiver *Svc) Http() {
 
 	codegen.GenMain(dir, ic)
 	codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
-	var caseConvertor func(string) string
-	switch receiver.Jsonattrcase {
-	case "snake":
-		caseConvertor = strcase.ToSnake
-	default:
-		caseConvertor = strcase.ToLowerCamel
-	}
 	codegen.GenHttpHandlerImpl(dir, ic, codegen.GenHttpHandlerImplConfig{
 		Omitempty:           receiver.Omitempty,
 		AllowGetWithReqBody: receiver.AllowGetWithReqBody,
-		CaseConvertor:       caseConvertor,
+		CaseConvertor:       receiver.CaseConverter,
 	})
 	if receiver.Client {
 		codegen.GenGoIClient(dir, ic)
@@ -155,7 +149,7 @@ func (receiver *Svc) Http() {
 			Env:                  receiver.Env,
 			RoutePatternStrategy: receiver.RoutePatternStrategy,
 			AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
-			CaseConvertor:        caseConvertor,
+			CaseConvertor:        receiver.CaseConverter,
 		})
 		codegen.GenGoClientProxy(dir, ic)
 	}
@@ -180,18 +174,22 @@ func (receiver *Svc) Init() {
 		GenSvcGo:       receiver.DbConfig == nil,
 		Module:         receiver.module,
 		ProtoGenerator: receiver.protoGenerator,
+		CaseConverter:  receiver.CaseConverter,
+		JsonCase:       receiver.JsonCase,
 	})
 	// generate or overwrite svc.go file
 	if receiver.DbConfig != nil {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
 		assert.NotNil(gen, "Unknown orm kind")
 		gen.Initialize(database.OrmGeneratorConfig{
-			Driver:      receiver.DbConfig.Driver,
-			Dsn:         receiver.DbConfig.Dsn,
-			TablePrefix: receiver.DbConfig.TablePrefix,
-			Dir:         receiver.dir,
-			Soft:        receiver.DbConfig.Soft,
-			Grpc:        receiver.DbConfig.Grpc,
+			Driver:        receiver.DbConfig.Driver,
+			Dsn:           receiver.DbConfig.Dsn,
+			TablePrefix:   receiver.DbConfig.TablePrefix,
+			TableGlob:     receiver.DbConfig.TableGlob,
+			CaseConverter: receiver.CaseConverter,
+			Dir:           receiver.dir,
+			Soft:          receiver.DbConfig.Soft,
+			Grpc:          receiver.DbConfig.Grpc,
 		})
 		gen.GenService()
 	} else if !receiver.module {
@@ -236,6 +234,18 @@ func WithDbConfig(dbConfig *DbConfig) SvcOption {
 func WithModule(module bool) SvcOption {
 	return func(svc *Svc) {
 		svc.module = module
+	}
+}
+
+func WithCaseConverter(fn func(string) string) SvcOption {
+	return func(svc *Svc) {
+		svc.CaseConverter = fn
+	}
+}
+
+func WithJsonCase(jsonCase string) SvcOption {
+	return func(svc *Svc) {
+		svc.JsonCase = jsonCase
 	}
 }
 

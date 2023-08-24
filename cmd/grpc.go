@@ -27,5 +27,5 @@ var grpcCmd = &cobra.Command{
 
 func init() {
 	svcCmd.AddCommand(grpcCmd)
-	grpcCmd.Flags().StringVarP(&naming, "naming", "n", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
+	grpcCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
 }

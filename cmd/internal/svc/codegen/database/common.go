@@ -3,7 +3,6 @@ package database
 import (
 	"fmt"
 	"github.com/docker/docker/pkg/fileutils"
-	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
@@ -34,12 +33,14 @@ func GetOrmGenerator(kind OrmKind) IOrmGenerator {
 }
 
 type OrmGeneratorConfig struct {
-	Driver      string
-	Dsn         string
-	TablePrefix string
-	Dir         string
-	Soft        string
-	Grpc        bool
+	Driver        string
+	Dsn           string
+	TablePrefix   string
+	TableGlob     string
+	CaseConverter func(string) string
+	Dir           string
+	Soft          string
+	Grpc          bool
 }
 
 type IOrmGenerator interface {
@@ -51,7 +52,6 @@ type IOrmGenerator interface {
 	fix()
 	Initialize(conf OrmGeneratorConfig)
 	GenService()
-	ProtoFieldNamingFn() func(string) string
 }
 
 var _ IOrmGenerator = (*AbstractBaseGenerator)(nil)
@@ -60,9 +60,10 @@ type AbstractBaseGenerator struct {
 	Driver              string
 	Dsn                 string
 	TablePrefix         string
+	TableGlob           string
 	Dir                 string
 	g                   *gormgen.Generator
-	Jsonattrcase        string
+	CaseConverter       func(string) string
 	Omitempty           bool
 	AllowGetWithReqBody bool
 	Client              bool
@@ -78,10 +79,6 @@ func (b *AbstractBaseGenerator) fix() {
 
 func (b *AbstractBaseGenerator) orm() {
 	b.impl.orm()
-}
-
-func (b *AbstractBaseGenerator) ProtoFieldNamingFn() func(string) string {
-	return b.impl.ProtoFieldNamingFn()
 }
 
 func (b *AbstractBaseGenerator) svcImplGrpc(grpcService v3.Service) {
@@ -126,15 +123,6 @@ func (b *AbstractBaseGenerator) GenService() {
 	ioutil.WriteFile(envfile, []byte(envContent), os.ModePerm)
 
 	b.dto()
-
-	wd, _ := os.Getwd()
-	os.Chdir(filepath.Join(b.Dir, "dto"))
-	err = b.runner.Run("go", "generate", "./...")
-	if err != nil {
-		panic(err)
-	}
-	os.Chdir(wd)
-
 	b.svcGo()
 
 	validate.DataType(b.Dir)
@@ -149,24 +137,17 @@ func (b *AbstractBaseGenerator) GenService() {
 	codegen.GenHttpMiddleware(b.Dir)
 	codegen.GenMain(b.Dir, ic)
 	codegen.GenHttpHandler(b.Dir, ic, 0)
-	var caseConvertor func(string) string
-	switch b.Jsonattrcase {
-	case "snake":
-		caseConvertor = strcase.ToSnake
-	default:
-		caseConvertor = strcase.ToLowerCamel
-	}
 	codegen.GenHttpHandlerImpl(b.Dir, ic, codegen.GenHttpHandlerImplConfig{
 		Omitempty:           b.Omitempty,
 		AllowGetWithReqBody: b.AllowGetWithReqBody,
-		CaseConvertor:       caseConvertor,
+		CaseConvertor:       b.CaseConverter,
 	})
 	if b.Client {
 		codegen.GenGoIClient(b.Dir, ic)
 		codegen.GenGoClient(b.Dir, ic, codegen.GenGoClientConfig{
 			Env:                 b.Env,
 			AllowGetWithReqBody: b.AllowGetWithReqBody,
-			CaseConvertor:       caseConvertor,
+			CaseConvertor:       b.CaseConverter,
 		})
 		codegen.GenGoClientProxy(b.Dir, ic)
 	}
@@ -175,12 +156,11 @@ func (b *AbstractBaseGenerator) GenService() {
 	})
 
 	if b.Grpc {
-		p := v3.NewProtoGenerator(v3.WithFieldNamingFunc(b.ProtoFieldNamingFn()))
+		p := v3.NewProtoGenerator(v3.WithFieldNamingFunc(b.CaseConverter))
 		parser.ParseDtoGrpc(b.Dir, p, "dto")
 		grpcSvc, protoFile := codegen.GenGrpcProto(b.Dir, ic, p)
 		protoFile, _ = filepath.Rel(b.Dir, protoFile)
-		fmt.Println(protoFile)
-		wd, _ = os.Getwd()
+		wd, _ := os.Getwd()
 		os.Chdir(filepath.Join(b.Dir))
 		// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
 		if err = b.runner.Run("protoc", "--proto_path=.",

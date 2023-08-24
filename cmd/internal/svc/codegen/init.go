@@ -43,10 +43,10 @@ type {{.SvcName}} interface {
 
 const dtoTmpl = templates.EditableHeaderTmpl + `package dto
 
-//go:generate go-doudou name --file $GOFILE --form
+//go:generate go-doudou name --file $GOFILE --form --case {{ .JsonCase }}
 
 type GddUser struct {
-	Id    int32
+	Id    int64
 	Name  string
 	Phone string
 	Dept  string
@@ -67,12 +67,40 @@ type Page struct {
 
 // Parameter struct
 type Parameter struct {
-	Page    string
-	Size    string
+	Page    int64
+	Size    int64
 	Sort    string
 	Order   string
 	Fields  string
 	Filters []interface{}
+}
+
+func (receiver Parameter) GetPage() int64 {
+	return receiver.Page
+}
+
+func (receiver Parameter) GetSize() int64 {
+	return receiver.Size
+}
+
+func (receiver Parameter) GetSort() string {
+	return receiver.Sort
+}
+
+func (receiver Parameter) GetOrder() string {
+	return receiver.Order
+}
+
+func (receiver Parameter) GetFields() string {
+	return receiver.Fields
+}
+
+func (receiver Parameter) GetFilters() interface{} {
+	return receiver.Filters
+}
+
+func (receiver Parameter) IParameterInstance() {
+
 }
 `
 
@@ -145,12 +173,14 @@ ENTRYPOINT ["/repo/api"]
 `
 
 type InitProjConfig struct {
-	Dir            string
-	ModName        string
-	Runner         executils.Runner
-	GenSvcGo       bool
-	Module         bool
+	Dir             string
+	ModName         string
+	Runner          executils.Runner
+	GenSvcGo        bool
+	Module          bool
 	ProtoGenerator v3.ProtoGenerator
+	CaseConverter  func(string) string
+	JsonCase       string
 }
 
 // InitProj inits a service project
@@ -168,7 +198,7 @@ func InitProj(conf InitProjConfig) {
 		tpl       *template.Template
 		envfile   string
 	)
-	dir, modName, runner, genSvcGo, module, protoGenerator := conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator
+	dir, modName, runner, genSvcGo, module, protoGenerator, caseConverter, jsonCase := conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator, conf.CaseConverter, conf.JsonCase
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
@@ -240,10 +270,18 @@ func InitProj(conf InitProjConfig) {
 
 		tpl, _ = template.New(dtoTmpl).Parse(dtoTmpl)
 		_ = tpl.Execute(f, struct {
-			Version string
+			Version  string
+			JsonCase string
 		}{
-			Version: version.Release,
+			Version:  version.Release,
+			JsonCase: jsonCase,
 		})
+		oldWd, _ := os.Getwd()
+		os.Chdir(dir)
+		if err = runner.Run("go", "generate", "./..."); err != nil {
+			panic(err)
+		}
+		os.Chdir(oldWd)
 	} else {
 		logrus.Warnf("file %s already exists", dtofile)
 	}
@@ -303,7 +341,7 @@ func InitProj(conf InitProjConfig) {
 		validate.DataType(dir)
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 		validate.RestApi(dir, ic)
-		genHttp(dir, ic)
+		genHttp(dir, ic, caseConverter)
 		genGrpc(dir, ic, runner, protoGenerator)
 		genPlugin(dir, ic)
 		genMainModule(dir)

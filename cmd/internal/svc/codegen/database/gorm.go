@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/iancoleman/strcase"
+	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
@@ -77,10 +77,6 @@ func (gg *GormGenerator) fix() {
 	//}
 }
 
-func (gg *GormGenerator) ProtoFieldNamingFn() func(string) string {
-	return strcase.ToLowerCamel
-}
-
 const (
 	driverMysql     = "mysql"
 	driverPostgres  = "postgres"
@@ -96,6 +92,8 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Client = false
 	gg.Grpc = conf.Grpc
 	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
+	gg.TableGlob = conf.TableGlob
+	gg.CaseConverter = conf.CaseConverter
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {
@@ -156,12 +154,21 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		}
 		return tag
 	}))
-	g.WithJSONTagNameStrategy(func(n string) string { return n + ",omitempty" })
+	g.WithJSONTagNameStrategy(func(n string) string { return gg.CaseConverter(n) + ",omitempty" })
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
-	g.ApplyBasic(g.GenerateAllTable(
-		gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
-		gormgen.FieldGenType(conf.Soft, "Time"),
-	)...)
+	var models []interface{}
+	if stringutils.IsNotEmpty(gg.TableGlob) {
+		models = g.GenerateTablesByGlob(
+			glob.MustCompile(gg.TableGlob),
+			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
+			gormgen.FieldGenType(conf.Soft, "Time"))
+	} else {
+		models = g.GenerateAllTable(
+			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
+			gormgen.FieldGenType(conf.Soft, "Time"),
+		)
+	}
+	g.ApplyBasic(models...)
 	gg.g = g
 }
