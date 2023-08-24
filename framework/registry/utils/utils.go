@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/hashicorp/go-sockaddr"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )

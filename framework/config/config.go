@@ -419,3 +419,42 @@ func ServiceDiscoveryMap() map[string]struct{} {
 }
 
 var PrintLock sync.Mutex
+
+type Config struct {
+	Db struct {
+		Name   string
+		Driver string
+		Dsn    string
+		Table  struct {
+			// for postgresql schema only
+			Prefix string
+		}
+		Log struct {
+			Level                     string
+			SlowThreshold             string
+			IgnoreRecordNotFoundError bool
+			ParameterizedQueries      bool
+		}
+		Mysql struct {
+			SkipInitializeWithVersion     bool
+			DefaultStringSize             int
+			DisableWithReturning          bool
+			DisableDatetimePrecision      bool
+			DontSupportRenameIndex        bool
+			DontSupportRenameColumn       bool
+			DontSupportForShareClause     bool
+			DontSupportNullAsDefaultValue bool
+			DontSupportRenameColumnUnique bool
+		}
+		Postgres struct {
+			PreferSimpleProtocol bool
+			WithoutReturning     bool
+		}
+		Pool struct {
+			MaxIdleConns    int
+			MaxOpenConns    int
+			ConnMaxLifetime string
+			ConnMaxIdleTime string
+		}
+	}
+}

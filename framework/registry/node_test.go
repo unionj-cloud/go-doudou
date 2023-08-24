@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr/mock"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
 	nmock "github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos/mock"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"

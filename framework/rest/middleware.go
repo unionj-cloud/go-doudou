@@ -16,7 +16,7 @@ import (
 	"github.com/slok/goresilience/bulkhead"
 	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"io"

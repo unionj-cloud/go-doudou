@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"

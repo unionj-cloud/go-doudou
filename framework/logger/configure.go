@@ -3,7 +3,7 @@ package logger
 import (
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"io"
 )

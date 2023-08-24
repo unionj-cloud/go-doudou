@@ -8,7 +8,7 @@ import (
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
-	ddconfig "github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	ddconfig "github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"io"

@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"

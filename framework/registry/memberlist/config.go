@@ -1,7 +1,7 @@
 package memberlist
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"

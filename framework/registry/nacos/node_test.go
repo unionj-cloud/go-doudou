@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos/mock"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/naming_client"

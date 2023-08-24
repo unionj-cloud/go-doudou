@@ -4,7 +4,7 @@ import (
 	"fmt"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/etcd"

@@ -3,7 +3,7 @@ package serversets
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/framework/internal/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"net/url"
 	"strconv"
