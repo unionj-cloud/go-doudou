@@ -142,14 +142,9 @@ func init() {
 }
 
 func NewDb(conf config.Config) (db *gorm.DB) {
-	var err error
-	slowThreshold, _ := time.ParseDuration("200ms")
-	if stringutils.IsNotEmpty(conf.Db.Log.SlowThreshold) {
-		if value, err := time.ParseDuration(conf.Db.Log.SlowThreshold); err == nil {
-			slowThreshold = value
-		} else {
-			zlogger.Error().Err(err).Msg(err.Error())
-		}
+	slowThreshold, err := time.ParseDuration(conf.Db.Log.SlowThreshold)
+	if err != nil {
+		errorx.Panic(err.Error())
 	}
 	logLevel := logger.Warn
 	if stringutils.IsNotEmpty(conf.Db.Log.Level) {

@@ -41,7 +41,7 @@ func LoadReader(reader io.Reader) error {
 	return load(data)
 }
 
-func loadFile(file string) {
+func LoadFile(file string) {
 	data, _ := ioutil.ReadFile(file)
 	err := load(data)
 	if err != nil {
@@ -53,21 +53,21 @@ func Load(env string) {
 	wd, _ := os.Getwd()
 	matches, _ := filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s-local.%s", env, "y*ml")))
 	for _, item := range matches {
-		loadFile(item)
+		LoadFile(item)
 	}
 	if "test" != env {
 		matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-local.%s", "y*ml")))
 		for _, item := range matches {
-			loadFile(item)
+			LoadFile(item)
 		}
 	}
 	matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app-%s.%s", env, "y*ml")))
 	for _, item := range matches {
-		loadFile(item)
+		LoadFile(item)
 	}
 	matches, _ = filepath.Glob(filepath.Join(wd, fmt.Sprintf("app.%s", "y*ml")))
 	for _, item := range matches {
-		loadFile(item)
+		LoadFile(item)
 	}
 }
 

@@ -431,7 +431,7 @@ type Config struct {
 		}
 		Log struct {
 			Level                     string
-			SlowThreshold             string
+			SlowThreshold             string `default:"200ms"`
 			IgnoreRecordNotFoundError bool
 			ParameterizedQueries      bool
 		}
@@ -451,8 +451,8 @@ type Config struct {
 			WithoutReturning     bool
 		}
 		Pool struct {
-			MaxIdleConns    int
-			MaxOpenConns    int
+			MaxIdleConns    int `default:"2"`
+			MaxOpenConns    int `default:"-1"`
 			ConnMaxLifetime string
 			ConnMaxIdleTime string
 		}

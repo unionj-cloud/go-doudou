@@ -2,6 +2,7 @@ package fileutils
 
 import (
 	"bufio"
+	"github.com/mholt/archiver/v3"
 	"io"
 	"os"
 )
@@ -38,4 +39,8 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 	}
 
 	return lines, nil
+}
+
+func Archive(output string, sources ...string) error {
+	return archiver.Archive(sources, output)
 }
