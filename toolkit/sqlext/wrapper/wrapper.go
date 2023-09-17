@@ -3,10 +3,10 @@ package wrapper
 import (
 	"context"
 	"database/sql"
-	"github.com/go-redis/cache/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/logger"
 	"time"
@@ -34,6 +34,7 @@ type Querier interface {
 	Rebind(query string) string
 	BindNamed(query string, arg interface{}) (string, []interface{}, error)
 	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	//RefreshCache()
 }
 
 // GddDB wraps sqlx.DB

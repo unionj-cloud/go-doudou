@@ -14,7 +14,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -51,32 +50,18 @@ func NewSqlLogger(opts ...SqlLoggerOption) SqlLogger {
 	return sqlLogger
 }
 
-var limitre *regexp.Regexp
-
-func init() {
-	limitre = regexp.MustCompile(`limit '\d+'(,'\d+')?`)
-}
-
 func PopulatedSql(query string, args ...interface{}) string {
-	query = strings.Join(strings.Fields(query), " ")
-	copiedArgs := make([]interface{}, len(args))
-	copy(copiedArgs, args)
-	for i, arg := range copiedArgs {
-		if arg == nil {
-			continue
-		}
+	var sb strings.Builder
+	sb.WriteString(strings.Join(strings.Fields(query), " "))
+	for _, arg := range args {
 		value := reflectutils.ValueOf(arg)
 		if value.IsValid() {
-			copiedArgs[i] = value.Interface()
+			sb.WriteString(fmt.Sprint(value.Interface()))
+		} else {
+			sb.WriteString(fmt.Sprint(arg))
 		}
 	}
-	str := strings.ReplaceAll(fmt.Sprintf(strings.ReplaceAll(query, "?", "'%v'"), copiedArgs...), "'<nil>'", "null")
-	if limitre.MatchString(str) {
-		str = limitre.ReplaceAllStringFunc(str, func(s string) string {
-			return strings.ReplaceAll(s, "'", "")
-		})
-	}
-	return str
+	return strings.ReplaceAll(sb.String(), "'<nil>'", "null")
 }
 
 func (receiver SqlLogger) LogWithErr(ctx context.Context, err error, hit *bool, query string, args ...interface{}) {
