@@ -93,6 +93,8 @@ type Svc struct {
 
 	JsonCase      string
 	CaseConverter func(string) string
+
+	http2grpc bool
 }
 
 type DbConfig struct {
@@ -126,7 +128,6 @@ func (receiver *Svc) SetRunner(runner executils.Runner) {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
-	parser.ParseDto(dir, "vo")
 	parser.ParseDto(dir, "dto")
 	validate.DataType(dir)
 
@@ -206,6 +207,18 @@ func (receiver *Svc) Init() {
 }
 
 type SvcOption func(svc *Svc)
+
+func WithHttp2Grpc(http2grpc bool) SvcOption {
+	return func(svc *Svc) {
+		svc.http2grpc = http2grpc
+	}
+}
+
+func WithAllowGetWithReqBody(allowGetWithReqBody bool) SvcOption {
+	return func(svc *Svc) {
+		svc.AllowGetWithReqBody = allowGetWithReqBody
+	}
+}
 
 func WithRunner(runner executils.Runner) SvcOption {
 	return func(svc *Svc) {
@@ -500,9 +513,8 @@ func (receiver *Svc) Grpc() {
 	dir := receiver.dir
 	validate.DataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-	validate.RestApi(dir, ic)
+	validate.GrpcApi(dir, ic, receiver.http2grpc)
 	codegen.GenConfig(dir)
-	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "vo")
 	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
@@ -515,7 +527,19 @@ func (receiver *Svc) Grpc() {
 		panic(err)
 	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)
-	codegen.GenMainGrpc(dir, ic, grpcSvc)
+	if receiver.http2grpc {
+		codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
+		codegen.GenHttp2Grpc(dir, ic, codegen.GenHttp2GrpcConfig{
+			AllowGetWithReqBody: receiver.AllowGetWithReqBody,
+		})
+		codegen.GenMainGrpcHttp(dir, ic, grpcSvc)
+		parser.GenDoc(dir, ic, parser.GenDocConfig{
+			RoutePatternStrategy: receiver.RoutePatternStrategy,
+			AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
+		})
+	} else {
+		codegen.GenMainGrpc(dir, ic, grpcSvc)
+	}
 	codegen.FixModGrpc(dir)
 	codegen.GenMethodAnnotationStore(dir, ic)
 	runner := receiver.runner

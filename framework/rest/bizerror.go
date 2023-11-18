@@ -69,3 +69,17 @@ func HandleBadRequestErr(err error) {
 func HandleInternalServerError(err error) {
 	panic(NewBizError(err))
 }
+
+func PanicBadRequestErr(err error) {
+	if err == nil {
+		return
+	}
+	panic(NewBizError(err, WithStatusCode(http.StatusBadRequest)))
+}
+
+func PanicInternalServerError(err error) {
+	if err == nil {
+		return
+	}
+	panic(NewBizError(err))
+}

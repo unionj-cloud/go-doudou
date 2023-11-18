@@ -55,7 +55,7 @@ func GenMethodAnnotationStore(dir string, ic astutils.InterfaceCollector) {
 		sqlBuf         bytes.Buffer
 		fi             os.FileInfo
 	)
-	grpcDir = filepath.Join(dir, "transport/grpc")
+	grpcDir = filepath.Join(dir, "transport", "grpc")
 	if err = os.MkdirAll(grpcDir, os.ModePerm); err != nil {
 		panic(err)
 	}
@@ -65,14 +65,14 @@ func GenMethodAnnotationStore(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	if fi != nil {
-		logrus.Warningln("file handler.go will be overwritten")
+		logrus.Warningln("file annotation.go will be overwritten")
 	}
 	if f, err = os.Create(annotationFile); err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	if tpl, err = template.New("annotation.go.tmpl").Parse(annotationTmpl); err != nil {
+	if tpl, err = template.New(annotationTmpl).Parse(annotationTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {

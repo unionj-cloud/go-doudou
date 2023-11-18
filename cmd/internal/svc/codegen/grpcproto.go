@@ -85,7 +85,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p protov3.ProtoGen
 		f       *os.File
 		grpcDir string
 	)
-	grpcDir = filepath.Join(dir, "transport/grpc")
+	grpcDir = filepath.Join(dir, "transport", "grpc")
 	if err = os.MkdirAll(grpcDir, os.ModePerm); err != nil {
 		panic(err)
 	}

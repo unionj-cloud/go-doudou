@@ -9,6 +9,7 @@ import (
 )
 
 var naming string
+var http2grpc bool
 
 var grpcCmd = &cobra.Command{
 	Use:   "grpc",
@@ -20,7 +21,11 @@ var grpcCmd = &cobra.Command{
 		case "snake":
 			fn = strcase.ToSnake
 		}
-		s := svc.NewSvc("", svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
+		s := svc.NewSvc("",
+			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))),
+			svc.WithHttp2Grpc(http2grpc),
+			svc.WithAllowGetWithReqBody(allowGetWithReqBody),
+		)
 		s.Grpc()
 	},
 }
@@ -28,4 +33,6 @@ var grpcCmd = &cobra.Command{
 func init() {
 	svcCmd.AddCommand(grpcCmd)
 	grpcCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
+	grpcCmd.Flags().BoolVar(&http2grpc, "http2grpc", false, `whether need RESTful api for your grpc service`)
+	grpcCmd.Flags().BoolVar(&allowGetWithReqBody, "allowGetWithReqBody", false, "Whether allow get http request with request body.")
 }

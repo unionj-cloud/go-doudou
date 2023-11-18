@@ -6,6 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,14 +15,7 @@ import (
 
 func DataType(dir string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), parser.ExprStringP)
-	vodir := filepath.Join(dir, "vo")
 	var files []string
-	if _, err := os.Stat(vodir); !os.IsNotExist(err) {
-		_ = filepath.Walk(vodir, astutils.Visit(&files))
-		for _, file := range files {
-			astutils.BuildStructCollector(file, parser.ExprStringP)
-		}
-	}
 	dtodir := filepath.Join(dir, "dto")
 	if _, err := os.Stat(dtodir); !os.IsNotExist(err) {
 		files = nil
@@ -43,7 +37,6 @@ func RestApi(dir string, ic astutils.InterfaceCollector) {
 		panic(errors.New("no service interface found"))
 	}
 	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
-		parser.ParseDto(dir, "vo")
 		parser.ParseDto(dir, "dto")
 	}
 	svcInter := ic.Interfaces[0]
@@ -59,6 +52,77 @@ func RestApi(dir string, ic astutils.InterfaceCollector) {
 			}
 		}
 	}
+}
+
+func GrpcApi(dir string, ic astutils.InterfaceCollector, http2grpc bool) {
+	if len(ic.Interfaces) == 0 {
+		panic(errors.New("no service interface found"))
+	}
+	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
+		parser.ParseDto(dir, "dto")
+	}
+	svcInter := ic.Interfaces[0]
+	re := regexp.MustCompile(`anonystruct«(.*)»`)
+	for _, method := range svcInter.Methods {
+		if http2grpc {
+			pass := checkParams(method.Params)
+			if !pass {
+				panic("Only support pass one context.Context and at most one struct from dto package as parameters. A context.Context is required.")
+			}
+			pass = checkResults(method.Results)
+			if !pass {
+				panic("Only support pass one struct from dto package and one error as results. An error is required.")
+			}
+		} else {
+			nonBasicTypes := getNonBasicTypes(method.Params)
+			if len(nonBasicTypes) > 1 {
+				panic(fmt.Sprintf("Too many golang non-builtin type parameters in method %s, can't decide which one should be put into request body!", method))
+			}
+			for _, param := range method.Results {
+				if re.MatchString(param.Type) {
+					panic("not support anonymous struct as parameter")
+				}
+			}
+		}
+	}
+}
+
+func checkResults(params []astutils.FieldMeta) bool {
+	pass := true
+	var passedParams []string
+	for _, param := range params {
+		if param.Type == "error" || strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") {
+			passedParams = append(passedParams, param.Type)
+			continue
+		}
+		return false
+	}
+	if len(passedParams) > 2 {
+		return false
+	}
+	if !sliceutils.StringContains(passedParams, "error") {
+		return false
+	}
+	return pass
+}
+
+func checkParams(params []astutils.FieldMeta) bool {
+	pass := true
+	var passedParams []string
+	for _, param := range params {
+		if param.Type == "context.Context" || strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") {
+			passedParams = append(passedParams, param.Type)
+			continue
+		}
+		return false
+	}
+	if len(passedParams) > 2 {
+		return false
+	}
+	if !sliceutils.StringContains(passedParams, "context.Context") {
+		return false
+	}
+	return pass
 }
 
 func getNonBasicTypes(params []astutils.FieldMeta) []string {

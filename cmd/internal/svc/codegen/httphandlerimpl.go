@@ -443,7 +443,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	if err != nil {
 		panic(err)
 	}
-	unimplementedMethods(&meta, httpDir)
+	unimplementedMethods(&meta, httpDir, meta.Name+"HandlerImpl")
 	if fi != nil {
 		logrus.Warningln("New content will be append to handlerimpl.go file")
 		if f, err = os.OpenFile(handlerimplfile, os.O_APPEND, os.ModePerm); err != nil {
@@ -517,7 +517,7 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	}{
 		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
-		DtoPackage:    dtoPkg,
+		DtoPackage:     dtoPkg,
 	}); err != nil {
 		panic(err)
 	}
@@ -525,10 +525,10 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	astutils.FixImport(original, handlerimplfile)
 }
 
-func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string) {
+func unimplementedMethods(meta *astutils.InterfaceMeta, httpDir string, structName string) {
 	sc := astutils.NewStructCollector(astutils.ExprString)
 	astutils.CollectStructsInFolder(httpDir, sc)
-	if handlers, exists := sc.Methods[meta.Name+"HandlerImpl"]; exists {
+	if handlers, exists := sc.Methods[structName]; exists {
 		var notimplemented []astutils.MethodMeta
 		for _, item := range meta.Methods {
 			for _, handler := range handlers {
