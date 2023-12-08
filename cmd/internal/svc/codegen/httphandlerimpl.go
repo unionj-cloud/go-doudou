@@ -27,7 +27,7 @@ var appendHttpHandlerImplTmpl = `
 			{{ $p.Name }} {{ $p.Type }}
 			{{- else if and (eq $m.HttpMethod "GET") (not (isBuiltin $p)) }}
 			{{ $p.Name }}Wrapper struct {
-				{{ $p.Name | title }} {{ $p.Type }} ` + "`" + `form:"{{ $p.Name }}"` + "`" + `
+				{{ $p.Name | title }} {{ $p.Type }} ` + "`" + `json:"{{ $p.Name }}"` + "`" + `
 			}
 			{{- else }}
 			{{ $p.Name }} {{ $p.Type }}
