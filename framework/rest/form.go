@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/go-playground/form/v4"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"net/url"
 	"reflect"
 	"strings"
@@ -12,6 +13,9 @@ var encoder = form.NewEncoder()
 
 func tagNameFunc(fld reflect.StructField) string {
 	name := fld.Tag.Get("json")
+	if stringutils.IsEmpty(name) {
+		name = fld.Tag.Get("form")
+	}
 	if commaIndex := strings.Index(name, ","); commaIndex != -1 {
 		name = name[:commaIndex]
 	}
