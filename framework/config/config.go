@@ -280,6 +280,21 @@ const (
 	GddDBPostgresPreferSimpleProtocol envVariable = "GDD_DB_POSTGRES_PREFERSIMPLEPROTOCOL"
 	GddDBPostgresWithoutReturning     envVariable = "GDD_DB_POSTGRES_WITHOUTRETURNING"
 
+	GddDbPrometheusEnable          envVariable = "GDD_DB_PROMETHEUS_ENABLE"
+	GddDbPrometheusRefreshInterval envVariable = "GDD_DB_PROMETHEUS_REFRESH_INTERVAL"
+	GddDbPrometheusDBName          envVariable = "GDD_DB_PROMETHEUS_DB_NAME"
+
+	GddDbCacheEnable envVariable = "GDD_DB_CACHE_ENABLE"
+
+	GddCacheRedisAddr           envVariable = "GDD_CACHE_REDIS_ADDR"
+	GddCacheRedisRouteByLatency envVariable = "GDD_CACHE_REDIS_ROUTE_BY_LATENCY"
+	GddCacheRedisRouteRandomly  envVariable = "GDD_CACHE_REDIS_ROUTE_RANDOMLY"
+	GddCacheRedisTTL            envVariable = "GDD_CACHE_REDIS_TTL"
+
+	GddCacheRistrettoNumCounters envVariable = "GDD_CACHE_RISTRETTO_NUMCOUNTERS"
+	GddCacheRistrettoMaxCost     envVariable = "GDD_CACHE_RISTRETTO_MAX_COST"
+	GddCacheRistrettoBufferItems envVariable = "GDD_CACHE_RISTRETTO_BUFFER_ITEMS"
+
 	GddZkServers          envVariable = "GDD_ZK_SERVERS"
 	GddZkSequence         envVariable = "GDD_ZK_SEQUENCE"
 	GddZkDirectoryPattern envVariable = "GDD_ZK_DIRECTORY_PATTERN"

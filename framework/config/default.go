@@ -128,4 +128,18 @@ const (
 	DefaultGddZkServers          = ""
 	DefaultGddZkSequence         = false
 	DefaultGddZkDirectoryPattern = "/registry/%s/providers"
+
+	DefaultGddDbPrometheusEnable          = false
+	DefaultGddDbPrometheusRefreshInterval = 15
+	DefaultGddDbPrometheusDBName          = ""
+
+	DefaultGddDbCacheEnable            = false
+	DefaultGddCacheRedisAddr           = ""
+	DefaultGddCacheRedisRouteByLatency = true
+	DefaultGddCacheRedisRouteRandomly  = false
+	DefaultGddCacheRedisTTL            = 0
+
+	DefaultGddCacheRistrettoNumCounters = 1000
+	DefaultGddCacheRistrettoMaxCost     = 100
+	DefaultGddCacheRistrettoBufferItems = 64
 )
