@@ -1,11 +1,11 @@
 package caches
 
 import (
-	"gorm.io/gorm/callbacks"
-	"gorm.io/gorm/clause"
 	"sync"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/callbacks"
+	"gorm.io/gorm/clause"
 )
 
 type Caches struct {
@@ -140,30 +140,44 @@ func (c *Caches) checkCache(db *gorm.DB, identifier string) bool {
 	return false
 }
 
-func getFromClause(db *gorm.DB) *clause.From {
+func getClause[T clause.Interface](db *gorm.DB) *T {
 	if db == nil || db.Statement == nil {
-		return &clause.From{}
+		return new(T)
 	}
-	c, ok := db.Statement.Clauses[clause.From{}.Name()]
+	c, ok := db.Statement.Clauses[(*(new(T))).Name()]
 	if !ok || c.Expression == nil {
-		return &clause.From{}
+		return new(T)
 	}
-	from, ok := c.Expression.(clause.From)
+	value, ok := c.Expression.(T)
 	if !ok {
-		return &clause.From{}
+		return new(T)
 	}
-	return &from
+	return &value
 }
 
 func getTables(db *gorm.DB) []string {
-	// Find all table names within the sql statement as cache tags
-	from := getFromClause(db)
 	var tables []string
-	for _, item := range from.Tables {
-		tables = append(tables, item.Name)
+	// Find all table names within the sql statement as cache tags
+	from := getClause[clause.From](db)
+	if from != nil {
+		for _, item := range from.Tables {
+			tables = append(tables, item.Name)
+		}
+		for _, item := range from.Joins {
+			tables = append(tables, item.Table.Name)
+		}
 	}
-	for _, item := range from.Joins {
-		tables = append(tables, item.Table.Name)
+	insert := getClause[clause.Insert](db)
+	if insert != nil {
+		tables = append(tables, insert.Table.Name)
+	}
+	update := getClause[clause.Update](db)
+	if update != nil {
+		tables = append(tables, update.Table.Name)
+	}
+	locking := getClause[clause.Locking](db)
+	if locking != nil {
+		tables = append(tables, locking.Table.Name)
 	}
 	return tables
 }

@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"gorm.io/gorm/logger"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 )
 
 const FrameworkName = "go-doudou"
@@ -137,7 +138,8 @@ const (
 	DefaultGddCacheRedisAddr           = ""
 	DefaultGddCacheRedisRouteByLatency = true
 	DefaultGddCacheRedisRouteRandomly  = false
-	DefaultGddCacheRedisTTL            = 0
+	DefaultGddCacheTTL                 = 0
+	DefaultGddCacheStores              = ""
 
 	DefaultGddCacheRistrettoNumCounters = 1000
 	DefaultGddCacheRistrettoMaxCost     = 100

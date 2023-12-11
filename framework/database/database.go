@@ -1,19 +1,12 @@
 package database
 
 import (
-	"github.com/dgraph-io/ristretto"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/metrics"
-	"github.com/eko/gocache/lib/v4/store"
-	redis_store "github.com/eko/gocache/store/redis/v4"
-	ristretto_store "github.com/eko/gocache/store/ristretto/v4"
-	"github.com/redis/go-redis/v9"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	gocache "github.com/eko/gocache/lib/v4/cache"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -23,11 +16,14 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"gorm.io/plugin/prometheus"
-	"log"
-	"os"
-	"strings"
-	"time"
-	"unsafe"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 const (
@@ -162,66 +158,8 @@ func init() {
 			cast.ToUInt32OrDefault(config.GddDbPrometheusRefreshInterval.Load(), config.DefaultGddDbPrometheusRefreshInterval),
 			nil, collectors...)
 	}
-	if cast.ToBoolOrDefault(config.GddDbCacheEnable.Load(), config.DefaultGddDbCacheEnable) {
-		var cacheManager cache.CacheInterface[any]
-		var setterCaches []cache.SetterCacheInterface[any]
-
-		// Initialize Ristretto cache and Redis client
-		ristrettoCache, err := ristretto.NewCache(&ristretto.Config{
-			NumCounters: cast.ToInt64OrDefault(config.GddCacheRistrettoNumCounters.Load(), config.DefaultGddCacheRistrettoNumCounters),
-			MaxCost:     cast.ToInt64OrDefault(config.GddCacheRistrettoMaxCost.Load(), config.DefaultGddCacheRistrettoMaxCost),
-			BufferItems: cast.ToInt64OrDefault(config.GddCacheRistrettoBufferItems.Load(), config.DefaultGddCacheRistrettoBufferItems),
-			Cost: func(value interface{}) int64 {
-				return int64(unsafe.Sizeof(value))
-			},
-		})
-		if err != nil {
-			panic(err)
-		}
-		ttl := cast.ToIntOrDefault(config.GddCacheRedisTTL.Load(), config.DefaultGddCacheRedisTTL)
-		var ristrettoStore *ristretto_store.RistrettoStore
-		if ttl > 0 {
-			ristrettoStore = ristretto_store.NewRistretto(ristrettoCache, store.WithExpiration(time.Duration(ttl)*time.Second))
-		} else {
-			ristrettoStore = ristretto_store.NewRistretto(ristrettoCache)
-		}
-		setterCaches = append(setterCaches, cache.New[any](ristrettoStore))
-
-		redisAddr := config.GddCacheRedisAddr.LoadOrDefault(config.DefaultGddCacheRedisAddr)
-		if stringutils.IsNotEmpty(redisAddr) {
-			addrs := strings.Split(redisAddr, ",")
-			var redisClient redis_store.RedisClientInterface
-			if len(addrs) > 1 {
-				redisClient = redis.NewClusterClient(&redis.ClusterOptions{
-					Addrs:          addrs,
-					RouteByLatency: cast.ToBoolOrDefault(config.GddCacheRedisRouteByLatency.Load(), config.DefaultGddCacheRedisRouteByLatency),
-					RouteRandomly:  cast.ToBoolOrDefault(config.GddCacheRedisRouteRandomly.Load(), config.DefaultGddCacheRedisRouteRandomly),
-				})
-			} else {
-				redisClient = redis.NewClient(&redis.Options{Addr: addrs[0]})
-			}
-			var redisStore *redis_store.RedisStore
-			if ttl > 0 {
-				redisStore = redis_store.NewRedis(redisClient, store.WithExpiration(time.Duration(ttl)*time.Second))
-			} else {
-				redisStore = redis_store.NewRedis(redisClient)
-			}
-			setterCaches = append(setterCaches, cache.New[any](redisStore))
-		}
-
-		// Initialize chained cache
-		cacheManager = cache.NewChain[any](setterCaches...)
-
-		serviceName := config.GddServiceName.LoadOrDefault(config.DefaultGddServiceName)
-		if stringutils.IsNotEmpty(serviceName) {
-			// Initializes Prometheus metrics service
-			promMetrics := metrics.NewPrometheus(serviceName)
-
-			// Initialize chained cache
-			cacheManager = cache.NewMetric[any](promMetrics, cacheManager)
-		}
-
-		ConfigureDBCache(Db, cacheManager)
+	if cast.ToBoolOrDefault(config.GddDbCacheEnable.Load(), config.DefaultGddDbCacheEnable) && cache.CacheManager != nil {
+		ConfigureDBCache(Db, cache.CacheManager)
 	}
 }
 
@@ -335,6 +273,19 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		}
 	}
 	sqlDB.SetConnMaxIdleTime(maxIdleTime)
+
+	if conf.Db.Prometheus.Enable &&
+		stringutils.IsNotEmpty(conf.Db.Prometheus.DBName) {
+		var collectors []prometheus.MetricsCollector
+		switch driver {
+		case DriverMysql, DriverTidb:
+			collectors = append(collectors, &prometheus.MySQL{})
+		case DriverPostgres:
+			collectors = append(collectors, &prometheus.Postgres{})
+		}
+		ConfigureMetrics(Db, conf.Db.Prometheus.DBName, uint32(conf.Db.Prometheus.RefreshInterval),
+			nil, collectors...)
+	}
 	return
 }
 
@@ -347,7 +298,7 @@ func ConfigureMetrics(db *gorm.DB, dbName string, refreshInterval uint32, labels
 	}))
 }
 
-func ConfigureDBCache(db *gorm.DB, cacheManager cache.CacheInterface[any]) {
+func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any]) {
 	cachesPlugin := &caches.Caches{Conf: &caches.Config{
 		Easer:  true,
 		Cacher: NewCacherAdapter(cacheManager),
