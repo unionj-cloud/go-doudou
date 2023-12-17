@@ -51,6 +51,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/morkid/gocache v1.0.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/rs/cors v1.9.0
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
