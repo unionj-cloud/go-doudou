@@ -3,13 +3,14 @@ package caches
 import (
 	"errors"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"reflect"
 
 	"gorm.io/gorm/schema"
 )
 
 func SetPointedValue(dest interface{}, src interface{}) {
-	reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(src).Elem())
+	copier.DeepCopy(src, dest)
 }
 
 func deepCopy(src, dst interface{}) error {

@@ -7,6 +7,7 @@ require (
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/deckarep/golang-set v1.8.0
+	github.com/eko/gocache/lib/v4 v4.1.6-0.20231209210640-002c243623a2
 	github.com/felixge/httpsnoop v1.0.3
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.6.1
@@ -37,9 +38,9 @@ require (
 
 require (
 	github.com/dgraph-io/ristretto v0.1.1
-	github.com/eko/gocache/lib/v4 v4.1.5
-	github.com/eko/gocache/store/redis/v4 v4.2.1
-	github.com/eko/gocache/store/ristretto/v4 v4.2.1
+	github.com/eko/gocache/store/go_cache/v4 v4.2.1
+	github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2
+	github.com/eko/gocache/store/ristretto/v4 v4.2.2-0.20231209210640-002c243623a2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/gobwas/glob v0.2.3
@@ -53,6 +54,7 @@ require (
 	github.com/rs/cors v1.9.0
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
+	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
 	gorm.io/hints v1.1.0

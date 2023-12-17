@@ -1,11 +1,13 @@
 package caches
 
 import (
-	"sync"
-
+	"fmt"
+	"github.com/samber/lo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/xwb1989/sqlparser"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
-	"gorm.io/gorm/clause"
+	"sync"
 )
 
 type Caches struct {
@@ -48,12 +50,12 @@ func (c *Caches) Initialize(db *gorm.DB) error {
 		return err
 	}
 
-	err = db.Callback().Create().After("gorm:after_delete").Register("cache:after_delete", c.AfterWrite)
+	err = db.Callback().Delete().After("gorm:after_delete").Register("cache:after_delete", c.AfterWrite)
 	if err != nil {
 		return err
 	}
 
-	err = db.Callback().Create().After("gorm:after_update").Register("cache:after_update", c.AfterWrite)
+	err = db.Callback().Update().After("gorm:after_update").Register("cache:after_update", c.AfterWrite)
 	if err != nil {
 		return err
 	}
@@ -68,6 +70,10 @@ func (c *Caches) Query(db *gorm.DB) {
 	}
 
 	identifier := buildIdentifier(db)
+
+	if db.DryRun {
+		return
+	}
 
 	if c.checkCache(db, identifier) {
 		return
@@ -140,46 +146,24 @@ func (c *Caches) checkCache(db *gorm.DB, identifier string) bool {
 	return false
 }
 
-func getClause[T clause.Interface](db *gorm.DB) *T {
-	if db == nil || db.Statement == nil {
-		return new(T)
-	}
-	c, ok := db.Statement.Clauses[(*(new(T))).Name()]
-	if !ok || c.Expression == nil {
-		return new(T)
-	}
-	value, ok := c.Expression.(T)
-	if !ok {
-		return new(T)
-	}
-	return &value
-}
-
 func getTables(db *gorm.DB) []string {
-	var tables []string
-	// Find all table names within the sql statement as cache tags
-	from := getClause[clause.From](db)
-	if from != nil {
-		for _, item := range from.Tables {
-			tables = append(tables, item.Name)
+	stmt, err := sqlparser.Parse(db.Statement.SQL.String())
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+	}
+	tableNames := make([]string, 0)
+	_ = sqlparser.Walk(func(node sqlparser.SQLNode) (kontinue bool, err error) {
+		switch node := node.(type) {
+		case sqlparser.TableName:
+			tableNames = append(tableNames, node.Name.CompliantName())
 		}
-		for _, item := range from.Joins {
-			tables = append(tables, item.Table.Name)
-		}
-	}
-	insert := getClause[clause.Insert](db)
-	if insert != nil {
-		tables = append(tables, insert.Table.Name)
-	}
-	update := getClause[clause.Update](db)
-	if update != nil {
-		tables = append(tables, update.Table.Name)
-	}
-	locking := getClause[clause.Locking](db)
-	if locking != nil {
-		tables = append(tables, locking.Table.Name)
-	}
-	return tables
+		return true, nil
+	}, stmt)
+	tableNames = lo.Filter(tableNames, func(x string, index int) bool {
+		return stringutils.IsNotEmpty(x)
+	})
+	tableNames = lo.Uniq(tableNames)
+	return tableNames
 }
 
 func (c *Caches) storeInCache(db *gorm.DB, identifier string) {

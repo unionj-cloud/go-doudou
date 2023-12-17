@@ -136,6 +136,8 @@ const (
 
 	DefaultGddDbCacheEnable            = false
 	DefaultGddCacheRedisAddr           = ""
+	DefaultGddCacheRedisUser           = ""
+	DefaultGddCacheRedisPass           = ""
 	DefaultGddCacheRedisRouteByLatency = true
 	DefaultGddCacheRedisRouteRandomly  = false
 	DefaultGddCacheTTL                 = 0
@@ -144,4 +146,7 @@ const (
 	DefaultGddCacheRistrettoNumCounters = 1000
 	DefaultGddCacheRistrettoMaxCost     = 100
 	DefaultGddCacheRistrettoBufferItems = 64
+
+	DefaultGddCacheGocacheExpiration      = "5m"
+	DefaultGddCacheGocacheCleanupInterval = "10m"
 )

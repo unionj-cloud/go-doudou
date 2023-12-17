@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
@@ -13,7 +12,7 @@ import (
 var _ caches.Cacher = (*CacherAdapter)(nil)
 
 type CacherAdapter struct {
-	marshaler *marshaler.Marshaler
+	marshaler *Marshaler
 }
 
 func (c *CacherAdapter) Delete(tag string, tags ...string) error {
@@ -44,6 +43,6 @@ func (c *CacherAdapter) Store(key string, val *caches.Query) error {
 
 func NewCacherAdapter(cacheManager cache.CacheInterface[any]) *CacherAdapter {
 	return &CacherAdapter{
-		marshaler: marshaler.New(cacheManager),
+		marshaler: NewMarshaler(cacheManager),
 	}
 }

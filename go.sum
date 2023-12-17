@@ -350,12 +350,14 @@ github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdf
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
-github.com/eko/gocache/lib/v4 v4.1.5 h1:CeMQmdIzwBKKLRjk3FCDXzNFsQTyqJ01JLI7Ib0C9r8=
-github.com/eko/gocache/lib/v4 v4.1.5/go.mod h1:XaNfCwW8KYW1bRZ/KoHA1TugnnkMz0/gT51NDIu7LSY=
-github.com/eko/gocache/store/redis/v4 v4.2.1 h1:uPAgZIn7knH6a55tO4ETN9V93VD3Rcyx0ZIyozEqC0I=
-github.com/eko/gocache/store/redis/v4 v4.2.1/go.mod h1:JoLkNA5yeGNQUwINAM9529cDNQCo88WwiKlO9e/+39I=
-github.com/eko/gocache/store/ristretto/v4 v4.2.1 h1:xB5E1LP1gh8yUV1G3KVRSL4T0OTnxp4OixuTljn2848=
-github.com/eko/gocache/store/ristretto/v4 v4.2.1/go.mod h1:KyshDyWQqfSVrg2rH06fFQZTj6vG2fxlY7oAW9oxNHY=
+github.com/eko/gocache/lib/v4 v4.1.6-0.20231209210640-002c243623a2 h1:0D1uMw2+fUoDLapI/LzF+C9XZejx0VrPLHKIsW2C/YE=
+github.com/eko/gocache/lib/v4 v4.1.6-0.20231209210640-002c243623a2/go.mod h1:XaNfCwW8KYW1bRZ/KoHA1TugnnkMz0/gT51NDIu7LSY=
+github.com/eko/gocache/store/go_cache/v4 v4.2.1 h1:3xSksOamzCf+YZXz9l67gr6jOj3AA4hnk0mV4z3Jwbs=
+github.com/eko/gocache/store/go_cache/v4 v4.2.1/go.mod h1:rd6tUbaBOdqgi5xT3+OGeU7lQuhVJGTapNWFlZou524=
+github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2 h1:APkfwRpuEuLUAZqX4/mdDy1dQj3F7gkeFZwNRtzbOHc=
+github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2/go.mod h1:JoLkNA5yeGNQUwINAM9529cDNQCo88WwiKlO9e/+39I=
+github.com/eko/gocache/store/ristretto/v4 v4.2.2-0.20231209210640-002c243623a2 h1:zppsgd40iBLCXetWGhED0zsh+q89/41RgEDhSjtsLkI=
+github.com/eko/gocache/store/ristretto/v4 v4.2.2-0.20231209210640-002c243623a2/go.mod h1:KyshDyWQqfSVrg2rH06fFQZTj6vG2fxlY7oAW9oxNHY=
 github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
 github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emicklei/go-restful v2.9.5+incompatible/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
@@ -920,6 +922,7 @@ github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0Mw
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/name v1.0.0/go.mod h1:Z//MfYJnH4jVpQ9wkclwu2I2MkHmXTlT9wR5UZScttM=
 github.com/pascaldekloe/name v1.0.1/go.mod h1:Z//MfYJnH4jVpQ9wkclwu2I2MkHmXTlT9wR5UZScttM=
+github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
 github.com/paulmach/orb v0.7.1 h1:Zha++Z5OX/l168sqHK3k4z18LDvr+YAO/VjK0ReQ9rU=
 github.com/paulmach/orb v0.7.1/go.mod h1:FWRlTgl88VI1RBx/MkrwWDRhQ96ctqMCh8boXhmqB/A=
 github.com/paulmach/protoscan v0.2.1/go.mod h1:SpcSwydNLrxUGSDvXvO0P7g7AuhJ7lcKfDlhJCDw2gY=
@@ -1177,6 +1180,8 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 h1:nIPpBwaJSVYIxUFsDv3M8ofm
 github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMxjDjgmT5uz5wzYJKVo23qUhYTos=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
+github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=
+github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
