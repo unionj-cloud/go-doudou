@@ -186,8 +186,25 @@ func getTablesPostgres(db *gorm.DB) []string {
 	sql := db.Statement.SQL.String()
 	w := &walk.AstWalker{
 		Fn: func(ctx interface{}, node interface{}) (stop bool) {
-			if tableName, ok := node.(*tree.TableName); ok {
-				tableNames = append(tableNames, tableName.Table())
+			//log.Printf("%T", node)
+			switch expr := node.(type) {
+			case *tree.TableName:
+				tableNames = append(tableNames, expr.Table())
+			case *tree.Insert:
+				fmtCtx := tree.NewFmtCtx(tree.FmtSimple)
+				expr.Table.Format(fmtCtx)
+				tableName := fmtCtx.String()
+				tableNames = append(tableNames, tableName)
+			case *tree.Update:
+				fmtCtx := tree.NewFmtCtx(tree.FmtSimple)
+				expr.Table.Format(fmtCtx)
+				tableName := fmtCtx.String()
+				tableNames = append(tableNames, tableName)
+			case *tree.Delete:
+				fmtCtx := tree.NewFmtCtx(tree.FmtSimple)
+				expr.Table.Format(fmtCtx)
+				tableName := fmtCtx.String()
+				tableNames = append(tableNames, tableName)
 			}
 			return false
 		},
