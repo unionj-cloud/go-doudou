@@ -37,6 +37,7 @@ require (
 )
 
 require (
+	github.com/auxten/postgresql-parser v1.0.1
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/eko/gocache/store/go_cache/v4 v4.2.1
 	github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2
@@ -64,10 +65,21 @@ require (
 )
 
 require (
+	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054 // indirect
+	github.com/cockroachdb/apd v1.1.1-0.20181017181144-bced77f817b4 // indirect
+	github.com/cockroachdb/errors v1.8.2 // indirect
+	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
+	github.com/cockroachdb/redact v1.0.8 // indirect
+	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/getsentry/raven-go v0.2.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 

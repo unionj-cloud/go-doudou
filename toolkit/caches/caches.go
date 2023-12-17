@@ -2,9 +2,14 @@ package caches
 
 import (
 	"fmt"
+	"github.com/auxten/postgresql-parser/pkg/sql/parser"
+	"github.com/auxten/postgresql-parser/pkg/sql/sem/tree"
+	"github.com/auxten/postgresql-parser/pkg/walk"
 	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/xwb1989/sqlparser"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"sync"
@@ -147,6 +152,16 @@ func (c *Caches) checkCache(db *gorm.DB, identifier string) bool {
 }
 
 func getTables(db *gorm.DB) []string {
+	switch db.Dialector.(type) {
+	case *mysql.Dialector:
+		return getTablesMysql(db)
+	case *postgres.Dialector:
+		return getTablesPostgres(db)
+	}
+	return nil
+}
+
+func getTablesMysql(db *gorm.DB) []string {
 	stmt, err := sqlparser.Parse(db.Statement.SQL.String())
 	if err != nil {
 		fmt.Println("Error: " + err.Error())
@@ -163,6 +178,28 @@ func getTables(db *gorm.DB) []string {
 		return stringutils.IsNotEmpty(x)
 	})
 	tableNames = lo.Uniq(tableNames)
+	return tableNames
+}
+
+func getTablesPostgres(db *gorm.DB) []string {
+	tableNames := make([]string, 0)
+	sql := db.Statement.SQL.String()
+	w := &walk.AstWalker{
+		Fn: func(ctx interface{}, node interface{}) (stop bool) {
+			if tableName, ok := node.(*tree.TableName); ok {
+				tableNames = append(tableNames, tableName.Table())
+			}
+			return false
+		},
+	}
+	stmts, err := parser.Parse(sql)
+	if err != nil {
+		return nil
+	}
+	_, err = w.Walk(stmts, nil)
+	if err != nil {
+		return nil
+	}
 	return tableNames
 }
 
