@@ -1,11 +1,12 @@
 package database
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	gocache "github.com/eko/gocache/lib/v4/cache"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -14,10 +15,15 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"log"
-	"os"
-	"strings"
-	"time"
+	"gorm.io/plugin/prometheus"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 const (
@@ -139,6 +145,22 @@ func init() {
 		maxIdleTime = config.DefaultGddDBConnMaxIdleTime
 	}
 	sqlDB.SetConnMaxIdleTime(maxIdleTime)
+	if cast.ToBoolOrDefault(config.GddDbPrometheusEnable.Load(), config.DefaultGddDbPrometheusEnable) &&
+		stringutils.IsNotEmpty(config.GddDbPrometheusDBName.LoadOrDefault(config.DefaultGddDbPrometheusDBName)) {
+		var collectors []prometheus.MetricsCollector
+		switch driver {
+		case DriverMysql, DriverTidb:
+			collectors = append(collectors, &prometheus.MySQL{})
+		case DriverPostgres:
+			collectors = append(collectors, &prometheus.Postgres{})
+		}
+		ConfigureMetrics(Db, config.GddDbPrometheusDBName.LoadOrDefault(config.DefaultGddDbPrometheusDBName),
+			cast.ToUInt32OrDefault(config.GddDbPrometheusRefreshInterval.Load(), config.DefaultGddDbPrometheusRefreshInterval),
+			nil, collectors...)
+	}
+	if cast.ToBoolOrDefault(config.GddDbCacheEnable.Load(), config.DefaultGddDbCacheEnable) && cache.CacheManager != nil {
+		ConfigureDBCache(Db, cache.CacheManager)
+	}
 }
 
 func NewDb(conf config.Config) (db *gorm.DB) {
@@ -251,5 +273,35 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		}
 	}
 	sqlDB.SetConnMaxIdleTime(maxIdleTime)
+
+	if conf.Db.Prometheus.Enable &&
+		stringutils.IsNotEmpty(conf.Db.Prometheus.DBName) {
+		var collectors []prometheus.MetricsCollector
+		switch driver {
+		case DriverMysql, DriverTidb:
+			collectors = append(collectors, &prometheus.MySQL{})
+		case DriverPostgres:
+			collectors = append(collectors, &prometheus.Postgres{})
+		}
+		ConfigureMetrics(Db, conf.Db.Prometheus.DBName, uint32(conf.Db.Prometheus.RefreshInterval),
+			nil, collectors...)
+	}
 	return
+}
+
+func ConfigureMetrics(db *gorm.DB, dbName string, refreshInterval uint32, labels map[string]string, collectors ...prometheus.MetricsCollector) {
+	db.Use(prometheus.New(prometheus.Config{
+		DBName:           dbName,          // `DBName` as metrics label
+		RefreshInterval:  refreshInterval, // refresh metrics interval (default 15 seconds)
+		MetricsCollector: collectors,
+		Labels:           labels,
+	}))
+}
+
+func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any]) {
+	cachesPlugin := &caches.Caches{Conf: &caches.Config{
+		Easer:  true,
+		Cacher: NewCacherAdapter(cacheManager),
+	}}
+	db.Use(cachesPlugin)
 }
