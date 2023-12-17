@@ -2,11 +2,23 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
+	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
+	"github.com/wubin1989/nacos-sdk-go/v2/vo"
+	_ "go.uber.org/automaxprocs"
+
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
@@ -14,15 +26,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
-	"github.com/wubin1989/nacos-sdk-go/v2/vo"
-	_ "go.uber.org/automaxprocs"
-	"net"
-	"net/url"
-	"os"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 func LoadConfigFromLocal() {
@@ -280,6 +283,27 @@ const (
 	GddDBPostgresPreferSimpleProtocol envVariable = "GDD_DB_POSTGRES_PREFERSIMPLEPROTOCOL"
 	GddDBPostgresWithoutReturning     envVariable = "GDD_DB_POSTGRES_WITHOUTRETURNING"
 
+	GddDbPrometheusEnable          envVariable = "GDD_DB_PROMETHEUS_ENABLE"
+	GddDbPrometheusRefreshInterval envVariable = "GDD_DB_PROMETHEUS_REFRESHINTERVAL"
+	GddDbPrometheusDBName          envVariable = "GDD_DB_PROMETHEUS_DBNAME"
+
+	GddDbCacheEnable envVariable = "GDD_DB_CACHE_ENABLE"
+	GddCacheTTL      envVariable = "GDD_CACHE_TTL"
+	GddCacheStores   envVariable = "GDD_CACHE_STORES"
+
+	GddCacheRedisAddr           envVariable = "GDD_CACHE_REDIS_ADDR"
+	GddCacheRedisUser           envVariable = "GDD_CACHE_REDIS_USER"
+	GddCacheRedisPass           envVariable = "GDD_CACHE_REDIS_PASS"
+	GddCacheRedisRouteByLatency envVariable = "GDD_CACHE_REDIS_ROUTEBYLATENCY"
+	GddCacheRedisRouteRandomly  envVariable = "GDD_CACHE_REDIS_ROUTERANDOMLY"
+
+	GddCacheRistrettoNumCounters envVariable = "GDD_CACHE_RISTRETTO_NUMCOUNTERS"
+	GddCacheRistrettoMaxCost     envVariable = "GDD_CACHE_RISTRETTO_MAXCOST"
+	GddCacheRistrettoBufferItems envVariable = "GDD_CACHE_RISTRETTO_BUFFERITEMS"
+
+	GddCacheGocacheExpiration      envVariable = "GDD_CACHE_GOCACHE_EXPIRATION"
+	GddCacheGocacheCleanupInterval envVariable = "GDD_CACHE_GOCACHE_CLEANUP_INTERVAL"
+
 	GddZkServers          envVariable = "GDD_ZK_SERVERS"
 	GddZkSequence         envVariable = "GDD_ZK_SEQUENCE"
 	GddZkDirectoryPattern envVariable = "GDD_ZK_DIRECTORY_PATTERN"
@@ -294,6 +318,18 @@ func (receiver envVariable) LoadOrDefault(d string) string {
 	val := d
 	if stringutils.IsNotEmpty(receiver.Load()) {
 		val = receiver.Load()
+	}
+	return val
+}
+
+func (receiver envVariable) LoadDurationOrDefault(d string) time.Duration {
+	val, _ := time.ParseDuration(d)
+	if stringutils.IsNotEmpty(receiver.Load()) {
+		var err error
+		val, err = time.ParseDuration(receiver.Load())
+		if err != nil {
+			panic(err)
+		}
 	}
 	return val
 }
@@ -456,5 +492,36 @@ type Config struct {
 			ConnMaxLifetime string
 			ConnMaxIdleTime string
 		}
+		Cache struct {
+			Enable bool
+		}
+		Prometheus struct {
+			Enable          bool
+			RefreshInterval int `default:"15"`
+			DBName          string
+		}
+	}
+	Cache struct {
+		TTL    int
+		Stores string
+		Redis  struct {
+			Addr           string
+			Username       string
+			Password       string
+			RouteByLatency bool `default:"true"`
+			RouteRandomly  bool
+		}
+		Ristretto struct {
+			NumCounters int64 `default:"1000"`
+			MaxCost     int64 `default:"100"`
+			BufferItems int64 `default:"64"`
+		}
+		GoCache struct {
+			Expiration      time.Duration `default:"5m"`
+			CleanupInterval time.Duration `default:"10m"`
+		}
+	}
+	Service struct {
+		Name string
 	}
 }

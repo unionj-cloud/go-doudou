@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"gorm.io/gorm/logger"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 )
 
 const FrameworkName = "go-doudou"
@@ -128,4 +129,24 @@ const (
 	DefaultGddZkServers          = ""
 	DefaultGddZkSequence         = false
 	DefaultGddZkDirectoryPattern = "/registry/%s/providers"
+
+	DefaultGddDbPrometheusEnable          = false
+	DefaultGddDbPrometheusRefreshInterval = 15
+	DefaultGddDbPrometheusDBName          = ""
+
+	DefaultGddDbCacheEnable            = false
+	DefaultGddCacheRedisAddr           = ""
+	DefaultGddCacheRedisUser           = ""
+	DefaultGddCacheRedisPass           = ""
+	DefaultGddCacheRedisRouteByLatency = true
+	DefaultGddCacheRedisRouteRandomly  = false
+	DefaultGddCacheTTL                 = 0
+	DefaultGddCacheStores              = ""
+
+	DefaultGddCacheRistrettoNumCounters = 1000
+	DefaultGddCacheRistrettoMaxCost     = 100
+	DefaultGddCacheRistrettoBufferItems = 64
+
+	DefaultGddCacheGocacheExpiration      = "5m"
+	DefaultGddCacheGocacheCleanupInterval = "10m"
 )

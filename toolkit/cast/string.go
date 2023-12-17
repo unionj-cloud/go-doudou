@@ -139,6 +139,22 @@ func ToIntOrDefault(s string, d int) int {
 	return result
 }
 
+func ToInt64OrDefault(s string, d int64) int64 {
+	result := d
+	if eg, err := ToInt64E(s); err == nil {
+		result = eg
+	}
+	return result
+}
+
+func ToUInt32OrDefault(s string, d uint32) uint32 {
+	result := d
+	if eg, err := ToUint32E(s); err == nil {
+		result = eg
+	}
+	return result
+}
+
 func ToRuneSliceE(s string) ([]rune, error) {
 	return []rune(s), nil
 }
