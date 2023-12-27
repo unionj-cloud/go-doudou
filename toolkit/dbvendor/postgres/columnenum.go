@@ -1,0 +1,28 @@
+package postgres
+
+const (
+	BitType        = "VARBIT(255)"
+	TextType       = "TEXT"
+	BlobType       = "BYTEA"
+	DateType       = "DATE"
+	DatetimeType   = "TIMESTAMP"
+	DatetimeTZType = "TIMESTAMPTZ"
+	DecimalType    = "DECIMAL"
+	DoubleType     = "FLOAT8"
+	FloatType      = "FLOAT4"
+	GeometryType   = "POINT"
+	MediumintType  = "INTEGER"
+	JSONType       = "JSON"
+	IntType        = "INTEGER"
+	SerialType     = "SERIAL"
+	BigSerialType  = "BIGSERIAL"
+	LongtextType   = "TEXT"
+	LongblobType   = "BYTEA"
+	BigintType     = "BIGINT"
+	MediumtextType = "TEXT"
+	MediumblobType = "BYTEA"
+	SmallintType   = "INTEGER"
+	TinyintType    = "SMALLINT"
+	VarcharType    = "VARCHAR"
+	BoolType       = "BOOLEAN"
+)

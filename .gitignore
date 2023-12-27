@@ -3,7 +3,6 @@ example/ddl/dao/
 example/doudou/dao/
 **/cover.out
 **/coverage.txt
-gen
 cmd/testdata/testsvc/cmd/cmd
 coverage.out
 resources
