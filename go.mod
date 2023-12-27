@@ -49,6 +49,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-sockaddr v1.0.2
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/morkid/gocache v1.0.0
@@ -93,7 +94,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1704 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/antlr/antlr4 v0.0.0-20200124162019-2d7f727a00b7 // indirect
+	github.com/antlr/antlr4 v0.0.0-20200124162019-2d7f727a00b7
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
