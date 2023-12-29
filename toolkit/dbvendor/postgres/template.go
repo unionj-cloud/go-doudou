@@ -1,16 +1,16 @@
 package postgres
 
 var (
-	createTable = `CREATE TABLE "{{.Name}}" (
+	createTable = `CREATE TABLE IF NOT EXISTS {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Name}}" (
 {{- range $co := .Columns }}
-"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT {{$co.Default}}{{end}},
+"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT '{{$co.Default}}'{{end}},
 {{- end }}
 PRIMARY KEY ("{{.Pk}}"))
 {{- if .Inherited }}
 INHERITS ({{.Inherited}})
 {{- end }};
 
-{{- if not .Inherited }}
+{{- if and (not .Inherited) (not .IsCopy) }}
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
