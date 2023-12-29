@@ -84,8 +84,6 @@ type Table struct {
 	Joins       []string
 	// 父表
 	Inherited string
-	// 该表是否仅用于同步/复制数据
-	IsCopy bool
 }
 
 func String(tmplname, tmpl string, data interface{}, pf PlaceholderFormat) (string, error) {
