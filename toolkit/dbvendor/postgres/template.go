@@ -46,6 +46,20 @@ VALUES ({{- range $i, $co := .InsertColumns}}
 	   {{- end }}) RETURNING "{{.Pk.Name}}";
 `
 
+	insertIntoBatch = `INSERT INTO {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+"{{$co.Name}}"
+{{- end }})
+VALUES {{- range $i, $ro := .Rows}}
+{{- if $i}},{{end}}
+({{- range $i, $co := $.InsertColumns}}
+   {{- if $i}},{{end}}
+   ?
+{{- end }})
+{{- end }};
+`
+
 	updateTable = `UPDATE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
 SET
 	{{- range $i, $co := .UpdateColumns}}

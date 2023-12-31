@@ -3,10 +3,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/dbvendor"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/database"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/dbvendor"
 	"gorm.io/gorm"
 )
 
@@ -127,6 +127,19 @@ func (v *Vendor) Insert(ctx context.Context, db *gorm.DB, dml dbvendor.DMLSchema
 
 func (v *Vendor) GetInsertStatement(dml dbvendor.DMLSchema) (statement string, err error) {
 	if statement, err = dbvendor.String(insertInto, insertInto, dml, dbvendor.Dollar); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return statement, nil
+}
+
+func (v *Vendor) GetBatchInsertStatement(dml dbvendor.DMLSchema, rows []interface{}) (statement string, err error) {
+	if statement, err = dbvendor.String(insertIntoBatch, insertIntoBatch, struct {
+		dbvendor.DMLSchema
+		Rows []interface{}
+	}{
+		DMLSchema: dml,
+		Rows:      rows,
+	}, dbvendor.Dollar); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return statement, nil
