@@ -3,10 +3,10 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/dbvendor"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/database"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/dbvendor"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +17,11 @@ func init() {
 var _ dbvendor.IVendor = (*Vendor)(nil)
 
 type Vendor struct {
+}
+
+func (v *Vendor) GetBatchInsertStatement(dml dbvendor.DMLSchema, rows []interface{}) (statement string, err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (v *Vendor) ToColumnType(goType string, _ bool) string {

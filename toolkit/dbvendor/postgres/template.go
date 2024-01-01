@@ -9,23 +9,9 @@ PRIMARY KEY ("{{.Pk}}"))
 {{- if .Inherited }}
 INHERITS ({{.Inherited}})
 {{- end }};
-
-{{- if and (not .Inherited) (not .IsCopy) }}
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   IF row(NEW.*) IS DISTINCT FROM row(OLD.*) THEN
-      NEW.updated_at = now(); 
-      RETURN NEW;
-   ELSE
-      RETURN OLD;
-   END IF;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_{{.Name}}_updated_at BEFORE UPDATE ON {{.Name}} FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
-ALTER TABLE "{{.Name}}" ALTER created_at TYPE timestamptz USING created_at AT TIME ZONE 'Asia/Shanghai';
-ALTER TABLE "{{.Name}}" ALTER updated_at TYPE timestamptz USING updated_at AT TIME ZONE 'Asia/Shanghai';
+    
+{{- range $co := .Columns }}
+COMMENT ON COLUMN {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"."{{$co.Name}}" IS {{if $co.Comment}}$${{$co.Comment}}$${{else}}''{{end}};
 {{- end }}
 `
 
@@ -36,12 +22,12 @@ ALTER TABLE "{{.Name}}" ALTER updated_at TYPE timestamptz USING updated_at AT TI
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" TYPE {{.Type}};
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" {{if .Nullable}}DROP{{else}}SET{{end}} NOT NULL;
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" {{if .Default}}SET DEFAULT {{.Default}}{{else}}DROP DEFAULT{{end}};
-COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}'{{.Comment}}'{{else}}''{{end}};
+COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}$${{.Comment}}$${{else}}''{{end}};
 {{end}}
 
 {{define "add"}}
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ADD COLUMN "{{.Name}}" {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}} {{if .Default}}DEFAULT {{.Default}}{{end}};
-COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}'{{.Comment}}'{{else}}''{{end}};
+COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}$${{.Comment}}$${{else}}''{{end}};
 {{end}}
 
 {{define "drop"}}
@@ -58,6 +44,20 @@ VALUES ({{- range $i, $co := .InsertColumns}}
 	   {{- if $i}},{{end}}
 	   ?
 	   {{- end }}) RETURNING "{{.Pk.Name}}";
+`
+
+	insertIntoBatch = `INSERT INTO {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+"{{$co.Name}}"
+{{- end }})
+VALUES {{- range $i, $ro := .Rows}}
+{{- if $i}},{{end}}
+({{- range $i, $co := $.InsertColumns}}
+   {{- if $i}},{{end}}
+   ?
+{{- end }})
+{{- end }};
 `
 
 	updateTable = `UPDATE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 

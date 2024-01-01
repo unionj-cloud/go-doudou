@@ -44,6 +44,9 @@ func main() {
 		v.Initialize(srv, grpcServer, dialCtx)
 	}
 	defer func() {
+		if r := recover(); r != nil {
+			zlogger.Info().Msgf("Recovered. Error:\n", r)
+		}
 		for _, v := range plugin.GetServicePlugins() {
 			v.Close()
 		}

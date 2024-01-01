@@ -44,6 +44,7 @@ type IVendor interface {
 	Delete(ctx context.Context, db *gorm.DB, dml DMLSchema, args ...interface{}) error
 	SelectById(ctx context.Context, db *gorm.DB, dml DMLSchema, args ...interface{}) (map[string]interface{}, error)
 	GetInsertStatement(dml DMLSchema) (statement string, err error)
+	GetBatchInsertStatement(dml DMLSchema, rows []interface{}) (statement string, err error)
 	GetUpdateStatement(dml DMLSchema) (statement string, err error)
 }
 
@@ -84,8 +85,6 @@ type Table struct {
 	Joins       []string
 	// 父表
 	Inherited string
-	// 该表是否仅用于同步/复制数据
-	IsCopy bool
 }
 
 func String(tmplname, tmpl string, data interface{}, pf PlaceholderFormat) (string, error) {
@@ -99,7 +98,7 @@ func String(tmplname, tmpl string, data interface{}, pf PlaceholderFormat) (stri
 			return "", errors.WithStack(err)
 		}
 	}
-	zlogger.Info().Msg(result)
+	zlogger.Debug().Msg(result)
 	return result, nil
 }
 
@@ -114,7 +113,7 @@ func StringBlock(tmplname, tmpl string, block string, data interface{}, pf Place
 			return "", errors.WithStack(err)
 		}
 	}
-	zlogger.Info().Msg(result)
+	zlogger.Debug().Msg(result)
 	return result, nil
 }
 
