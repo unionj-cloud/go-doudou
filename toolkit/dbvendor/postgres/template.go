@@ -11,7 +11,7 @@ INHERITS ({{.Inherited}})
 {{- end }};
     
 {{- range $co := .Columns }}
-COMMENT ON COLUMN {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"."{{$co.Name}}" IS {{if $co.Comment}}'{{$co.Comment}}'{{else}}''{{end}};
+COMMENT ON COLUMN {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"."{{$co.Name}}" IS {{if $co.Comment}}$${{$co.Comment}}$${{else}}''{{end}};
 {{- end }}
 `
 
@@ -22,12 +22,12 @@ COMMENT ON COLUMN {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"."
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" TYPE {{.Type}};
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" {{if .Nullable}}DROP{{else}}SET{{end}} NOT NULL;
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ALTER COLUMN "{{.Name}}" {{if .Default}}SET DEFAULT {{.Default}}{{else}}DROP DEFAULT{{end}};
-COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}'{{.Comment}}'{{else}}''{{end}};
+COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}$${{.Comment}}$${{else}}''{{end}};
 {{end}}
 
 {{define "add"}}
 ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" ADD COLUMN "{{.Name}}" {{.Type}} {{if .Nullable}}NULL{{else}}NOT NULL{{end}} {{if .Default}}DEFAULT {{.Default}}{{end}};
-COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}'{{.Comment}}'{{else}}''{{end}};
+COMMENT ON COLUMN {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}"."{{.Name}}" IS {{if .Comment}}$${{.Comment}}$${{else}}''{{end}};
 {{end}}
 
 {{define "drop"}}
