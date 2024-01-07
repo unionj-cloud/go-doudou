@@ -1,8 +1,9 @@
 package framework
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"os"
+	"github.com/common-nighthawk/go-figure"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"sync"
 )
 
 type Annotation struct {
@@ -30,6 +31,17 @@ func (receiver AnnotationStore) GetParams(key string, annotationName string) []s
 	return nil
 }
 
-func CheckDev() bool {
-	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
+var PrintLock sync.Mutex
+
+var once sync.Once
+
+func PrintBanner() {
+	once.Do(func() {
+		if !config.CheckDev() {
+			return
+		}
+		if config.GddConfig.Banner {
+			figure.NewColorFigure(config.GddConfig.BannerText, "doom", "green", true).Print()
+		}
+	})
 }

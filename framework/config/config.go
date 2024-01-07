@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/apolloconfig/agollo/v4"
@@ -19,7 +18,7 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	_ "go.uber.org/automaxprocs"
 
-	"github.com/unionj-cloud/go-doudou/v2/framework"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
@@ -27,6 +26,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
+
+var GddConfig = &gddConfig{}
 
 func LoadConfigFromLocal() {
 	env := os.Getenv("GDD_ENV")
@@ -87,12 +88,20 @@ func LoadConfigFromRemote() {
 	}
 }
 
+func CheckDev() bool {
+	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
+}
+
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
+	err := envconfig.Process("gdd", &GddConfig)
+	if err != nil {
+		zlogger.Panic().Msg("Error processing environment variables")
+	}
 	zl, _ := zerolog.ParseLevel(GddLogLevel.LoadOrDefault(DefaultGddLogLevel))
 	opts := []zlogger.LoggerConfigOption{
-		zlogger.WithDev(framework.CheckDev()),
+		zlogger.WithDev(CheckDev()),
 		zlogger.WithCaller(cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller)),
 		zlogger.WithDiscard(cast.ToBoolOrDefault(GddLogDiscard.Load(), DefaultGddLogDiscard)),
 		zlogger.WithZeroLogLevel(zl),
@@ -454,8 +463,6 @@ func ServiceDiscoveryMap() map[string]struct{} {
 	return modemap
 }
 
-var PrintLock sync.Mutex
-
 type Config struct {
 	Db struct {
 		Name   string
@@ -524,4 +531,24 @@ type Config struct {
 	Service struct {
 		Name string
 	}
+}
+
+type gddConfig struct {
+	Banner              bool
+	BannerText          string        `default:"go-doudou" split_words:"true"`
+	RouteRootPath       string        `default:"/" split_words:"true"`
+	WriteTimeout        time.Duration `default:"15s" split_words:"true"`
+	ReadTimeout         time.Duration `default:"15s" split_words:"true"`
+	IdleTimeout         time.Duration `default:"60s" split_words:"true"`
+	GraceTimeout        time.Duration `default:"15s" split_words:"true"`
+	Port                string        `default:"6060"`
+	Host                string
+	EnableResponseGzip  bool   `default:"true" split_words:"true"`
+	LogReqEnable        bool   `default:"false" split_words:"true"`
+	ManageEnable        bool   `default:"true" split_words:"true"`
+	FallbackContenttype string `default:"application/json; charset=UTF-8" split_words:"true"`
+	Grpc                struct {
+		Port string `default:"50051"`
+	}
+	Config
 }
