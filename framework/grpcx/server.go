@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
-	"github.com/unionj-cloud/go-doudou/v2/framework/banner"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/timeutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"google.golang.org/grpc"
@@ -52,7 +50,7 @@ func NewGrpcServerWithData(data map[string]interface{}, opt ...grpc.ServerOption
 }
 
 func (srv *GrpcServer) printServices() {
-	if !framework.CheckDev() {
+	if !config.CheckDev() {
 		return
 	}
 	logger.Info().Msg("================ Registered Services ================")
@@ -88,51 +86,22 @@ func (srv *GrpcServer) Run() {
 
 // RunWithPipe runs grpc server
 func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
-	if srv.Server == nil {
-		return
-	}
-	banner.Print()
-	config.PrintLock.Lock()
-	register.NewGrpc(srv.data)
-	port := config.DefaultGddGrpcPort
-	if p, err := cast.ToIntE(config.GddGrpcPort.Load()); err == nil {
-		port = p
-	}
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", config.GddConfig.Grpc.Port))
 	if err != nil {
 		logger.Panic().Msgf("failed to listen: %v", err)
 	}
-	reflection.Register(srv)
-	srv.printServices()
-	go func() {
-		if err := srv.Serve(lis); err != nil {
-			logger.Error().Msgf("failed to serve: %v", err)
-		}
-	}()
-	if pipe != nil {
-		go func() {
-			if err := srv.Serve(pipe); err != nil {
-				logger.Error().Msgf("failed to serve: %v", err)
-			}
-		}()
-	}
-	logger.Info().Msgf("Grpc server is listening at %v", lis.Addr())
-	logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
-	config.PrintLock.Unlock()
+	srv.ServeWithPipe(ln, pipe)
 	defer func() {
+		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", config.GddConfig.GraceTimeout)
+		// Make sure to set a deadline on exiting the process
+		// after upg.Exit() is closed. No new upgrades can be
+		// performed if the parent doesn't exit.
+		time.AfterFunc(config.GddConfig.GraceTimeout, func() {
+			logger.Error().Msg("Graceful shutdown timed out")
+			os.Exit(1)
+		})
 		register.ShutdownGrpc()
-
-		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
-		if err != nil {
-			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
-				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
-			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
-		}
-		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", grace)
-
-		ctx, cancel := context.WithTimeout(context.Background(), grace)
-		defer cancel()
-		if err := timeutils.CallWithCtx(ctx, func() struct{} {
+		if err := timeutils.CallWithCtx(context.Background(), func() struct{} {
 			srv.GracefulStop()
 			return struct{}{}
 		}); err != nil {
@@ -147,4 +116,34 @@ func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
 
 	// Block until we receive our signal.
 	<-c
+}
+
+func (srv *GrpcServer) Serve(ln net.Listener) {
+	srv.ServeWithPipe(ln, nil)
+}
+
+func (srv *GrpcServer) ServeWithPipe(ln net.Listener, pipe net.Listener) {
+	if srv.Server == nil {
+		return
+	}
+	framework.PrintBanner()
+	framework.PrintLock.Lock()
+	register.NewGrpc(srv.data)
+	reflection.Register(srv)
+	srv.printServices()
+	go func() {
+		if err := srv.Server.Serve(ln); err != nil {
+			logger.Error().Msgf("failed to serve: %v", err)
+		}
+	}()
+	if pipe != nil {
+		go func() {
+			if err := srv.Server.Serve(pipe); err != nil {
+				logger.Error().Msgf("failed to serve: %v", err)
+			}
+		}()
+	}
+	logger.Info().Msgf("Grpc server is listening at %v", ln.Addr())
+	logger.Info().Msgf("Grpc server started in %s", time.Since(startAt))
+	framework.PrintLock.Unlock()
 }

@@ -10,20 +10,17 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
-	"github.com/unionj-cloud/go-doudou/v2/framework/banner"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
 	"os/signal"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -94,6 +91,7 @@ type RestServer struct {
 	middlewares  []MiddlewareFunc
 	data         map[string]interface{}
 	panicHandler func(inner http.Handler) http.Handler
+	*http.Server
 }
 
 func path2key(method, path string) string {
@@ -105,15 +103,11 @@ func path2key(method, path string) string {
 }
 
 func (srv *RestServer) printRoutes() {
-	if !framework.CheckDev() {
+	if !config.CheckDev() {
 		return
 	}
 	logger.Info().Msg("================ Registered Routes ================")
 	data := [][]string{}
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
 	var all []Route
 	all = append(all, srv.bizRoutes...)
 	all = append(all, srv.gddRoutes...)
@@ -127,7 +121,7 @@ func (srv *RestServer) printRoutes() {
 			if strings.HasPrefix(r.Pattern, gddPathPrefix) || strings.HasPrefix(r.Pattern, debugPathPrefix) {
 				data = append(data, []string{r.Name, r.Method, r.Pattern})
 			} else {
-				data = append(data, []string{r.Name, r.Method, path.Clean(rr + r.Pattern)})
+				data = append(data, []string{r.Name, r.Method, path.Clean(config.GddConfig.RouteRootPath + r.Pattern)})
 			}
 		}
 	}
@@ -147,44 +141,11 @@ func (srv *RestServer) printRoutes() {
 
 // NewRestServer create a RestServer instance
 func NewRestServer(data ...map[string]interface{}) *RestServer {
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
-	if stringutils.IsEmpty(rr) {
-		rr = "/"
-	}
-	rootRouter := httprouter.New()
-	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
-	srv := &RestServer{
-		bizRouter:    rootRouter.NewGroup(rr),
-		rootRouter:   rootRouter,
-		panicHandler: recovery,
-	}
-	srv.middlewares = append(srv.middlewares,
-		tracing,
-		metrics,
-		gzipBody,
-	)
-	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
-		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
-		if err != nil {
-			panic(err)
-		}
-		srv.middlewares = append(srv.middlewares, toMiddlewareFunc(gzipMiddleware))
-	}
-	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
-		srv.middlewares = append(srv.middlewares, log)
-	}
-	srv.middlewares = append(srv.middlewares,
-		requestid.RequestIDHandler,
-		handlers.ProxyHeaders,
-		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
-	)
+	var options []ServerOption
 	if len(data) > 0 {
-		srv.data = data[0]
+		options = append(options, WithUserData(data[0]))
 	}
-	return srv
+	return NewRestServerWithOptions(options...)
 }
 
 type ServerOption func(server *RestServer)
@@ -203,19 +164,19 @@ func WithUserData(userData map[string]interface{}) ServerOption {
 
 // NewRestServerWithOptions create a RestServer instance with options
 func NewRestServerWithOptions(options ...ServerOption) *RestServer {
-	rr := config.DefaultGddRouteRootPath
-	if stringutils.IsNotEmpty(config.GddRouteRootPath.Load()) {
-		rr = config.GddRouteRootPath.Load()
-	}
-	if stringutils.IsEmpty(rr) {
-		rr = "/"
-	}
 	rootRouter := httprouter.New()
-	rootRouter.SaveMatchedRoutePath = cast.ToBoolOrDefault(config.GddRouterSaveMatchedRoutePath.Load(), config.DefaultGddRouterSaveMatchedRoutePath)
+	rootRouter.SaveMatchedRoutePath = true
 	srv := &RestServer{
-		bizRouter:    rootRouter.NewGroup(rr),
+		bizRouter:    rootRouter.NewGroup(config.GddConfig.RouteRootPath),
 		rootRouter:   rootRouter,
 		panicHandler: recovery,
+		Server: &http.Server{
+			// Good practice to set timeouts to avoid Slowloris attacks.
+			WriteTimeout: config.GddConfig.WriteTimeout,
+			ReadTimeout:  config.GddConfig.ReadTimeout,
+			IdleTimeout:  config.GddConfig.IdleTimeout,
+			Handler:      rootRouter, // Pass our instance of httprouter.Router in.
+		},
 	}
 	for _, fn := range options {
 		fn(srv)
@@ -225,20 +186,20 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 		metrics,
 		gzipBody,
 	)
-	if cast.ToBoolOrDefault(config.GddEnableResponseGzip.Load(), config.DefaultGddEnableResponseGzip) {
+	if config.GddConfig.EnableResponseGzip {
 		gzipMiddleware, err := gzhttp.NewWrapper(gzhttp.ContentTypes(contentTypeShouldbeGzip))
 		if err != nil {
 			panic(err)
 		}
 		srv.middlewares = append(srv.middlewares, toMiddlewareFunc(gzipMiddleware))
 	}
-	if cast.ToBoolOrDefault(config.GddLogReqEnable.Load(), config.DefaultGddLogReqEnable) {
+	if config.GddConfig.LogReqEnable {
 		srv.middlewares = append(srv.middlewares, log)
 	}
 	srv.middlewares = append(srv.middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
-		fallbackContentType(config.GddFallbackContentType.LoadOrDefault(config.DefaultGddFallbackContentType)),
+		fallbackContentType(config.GddConfig.FallbackContenttype),
 	)
 	return srv
 }
@@ -264,62 +225,8 @@ func (srv *RestServer) PreMiddleware(mwf ...func(http.Handler) http.Handler) {
 	srv.middlewares = append(middlewares, srv.middlewares...)
 }
 
-func (srv *RestServer) newHttpServer() *http.Server {
-	write, err := time.ParseDuration(config.GddWriteTimeout.Load())
-	if err != nil {
-		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddWriteTimeout),
-			config.GddWriteTimeout.Load(), err.Error(), config.DefaultGddWriteTimeout)
-		write, _ = time.ParseDuration(config.DefaultGddWriteTimeout)
-	}
-
-	read, err := time.ParseDuration(config.GddReadTimeout.Load())
-	if err != nil {
-		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddReadTimeout),
-			config.GddReadTimeout.Load(), err.Error(), config.DefaultGddReadTimeout)
-		read, _ = time.ParseDuration(config.DefaultGddReadTimeout)
-	}
-
-	idle, err := time.ParseDuration(config.GddIdleTimeout.Load())
-	if err != nil {
-		logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddIdleTimeout),
-			config.GddIdleTimeout.Load(), err.Error(), config.DefaultGddIdleTimeout)
-		idle, _ = time.ParseDuration(config.DefaultGddIdleTimeout)
-	}
-
-	httpPort := strconv.Itoa(config.DefaultGddPort)
-	if _, err = cast.ToIntE(config.GddPort.Load()); err == nil {
-		httpPort = config.GddPort.Load()
-	}
-	httpHost := config.DefaultGddHost
-	if stringutils.IsNotEmpty(config.GddHost.Load()) {
-		httpHost = config.GddHost.Load()
-	}
-	httpServer := &http.Server{
-		Addr: strings.Join([]string{httpHost, httpPort}, ":"),
-		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: write,
-		ReadTimeout:  read,
-		IdleTimeout:  idle,
-		Handler:      srv.rootRouter, // Pass our instance of httprouter.Router in.
-	}
-
-	// Run our server in a goroutine so that it doesn't block.
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			logger.Error().Err(err).Msg("")
-		}
-	}()
-
-	return httpServer
-}
-
-// Run runs http server
-func (srv *RestServer) Run() {
-	banner.Print()
-	config.PrintLock.Lock()
-	register.NewRest(srv.data)
-	manage := cast.ToBoolOrDefault(config.GddManage.Load(), config.DefaultGddManage)
-	if manage {
+func (srv *RestServer) configure() {
+	if config.GddConfig.ManageEnable {
 		srv.middlewares = append([]MiddlewareFunc{PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
 		corsOpts := cors.New(cors.Options{
@@ -462,26 +369,26 @@ func (srv *RestServer) Run() {
 		srv.rootRouter.NotFound = srv.middlewares[i].Middleware(srv.rootRouter.NotFound)
 		srv.rootRouter.MethodNotAllowed = srv.middlewares[i].Middleware(srv.rootRouter.MethodNotAllowed)
 	}
-	srv.printRoutes()
-	httpServer := srv.newHttpServer()
-	logger.Info().Msgf("Http server is listening at %v", httpServer.Addr)
-	logger.Info().Msgf("Http server started in %s", time.Since(startAt))
-	config.PrintLock.Unlock()
-	defer func() {
-		register.ShutdownRest()
-		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
-		if err != nil {
-			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
-				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
-			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
-		}
-		logger.Info().Msgf("Http server is gracefully shutting down in %s", grace)
+}
 
-		ctx, cancel := context.WithTimeout(context.Background(), grace)
-		defer cancel()
-		// Doesn't block if no connections, but will otherwise wait
-		// until the timeout deadline.
-		httpServer.Shutdown(ctx)
+// Run runs http server
+func (srv *RestServer) Run() {
+	ln, err := net.Listen("tcp", strings.Join([]string{config.GddConfig.Host, config.GddConfig.Port}, ":"))
+	if err != nil {
+		logger.Panic().Msg(err.Error())
+	}
+	srv.Serve(ln)
+	defer func() {
+		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", config.GddConfig.GraceTimeout)
+		// Make sure to set a deadline on exiting the process
+		// after upg.Exit() is closed. No new upgrades can be
+		// performed if the parent doesn't exit.
+		time.AfterFunc(config.GddConfig.GraceTimeout, func() {
+			logger.Error().Msg("Graceful shutdown timed out")
+			os.Exit(1)
+		})
+		register.ShutdownRest()
+		srv.Shutdown(context.Background())
 	}()
 
 	c := make(chan os.Signal, 1)
@@ -491,4 +398,21 @@ func (srv *RestServer) Run() {
 
 	// Block until we receive our signal.
 	<-c
+}
+
+func (srv *RestServer) Serve(ln net.Listener) {
+	framework.PrintBanner()
+	framework.PrintLock.Lock()
+	register.NewRest(srv.data)
+	srv.configure()
+	srv.printRoutes()
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		if err := srv.Server.Serve(ln); err != http.ErrServerClosed {
+			logger.Error().Msgf("HTTP server: %s", err.Error())
+		}
+	}()
+	logger.Info().Msgf("Http server is listening at %v", ln.Addr().String())
+	logger.Info().Msgf("Http server started in %s", time.Since(startAt))
+	framework.PrintLock.Unlock()
 }

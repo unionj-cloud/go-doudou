@@ -2,10 +2,14 @@ package postgres
 
 var (
 	createTable = `CREATE TABLE IF NOT EXISTS {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Name}}" (
-{{- range $co := .Columns }}
-"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT '{{$co.Default}}'{{end}},
+{{- range $i, $co := .Columns }}
+{{- if $i}},{{end}}
+"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT '{{$co.Default}}'{{end}}
 {{- end }}
-PRIMARY KEY ("{{.Pk}}"))
+{{- if .Pk }},
+PRIMARY KEY ({{- range $i, $co := .Pk }}{{- if $i}},{{end}}"{{$co}}"{{- end }})
+{{- end }}
+)
 {{- if .Inherited }}
 INHERITS ({{.Inherited}})
 {{- end }};
