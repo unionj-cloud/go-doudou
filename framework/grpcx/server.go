@@ -92,19 +92,16 @@ func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
 	}
 	srv.ServeWithPipe(ln, pipe)
 	defer func() {
+		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", config.GddConfig.GraceTimeout)
+		// Make sure to set a deadline on exiting the process
+		// after upg.Exit() is closed. No new upgrades can be
+		// performed if the parent doesn't exit.
+		time.AfterFunc(config.GddConfig.GraceTimeout, func() {
+			logger.Error().Msg("Graceful shutdown timed out")
+			os.Exit(1)
+		})
 		register.ShutdownGrpc()
-
-		grace, err := time.ParseDuration(config.GddGraceTimeout.Load())
-		if err != nil {
-			logger.Debug().Msgf("Parse %s %s as time.Duration failed: %s, use default %s instead.\n", string(config.GddGraceTimeout),
-				config.GddGraceTimeout.Load(), err.Error(), config.DefaultGddGraceTimeout)
-			grace, _ = time.ParseDuration(config.DefaultGddGraceTimeout)
-		}
-		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", grace)
-
-		ctx, cancel := context.WithTimeout(context.Background(), grace)
-		defer cancel()
-		if err := timeutils.CallWithCtx(ctx, func() struct{} {
+		if err := timeutils.CallWithCtx(context.Background(), func() struct{} {
 			srv.GracefulStop()
 			return struct{}{}
 		}); err != nil {

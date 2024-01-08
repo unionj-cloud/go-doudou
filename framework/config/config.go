@@ -95,9 +95,9 @@ func CheckDev() bool {
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
-	err := envconfig.Process("gdd", &GddConfig)
+	err := envconfig.Process("gdd", GddConfig)
 	if err != nil {
-		zlogger.Panic().Msg("Error processing environment variables")
+		zlogger.Panic().Msgf("Error processing environment variables: %s", err.Error())
 	}
 	zl, _ := zerolog.ParseLevel(GddLogLevel.LoadOrDefault(DefaultGddLogLevel))
 	opts := []zlogger.LoggerConfigOption{

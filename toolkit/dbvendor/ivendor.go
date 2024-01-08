@@ -81,7 +81,7 @@ type Table struct {
 	Name        string
 	Columns     []Column
 	BizColumns  []Column
-	Pk          string
+	Pk          []string
 	Joins       []string
 	// 父表
 	Inherited string
