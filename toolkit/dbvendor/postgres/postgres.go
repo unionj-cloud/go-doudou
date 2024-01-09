@@ -111,7 +111,7 @@ func (v *Vendor) Insert(ctx context.Context, db *gorm.DB, dml dbvendor.DMLSchema
 		statement string
 		err       error
 	)
-	if statement, err = v.GetInsertStatement(dml); err != nil {
+	if statement, err = v.GetInsertReturningPkStatement(dml); err != nil {
 		return 0, errors.WithStack(err)
 	}
 	sqlDB, err := db.DB()
@@ -127,6 +127,13 @@ func (v *Vendor) Insert(ctx context.Context, db *gorm.DB, dml dbvendor.DMLSchema
 
 func (v *Vendor) GetInsertStatement(dml dbvendor.DMLSchema) (statement string, err error) {
 	if statement, err = dbvendor.String(insertInto, insertInto, dml, dbvendor.Dollar); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return statement, nil
+}
+
+func (v *Vendor) GetInsertReturningPkStatement(dml dbvendor.DMLSchema) (statement string, err error) {
+	if statement, err = dbvendor.String(insertIntoReturningPk, insertIntoReturningPk, dml, dbvendor.Dollar); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return statement, nil
