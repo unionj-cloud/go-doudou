@@ -83,6 +83,7 @@ var appendHttp2GrpcTmpl = `
 				}
 			{{- end }}
 		{{- end }}
+		_writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		{{- if eq (len $m.Results) 1 }}
 			if _err := json.NewEncoder(_writer).Encode(struct {}{}); _err != nil {
 				rest.HandleInternalServerError(_err)

@@ -68,6 +68,9 @@ func (r *RouteGroup) DELETE(path string, handle Handle) {
 }
 
 func (r *RouteGroup) subPath(path string) string {
-	validatePath(path)
+	result := r.p + path
+	if stringutils.IsEmpty(result) {
+		return "/"
+	}
 	return r.p + path
 }
