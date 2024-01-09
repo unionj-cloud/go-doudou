@@ -44,6 +44,7 @@ type IVendor interface {
 	Delete(ctx context.Context, db *gorm.DB, dml DMLSchema, args ...interface{}) error
 	SelectById(ctx context.Context, db *gorm.DB, dml DMLSchema, args ...interface{}) (map[string]interface{}, error)
 	GetInsertStatement(dml DMLSchema) (statement string, err error)
+	GetInsertReturningPkStatement(dml DMLSchema) (statement string, err error)
 	GetBatchInsertStatement(dml DMLSchema, rows []interface{}) (statement string, err error)
 	GetUpdateStatement(dml DMLSchema) (statement string, err error)
 }
@@ -54,7 +55,7 @@ type DMLSchema struct {
 	TableName     string
 	InsertColumns []Column
 	UpdateColumns []Column
-	Pk            Column
+	Pk            []Column
 }
 
 // Column define a column

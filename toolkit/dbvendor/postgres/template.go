@@ -39,6 +39,17 @@ ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" DROP COLU
 {{end}}
 `
 
+	insertIntoReturningPk = `INSERT INTO {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
+({{- range $i, $co := .InsertColumns}}
+{{- if $i}},{{end}}
+"{{$co.Name}}"
+{{- end }})
+VALUES ({{- range $i, $co := .InsertColumns}}
+	   {{- if $i}},{{end}}
+	   ?
+	   {{- end }}) RETURNING {{ range $i, $co := .Pk }}"{{$co.Name}}"{{- end }};
+`
+
 	insertInto = `INSERT INTO {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
 ({{- range $i, $co := .InsertColumns}}
 {{- if $i}},{{end}}
@@ -47,7 +58,7 @@ ALTER TABLE {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Table}}" DROP COLU
 VALUES ({{- range $i, $co := .InsertColumns}}
 	   {{- if $i}},{{end}}
 	   ?
-	   {{- end }}) RETURNING "{{.Pk.Name}}";
+	   {{- end }});
 `
 
 	insertIntoBatch = `INSERT INTO {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
@@ -70,17 +81,14 @@ SET
 	{{- if $i}},{{end}}
 	"{{$co.Name}}"=?
 	{{- end }}
-WHERE
-    "{{.Pk.Name}}"=?;
+WHERE {{ range $i, $co := .Pk }}{{- if $i}} and {{end}}"{{$co.Name}}"=?{{- end }};
 `
 
 	deleteFrom = `DELETE FROM {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.TableName}}" 
-WHERE
-    "{{.Pk.Name}}"=?;
+WHERE {{ range $i, $co := .Pk }}{{- if $i}} and {{end}}"{{$co.Name}}"=?{{- end }};
 `
 
 	selectFromById = `SELECT * FROM "{{.TableName}}" 
-WHERE
-    "{{.Pk.Name}}"=?;
+WHERE {{ range $i, $co := .Pk }}{{- if $i}} and {{end}}"{{$co.Name}}"=?{{- end }};
 `
 )

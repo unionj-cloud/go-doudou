@@ -135,6 +135,13 @@ func (v *Vendor) GetInsertStatement(dml dbvendor.DMLSchema) (statement string, e
 	return statement, nil
 }
 
+func (v *Vendor) GetInsertReturningPkStatement(dml dbvendor.DMLSchema) (statement string, err error) {
+	if statement, err = dbvendor.String(insertInto, insertInto, dml, dbvendor.Question); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return statement, nil
+}
+
 func (v *Vendor) GetUpdateStatement(dml dbvendor.DMLSchema) (statement string, err error) {
 	if statement, err = dbvendor.String(updateTable, updateTable, dml, dbvendor.Question); err != nil {
 		return "", errors.WithStack(err)
