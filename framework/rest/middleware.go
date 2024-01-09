@@ -33,7 +33,6 @@ var (
 	Tracing             = tracing
 	Metrics             = metrics
 	Log                 = log
-	FallbackContentType = fallbackContentType
 	BasicAuth           = basicAuth
 	Recovery            = recovery
 )
@@ -189,18 +188,6 @@ func rest(inner http.Handler) http.Handler {
 		}
 		inner.ServeHTTP(w, r)
 	})
-}
-
-// fallbackContentType set fallback response Content-Type to contentType
-func fallbackContentType(contentType string) func(inner http.Handler) http.Handler {
-	return func(inner http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if stringutils.IsEmpty(w.Header().Get("Content-Type")) {
-				w.Header().Set("Content-Type", contentType)
-			}
-			inner.ServeHTTP(w, r)
-		})
-	}
 }
 
 // basicAuth adds http basic auth validation

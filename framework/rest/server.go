@@ -199,7 +199,6 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 	srv.middlewares = append(srv.middlewares,
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
-		fallbackContentType(config.GddConfig.FallbackContenttype),
 	)
 	return srv
 }

@@ -354,6 +354,7 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 		{{- end }}
 		{{- if not $done }}
+			_writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			if _err := json.NewEncoder(_writer).Encode(struct {
 				{{- range $r := $m.Results }}
 				{{- if ne $r.Type "error" }}

@@ -546,7 +546,6 @@ type gddConfig struct {
 	EnableResponseGzip  bool   `default:"true" split_words:"true"`
 	LogReqEnable        bool   `default:"false" split_words:"true"`
 	ManageEnable        bool   `default:"true" split_words:"true"`
-	FallbackContenttype string `default:"application/json; charset=UTF-8" split_words:"true"`
 	Grpc                struct {
 		Port string `default:"50051"`
 	}
