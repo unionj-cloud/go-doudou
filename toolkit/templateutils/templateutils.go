@@ -16,7 +16,12 @@ func String(tmplname, tmpl string, data interface{}) (string, error) {
 		err    error
 		tpl    *template.Template
 	)
-	tpl = template.Must(template.New(tmplname).Parse(tmpl))
+	funcs := map[string]any{
+		"contains":  strings.Contains,
+		"hasPrefix": strings.HasPrefix,
+		"hasSuffix": strings.HasSuffix,
+	}
+	tpl = template.Must(template.New(tmplname).Funcs(funcs).Parse(tmpl))
 	if err = tpl.Execute(&sqlBuf, data); err != nil {
 		return "", errors.Wrap(err, caller.NewCaller().String())
 	}

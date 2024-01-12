@@ -4,7 +4,7 @@ var (
 	createTable = `CREATE TABLE IF NOT EXISTS {{if .TablePrefix }}"{{.TablePrefix}}".{{end}}"{{.Name}}" (
 {{- range $i, $co := .Columns }}
 {{- if $i}},{{end}}
-"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT '{{$co.Default}}'{{end}}
+"{{$co.Name}}" {{$co.Type}} {{if $co.Nullable}}NULL{{else}}NOT NULL{{end}}{{if $co.Default}} DEFAULT {{if hasSuffix $co.Default "()"}}{{$co.Default}}{{else}}'{{$co.Default}}'{{end}}{{end}}
 {{- end }}
 {{- if .Pk }},
 PRIMARY KEY ({{- range $i, $co := .Pk }}{{- if $i}},{{end}}"{{$co}}"{{- end }})
@@ -16,6 +16,11 @@ INHERITS ({{.Inherited}})
     
 {{- range $co := .Columns }}
 COMMENT ON COLUMN {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"."{{$co.Name}}" IS {{if $co.Comment}}$${{$co.Comment}}$${{else}}''{{end}};
+{{- end }}
+    
+{{- range $idx := .Indexes }}
+CREATE {{if eq $idx.NoneUnique 0}}UNIQUE{{end}} INDEX IF NOT EXISTS {{ $idx.Name }}
+ON {{if $.TablePrefix }}"{{$.TablePrefix}}".{{end}}"{{$.Name}}"({{- range $i, $co := $idx.Columns }}{{- if $i}},{{end}}"{{$co}}"{{- end }});
 {{- end }}
 `
 

@@ -76,6 +76,13 @@ type Column struct {
 	Foreign string
 }
 
+type Index struct {
+	Name        string
+	Columns     []string
+	Cardinality []uint64
+	NoneUnique  uint64
+}
+
 // Table defines a table
 type Table struct {
 	TablePrefix string
@@ -84,6 +91,7 @@ type Table struct {
 	BizColumns  []Column
 	Pk          []string
 	Joins       []string
+	Indexes     []*Index
 	// 父表
 	Inherited string
 }
