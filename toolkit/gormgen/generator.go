@@ -786,7 +786,13 @@ func (g *Generator) generateModelFile() error {
 				errChan <- err
 				return
 			}
-			err = t.Execute(&buf, data)
+			err = t.Execute(&buf, struct {
+				*generate.QueryStructMeta
+				ConfigPackage string
+			}{
+				QueryStructMeta: data,
+				ConfigPackage:   g.ConfigPackage,
+			})
 			if err != nil {
 				errChan <- err
 				return

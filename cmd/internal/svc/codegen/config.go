@@ -3,9 +3,11 @@ package codegen
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -13,43 +15,48 @@ var configTmpl = templates.EditableHeaderTmpl + `package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 )
 
+var G_Config *Config
+
 type Config struct {
-	BizConf BizConf
+	Biz struct {
+		ApiSecret string ` + "`" + `split_words:"true"` + "`" + `
+	}
+	config.Config
 }
 
-type BizConf struct {
-	ApiSecret string ` + "`" + `split_words:"true"` + "`" + `
-}
-
-func LoadFromEnv() *Config {
-	var bizConf BizConf
-	err := envconfig.Process("biz", &bizConf)
+func init() {
+	var conf Config
+	err := envconfig.Process("{{.ServiceName}}", &conf)
 	if err != nil {
 		errorx.Panic("Error processing environment variables")
 	}
-	return &Config{
-		BizConf: bizConf,
-	}
+	G_Config = &conf
+}
+
+func LoadFromEnv() *Config {
+	return G_Config
 }
 `
 
-//GenConfig generates config file
-func GenConfig(dir string) {
+// GenConfig generates config file
+func GenConfig(dir string, ic astutils.InterfaceCollector) {
 	var (
-		err        error
-		configfile string
-		f          *os.File
-		tpl        *template.Template
-		configDir  string
+		err         error
+		configfile  string
+		f           *os.File
+		tpl         *template.Template
+		configDir   string
+		serviceName string
 	)
 	configDir = filepath.Join(dir, "config")
 	if err = os.MkdirAll(configDir, os.ModePerm); err != nil {
 		panic(err)
 	}
-
+	serviceName = strings.ToLower(ic.Interfaces[0].Name)
 	configfile = filepath.Join(configDir, "config.go")
 	if _, err = os.Stat(configfile); os.IsNotExist(err) {
 		if f, err = os.Create(configfile); err != nil {
@@ -58,9 +65,11 @@ func GenConfig(dir string) {
 		defer f.Close()
 		tpl, _ = template.New("config.go.tmpl").Parse(configTmpl)
 		_ = tpl.Execute(f, struct {
-			Version string
+			Version     string
+			ServiceName string
 		}{
-			Version: version.Release,
+			Version:     version.Release,
+			ServiceName: serviceName,
 		})
 	} else {
 		logrus.Warnf("file %s already exists", configfile)

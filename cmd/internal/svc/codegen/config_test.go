@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,9 +13,11 @@ func TestGenConfig(t *testing.T) {
 	dir := testDir + "config"
 	InitSvc(dir)
 	defer os.RemoveAll(dir)
-	GenConfig(dir)
+	var ic astutils.InterfaceCollector
+	GenConfig(dir, ic)
 }
 
 func TestGenConfig1(t *testing.T) {
-	GenConfig(filepath.Join(testDir))
+	var ic astutils.InterfaceCollector
+	GenConfig(filepath.Join(testDir), ic)
 }

@@ -5,6 +5,10 @@ const Model = NotEditMark + `
 package {{.StructInfo.Package}}
 
 import (
+	"{{.ConfigPackage}}"
+	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+
 	"encoding/json"
 	"time"
 
@@ -14,7 +18,15 @@ import (
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
-{{if .TableName -}}const TableName{{.ModelStructName}} = "{{.TableName}}"{{- end}}
+{{if .TableName -}}var TableName{{.ModelStructName}} string{{- end}}
+
+func init() {
+	if stringutils.IsNotEmpty(config.G_Config.Db.Name) {
+		TableName{{.ModelStructName}} = fmt.Sprintf("%s.{{.TableName}}", config.G_Config.Db.Name)
+	} else {
+		TableName{{.ModelStructName}} = "{{.TableName}}"
+	}
+}
 
 // {{.ModelStructName}} {{.StructComment}}
 type {{.ModelStructName}} struct {

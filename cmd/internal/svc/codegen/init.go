@@ -26,7 +26,7 @@ import (
 	"{{.DtoPackage}}"
 )
 
-//go:generate go-doudou svc http -c
+//go:generate go-doudou svc http
 //go:generate go-doudou svc grpc
 
 type {{.SvcName}} interface {

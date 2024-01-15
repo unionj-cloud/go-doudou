@@ -15,12 +15,19 @@ var mainTmpl = templates.EditableHeaderTmpl + `package main
 import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
+    {{- if .QueryPackage}}
+	"{{.QueryPackage}}"
+	"github.com/unionj-cloud/go-doudou/v2/framework/database"
+	{{- end}}
     "{{.ConfigPackage}}"
 	"{{.HttpPackage}}"
 )
 
 func main() {
 	conf := config.LoadFromEnv()
+{{- if .QueryPackage}}
+	query.SetDefault(database.NewDb(conf.Config))
+{{- end}}
     svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
 	srv := rest.NewRestServer()
@@ -52,6 +59,10 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 		servicePkg := astutils.GetPkgPath(dir)
 		cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
 		httpsrvPkg := astutils.GetPkgPath(filepath.Join(dir, "transport", "httpsrv"))
+		var queryPkg string
+		if _, err := Stat(filepath.Join(dir, "query")); err == nil {
+			queryPkg = astutils.GetPkgPath(filepath.Join(dir, "query"))
+		}
 
 		if f, err = Create(mainfile); err != nil {
 			panic(err)
@@ -68,6 +79,7 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 			SvcName        string
 			ServiceAlias   string
 			Version        string
+			QueryPackage   string
 		}{
 			ServicePackage: servicePkg,
 			ConfigPackage:  cfgPkg,
@@ -75,6 +87,7 @@ func GenMain(dir string, ic astutils.InterfaceCollector) {
 			SvcName:        svcName,
 			ServiceAlias:   alias,
 			Version:        version.Release,
+			QueryPackage:   queryPkg,
 		}); err != nil {
 			panic(err)
 		}

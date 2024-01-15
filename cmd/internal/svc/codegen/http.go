@@ -6,7 +6,7 @@ import (
 )
 
 func genHttp(dir string, ic astutils.InterfaceCollector, caseConvertor func(string) string) {
-	GenConfig(dir)
+	GenConfig(dir, ic)
 	GenHttpMiddleware(dir)
 	GenHttpHandler(dir, ic, 0)
 	GenHttpHandlerImpl(dir, ic, GenHttpHandlerImplConfig{
