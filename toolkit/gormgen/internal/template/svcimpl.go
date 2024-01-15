@@ -5,10 +5,6 @@ package service
 
 import ()
 
-func init() {
-	query.SetDefault(database.Db)
-}
-
 var _ {{.InterfaceName}} = (*{{.InterfaceName}}Impl)(nil)
 
 type {{.InterfaceName}}Impl struct {

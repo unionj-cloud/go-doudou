@@ -71,6 +71,7 @@ type AbstractBaseGenerator struct {
 	Env                 string
 	impl                IOrmGenerator
 	runner              executils.Runner
+	ConfigPackage       string
 }
 
 func (b *AbstractBaseGenerator) fix() {
@@ -103,6 +104,14 @@ func (b *AbstractBaseGenerator) Initialize(conf OrmGeneratorConfig) {
 }
 
 func (b *AbstractBaseGenerator) GenService() {
+	b.dto()
+	b.svcGo()
+
+	validate.DataType(b.Dir)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(b.Dir, "svc.go"), astutils.ExprString)
+	validate.RestApi(b.Dir, ic)
+
+	serviceName := ic.Interfaces[0].Name
 	envfile := filepath.Join(b.Dir, ".env")
 	if _, err := os.Stat(envfile); err != nil {
 		fileutils.CreateIfNotExists(envfile, false)
@@ -112,24 +121,20 @@ func (b *AbstractBaseGenerator) GenService() {
 		panic(err)
 	}
 	envContent := string(envSource)
-	if !strings.Contains(envContent, "GDD_DB_DRIVER") {
-		envContent += fmt.Sprintf(`GDD_DB_DRIVER=%s`, b.Driver)
+	if !strings.Contains(envContent, strings.ToUpper(serviceName)+"_DB_DRIVER") {
+		envContent += fmt.Sprintf(`%s_DB_DRIVER=%s`, strings.ToUpper(serviceName), b.Driver)
 		envContent += constants.LineBreak
 	}
-	if !strings.Contains(envContent, "GDD_DB_DSN") {
-		envContent += fmt.Sprintf(`GDD_DB_DSN=%s`, b.Dsn)
+	if !strings.Contains(envContent, strings.ToUpper(serviceName)+"_DB_DSN") {
+		envContent += fmt.Sprintf(`%s_DB_DSN=%s`, strings.ToUpper(serviceName), b.Dsn)
 		envContent += constants.LineBreak
 	}
 	ioutil.WriteFile(envfile, []byte(envContent), os.ModePerm)
 
-	b.dto()
-	b.svcGo()
+	codegen.GenConfig(b.Dir, ic)
 
-	validate.DataType(b.Dir)
-	ic := astutils.BuildInterfaceCollector(filepath.Join(b.Dir, "svc.go"), astutils.ExprString)
-	validate.RestApi(b.Dir, ic)
-
-	codegen.GenConfig(b.Dir)
+	cfgPkg := astutils.GetPkgPath(filepath.Join(b.Dir, "config"))
+	b.g.ConfigPackage = cfgPkg
 
 	b.orm()
 	b.svcImplGo()

@@ -61,6 +61,8 @@ type Config struct {
 	fieldJSONTagNS func(columnName string) (tagContent string)
 
 	modelOpts []ModelOpt
+
+	ConfigPackage string
 }
 
 // WithOpts set global  model options

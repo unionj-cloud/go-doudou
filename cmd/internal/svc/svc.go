@@ -134,7 +134,7 @@ func (receiver *Svc) Http() {
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.RestApi(dir, ic)
 
-	codegen.GenConfig(dir)
+	codegen.GenConfig(dir, ic)
 	codegen.GenHttpMiddleware(dir)
 
 	codegen.GenMain(dir, ic)
@@ -514,7 +514,7 @@ func (receiver *Svc) Grpc() {
 	validate.DataType(dir)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.GrpcApi(dir, ic, receiver.http2grpc)
-	codegen.GenConfig(dir)
+	codegen.GenConfig(dir, ic)
 	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
 	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto

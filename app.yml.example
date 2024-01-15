@@ -1,0 +1,30 @@
+example:
+  db:
+    driver: mysql
+    dsn: root:1234@tcp(127.0.0.1:3306)/tutorial?charset=utf8mb4&parseTime=True&loc=Local
+    log:
+      level: info
+      slow-threshold: 200ms
+      ignore-record-not-found-error: false
+      parameterized-queries: false
+    mysql:
+      skip-initialize-with-version: false
+      default-string-size: 0
+      disable-with-returning: false
+      disable-datetime-precision: false
+      dont-support-rename-index: false
+      dont-support-rename-column: false
+      dont-support-for-share-clause: false
+      dont-support-null-as-default-value: false
+      dont-support-rename-column-unique: false
+    postgres:
+      prefer-simple-protocol: false
+      without-returning: false
+    pool:
+      max-idle-conns: 2
+      max-open-conns: -1
+      conn-max-lifetime: ""
+      conn-max-idle-time: ""
+  biz:
+    api:
+      secret: "my_secret"
