@@ -14,9 +14,9 @@ import (
 var configTmpl = templates.EditableHeaderTmpl + `package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 var G_Config *Config
@@ -32,7 +32,7 @@ func init() {
 	var conf Config
 	err := envconfig.Process("{{.ServiceName}}", &conf)
 	if err != nil {
-		errorx.Panic("Error processing environment variables")
+		zlogger.Panic().Msgf("Error processing environment variables: %v", err)
 	}
 	G_Config = &conf
 }

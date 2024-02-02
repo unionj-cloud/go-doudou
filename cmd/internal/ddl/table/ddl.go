@@ -6,7 +6,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/testcontainers/testcontainers-go"

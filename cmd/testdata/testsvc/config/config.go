@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/sirupsen/logrus"
 )
 
