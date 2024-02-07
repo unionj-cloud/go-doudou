@@ -16,6 +16,7 @@ var dbDsn string
 var dbOrm string
 var dbSoft string
 var dbGrpc bool
+var dbService bool
 var dbTablePrefix string
 var dbTableGlob string
 var module bool
@@ -43,6 +44,7 @@ var initCmd = &cobra.Command{
 			Orm:         dbOrm,
 			Soft:        dbSoft,
 			Grpc:        dbGrpc,
+			Service:     dbService,
 		}
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
@@ -69,6 +71,7 @@ func init() {
 	initCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
+	initCmd.Flags().BoolVar(&dbService, "db_service", true, `If false, service will not be generated, and db_grpc will be ignored. Only dao layer code will be generated.`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)

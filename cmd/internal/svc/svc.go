@@ -106,6 +106,7 @@ type DbConfig struct {
 	Orm         string
 	Soft        string
 	Grpc        bool
+	Service     bool
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -192,7 +193,11 @@ func (receiver *Svc) Init() {
 			Soft:          receiver.DbConfig.Soft,
 			Grpc:          receiver.DbConfig.Grpc,
 		})
-		gen.GenService()
+		if receiver.DbConfig.Service {
+			gen.GenService()
+		} else {
+			gen.GenDao()
+		}
 	} else if !receiver.module {
 		if stringutils.IsEmpty(receiver.DocPath) {
 			matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
