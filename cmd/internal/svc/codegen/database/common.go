@@ -52,6 +52,7 @@ type IOrmGenerator interface {
 	fix()
 	Initialize(conf OrmGeneratorConfig)
 	GenService()
+	GenDao()
 }
 
 var _ IOrmGenerator = (*AbstractBaseGenerator)(nil)
@@ -72,6 +73,12 @@ type AbstractBaseGenerator struct {
 	impl                IOrmGenerator
 	runner              executils.Runner
 	ConfigPackage       string
+}
+
+func (b *AbstractBaseGenerator) GenDao() {
+	b.dto()
+	b.orm()
+	b.goModTidy()
 }
 
 func (b *AbstractBaseGenerator) fix() {
