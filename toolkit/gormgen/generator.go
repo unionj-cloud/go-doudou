@@ -173,6 +173,11 @@ func (g *Generator) GenerateTablesByGlob(gl glob.Glob, opts ...ModelOpt) (tableM
 	return tableModels
 }
 
+// GenerateFilteredTables generate all tables filterd by glob syntax in db
+func (g *Generator) GenerateFilteredTables(opts ...ModelOpt) (tableModels []interface{}) {
+	return g.GenerateTablesByGlob(g.FilterTableGlob, opts...)
+}
+
 // GenerateModelFrom generate model from object
 func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMeta {
 	s, err := generate.GetQueryStructMetaFromObject(obj, g.genModelObjConfig())
@@ -604,6 +609,10 @@ func (g *Generator) generateQueryFile() (err error) {
 	case err = <-errChan:
 		return errors.WithStack(err)
 	case <-pool.AsyncWaitAll():
+	}
+
+	if g.FilterTableGlob != nil {
+		return nil
 	}
 
 	importPkgs := importList.Add(g.importPkgPaths...).Paths()

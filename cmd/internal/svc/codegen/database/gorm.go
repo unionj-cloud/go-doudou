@@ -159,8 +159,8 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	g.UseDB(db)
 	var models []interface{}
 	if stringutils.IsNotEmpty(gg.TableGlob) {
-		models = g.GenerateTablesByGlob(
-			glob.MustCompile(gg.TableGlob),
+		g.FilterTableGlob = glob.MustCompile(gg.TableGlob)
+		models = g.GenerateFilteredTables(
 			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
 			gormgen.FieldGenType(conf.Soft, "Time"))
 	} else {

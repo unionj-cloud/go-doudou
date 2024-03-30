@@ -172,11 +172,11 @@ ENTRYPOINT ["/repo/api"]
 `
 
 type InitProjConfig struct {
-	Dir             string
-	ModName         string
-	Runner          executils.Runner
-	GenSvcGo        bool
-	Module          bool
+	Dir            string
+	ModName        string
+	Runner         executils.Runner
+	GenSvcGo       bool
+	Module         bool
 	ProtoGenerator v3.ProtoGenerator
 	CaseConverter  func(string) string
 	JsonCase       string
@@ -197,7 +197,8 @@ func InitProj(conf InitProjConfig) {
 		tpl       *template.Template
 		envfile   string
 	)
-	dir, modName, runner, genSvcGo, module, protoGenerator, caseConverter, jsonCase := conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator, conf.CaseConverter, conf.JsonCase
+	dir, modName, runner, genSvcGo, module, protoGenerator, caseConverter, jsonCase :=
+		conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator, conf.CaseConverter, conf.JsonCase
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
