@@ -2,6 +2,7 @@ package gormgen
 
 import (
 	"fmt"
+	"github.com/gobwas/glob"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,6 +64,8 @@ type Config struct {
 	modelOpts []ModelOpt
 
 	ConfigPackage string
+
+	FilterTableGlob glob.Glob
 }
 
 // WithOpts set global  model options

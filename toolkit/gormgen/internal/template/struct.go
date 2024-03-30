@@ -7,7 +7,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + getFieldExprByName + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -25,7 +25,7 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Columns(cols ...field.Expr) gormgen.Columns { return {{.S}}.{{.QueryStructName}}Do.Columns(cols...) }
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + getFieldMethod + getFieldExprByName + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryIface table query interface
 	TableQueryIface = defineDoInterface
@@ -123,6 +123,15 @@ func ({{.S}} *{{.QueryStructName}}) GetFieldByName(fieldName string) (field.Orde
 	}
 	_oe,ok := _f.(field.OrderExpr)
 	return _oe,ok
+}
+`
+	getFieldExprByName = `
+func ({{.S}} *{{.QueryStructName}}) GetFieldExprByName(fieldName string) (field.Expr, bool) {
+	_f, ok := {{.S}}.fieldMap[fieldName]
+	if !ok || _f == nil {
+		return nil, false
+	}
+	return _f, ok
 }
 `
 	relationship = `{{range .Fields}}{{if .IsRelation}}` +

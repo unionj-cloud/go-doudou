@@ -71,7 +71,7 @@ func init() {
 	initCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
-	initCmd.Flags().BoolVar(&dbService, "db_service", true, `If false, service will not be generated, and db_grpc will be ignored. Only dao layer code will be generated.`)
+	initCmd.Flags().BoolVar(&dbService, "db_service", false, `If false, service will not be generated, and db_grpc will be ignored. Only dao layer code will be generated.`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
