@@ -48,6 +48,10 @@ func (q *Query) Clone(db *gorm.DB) *Query {
 	}
 }
 
+func (q *Query) Db() *gorm.DB {
+	return q.db
+}
+
 func (q *Query) ReadDB() *Query {
 	return q.ReplaceDB(q.db.Clauses(dbresolver.Read))
 }
