@@ -1,4 +1,4 @@
-FROM golang:1.21rc3-alpine AS builder
+FROM golang:1.21.8-alpine AS builder
 
 ENV GO111MODULE=on
 ARG user
