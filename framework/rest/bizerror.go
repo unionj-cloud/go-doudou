@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -82,4 +83,14 @@ func PanicInternalServerError(err error) {
 		return
 	}
 	panic(NewBizError(err))
+}
+
+func UnWrap(err error) error {
+	var bizErr BizError
+	if errors.As(err, &bizErr) {
+		if bizErr.Cause != nil {
+			return UnWrap(bizErr.Cause)
+		}
+	}
+	return err
 }
