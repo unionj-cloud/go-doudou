@@ -152,7 +152,6 @@ func (r *resContext) Response(res interface{}) Page {
 		hasAdapter = true
 		if cKey != "" && adapter.IsValid(cKey) {
 			if cache, err := adapter.Get(cKey); nil == err {
-				page.Items, _ = sliceutils.ConvertAny2Interface(res)
 				if err := p.Config.JSONUnmarshal([]byte(cache), &page); nil == err {
 					return page
 				}

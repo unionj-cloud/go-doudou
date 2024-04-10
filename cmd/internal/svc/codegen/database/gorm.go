@@ -93,6 +93,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Grpc = conf.Grpc
 	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
 	gg.TableGlob = conf.TableGlob
+	gg.GenGenGo = conf.GenGenGo
 	gg.CaseConverter = conf.CaseConverter
 	var db *gorm.DB
 	var err error
@@ -157,6 +158,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	g.WithJSONTagNameStrategy(func(n string) string { return gg.CaseConverter(n) + ",omitempty" })
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
+	g.GenGenGo = gg.GenGenGo
 	var models []interface{}
 	if stringutils.IsNotEmpty(gg.TableGlob) {
 		g.FilterTableGlob = glob.MustCompile(gg.TableGlob)

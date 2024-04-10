@@ -37,6 +37,7 @@ type OrmGeneratorConfig struct {
 	Dsn           string
 	TablePrefix   string
 	TableGlob     string
+	GenGenGo      bool
 	CaseConverter func(string) string
 	Dir           string
 	Soft          string
@@ -62,6 +63,7 @@ type AbstractBaseGenerator struct {
 	Dsn                 string
 	TablePrefix         string
 	TableGlob           string
+	GenGenGo            bool
 	Dir                 string
 	g                   *gormgen.Generator
 	CaseConverter       func(string) string

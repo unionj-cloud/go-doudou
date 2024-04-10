@@ -611,7 +611,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	case <-pool.AsyncWaitAll():
 	}
 
-	if g.FilterTableGlob != nil {
+	if !g.GenGenGo {
 		return nil
 	}
 
