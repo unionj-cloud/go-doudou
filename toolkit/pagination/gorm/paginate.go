@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/iancoleman/strcase"
 	"github.com/morkid/gocache"
 	"gorm.io/gorm"
 )
@@ -22,6 +21,7 @@ import (
 type ResponseContext interface {
 	Cache(string) ResponseContext
 	Fields([]string) ResponseContext
+	Distinct([]string) ResponseContext
 	Response(interface{}) Page
 	Error() error
 }
@@ -82,12 +82,14 @@ func (r reqContext) Request(parameter IParameter) ResponseContext {
 }
 
 type resContext struct {
-	Pagination  *Pagination
-	Statement   *gorm.DB
-	Parameter   IParameter
-	cachePrefix string
-	fieldList   []string
-	error       error
+	Pagination   *Pagination
+	Statement    *gorm.DB
+	Parameter    IParameter
+	cachePrefix  string
+	fieldList    []string
+	customSelect string
+	distinct     bool
+	error        error
 }
 
 func (r *resContext) Error() error {
@@ -101,6 +103,13 @@ func (r *resContext) Cache(prefix string) ResponseContext {
 
 func (r *resContext) Fields(fields []string) ResponseContext {
 	r.fieldList = fields
+	return r
+}
+
+// CustomSelect currently used for distinct on clause
+func (r *resContext) Distinct(fields []string) ResponseContext {
+	r.fieldList = fields
+	r.distinct = true
 	return r
 }
 
@@ -143,7 +152,6 @@ func (r *resContext) Response(res interface{}) Page {
 		hasAdapter = true
 		if cKey != "" && adapter.IsValid(cKey) {
 			if cache, err := adapter.Get(cKey); nil == err {
-				page.Items, _ = sliceutils.ConvertAny2Interface(res)
 				if err := p.Config.JSONUnmarshal([]byte(cache), &page); nil == err {
 					return page
 				}
@@ -188,12 +196,21 @@ func (r *resContext) Response(res interface{}) Page {
 		Table("(?) AS s", query)
 
 	if len(selects) > 0 {
-		result = result.Select(selects)
+		if r.distinct {
+			result = result.Distinct(selects)
+		} else {
+			result = result.Select(selects)
+		}
 	}
 
 	if len(causes.Params) > 0 || len(causes.WhereString) > 0 {
 		result = result.Where(causes.WhereString, causes.Params...)
 	}
+
+	dbs = query.Statement.DB.Session(&gorm.Session{NewDB: true})
+	result = dbs.
+		Unscoped().
+		Table("(?) AS s1", result)
 
 	result = result.Count(&page.Total).
 		Limit(int(causes.Limit)).
@@ -622,7 +639,11 @@ func contains(source []string, value string) bool {
 }
 
 func FieldAs(tableName, colName string) string {
-	return strcase.ToSnake(fmt.Sprintf("%s_%s", tableName, colName))
+	return fmt.Sprintf("%s_%s", strings.ToLower(tableName), strings.ToLower(colName))
+}
+
+func GetLowerColNameFromAlias(alias, tableName string) string {
+	return strings.TrimPrefix(alias, strings.ToLower(tableName)+"_")
 }
 
 func fieldName(field string) string {

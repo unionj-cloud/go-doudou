@@ -20,6 +20,7 @@ var dbService bool
 var dbTablePrefix string
 var dbTableGlob string
 var module bool
+var dbGenGenGo bool
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -41,6 +42,7 @@ var initCmd = &cobra.Command{
 			Dsn:         dbDsn,
 			TablePrefix: dbTablePrefix,
 			TableGlob:   dbTableGlob,
+			GenGenGo:    dbGenGenGo,
 			Orm:         dbOrm,
 			Soft:        dbSoft,
 			Grpc:        dbGrpc,
@@ -72,6 +74,7 @@ func init() {
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
 	initCmd.Flags().BoolVar(&dbService, "db_service", false, `If false, service will not be generated, and db_grpc will be ignored. Only dao layer code will be generated.`)
+	initCmd.Flags().BoolVar(&dbGenGenGo, "db_gen_gen", false, `whether generate gen.go file`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)

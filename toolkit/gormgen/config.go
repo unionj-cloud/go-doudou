@@ -66,6 +66,7 @@ type Config struct {
 	ConfigPackage string
 
 	FilterTableGlob glob.Glob
+	GenGenGo        bool
 }
 
 // WithOpts set global  model options

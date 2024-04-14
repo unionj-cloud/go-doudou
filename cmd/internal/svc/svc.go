@@ -103,10 +103,12 @@ type DbConfig struct {
 	// or schema for pg
 	TablePrefix string
 	TableGlob   string
-	Orm         string
-	Soft        string
-	Grpc        bool
-	Service     bool
+	// whether generate gen.go file
+	GenGenGo bool
+	Orm      string
+	Soft     string
+	Grpc     bool
+	Service  bool
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -188,6 +190,7 @@ func (receiver *Svc) Init() {
 			Dsn:           receiver.DbConfig.Dsn,
 			TablePrefix:   receiver.DbConfig.TablePrefix,
 			TableGlob:     receiver.DbConfig.TableGlob,
+			GenGenGo:      receiver.DbConfig.GenGenGo,
 			CaseConverter: receiver.CaseConverter,
 			Dir:           receiver.dir,
 			Soft:          receiver.DbConfig.Soft,

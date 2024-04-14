@@ -226,6 +226,7 @@ func (srv *RestServer) PreMiddleware(mwf ...func(http.Handler) http.Handler) {
 
 func (srv *RestServer) configure() {
 	if config.GddConfig.ManageEnable {
+		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
 		srv.middlewares = append([]MiddlewareFunc{PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
 		corsOpts := cors.New(cors.Options{
@@ -350,8 +351,9 @@ func (srv *RestServer) configure() {
 			}
 			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), h, item.Name)
 		}
+	} else {
+		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
 	}
-	srv.middlewares = append(srv.middlewares, srv.panicHandler)
 	for _, item := range srv.bizRoutes {
 		h := http.Handler(item.HandlerFunc)
 		for i := len(srv.middlewares) - 1; i >= 0; i-- {
