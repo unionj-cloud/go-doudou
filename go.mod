@@ -19,7 +19,6 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
-	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opentracing-contrib/go-stdlib v1.0.0
@@ -42,6 +41,7 @@ require (
 	github.com/eko/gocache/store/go_cache/v4 v4.2.1
 	github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2
 	github.com/eko/gocache/store/ristretto/v4 v4.2.2-0.20231209210640-002c243623a2
+	github.com/elliotchance/orderedmap/v2 v2.2.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/gobwas/glob v0.2.3
@@ -67,7 +67,6 @@ require (
 
 require (
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054 // indirect
-	github.com/cloudflare/tableflip v1.2.3 // indirect
 	github.com/cockroachdb/apd v1.1.1-0.20181017181144-bced77f817b4 // indirect
 	github.com/cockroachdb/errors v1.8.2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
@@ -229,7 +228,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/btree v1.1.2
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hashicorp/errwrap v1.1.0 // indirect
