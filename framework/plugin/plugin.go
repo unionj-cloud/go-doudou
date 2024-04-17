@@ -1,24 +1,26 @@
 package plugin
 
 import (
+	"github.com/elliotchance/orderedmap/v2"
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
 )
 
-var servicePlugins = map[string]ServicePlugin{}
+var servicePlugins = orderedmap.NewOrderedMap[string, ServicePlugin]()
 
 type ServicePlugin interface {
 	Initialize(restServer *rest.RestServer, grpcServer *grpcx.GrpcServer, dialCtx pipeconn.DialContextFunc)
 	GetName() string
 	Close()
 	GoDoudouServicePlugin()
+	GetServiceInstance() interface{}
 }
 
 func RegisterServicePlugin(plugin ServicePlugin) {
-	servicePlugins[plugin.GetName()] = plugin
+	servicePlugins.Set(plugin.GetName(), plugin)
 }
 
-func GetServicePlugins() map[string]ServicePlugin {
+func GetServicePlugins() *orderedmap.OrderedMap[string, ServicePlugin] {
 	return servicePlugins
 }
