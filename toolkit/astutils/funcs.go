@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -326,8 +327,15 @@ func ExprString(expr ast.Expr) string {
 			return "..." + ExprString(_expr.Elt)
 		}
 		panic(fmt.Sprintf("invalid ellipsis expression: %+v\n", expr))
+	case *ast.IndexExpr:
+		return ExprString(_expr.X)
 	default:
-		panic(fmt.Sprintf("not support expression: %+v\n", expr))
+		logrus.Infof("not support expression: %+v\n", expr)
+		logrus.Infof("not support expression: %+v\n", reflect.TypeOf(expr))
+		logrus.Infof("not support expression: %#v\n", reflect.TypeOf(expr))
+		logrus.Infof("not support expression: %v\n", reflect.TypeOf(expr).String())
+		return ""
+		//panic(fmt.Sprintf("not support expression: %+v\n", expr))
 	}
 }
 
