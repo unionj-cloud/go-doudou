@@ -110,7 +110,9 @@ func (c *Caches) AfterWrite(db *gorm.DB) {
 	callbacks.BuildQuerySQL(db)
 
 	tables := getTables(db)
-	if len(tables) == 1 {
+	if len(tables) == 0 {
+		return
+	} else if len(tables) == 1 {
 		c.deleteCache(db, tables[0])
 	} else {
 		c.deleteCache(db, tables[0], tables[1:]...)
@@ -123,6 +125,7 @@ func (c *Caches) AfterWrite(db *gorm.DB) {
 
 func (c *Caches) ease(db *gorm.DB, identifier string, callback func(*gorm.DB)) {
 	if c.Conf.Easer == false {
+		//if true {
 		callback(db)
 		return
 	}
@@ -142,10 +145,10 @@ func (c *Caches) ease(db *gorm.DB, identifier string, callback func(*gorm.DB)) {
 	}
 
 	q := Query{
-		Dest:         db.Statement.Dest,
-		RowsAffected: db.Statement.RowsAffected,
+		Dest:         res.db.Statement.Dest,
+		RowsAffected: res.db.Statement.RowsAffected,
 	}
-	q.replaceOn(res.db)
+	q.replaceOn(db)
 }
 
 func (c *Caches) checkCache(identifier string) (res *Query, ok bool) {
@@ -242,6 +245,9 @@ func getTablesPostgres(db *gorm.DB) []string {
 
 func (c *Caches) storeInCache(db *gorm.DB, identifier string) {
 	if c.Conf.Cacher != nil {
+		if _, ok := db.Statement.Dest.(map[string]interface{}); ok {
+			fmt.Println(db.Statement.Dest)
+		}
 		err := c.Conf.Cacher.Store(identifier, &Query{
 			Tags:         getTables(db),
 			Dest:         db.Statement.Dest,
