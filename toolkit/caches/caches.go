@@ -12,14 +12,13 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
+	"strings"
 	"sync"
 )
 
 type Caches struct {
-	Conf *Config
-
-	queue   *sync.Map
-	queryCb func(*gorm.DB)
+	Conf  *Config
+	queue *sync.Map
 }
 
 type Config struct {
@@ -43,9 +42,9 @@ func (c *Caches) Initialize(db *gorm.DB) error {
 		c.queue = &sync.Map{}
 	}
 
-	c.queryCb = db.Callback().Query().Get("gorm:query")
+	callback := db.Callback().Query().Get("gorm:query")
 
-	err := db.Callback().Query().Replace("gorm:query", c.Query)
+	err := db.Callback().Query().Replace("gorm:query", c.Query(callback))
 	if err != nil {
 		return err
 	}
@@ -65,33 +64,41 @@ func (c *Caches) Initialize(db *gorm.DB) error {
 		return err
 	}
 
+	err = db.Callback().Raw().After("gorm:raw").Register("cache:after_raw", c.AfterWrite)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (c *Caches) Query(db *gorm.DB) {
-	if c.Conf.Easer == false && c.Conf.Cacher == nil {
-		c.queryCb(db)
-		return
-	}
+func (c *Caches) Query(callback func(*gorm.DB)) func(*gorm.DB) {
+	return func(db *gorm.DB) {
+		if c.Conf.Easer == false && c.Conf.Cacher == nil {
+			callback(db)
+			return
+		}
 
-	identifier := buildIdentifier(db)
+		identifier := buildIdentifier(db)
 
-	if db.DryRun {
-		return
-	}
+		if db.DryRun {
+			return
+		}
 
-	if c.checkCache(db, identifier) {
-		return
-	}
+		if res, ok := c.checkCache(identifier); ok {
+			res.replaceOn(db)
+			return
+		}
 
-	c.ease(db, identifier)
-	if db.Error != nil {
-		return
-	}
+		c.ease(db, identifier, callback)
+		if db.Error != nil {
+			return
+		}
 
-	c.storeInCache(db, identifier)
-	if db.Error != nil {
-		return
+		c.storeInCache(db, identifier)
+		if db.Error != nil {
+			return
+		}
 	}
 }
 
@@ -114,16 +121,16 @@ func (c *Caches) AfterWrite(db *gorm.DB) {
 	}
 }
 
-func (c *Caches) ease(db *gorm.DB, identifier string) {
+func (c *Caches) ease(db *gorm.DB, identifier string, callback func(*gorm.DB)) {
 	if c.Conf.Easer == false {
-		c.queryCb(db)
+		callback(db)
 		return
 	}
 
 	res := ease(&queryTask{
 		id:      identifier,
 		db:      db,
-		queryCb: c.queryCb,
+		queryCb: callback,
 	}, c.queue).(*queryTask)
 
 	if db.Error != nil {
@@ -141,17 +148,17 @@ func (c *Caches) ease(db *gorm.DB, identifier string) {
 	q.replaceOn(res.db)
 }
 
-func (c *Caches) checkCache(db *gorm.DB, identifier string) bool {
+func (c *Caches) checkCache(identifier string) (res *Query, ok bool) {
 	if c.Conf.Cacher != nil {
-		if res := c.Conf.Cacher.Get(identifier); res != nil {
-			res.replaceOn(db)
-			return true
+		if res = c.Conf.Cacher.Get(identifier); res != nil {
+			return res, true
 		}
 	}
-	return false
+	return nil, false
 }
 
 func getTables(db *gorm.DB) []string {
+	callbacks.BuildQuerySQL(db)
 	switch db.Dialector.(type) {
 	case *mysql.Dialector:
 		return getTablesMysql(db)
@@ -189,7 +196,20 @@ func getTablesPostgres(db *gorm.DB) []string {
 			//log.Printf("%T", node)
 			switch expr := node.(type) {
 			case *tree.TableName:
-				tableNames = append(tableNames, expr.Table())
+				var sb strings.Builder
+				fmtCtx := tree.NewFmtCtx(tree.FmtSimple)
+				expr.TableNamePrefix.Format(fmtCtx)
+				sb.WriteString(fmtCtx.String())
+
+				if sb.Len() > 0 {
+					sb.WriteString(".")
+				}
+
+				fmtCtx = tree.NewFmtCtx(tree.FmtSimple)
+				expr.TableName.Format(fmtCtx)
+				sb.WriteString(fmtCtx.String())
+
+				tableNames = append(tableNames, sb.String())
 			case *tree.Insert:
 				fmtCtx := tree.NewFmtCtx(tree.FmtSimple)
 				expr.Table.Format(fmtCtx)

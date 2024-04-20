@@ -1,12 +1,12 @@
 package database
 
 import (
+	gocache "github.com/eko/gocache/lib/v4/cache"
 	"log"
 	"os"
 	"strings"
 	"time"
 
-	gocache "github.com/eko/gocache/lib/v4/cache"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -283,8 +283,11 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		case DriverPostgres:
 			collectors = append(collectors, &prometheus.Postgres{})
 		}
-		ConfigureMetrics(Db, conf.Db.Prometheus.DBName, uint32(conf.Db.Prometheus.RefreshInterval),
+		ConfigureMetrics(db, conf.Db.Prometheus.DBName, uint32(conf.Db.Prometheus.RefreshInterval),
 			nil, collectors...)
+	}
+	if conf.Db.Cache.Enable && stringutils.IsNotEmpty(conf.Cache.Stores) {
+		ConfigureDBCache(db, cache.NewCacheManager(conf))
 	}
 	return
 }
@@ -299,9 +302,8 @@ func ConfigureMetrics(db *gorm.DB, dbName string, refreshInterval uint32, labels
 }
 
 func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any]) {
-	cachesPlugin := &caches.Caches{Conf: &caches.Config{
+	db.Use(&caches.Caches{Conf: &caches.Config{
 		Easer:  true,
 		Cacher: NewCacherAdapter(cacheManager),
-	}}
-	db.Use(cachesPlugin)
+	}})
 }
