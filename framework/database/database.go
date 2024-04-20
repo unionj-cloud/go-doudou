@@ -1,12 +1,12 @@
 package database
 
 import (
+	gocache "github.com/eko/gocache/lib/v4/cache"
 	"log"
 	"os"
 	"strings"
 	"time"
 
-	gocache "github.com/eko/gocache/lib/v4/cache"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -302,9 +302,8 @@ func ConfigureMetrics(db *gorm.DB, dbName string, refreshInterval uint32, labels
 }
 
 func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any]) {
-	cachesPlugin := &caches.Caches{Conf: &caches.Config{
+	db.Use(&caches.Caches{Conf: &caches.Config{
 		Easer:  true,
 		Cacher: NewCacherAdapter(cacheManager),
-	}}
-	db.Use(cachesPlugin)
+	}})
 }
