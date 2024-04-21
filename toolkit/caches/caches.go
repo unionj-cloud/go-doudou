@@ -80,6 +80,11 @@ func (c *Caches) Query(callback func(*gorm.DB)) func(*gorm.DB) {
 		}
 
 		identifier := buildIdentifier(db)
+		if stringutils.ContainsI(identifier, "INSERT INTO") {
+			callback(db)
+			c.AfterWrite(db)
+			return
+		}
 
 		if db.DryRun {
 			return
