@@ -539,8 +539,15 @@ func ExprStringP(expr ast.Expr) string {
 		panic("not support function as struct field type in vo and dto package and as parameter in method signature in svc.go file")
 	case *ast.ChanType:
 		panic("not support channel as struct field type in vo and dto package and as parameter in method signature in svc.go file")
+	case *ast.IndexExpr:
+		return ExprStringP(_expr.X)
 	default:
-		panic(fmt.Errorf("not support expression as struct field type in vo and dto package and in method signature in svc.go file: %+v", expr))
+		logrus.Infof("not support expression: %+v\n", expr)
+		logrus.Infof("not support expression: %+v\n", reflect.TypeOf(expr))
+		logrus.Infof("not support expression: %#v\n", reflect.TypeOf(expr))
+		logrus.Infof("not support expression: %v\n", reflect.TypeOf(expr).String())
+		return ""
+		//panic(fmt.Errorf("not support expression as struct field type in vo and dto package and in method signature in svc.go file: %+v", expr))
 	}
 }
 
