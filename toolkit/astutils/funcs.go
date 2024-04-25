@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
@@ -328,7 +329,12 @@ func ExprString(expr ast.Expr) string {
 		}
 		panic(fmt.Sprintf("invalid ellipsis expression: %+v\n", expr))
 	case *ast.IndexExpr:
-		return ExprString(_expr.X)
+		return ExprString(_expr.X) + "[" + ExprString(_expr.Index) + "]"
+	case *ast.IndexListExpr:
+		typeParams := lo.Map[ast.Expr, string](_expr.Indices, func(item ast.Expr, index int) string {
+			return ExprString(item)
+		})
+		return ExprString(_expr.X) + "[" + strings.Join(typeParams, ", ") + "]"
 	default:
 		logrus.Infof("not support expression: %+v\n", expr)
 		logrus.Infof("not support expression: %+v\n", reflect.TypeOf(expr))

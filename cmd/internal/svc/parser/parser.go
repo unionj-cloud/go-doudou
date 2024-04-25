@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/iancoleman/strcase"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
@@ -540,7 +541,12 @@ func ExprStringP(expr ast.Expr) string {
 	case *ast.ChanType:
 		panic("not support channel as struct field type in vo and dto package and as parameter in method signature in svc.go file")
 	case *ast.IndexExpr:
-		return ExprStringP(_expr.X)
+		return ExprStringP(_expr.X) + "[" + ExprStringP(_expr.Index) + "]"
+	case *ast.IndexListExpr:
+		typeParams := lo.Map[ast.Expr, string](_expr.Indices, func(item ast.Expr, index int) string {
+			return ExprStringP(item)
+		})
+		return ExprStringP(_expr.X) + "[" + strings.Join(typeParams, ", ") + "]"
 	default:
 		logrus.Infof("not support expression: %+v\n", expr)
 		logrus.Infof("not support expression: %+v\n", reflect.TypeOf(expr))

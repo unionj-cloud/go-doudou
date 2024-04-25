@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -318,6 +319,7 @@ func TestNewMethodMeta(t *testing.T) {
 	}
 	sc := NewStructCollector(ExprString)
 	ast.Walk(sc, root)
+	spew.Dump(root)
 }
 
 func TestGetImportStatements(t *testing.T) {
