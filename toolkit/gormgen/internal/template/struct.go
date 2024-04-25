@@ -209,6 +209,7 @@ type I{{.ModelStructName}}Do interface {
 	FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
 	Scan(result interface{}) (err error)
+	Fetch(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) I{{.ModelStructName}}Do
 	UnderlyingDB() *gorm.DB
 	schema.Tabler

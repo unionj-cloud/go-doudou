@@ -254,6 +254,10 @@ func ({{.S}} {{.QueryStructName}}Do) Scan(result interface{}) (err error) {
 	return {{.S}}.DO.Scan(result)
 }
 
+func ({{.S}} {{.QueryStructName}}Do) Fetch(result interface{}) (err error) {
+	return {{.S}}.DO.Fetch(result)
+}
+
 func ({{.S}} {{.QueryStructName}}Do) Delete(models ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) (result gormgen.ResultInfo, err error) {
 	return {{.S}}.DO.Delete(models)
 }

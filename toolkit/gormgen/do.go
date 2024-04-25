@@ -812,6 +812,11 @@ func (d *DO) Rows() (*sql.Rows, error) {
 
 // Scan ...
 func (d *DO) Scan(dest interface{}) error {
+	return d.db.Model(d.newResultPointer()).Scan(dest).Error
+}
+
+// Fetch ...
+func (d *DO) Fetch(dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).Find(dest).Error
 }
 
