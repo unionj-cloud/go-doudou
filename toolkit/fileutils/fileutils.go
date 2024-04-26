@@ -3,17 +3,23 @@ package fileutils
 import (
 	"bufio"
 	"github.com/mholt/archiver/v3"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 )
 
 // CreateDirectory dir didn't exist, then create dir, otherwise do nothing.
 func CreateDirectory(dir string) (err error) {
-	if _, err = os.Stat(dir); err != nil {
+	var info os.FileInfo
+	if info, err = os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			if err = os.MkdirAll(dir, 0755); err != nil {
 				return
 			}
+		}
+	} else {
+		if !info.IsDir() {
+			return errors.New("not a directory: " + dir)
 		}
 	}
 	return
