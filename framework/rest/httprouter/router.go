@@ -6,30 +6,30 @@
 //
 // A trivial example is:
 //
-//  package main
+//	package main
 //
-//  import (
-//      "fmt"
-//      "github.com/julienschmidt/httprouter"
-//      "net/http"
-//      "log"
-//  )
+//	import (
+//	    "fmt"
+//	    "github.com/julienschmidt/httprouter"
+//	    "net/http"
+//	    "log"
+//	)
 //
-//  func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-//      fmt.Fprint(w, "Welcome!\n")
-//  }
+//	func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	    fmt.Fprint(w, "Welcome!\n")
+//	}
 //
-//  func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-//      fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-//  }
+//	func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	    fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
+//	}
 //
-//  func main() {
-//      router := httprouter.New()
-//      router.GET("/", Index)
-//      router.GET("/hello/:name", Hello)
+//	func main() {
+//	    router := httprouter.New()
+//	    router.GET("/", Index)
+//	    router.GET("/hello/:name", Hello)
 //
-//      log.Fatal(http.ListenAndServe(":8080", router))
-//  }
+//	    log.Fatal(http.ListenAndServe(":8080", router))
+//	}
 //
 // The router matches incoming requests by the request method and the path.
 // If a handle is registered for this path and method, the router delegates the
@@ -39,41 +39,45 @@
 //
 // The registered path, against which the router matches incoming requests, can
 // contain two types of parameters:
-//  Syntax    Type
-//  :name     named parameter
-//  *name     catch-all parameter
+//
+//	Syntax    Type
+//	:name     named parameter
+//	*name     catch-all parameter
 //
 // Named parameters are dynamic path segments. They match anything until the
 // next '/' or the path end:
-//  Path: /blog/:category/:post
 //
-//  Requests:
-//   /blog/go/request-routers            match: category="go", post="request-routers"
-//   /blog/go/request-routers/           no match, but the router would redirect
-//   /blog/go/                           no match
-//   /blog/go/request-routers/comments   no match
+//	Path: /blog/:category/:post
+//
+//	Requests:
+//	 /blog/go/request-routers            match: category="go", post="request-routers"
+//	 /blog/go/request-routers/           no match, but the router would redirect
+//	 /blog/go/                           no match
+//	 /blog/go/request-routers/comments   no match
 //
 // Catch-all parameters match anything until the path end, including the
 // directory index (the '/' before the catch-all). Since they match anything
 // until the end, catch-all parameters must always be the final path element.
-//  Path: /files/*filepath
 //
-//  Requests:
-//   /files/                             match: filepath="/"
-//   /files/LICENSE                      match: filepath="/LICENSE"
-//   /files/templates/article.html       match: filepath="/templates/article.html"
-//   /files                              no match, but the router would redirect
+//	Path: /files/*filepath
+//
+//	Requests:
+//	 /files/                             match: filepath="/"
+//	 /files/LICENSE                      match: filepath="/LICENSE"
+//	 /files/templates/article.html       match: filepath="/templates/article.html"
+//	 /files                              no match, but the router would redirect
 //
 // The value of parameters is saved as a slice of the Param struct, consisting
 // each of a key and a value. The slice is passed to the Handle func as a third
 // parameter.
 // There are two ways to retrieve the value of a parameter:
-//  // by the name of the parameter
-//  user := ps.ByName("user") // defined by :user or *user
 //
-//  // by the index of the parameter. This way you can also get the name (key)
-//  thirdKey   := ps[2].Key   // the name of the 3rd parameter
-//  thirdValue := ps[2].Value // the value of the 3rd parameter
+//	// by the name of the parameter
+//	user := ps.ByName("user") // defined by :user or *user
+//
+//	// by the index of the parameter. This way you can also get the name (key)
+//	thirdKey   := ps[2].Key   // the name of the 3rd parameter
+//	thirdValue := ps[2].Value // the value of the 3rd parameter
 package httprouter
 
 import (
@@ -187,8 +191,10 @@ type Router struct {
 	// key is method
 	registeredPaths map[string]struct{}
 	handlers        map[string]Handle
+	// here we use pointer type because urlpath.Path is not comparable
 	dynamicHandlers []map[*urlpath.Path]Handle
-	methodPaths     map[string]struct{}
+	// key is path
+	dynamicPaths map[string]*urlpath.Path
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -207,7 +213,7 @@ func New() *Router {
 		registeredPaths:        make(map[string]struct{}),
 		handlers:               make(map[string]Handle),
 		dynamicHandlers:        make([]map[*urlpath.Path]Handle, len(httpMethods)),
-		methodPaths:            make(map[string]struct{}),
+		dynamicPaths:           make(map[string]*urlpath.Path),
 	}
 	for i := range httpMethods {
 		r.dynamicHandlers[i] = make(map[*urlpath.Path]Handle)
@@ -361,15 +367,17 @@ func (r *Router) Handle(method, path string, handle Handle, name ...string) {
 		handle = r.saveMatchedRoutePath(name[0], handle)
 	}
 	key := path2key(method, path)
-	_, ok := r.methodPaths[key]
-	if !ok {
-		r.methodPaths[key] = struct{}{}
-		if strings.Contains(path, "*") || strings.Contains(path, ":") {
+	// later registered rest handler will replace previous one
+	if strings.Contains(path, "*") || strings.Contains(path, ":") {
+		if p, ok := r.dynamicPaths[path]; ok {
+			r.dynamicHandlers[idx][p] = handle
+		} else {
 			pt := urlpath.New(path)
 			r.dynamicHandlers[idx][&pt] = handle
-		} else {
-			r.handlers[key] = handle
+			r.dynamicPaths[path] = &pt
 		}
+	} else {
+		r.handlers[key] = handle
 	}
 }
 
