@@ -790,6 +790,7 @@ func (g *Generator) generateModelFile() error {
 			funcMap["convert"] = func(s string) string {
 				return strings.ReplaceAll(s, "time.Time", "customtypes.Time")
 			}
+			funcMap["contains"] = strings.Contains
 			t, err := template.New(tmpl.Model).Funcs(funcMap).Parse(tmpl.Model)
 			if err != nil {
 				errChan <- err

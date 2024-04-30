@@ -21,11 +21,15 @@ import (
 {{if .TableName -}}var TableName{{.ModelStructName}} string{{- end}}
 
 func init() {
+	{{- if contains .TableName "." }}
+	TableName{{.ModelStructName}} = "{{.TableName}}"
+	{{- else }}
 	if stringutils.IsNotEmpty(config.G_Config.Db.Name) {
 		TableName{{.ModelStructName}} = fmt.Sprintf("%s.{{.TableName}}", config.G_Config.Db.Name)
 	} else {
 		TableName{{.ModelStructName}} = "{{.TableName}}"
 	}
+	{{- end }}
 }
 
 // {{.ModelStructName}} {{.StructComment}}
