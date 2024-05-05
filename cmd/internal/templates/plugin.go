@@ -29,6 +29,11 @@ var _ plugin.ServicePlugin = (*{{.SvcName}}Plugin)(nil)
 
 type {{.SvcName}}Plugin struct {
 	grpcConns []*grpc.ClientConn
+	serviceInstance service.{{.SvcName}}
+}
+
+func (receiver *{{.SvcName}}Plugin) GetServiceInstance() interface{} {
+	return receiver.serviceInstance
 }
 
 func (receiver *{{.SvcName}}Plugin) Close() {
@@ -52,6 +57,7 @@ func (receiver *{{.SvcName}}Plugin) GetName() string {
 func (receiver *{{.SvcName}}Plugin) Initialize(restServer *rest.RestServer, grpcServer *grpcx.GrpcServer, dialCtx pipeconn.DialContextFunc) {
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
+	receiver.serviceInstance = svc
 	restServer.AddRoute(httpsrv.Routes(httpsrv.New{{.SvcName}}Handler(svc))...)
 	if grpcServer.Server == nil {
 		grpcServer.Server = grpc.NewServer(
