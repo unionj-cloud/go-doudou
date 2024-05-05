@@ -40,15 +40,18 @@ func main() {
 		)),
 	)
 	lis, dialCtx := pipeconn.NewPipeListener()
-	for _, v := range plugin.GetServicePlugins() {
-		v.Initialize(srv, grpcServer, dialCtx)
+	plugins := plugin.GetServicePlugins()
+	for _, key := range plugins.Keys() {
+		value, _ := plugins.Get(key)
+		value.Initialize(srv, grpcServer, dialCtx)
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			zlogger.Info().Msgf("Recovered. Error: %v\n", r)
 		}
-		for _, v := range plugin.GetServicePlugins() {
-			v.Close()
+		for _, key := range plugins.Keys() {
+			value, _ := plugins.Get(key)
+			value.Close()
 		}
 	}()
 	go func() {

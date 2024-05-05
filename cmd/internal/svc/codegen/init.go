@@ -72,7 +72,7 @@ type Parameter struct {
 	Sort    string
 	Order   string
 	Fields  string
-	Filters []interface{}
+	Filters string
 }
 
 func (receiver Parameter) GetPage() int64 {
