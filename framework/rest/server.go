@@ -9,6 +9,7 @@ import (
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/cors"
+	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
@@ -182,6 +183,7 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 		fn(srv)
 	}
 	srv.middlewares = append(srv.middlewares,
+		srv.panicHandler,
 		tracing,
 		metrics,
 		gzipBody,
@@ -200,33 +202,7 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
 	)
-	return srv
-}
-
-// AddRoute adds routes to router
-func (srv *RestServer) AddRoute(route ...Route) {
-	srv.bizRoutes = append(srv.bizRoutes, route...)
-}
-
-// AddMiddleware adds middlewares to the end of chain
-func (srv *RestServer) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
-	for _, item := range mwf {
-		srv.middlewares = append(srv.middlewares, item)
-	}
-}
-
-// PreMiddleware adds middlewares to the head of chain
-func (srv *RestServer) PreMiddleware(mwf ...func(http.Handler) http.Handler) {
-	var middlewares []MiddlewareFunc
-	for _, item := range mwf {
-		middlewares = append(middlewares, item)
-	}
-	srv.middlewares = append(middlewares, srv.middlewares...)
-}
-
-func (srv *RestServer) configure() {
 	if config.GddConfig.ManageEnable {
-		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
 		srv.middlewares = append([]MiddlewareFunc{PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
 		corsOpts := cors.New(cors.Options{
@@ -351,15 +327,6 @@ func (srv *RestServer) configure() {
 			}
 			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), h, item.Name)
 		}
-	} else {
-		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
-	}
-	for _, item := range srv.bizRoutes {
-		h := http.Handler(item.HandlerFunc)
-		for i := len(srv.middlewares) - 1; i >= 0; i-- {
-			h = srv.middlewares[i].Middleware(h)
-		}
-		srv.bizRouter.Handler(item.Method, item.Pattern, h, item.Name)
 	}
 	srv.rootRouter.NotFound = http.HandlerFunc(http.NotFound)
 	srv.rootRouter.MethodNotAllowed = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -369,6 +336,58 @@ func (srv *RestServer) configure() {
 	for i := len(srv.middlewares) - 1; i >= 0; i-- {
 		srv.rootRouter.NotFound = srv.middlewares[i].Middleware(srv.rootRouter.NotFound)
 		srv.rootRouter.MethodNotAllowed = srv.middlewares[i].Middleware(srv.rootRouter.MethodNotAllowed)
+	}
+	return srv
+}
+
+func (srv *RestServer) groupRoutes(routeGroup *httprouter.RouteGroup, routes []Route, mwf ...MiddlewareFunc) {
+	for _, item := range routes {
+		h := http.Handler(item.HandlerFunc)
+		for i := len(mwf) - 1; i >= 0; i-- {
+			h = mwf[i].Middleware(h)
+		}
+		routeGroup.Handler(item.Method, item.Pattern, h, item.Name)
+		srv.bizRoutes = append(srv.bizRoutes, item)
+	}
+}
+
+// AddRoute adds routes to router
+func (srv *RestServer) AddRoute(route ...Route) {
+	srv.groupRoutes(srv.bizRouter, route, srv.middlewares...)
+}
+
+// AddRoutes adds routes to router
+func (srv *RestServer) AddRoutes(routes []Route, mwf ...func(http.Handler) http.Handler) {
+	m := make([]MiddlewareFunc, 0)
+	m = append(m, srv.middlewares...)
+	m = append(m, lo.Map(mwf, func(item func(http.Handler) http.Handler, index int) MiddlewareFunc {
+		return item
+	})...)
+	srv.groupRoutes(srv.bizRouter, routes, m...)
+}
+
+// GroupRoutes adds routes to router
+func (srv *RestServer) GroupRoutes(group string, routes []Route, mwf ...func(http.Handler) http.Handler) {
+	m := make([]MiddlewareFunc, 0)
+	m = append(m, srv.middlewares...)
+	m = append(m, lo.Map(mwf, func(item func(http.Handler) http.Handler, index int) MiddlewareFunc {
+		return item
+	})...)
+	srv.groupRoutes(srv.bizRouter.NewGroup(group), routes, m...)
+}
+
+// AddMiddleware adds middlewares to the end of chain
+// Deprecated: use Use instead
+func (srv *RestServer) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
+	for _, item := range mwf {
+		srv.middlewares = append(srv.middlewares, item)
+	}
+}
+
+// Use adds middlewares to the end of chain
+func (srv *RestServer) Use(mwf ...func(http.Handler) http.Handler) {
+	for _, item := range mwf {
+		srv.middlewares = append(srv.middlewares, item)
 	}
 }
 
@@ -405,7 +424,6 @@ func (srv *RestServer) Serve(ln net.Listener) {
 	framework.PrintBanner()
 	framework.PrintLock.Lock()
 	register.NewRest(srv.data)
-	srv.configure()
 	srv.printRoutes()
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
