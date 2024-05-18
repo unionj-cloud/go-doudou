@@ -50,6 +50,7 @@ func GenSvcGo(dir string, docPath string) {
 	if modf, err = os.Open(modfile); err != nil {
 		panic(err)
 	}
+	defer modf.Close()
 	reader := bufio.NewReader(modf)
 	firstLine, _ := reader.ReadString('\n')
 	modName := strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
