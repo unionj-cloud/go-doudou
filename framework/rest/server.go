@@ -2,13 +2,11 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
-	"github.com/rs/cors"
 	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
@@ -205,31 +203,8 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 	if config.GddConfig.ManageEnable {
 		srv.middlewares = append([]MiddlewareFunc{PrometheusMiddleware}, srv.middlewares...)
 		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
-		corsOpts := cors.New(cors.Options{
-			AllowedMethods: []string{
-				http.MethodGet,
-				http.MethodPost,
-				http.MethodPut,
-				http.MethodPatch,
-				http.MethodDelete,
-				http.MethodOptions,
-				http.MethodHead,
-			},
-
-			AllowedHeaders: []string{
-				"*",
-			},
-
-			AllowOriginRequestFunc: func(r *http.Request, origin string) bool {
-				if r.URL.Path == fmt.Sprintf("%sopenapi.json", gddPathPrefix) {
-					return true
-				}
-				return false
-			},
-		})
 		basicAuthMiddle := MiddlewareFunc(basicAuth())
-		gddmiddlewares := []MiddlewareFunc{metrics, corsOpts.Handler, basicAuthMiddle}
-		srv.gddRoutes = append(srv.gddRoutes, docRoutes()...)
+		gddmiddlewares := []MiddlewareFunc{metrics, basicAuthMiddle}
 		srv.gddRoutes = append(srv.gddRoutes, promRoutes()...)
 		srv.gddRoutes = append(srv.gddRoutes, configRoutes()...)
 		if _, ok := config.ServiceDiscoveryMap()[constants.SD_MEMBERLIST]; ok {
