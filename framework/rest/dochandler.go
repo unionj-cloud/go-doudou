@@ -2,8 +2,10 @@ package rest
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/cors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"html/template"
 	"net/http"
 	"strings"
@@ -29,6 +31,9 @@ type DocItem struct {
 }
 
 func docRoutes(doc string) []Route {
+	if stringutils.IsEmpty(doc) {
+		doc = "{}"
+	}
 	routes := []Route{
 		{
 			Name:    "GetDoc",
@@ -44,14 +49,15 @@ func docRoutes(doc string) []Route {
 					panic(err)
 				}
 				docUrl := "openapi.json"
+				docs, _ := json.Marshal(Docs)
 				if err = tpl.Execute(&buf, struct {
 					Doc    string
 					DocUrl string
-					Docs   []DocItem
+					Docs   string
 				}{
 					Doc:    doc,
 					DocUrl: docUrl,
-					Docs:   Docs,
+					Docs:   string(docs),
 				}); err != nil {
 					panic(err)
 				}

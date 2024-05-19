@@ -32,7 +32,9 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 		}
 		defer f.Close()
 
-		if tpl, err = template.New(templates.PluginTmpl).Parse(templates.PluginTmpl); err != nil {
+		funcMap := make(map[string]interface{})
+		funcMap["toLower"] = strings.ToLower
+		if tpl, err = template.New(templates.PluginTmpl).Funcs(funcMap).Parse(templates.PluginTmpl); err != nil {
 			panic(err)
 		}
 

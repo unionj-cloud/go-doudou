@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -301,7 +302,7 @@ func InitProj(conf InitProjConfig) {
 				SvcName    string
 				Version    string
 			}{
-				DtoPackage: filepath.Join(modName, "dto"),
+				DtoPackage: strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
 				SvcName:    svcName,
 				Version:    version.Release,
 			})
