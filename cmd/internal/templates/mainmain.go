@@ -57,6 +57,7 @@ func main() {
 	go func() {
 		grpcServer.RunWithPipe(lis)
 	}()
+	srv.AddRoutes(rest.DocRoutes(""))
 	srv.Run()
 }
 `

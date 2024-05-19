@@ -30,19 +30,19 @@ func newRouteGroup(r *Router, path string) *RouteGroup {
 }
 
 func (r *RouteGroup) NewGroup(path string) *RouteGroup {
-	return newRouteGroup(r.r, r.subPath(path))
+	return newRouteGroup(r.r, r.SubPath(path))
 }
 
 func (r *RouteGroup) Handle(method, path string, handle Handle, name ...string) {
-	r.r.Handle(method, r.subPath(path), handle, name...)
+	r.r.Handle(method, r.SubPath(path), handle, name...)
 }
 
 func (r *RouteGroup) Handler(method, path string, handler http.Handler, name ...string) {
-	r.r.Handler(method, r.subPath(path), handler, name...)
+	r.r.Handler(method, r.SubPath(path), handler, name...)
 }
 
 func (r *RouteGroup) HandlerFunc(method, path string, handler http.HandlerFunc, name ...string) {
-	r.r.HandlerFunc(method, r.subPath(path), handler, name...)
+	r.r.HandlerFunc(method, r.SubPath(path), handler, name...)
 }
 
 func (r *RouteGroup) GET(path string, handle Handle) {
@@ -67,7 +67,7 @@ func (r *RouteGroup) DELETE(path string, handle Handle) {
 	r.Handle("DELETE", path, handle)
 }
 
-func (r *RouteGroup) subPath(path string) string {
+func (r *RouteGroup) SubPath(path string) string {
 	result := r.p + path
 	if stringutils.IsEmpty(result) {
 		return "/"

@@ -58,7 +58,9 @@ func (receiver *{{.SvcName}}Plugin) Initialize(restServer *rest.RestServer, grpc
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	receiver.serviceInstance = svc
-	restServer.AddRoute(httpsrv.Routes(httpsrv.New{{.SvcName}}Handler(svc))...)
+	routes := httpsrv.Routes(httpsrv.New{{.SvcName}}Handler(svc))
+	restServer.GroupRoutes("/{{.SvcName | toLower}}", routes)
+	restServer.GroupRoutes("/{{.SvcName | toLower}}", rest.DocRoutes(service.Oas))
 	if grpcServer.Server == nil {
 		grpcServer.Server = grpc.NewServer(
 			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(

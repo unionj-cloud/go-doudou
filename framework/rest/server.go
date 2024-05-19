@@ -2,22 +2,21 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
-	"github.com/rs/cors"
+	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"net"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"os/signal"
 	"path"
@@ -118,11 +117,7 @@ func (srv *RestServer) printRoutes() {
 		_, ok := routes[key]
 		if !ok {
 			routes[key] = struct{}{}
-			if strings.HasPrefix(r.Pattern, gddPathPrefix) || strings.HasPrefix(r.Pattern, debugPathPrefix) {
-				data = append(data, []string{r.Name, r.Method, r.Pattern})
-			} else {
-				data = append(data, []string{r.Name, r.Method, path.Clean(config.GddConfig.RouteRootPath + r.Pattern)})
-			}
+			data = append(data, []string{r.Name, r.Method, path.Clean(r.Pattern)})
 		}
 	}
 	tableString := &strings.Builder{}
@@ -182,6 +177,7 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 		fn(srv)
 	}
 	srv.middlewares = append(srv.middlewares,
+		srv.panicHandler,
 		tracing,
 		metrics,
 		gzipBody,
@@ -200,60 +196,10 @@ func NewRestServerWithOptions(options ...ServerOption) *RestServer {
 		requestid.RequestIDHandler,
 		handlers.ProxyHeaders,
 	)
-	return srv
-}
-
-// AddRoute adds routes to router
-func (srv *RestServer) AddRoute(route ...Route) {
-	srv.bizRoutes = append(srv.bizRoutes, route...)
-}
-
-// AddMiddleware adds middlewares to the end of chain
-func (srv *RestServer) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
-	for _, item := range mwf {
-		srv.middlewares = append(srv.middlewares, item)
-	}
-}
-
-// PreMiddleware adds middlewares to the head of chain
-func (srv *RestServer) PreMiddleware(mwf ...func(http.Handler) http.Handler) {
-	var middlewares []MiddlewareFunc
-	for _, item := range mwf {
-		middlewares = append(middlewares, item)
-	}
-	srv.middlewares = append(middlewares, srv.middlewares...)
-}
-
-func (srv *RestServer) configure() {
 	if config.GddConfig.ManageEnable {
-		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
 		srv.middlewares = append([]MiddlewareFunc{PrometheusMiddleware}, srv.middlewares...)
-		gddRouter := srv.rootRouter.NewGroup(gddPathPrefix)
-		corsOpts := cors.New(cors.Options{
-			AllowedMethods: []string{
-				http.MethodGet,
-				http.MethodPost,
-				http.MethodPut,
-				http.MethodPatch,
-				http.MethodDelete,
-				http.MethodOptions,
-				http.MethodHead,
-			},
-
-			AllowedHeaders: []string{
-				"*",
-			},
-
-			AllowOriginRequestFunc: func(r *http.Request, origin string) bool {
-				if r.URL.Path == fmt.Sprintf("%sopenapi.json", gddPathPrefix) {
-					return true
-				}
-				return false
-			},
-		})
 		basicAuthMiddle := MiddlewareFunc(basicAuth())
-		gddmiddlewares := []MiddlewareFunc{metrics, corsOpts.Handler, basicAuthMiddle}
-		srv.gddRoutes = append(srv.gddRoutes, docRoutes()...)
+		gddmiddlewares := []MiddlewareFunc{metrics, basicAuthMiddle}
 		srv.gddRoutes = append(srv.gddRoutes, promRoutes()...)
 		srv.gddRoutes = append(srv.gddRoutes, configRoutes()...)
 		if _, ok := config.ServiceDiscoveryMap()[constants.SD_MEMBERLIST]; ok {
@@ -265,7 +211,9 @@ func (srv *RestServer) configure() {
 				config.GddStatsFreq.Load(), err.Error(), config.DefaultGddStatsFreq)
 			freq, _ = time.ParseDuration(config.DefaultGddStatsFreq)
 		}
-		_ = freq
+		statsvizServer, _ := statsviz.NewServer(statsviz.Root(srv.bizRouter.SubPath(gddPathPrefix+"statsviz/")), statsviz.SendFrequency(freq))
+		ws := statsvizServer.Ws()
+		index := statsvizServer.Index()
 		srv.gddRoutes = append(srv.gddRoutes, []Route{
 			{
 				Name:    "GetStatsvizWs",
@@ -278,22 +226,23 @@ func (srv *RestServer) configure() {
 				Pattern: gddPathPrefix + "statsviz/*",
 				HandlerFunc: func(writer http.ResponseWriter, request *http.Request) {
 					if strings.HasSuffix(request.URL.Path, "/ws") {
-						statsviz.Ws(writer, request)
+						ws(writer, request)
 						return
 					}
-					statsviz.IndexAtRoot(gddPathPrefix+"statsviz/").ServeHTTP(writer, request)
+					index(writer, request)
 				},
 			},
 		}...)
-		for _, item := range srv.gddRoutes {
-			if item.HandlerFunc == nil {
-				continue
+		for k, item := range srv.gddRoutes {
+			if item.HandlerFunc != nil {
+				h := http.Handler(item.HandlerFunc)
+				for i := len(gddmiddlewares) - 1; i >= 0; i-- {
+					h = gddmiddlewares[i].Middleware(h)
+				}
+				srv.bizRouter.Handler(item.Method, item.Pattern, h, item.Name)
 			}
-			h := http.Handler(item.HandlerFunc)
-			for i := len(gddmiddlewares) - 1; i >= 0; i-- {
-				h = gddmiddlewares[i].Middleware(h)
-			}
-			gddRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, gddPathPrefix), h, item.Name)
+			item.Pattern = srv.bizRouter.SubPath(item.Pattern)
+			srv.gddRoutes[k] = item
 		}
 		srv.debugRoutes = append(srv.debugRoutes, []Route{
 			{
@@ -324,42 +273,33 @@ func (srv *RestServer) configure() {
 					lastSegment := request.URL.Path[strings.LastIndex(request.URL.Path, "/"):]
 					switch lastSegment {
 					case "/cmdline":
-						pprof.Cmdline(writer, request)
+						Cmdline(writer, request)
 						return
 					case "/profile":
-						pprof.Profile(writer, request)
+						Profile(writer, request)
 						return
 					case "/symbol":
-						pprof.Symbol(writer, request)
+						Symbol(writer, request)
 						return
 					case "/trace":
-						pprof.Trace(writer, request)
+						Trace(writer, request)
 						return
 					}
-					pprof.Index(writer, request)
+					Index(writer, request)
 				},
 			},
 		}...)
-		debugRouter := srv.rootRouter.NewGroup(debugPathPrefix)
-		for _, item := range srv.debugRoutes {
-			if item.HandlerFunc == nil {
-				continue
+		for k, item := range srv.debugRoutes {
+			if item.HandlerFunc != nil {
+				h := http.Handler(item.HandlerFunc)
+				for i := len(gddmiddlewares) - 1; i >= 0; i-- {
+					h = gddmiddlewares[i].Middleware(h)
+				}
+				srv.bizRouter.Handler(item.Method, item.Pattern, h, item.Name)
 			}
-			h := http.Handler(item.HandlerFunc)
-			for i := len(gddmiddlewares) - 1; i >= 0; i-- {
-				h = gddmiddlewares[i].Middleware(h)
-			}
-			debugRouter.Handler(item.Method, "/"+strings.TrimPrefix(item.Pattern, debugPathPrefix), h, item.Name)
+			item.Pattern = srv.bizRouter.SubPath(item.Pattern)
+			srv.debugRoutes[k] = item
 		}
-	} else {
-		srv.middlewares = append([]MiddlewareFunc{srv.panicHandler}, srv.middlewares...)
-	}
-	for _, item := range srv.bizRoutes {
-		h := http.Handler(item.HandlerFunc)
-		for i := len(srv.middlewares) - 1; i >= 0; i-- {
-			h = srv.middlewares[i].Middleware(h)
-		}
-		srv.bizRouter.Handler(item.Method, item.Pattern, h, item.Name)
 	}
 	srv.rootRouter.NotFound = http.HandlerFunc(http.NotFound)
 	srv.rootRouter.MethodNotAllowed = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -369,6 +309,59 @@ func (srv *RestServer) configure() {
 	for i := len(srv.middlewares) - 1; i >= 0; i-- {
 		srv.rootRouter.NotFound = srv.middlewares[i].Middleware(srv.rootRouter.NotFound)
 		srv.rootRouter.MethodNotAllowed = srv.middlewares[i].Middleware(srv.rootRouter.MethodNotAllowed)
+	}
+	return srv
+}
+
+func (srv *RestServer) groupRoutes(routeGroup *httprouter.RouteGroup, routes []Route, mwf ...MiddlewareFunc) {
+	for _, item := range routes {
+		h := http.Handler(item.HandlerFunc)
+		for i := len(mwf) - 1; i >= 0; i-- {
+			h = mwf[i].Middleware(h)
+		}
+		routeGroup.Handler(item.Method, item.Pattern, h, item.Name)
+		item.Pattern = routeGroup.SubPath(item.Pattern)
+		srv.bizRoutes = append(srv.bizRoutes, item)
+	}
+}
+
+// AddRoute adds routes to router
+func (srv *RestServer) AddRoute(route ...Route) {
+	srv.groupRoutes(srv.bizRouter, route, srv.middlewares...)
+}
+
+// AddRoutes adds routes to router
+func (srv *RestServer) AddRoutes(routes []Route, mwf ...func(http.Handler) http.Handler) {
+	m := make([]MiddlewareFunc, 0)
+	m = append(m, srv.middlewares...)
+	m = append(m, lo.Map(mwf, func(item func(http.Handler) http.Handler, index int) MiddlewareFunc {
+		return item
+	})...)
+	srv.groupRoutes(srv.bizRouter, routes, m...)
+}
+
+// GroupRoutes adds routes to router
+func (srv *RestServer) GroupRoutes(group string, routes []Route, mwf ...func(http.Handler) http.Handler) {
+	m := make([]MiddlewareFunc, 0)
+	m = append(m, srv.middlewares...)
+	m = append(m, lo.Map(mwf, func(item func(http.Handler) http.Handler, index int) MiddlewareFunc {
+		return item
+	})...)
+	srv.groupRoutes(srv.bizRouter.NewGroup(group), routes, m...)
+}
+
+// AddMiddleware adds middlewares to the end of chain
+// Deprecated: use Use instead
+func (srv *RestServer) AddMiddleware(mwf ...func(http.Handler) http.Handler) {
+	for _, item := range mwf {
+		srv.middlewares = append(srv.middlewares, item)
+	}
+}
+
+// Use adds middlewares to the end of chain
+func (srv *RestServer) Use(mwf ...func(http.Handler) http.Handler) {
+	for _, item := range mwf {
+		srv.middlewares = append(srv.middlewares, item)
 	}
 }
 
@@ -402,10 +395,27 @@ func (srv *RestServer) Run() {
 }
 
 func (srv *RestServer) Serve(ln net.Listener) {
+	var all []Route
+	all = append(all, srv.bizRoutes...)
+	all = append(all, srv.gddRoutes...)
+	all = append(all, srv.debugRoutes...)
+	for _, r := range all {
+		if strings.Contains(r.Pattern, gddPathPrefix+"doc") {
+			resources := strings.Split(strings.TrimPrefix(strings.TrimSuffix(r.Pattern, gddPathPrefix+"doc"), "/"), "/")
+			if len(resources) > 0 {
+				module := resources[len(resources)-1]
+				if stringutils.IsNotEmpty(module) {
+					Docs = append(Docs, DocItem{
+						Label: module,
+						Value: r.Pattern,
+					})
+				}
+			}
+		}
+	}
 	framework.PrintBanner()
 	framework.PrintLock.Lock()
 	register.NewRest(srv.data)
-	srv.configure()
 	srv.printRoutes()
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {

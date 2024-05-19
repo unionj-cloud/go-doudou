@@ -366,11 +366,7 @@ func pathsOf(ic astutils.InterfaceCollector, config GenDocConfig) map[string]v3.
 
 var gofileTmpl = `package {{.SvcPackage}}
 
-import "github.com/unionj-cloud/go-doudou/v2/framework/rest"
-
-func init() {
-	rest.Oas = ` + "`" + `{{.Doc}}` + "`" + `
-}
+var Oas = ` + "`" + `{{.Doc}}` + "`" + `
 `
 
 type GenDocConfig struct {
