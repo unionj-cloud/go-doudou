@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/rs/cors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"html/template"
 	"net/http"
 	"strings"
+	"text/template"
 )
 
 //	 window.docs = [
@@ -45,7 +45,9 @@ func docRoutes(doc string) []Route {
 					err error
 					buf bytes.Buffer
 				)
-				if tpl, err = template.New("onlinedoc.tmpl").Parse(onlinedocTmpl); err != nil {
+				if tpl, err = template.New("onlinedoc.tmpl").Parse(`window.doc = {{ .Doc }}
+window.docUrl = "{{ .DocUrl }}"
+window.docs = {{ .Docs }}`); err != nil {
 					panic(err)
 				}
 				docUrl := "openapi.json"
@@ -62,7 +64,8 @@ func docRoutes(doc string) []Route {
 					panic(err)
 				}
 				_writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-				_writer.Write(buf.Bytes())
+				result := head + buf.String() + tail
+				_writer.Write([]byte(result))
 			},
 		},
 		{
