@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gorilla/handlers"
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
@@ -399,13 +400,14 @@ func (srv *RestServer) Serve(ln net.Listener) {
 	all = append(all, srv.bizRoutes...)
 	all = append(all, srv.gddRoutes...)
 	all = append(all, srv.debugRoutes...)
+	docs := mapset.NewSet[DocItem]()
 	for _, r := range all {
 		if strings.Contains(r.Pattern, gddPathPrefix+"doc") {
 			resources := strings.Split(strings.TrimPrefix(strings.TrimSuffix(r.Pattern, gddPathPrefix+"doc"), "/"), "/")
 			if len(resources) > 0 {
 				module := resources[len(resources)-1]
 				if stringutils.IsNotEmpty(module) {
-					Docs = append(Docs, DocItem{
+					docs.Add(DocItem{
 						Label: module,
 						Value: r.Pattern,
 					})
@@ -413,6 +415,7 @@ func (srv *RestServer) Serve(ln net.Listener) {
 			}
 		}
 	}
+	Docs = docs.ToSlice()
 	framework.PrintBanner()
 	framework.PrintLock.Lock()
 	register.NewRest(srv.data)

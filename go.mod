@@ -37,6 +37,7 @@ require (
 
 require (
 	github.com/auxten/postgresql-parser v1.0.1
+	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/eko/gocache/store/go_cache/v4 v4.2.1
 	github.com/eko/gocache/store/redis/v4 v4.2.2-0.20231209210640-002c243623a2
