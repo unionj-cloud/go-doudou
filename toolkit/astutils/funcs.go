@@ -386,7 +386,8 @@ type MethodMeta struct {
 	// all will be put into request body as multipart/form-data data.
 	Params []FieldMeta
 	// Results response
-	Results []FieldMeta
+	Results   []FieldMeta
+	QueryVars []FieldMeta
 	// PathVars not support when generate client code from service interface in svc.go file
 	// when generate client code from openapi3 spec json file, PathVars is parameters in url as path variable.
 	PathVars []FieldMeta

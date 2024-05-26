@@ -116,11 +116,15 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 			params = ic.field2Params(ft.Params.List)
 		}
 
+		queryVars := make([]FieldMeta, 0)
 		httpMethod, endpoint := Pattern(mn)
 		pvs := pathVariables(endpoint)
 		for i := range params {
 			if sliceutils.StringContains(pvs, params[i].Name) {
 				params[i].IsPathVariable = true
+			}
+			if httpMethod == http.MethodGet && !params[i].IsPathVariable && params[i].Type != "context.Context" {
+				queryVars = append(queryVars, params[i])
 			}
 		}
 
@@ -136,6 +140,7 @@ func (ic *InterfaceCollector) field2Methods(list []*ast.Field) []MethodMeta {
 			Annotations:     annotations,
 			HasPathVariable: len(pvs) > 0,
 			HttpMethod:      httpMethod,
+			QueryVars:       queryVars,
 		})
 	}
 	return methods
