@@ -25,7 +25,7 @@ var appendHttpHandlerImplTmpl = `
 			{{ $p.Name }} = new({{ $p.Type | toSlice }})
 			{{- else if eq $p.Type "context.Context"}}
 			{{ $p.Name }} {{ $p.Type }}
-			{{- else if and (eq $m.HttpMethod "GET") (not (isBuiltin $p)) }}
+			{{- else if and (and (eq $m.HttpMethod "GET") (not (isBuiltin $p))) (gt (len $m.QueryVars) 1) }}
 			{{ $p.Name }}Wrapper struct {
 				{{ $p.Name | title }} {{ $p.Type }} ` + "`" + `json:"{{ $p.Name }}"` + "`" + `
 			}
@@ -143,6 +143,7 @@ var appendHttpHandlerImplTmpl = `
 		}
 		{{- $formParsed = true }}
 		{{- end }}
+		{{- if gt (len $m.QueryVars) 1 }}
 		if _err := rest.DecodeForm(&{{ $p.Name }}Wrapper, _req.Form); _err != nil {
 			rest.HandleBadRequestErr(_err)
 		} else {
@@ -156,6 +157,21 @@ var appendHttpHandlerImplTmpl = `
 			}
 			{{- end }}
 		}
+		{{- else }}
+		if _err := rest.DecodeForm(&{{ $p.Name }}, _req.Form); _err != nil {
+			rest.HandleBadRequestErr(_err)
+		} else {
+			{{- if isStruct $p }}
+			if _err := rest.ValidateStruct({{ $p.Name }}); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- else }}
+			if _err := rest.ValidateVar({{ $p.Name }}, "{{$p.ValidateTag}}", ""); _err != nil {
+				rest.HandleBadRequestErr(_err)
+			}
+			{{- end }}
+		}
+		{{- end }}
 		{{- else }}
 		{{- if isOptional $p.Type }}
 		if _err := json.NewDecoder(_req.Body).Decode(&{{$p.Name}}); _err != nil {
@@ -320,7 +336,7 @@ var appendHttpHandlerImplTmpl = `
 			*{{ $p.Name }}...,
 			{{- else if eq $p.Type "context.Context"}}
 			{{ $p.Name }},
-			{{- else if and (eq $m.HttpMethod "GET") (not (isBuiltin $p)) }}
+			{{- else if and (and (eq $m.HttpMethod "GET") (not (isBuiltin $p))) (gt (len $m.QueryVars) 1) }}
 			{{ $p.Name }}Wrapper.{{ $p.Name | title }},
 			{{- else }}
 			{{ $p.Name }},

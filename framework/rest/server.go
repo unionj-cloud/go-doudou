@@ -403,16 +403,14 @@ func (srv *RestServer) Serve(ln net.Listener) {
 	docs := mapset.NewSet[DocItem]()
 	for _, r := range all {
 		if strings.Contains(r.Pattern, gddPathPrefix+"doc") {
-			resources := strings.Split(strings.TrimPrefix(strings.TrimSuffix(r.Pattern, gddPathPrefix+"doc"), "/"), "/")
-			if len(resources) > 0 {
-				module := resources[len(resources)-1]
-				if stringutils.IsNotEmpty(module) {
-					docs.Add(DocItem{
-						Label: module,
-						Value: r.Pattern,
-					})
-				}
+			module := strings.TrimSuffix(r.Pattern, gddPathPrefix+"doc")
+			if stringutils.IsEmpty(module) {
+				module = "/"
 			}
+			docs.Add(DocItem{
+				Label: module,
+				Value: r.Pattern,
+			})
 		}
 	}
 	Docs = docs.ToSlice()
