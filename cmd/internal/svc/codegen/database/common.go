@@ -42,6 +42,7 @@ type OrmGeneratorConfig struct {
 	Dir           string
 	Soft          string
 	Grpc          bool
+	Omitempty     bool
 }
 
 type IOrmGenerator interface {

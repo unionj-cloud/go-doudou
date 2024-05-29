@@ -21,6 +21,7 @@ var dbTablePrefix string
 var dbTableGlob string
 var module bool
 var dbGenGenGo bool
+var dbOmitempty bool
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -47,6 +48,7 @@ var initCmd = &cobra.Command{
 			Soft:        dbSoft,
 			Grpc:        dbGrpc,
 			Service:     dbService,
+			Omitempty:   dbOmitempty,
 		}
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
@@ -78,4 +80,5 @@ func init() {
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
+	initCmd.Flags().BoolVar(&dbOmitempty, "db_omitempty", false, `whether add omitempty json tag to generated model field"`)
 }

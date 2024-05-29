@@ -104,11 +104,12 @@ type DbConfig struct {
 	TablePrefix string
 	TableGlob   string
 	// whether generate gen.go file
-	GenGenGo bool
-	Orm      string
-	Soft     string
-	Grpc     bool
-	Service  bool
+	GenGenGo  bool
+	Orm       string
+	Soft      string
+	Grpc      bool
+	Service   bool
+	Omitempty bool
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -195,6 +196,7 @@ func (receiver *Svc) Init() {
 			Dir:           receiver.dir,
 			Soft:          receiver.DbConfig.Soft,
 			Grpc:          receiver.DbConfig.Grpc,
+			Omitempty:     receiver.DbConfig.Omitempty,
 		})
 		if receiver.DbConfig.Service {
 			gen.GenService()
