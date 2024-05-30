@@ -65,3 +65,19 @@ func ReplaceStringAtByteIndex(in string, replace string, start int, end int) str
 	result = append(result, out[end:]...)
 	return string(result)
 }
+
+func ReplaceStringAtByteIndexBatch(in string, args []string, locs [][]int) string {
+	out := []byte(in)
+	result := make([]byte, 0)
+	end := 0
+	for i, loc := range locs {
+		arg := args[i]
+		r := []byte(arg)
+		start := loc[0]
+		result = append(result, out[end:start]...)
+		result = append(result, r...)
+		end = loc[1]
+	}
+	result = append(result, out[end:]...)
+	return string(result)
+}
