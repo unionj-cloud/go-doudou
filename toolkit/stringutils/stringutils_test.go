@@ -1,6 +1,8 @@
 package stringutils
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestContains(t *testing.T) {
 	type args struct {
@@ -217,6 +219,54 @@ func TestToCamel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ToCamel(tt.args.s); got != tt.want {
 				t.Errorf("ToCamel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestReplaceStringAtIndex(t *testing.T) {
+	in := `INSERT INTO user ("name", "age") VALUES (?, ?);`
+	loc := IndexAll(in, "?", -1)
+
+	in2 := `我爱北京天安门，啦啦啦`
+	loc2 := IndexAll(in2, "天安门", -1)
+
+	type args struct {
+		in      string
+		replace string
+		start   int
+		end     int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "",
+			args: args{
+				in:      in,
+				replace: "18",
+				start:   loc[1][0],
+				end:     loc[1][1],
+			},
+			want: `INSERT INTO user ("name", "age") VALUES (?, 18);`,
+		},
+		{
+			name: "",
+			args: args{
+				in:      in2,
+				replace: "颐和园",
+				start:   loc2[0][0],
+				end:     loc2[0][1],
+			},
+			want: `我爱北京颐和园，啦啦啦`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ReplaceStringAtByteIndex(tt.args.in, tt.args.replace, tt.args.start, tt.args.end); got != tt.want {
+				t.Errorf("ReplaceStringAtIndex() = %v, want %v", got, tt.want)
 			}
 		})
 	}

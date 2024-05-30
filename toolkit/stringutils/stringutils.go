@@ -50,8 +50,18 @@ func ToCamel(s string) string {
 	return ret
 }
 
-func ReplaceAtIndex(in string, r rune, i int) string {
+func ReplaceAtRuneIndex(in string, r rune, i int) string {
 	out := []rune(in)
 	out[i] = r
 	return string(out)
+}
+
+func ReplaceStringAtByteIndex(in string, replace string, start int, end int) string {
+	out := []byte(in)
+	r := []byte(replace)
+	result := make([]byte, len(out[:start]))
+	copy(result, out[:start])
+	result = append(result, r...)
+	result = append(result, out[end:]...)
+	return string(result)
 }
