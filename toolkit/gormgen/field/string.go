@@ -3,7 +3,7 @@ package field
 import (
 	"fmt"
 
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/gorm/clause"
 )
 
 // String string type field

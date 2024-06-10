@@ -1,8 +1,8 @@
 version: "0.1"
 database:
-  # consult[https://gorm.io/docs/connecting_to_the_database.html]"
+  # consult[https://github.com/wubin1989/docs/connecting_to_the_database.html]"
   dsn : "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
-  # input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+  # input mysql or postgres or sqlite or sqlserver. consult[https://github.com/wubin1989/docs/connecting_to_the_database.html]
   db  : "mysql"
   # enter the required data table or leave it blank.You can input : 
   # tables  : 

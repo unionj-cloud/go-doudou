@@ -5,7 +5,7 @@ Install GEN as a binary tool
 ## install
 
 ```shell
- go install gorm.io/gen/tools/gentool@latest
+ go install github.com/wubin1989/gen/tools/gentool@latest
 ```
 
 ## usage
@@ -16,9 +16,9 @@ Install GEN as a binary tool
  
  Usage of gentool:
   -db string
-        input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
+        input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://github.com/wubin1989/docs/connecting_to_the_database.html] (default "mysql")
   -dsn string
-        consult[https://gorm.io/docs/connecting_to_the_database.html]
+        consult[https://github.com/wubin1989/docs/connecting_to_the_database.html]
   -fieldNullable
         generate with pointer when field is nullable
   -fieldWithIndexTag
@@ -54,13 +54,13 @@ default:mysql
 
 input mysql or postgres or sqlite or sqlserver.
 
-consult : https://gorm.io/docs/connecting_to_the_database.html
+consult : https://github.com/wubin1989/docs/connecting_to_the_database.html
 
 #### dsn
 
 You can use all gorm's dsn.
 
- consult : https://gorm.io/docs/connecting_to_the_database.html
+ consult : https://github.com/wubin1989/docs/connecting_to_the_database.html
 
 #### fieldNullable
 

@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/database"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/dbvendor"
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 func init() {

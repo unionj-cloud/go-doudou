@@ -6,18 +6,18 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/config"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/wrapper"
@@ -597,11 +597,16 @@ func setupMySQLContainer(logger zerolog.Logger, initdb string, dbname string) (f
 			"MYSQL_ROOT_PASSWORD": "1234",
 			"MYSQL_DATABASE":      dbname,
 		},
-		BindMounts: map[string]string{
-			initdb: "/docker-entrypoint-initdb.d",
-		},
+		Mounts: make(testcontainers.ContainerMounts, 0),
 		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(60 * time.Second),
 	}
+
+	// TODO
+	//req.Mounts = append(req.Mounts, testcontainers.ContainerMount{
+	//	Source:   nil,
+	//	Target:   "/docker-entrypoint-initdb.d",
+	//	ReadOnly: false,
+	//})
 
 	mysqlC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,

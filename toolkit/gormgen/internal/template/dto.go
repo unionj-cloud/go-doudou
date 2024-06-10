@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"gorm.io/datatypes"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/datatypes"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/schema"
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 

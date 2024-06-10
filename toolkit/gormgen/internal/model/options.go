@@ -1,7 +1,7 @@
 package model
 
 import (
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 // SchemaNameOpt schema name option

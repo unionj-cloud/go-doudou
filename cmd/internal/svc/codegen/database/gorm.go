@@ -8,11 +8,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
-	"gorm.io/driver/sqlserver"
-	"gorm.io/gorm"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/postgres"
+	"github.com/wubin1989/sqlite"
+	"github.com/wubin1989/sqlserver"
+	"github.com/wubin1989/gorm"
 	"strings"
 )
 
@@ -72,7 +72,7 @@ func (gg *GormGenerator) fix() {
 	//		panic(err)
 	//	}
 	//	fileContent := string(source)
-	//	fileContent = strings.ReplaceAll(fileContent, "gorm.io/gen", "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen")
+	//	fileContent = strings.ReplaceAll(fileContent, "github.com/wubin1989/gen", "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen")
 	//	ioutil.WriteFile(file, []byte(fileContent), os.ModePerm)
 	//}
 }
@@ -126,7 +126,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		OutPath:       gg.Dir + "/query",
 		Mode:          gormgen.WithDefaultQuery | gormgen.WithQueryInterface,
 		FieldNullable: true,
-		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
+		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true, reference: https://github.com/wubin1989/docs/create.html#Default-Values
 		FieldCoverable: false,
 		// if you want to generate field with unsigned integer type, set FieldSignable true
 		FieldSignable: false,

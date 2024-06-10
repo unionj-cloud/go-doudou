@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 // Column table column's info

@@ -2,9 +2,9 @@ package caches
 
 import (
 	"fmt"
-	"gorm.io/gorm/callbacks"
+	"github.com/wubin1989/gorm/callbacks"
 
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 func buildIdentifier(db *gorm.DB) string {

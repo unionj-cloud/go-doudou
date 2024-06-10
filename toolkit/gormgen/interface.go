@@ -3,9 +3,9 @@ package gormgen
 import (
 	"database/sql"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/clause"
+	"github.com/wubin1989/gorm/schema"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 )

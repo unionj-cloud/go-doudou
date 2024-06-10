@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gorm.io/gorm/logger"
+	"github.com/wubin1989/gorm/logger"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 )

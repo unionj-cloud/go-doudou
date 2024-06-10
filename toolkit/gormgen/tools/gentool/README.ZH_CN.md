@@ -7,7 +7,7 @@
 ## 安装
 
 ```shell
- go install gorm.io/gen/tools/gentool@latest
+ go install github.com/wubin1989/gen/tools/gentool@latest
 ```
 
 ## 使用方式
@@ -18,9 +18,9 @@
  
  Usage of gentool:
   -db string
-        input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
+        input mysql or postgres or sqlite or sqlserver. consult[https://github.com/wubin1989/docs/connecting_to_the_database.html] (default "mysql")
   -dsn string
-        consult[https://gorm.io/docs/connecting_to_the_database.html]
+        consult[https://github.com/wubin1989/docs/connecting_to_the_database.html]
   -fieldNullable
         generate with pointer when field is nullable
   -fieldWithIndexTag
@@ -56,13 +56,13 @@ default ""
 
 可以输入： mysql、 postgres、 sqlite 、 sqlserve
 
-参考：https://gorm.io/docs/connecting_to_the_database.html
+参考：https://github.com/wubin1989/docs/connecting_to_the_database.html
 
 #### dsn
 
 你可以使用GORM所有的连接。
 
- 参考：https://gorm.io/docs/connecting_to_the_database.html
+ 参考：https://github.com/wubin1989/docs/connecting_to_the_database.html
 
 #### fieldNullable
 

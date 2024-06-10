@@ -8,7 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/generate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/gorm/schema"
 )
 
 // ModelOpt field option

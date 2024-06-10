@@ -22,8 +22,8 @@ import (
 
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/schema"
 
 	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/helper"

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/utils/tests"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/utils/tests"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
 )
@@ -40,7 +40,7 @@ type Config struct {
 
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
-	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
+	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://github.com/wubin1989/docs/create.html#Default-Values
 	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag

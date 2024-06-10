@@ -1,20 +1,35 @@
 package caches
 
 import (
+	"context"
 	"fmt"
 	"github.com/auxten/postgresql-parser/pkg/sql/parser"
 	"github.com/auxten/postgresql-parser/pkg/sql/sem/tree"
 	"github.com/auxten/postgresql-parser/pkg/walk"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/callbacks"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/postgres"
 	"github.com/xwb1989/sqlparser"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/callbacks"
 	"strings"
 	"sync"
 )
+
+type ctxKey int
+
+const tablesKey = ctxKey(0)
+
+func NewTablesContext(ctx context.Context, tables mapset.Set[string]) context.Context {
+	return context.WithValue(ctx, tablesKey, tables)
+}
+
+func TablesFromContext(ctx context.Context) (mapset.Set[string], bool) {
+	tables, ok := ctx.Value(tablesKey).(mapset.Set[string])
+	return tables, ok
+}
 
 type Caches struct {
 	Conf  *Config
@@ -69,12 +84,33 @@ func (c *Caches) Initialize(db *gorm.DB) error {
 		return err
 	}
 
+	// Run sql SHOW default_transaction_isolation; to make sure the transaction isolation level is >= read committed
+	err = db.Callback().Begin().Register("cache:after_begin", c.AfterBegin)
+	if err != nil {
+		return err
+	}
+
+	err = db.Callback().Commit().Register("cache:after_commit", c.AfterCommit)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (c *Caches) Query(callback func(*gorm.DB)) func(*gorm.DB) {
 	return func(db *gorm.DB) {
+		if db.Error != nil {
+			return
+		}
+
 		if c.Conf.Easer == false && c.Conf.Cacher == nil {
+			callback(db)
+			return
+		}
+
+		if _, ok := db.Statement.ConnPool.(gorm.TxCommitter); ok {
+			// query from database directly when in transaction
 			callback(db)
 			return
 		}
@@ -108,6 +144,10 @@ func (c *Caches) Query(callback func(*gorm.DB)) func(*gorm.DB) {
 }
 
 func (c *Caches) AfterWrite(db *gorm.DB) {
+	if db.Error != nil {
+		return
+	}
+
 	if c.Conf.Easer == false && c.Conf.Cacher == nil {
 		return
 	}
@@ -115,9 +155,63 @@ func (c *Caches) AfterWrite(db *gorm.DB) {
 	callbacks.BuildQuerySQL(db)
 
 	tables := getTables(db)
+
 	if len(tables) == 0 {
 		return
-	} else if len(tables) == 1 {
+	}
+
+	if _, ok := db.Statement.ConnPool.(gorm.TxCommitter); ok {
+		// query from database directly when in transaction
+		if value, ok := TablesFromContext(db.Statement.Context); ok {
+			value.Append(tables...)
+		}
+		return
+	}
+
+	if len(tables) == 1 {
+		c.deleteCache(db, tables[0])
+	} else {
+		c.deleteCache(db, tables[0], tables[1:]...)
+	}
+
+	if db.Error != nil {
+		return
+	}
+}
+
+func (c *Caches) AfterBegin(db *gorm.DB) {
+	if db.Error != nil {
+		return
+	}
+
+	if c.Conf.Easer == false && c.Conf.Cacher == nil {
+		return
+	}
+
+	db.Statement.Context = NewTablesContext(db.Statement.Context, mapset.NewSet[string]())
+}
+
+func (c *Caches) AfterCommit(db *gorm.DB) {
+	if db.Error != nil {
+		return
+	}
+
+	if c.Conf.Easer == false && c.Conf.Cacher == nil {
+		return
+	}
+
+	value, ok := TablesFromContext(db.Statement.Context)
+	if !ok {
+		return
+	}
+
+	tables := value.ToSlice()
+
+	if len(tables) == 0 {
+		return
+	}
+
+	if len(tables) == 1 {
 		c.deleteCache(db, tables[0])
 	} else {
 		c.deleteCache(db, tables[0], tables[1:]...)

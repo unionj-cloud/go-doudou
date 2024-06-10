@@ -3,7 +3,7 @@ package caches
 import (
 	"testing"
 
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 func Test_buildIdentifier(t *testing.T) {

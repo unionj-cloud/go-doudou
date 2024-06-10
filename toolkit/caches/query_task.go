@@ -1,6 +1,6 @@
 package caches
 
-import "gorm.io/gorm"
+import "github.com/wubin1989/gorm"
 
 type queryTask struct {
 	id      string
