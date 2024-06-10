@@ -3,7 +3,7 @@ package field
 import (
 	"database/sql/driver"
 
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/gorm/clause"
 )
 
 // ScanValuer interface for Field

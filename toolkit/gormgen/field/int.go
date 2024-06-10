@@ -1,7 +1,7 @@
 package field
 
 import (
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/gorm/clause"
 )
 
 // Int int type field

@@ -8,7 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 var Registry = &registry{

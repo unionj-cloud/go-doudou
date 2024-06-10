@@ -1,6 +1,6 @@
 package model
 
-import "gorm.io/gorm"
+import "github.com/wubin1989/gorm"
 
 // Index table index info
 type Index struct {

@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/callbacks"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
-	"gorm.io/gorm/utils/tests"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/callbacks"
+	"github.com/wubin1989/gorm/clause"
+	"github.com/wubin1989/gorm/schema"
+	"github.com/wubin1989/gorm/utils/tests"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 )

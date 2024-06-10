@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 // Config model configuration

@@ -3,7 +3,7 @@ package field
 import (
 	"strings"
 
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/gorm/clause"
 )
 
 // Func sql functions

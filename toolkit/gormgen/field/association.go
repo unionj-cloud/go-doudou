@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"strings"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/clause"
+	"github.com/wubin1989/gorm/schema"
 )
 
 // RelationshipType table relationship
 type RelationshipType schema.RelationshipType
 
 const (
-	// HasOne a has one association sets up a one-to-one connection with another model. Reference https://gorm.io/docs/has_one.html
+	// HasOne a has one association sets up a one-to-one connection with another model. Reference https://github.com/wubin1989/docs/has_one.html
 	HasOne RelationshipType = RelationshipType(schema.HasOne) // HasOneRel has one relationship
-	// HasMany a has many association sets up a one-to-many connection with another model. Reference https://gorm.io/docs/has_many.html
+	// HasMany a has many association sets up a one-to-many connection with another model. Reference https://github.com/wubin1989/docs/has_many.html
 	HasMany RelationshipType = RelationshipType(schema.HasMany) // HasManyRel has many relationships
-	// BelongsTo A belongs to association sets up a one-to-one connection with another model. Reference https://gorm.io/docs/belongs_to.html
+	// BelongsTo A belongs to association sets up a one-to-one connection with another model. Reference https://github.com/wubin1989/docs/belongs_to.html
 	BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
-	// Many2Many Many to Many add a join table between two models. Reference https://gorm.io/docs/many2many.html
+	// Many2Many Many to Many add a join table between two models. Reference https://github.com/wubin1989/docs/many2many.html
 	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 

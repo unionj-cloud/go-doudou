@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
-	"gorm.io/datatypes"
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/datatypes"
+	"github.com/wubin1989/gorm/clause"
 )
 
 // Cond convert expression array to condition array

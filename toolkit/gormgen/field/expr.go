@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+	"github.com/wubin1989/gorm"
+	"github.com/wubin1989/gorm/clause"
 )
 
 var _ Expr = new(Field)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
 )

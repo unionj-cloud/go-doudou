@@ -6,7 +6,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"reflect"
 
-	"gorm.io/gorm/schema"
+	"github.com/wubin1989/gorm/schema"
 )
 
 func SetPointedValue(dest interface{}, src interface{}) {

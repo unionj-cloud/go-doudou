@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"gorm.io/gorm"
+	"github.com/wubin1989/gorm"
 )
 
 func TestQueryTask_GetId(t *testing.T) {

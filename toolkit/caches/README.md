@@ -26,8 +26,8 @@ import (
 	"sync"
 
 	"github.com/go-gorm/caches"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/gorm"
 )
 
 func main() {
@@ -54,8 +54,8 @@ import (
 	"time"
 
 	"github.com/go-gorm/caches"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/gorm"
 )
 
 type UserRoleModel struct {
@@ -137,8 +137,8 @@ import (
 	"sync"
 
 	"github.com/go-gorm/caches"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/gorm"
 )
 
 type UserRoleModel struct {
