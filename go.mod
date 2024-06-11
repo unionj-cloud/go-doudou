@@ -60,15 +60,15 @@ require (
 	github.com/rs/cors v1.9.0
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
-	github.com/wubin1989/clickhouse v0.0.2-0.20240609154133-d666d16c0b86
-	github.com/wubin1989/datatypes v0.0.0-20240609155506-09ccf9401a70
-	github.com/wubin1989/dbresolver v0.0.0-20240609154356-f007a2146e21
-	github.com/wubin1989/gorm v0.0.1
-	github.com/wubin1989/hints v0.0.0-20240609153903-5e5ed4395827
-	github.com/wubin1989/mysql v0.0.0-20240609154238-4349e547ada1
-	github.com/wubin1989/prometheus v0.0.0-20240609155738-1ccd9c4b0070
-	github.com/wubin1989/sqlite v0.0.2-0.20240609153504-8cc2b2e229d3
-	github.com/wubin1989/sqlserver v0.0.0-20240609154458-d7aac7b6168f
+	github.com/wubin1989/clickhouse v0.0.3-0.20240611142627-b655b8690cda
+	github.com/wubin1989/datatypes v0.0.2-0.20240611143143-56e1066d0d46
+	github.com/wubin1989/dbresolver v0.0.2-0.20240611143237-5d31d83b04ba
+	github.com/wubin1989/gorm v0.0.3
+	github.com/wubin1989/hints v0.0.2-0.20240611143337-989d3cd7fd24
+	github.com/wubin1989/mysql v0.0.2-0.20240611142742-11722462c1f3
+	github.com/wubin1989/prometheus v0.0.2-0.20240611143457-960b4a499cef
+	github.com/wubin1989/sqlite v0.0.3-0.20240611143051-c35482f79d92
+	github.com/wubin1989/sqlserver v0.0.2-0.20240611142955-b9bee6e252c3
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -273,7 +273,7 @@ require (
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb
 	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221024120645-0288f53fdaa8
-	github.com/wubin1989/postgres v0.0.1
+	github.com/wubin1989/postgres v0.0.2-0.20240611142853-f89b1682d931
 	go.etcd.io/etcd/client/v3 v3.5.14
 	go.uber.org/automaxprocs v1.5.2
 	golang.org/x/crypto v0.22.0 // indirect
@@ -282,5 +282,3 @@ require (
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0
 )
-
-replace github.com/wubin1989/gorm v0.0.1 => E:\workspace\gorm
