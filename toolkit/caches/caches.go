@@ -108,16 +108,16 @@ func (c *Caches) Query(callback func(*gorm.DB)) func(*gorm.DB) {
 			return
 		}
 
-		if _, ok := db.Statement.ConnPool.(gorm.TxCommitter); ok {
-			// query from database directly when in transaction
-			callback(db)
-			return
-		}
-
 		identifier := buildIdentifier(db)
 		if stringutils.ContainsI(identifier, "INSERT INTO") {
 			callback(db)
 			c.AfterWrite(db)
+			return
+		}
+
+		if _, ok := db.Statement.ConnPool.(gorm.TxCommitter); ok {
+			// query from database directly when in transaction
+			callback(db)
 			return
 		}
 
