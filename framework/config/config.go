@@ -264,14 +264,15 @@ const (
 	// allowed connecting (you must specify IPv6/IPv4 separately)
 	GddMemCIDRsAllowed envVariable = "GDD_MEM_CIDRS_ALLOWED"
 
-	GddDBDisableAutoConfigure envVariable = "GDD_DB_DISABLEAUTOCONFIGURE"
-	GddDBDriver               envVariable = "GDD_DB_DRIVER"
-	GddDBDsn                  envVariable = "GDD_DB_DSN"
-	GddDBTablePrefix          envVariable = "GDD_DB_TABLE_PREFIX"
-	GddDBMaxIdleConns         envVariable = "GDD_DB_POOL_MAXIDLECONNS"
-	GddDBMaxOpenConns         envVariable = "GDD_DB_POOL_MAXOPENCONNS"
-	GddDBConnMaxLifetime      envVariable = "GDD_DB_POOL_CONNMAXLIFETIME"
-	GddDBConnMaxIdleTime      envVariable = "GDD_DB_POOL_CONNMAXIDLETIME"
+	GddDBDisableAutoConfigure   envVariable = "GDD_DB_DISABLEAUTOCONFIGURE"
+	GddDBDriver                 envVariable = "GDD_DB_DRIVER"
+	GddDBDsn                    envVariable = "GDD_DB_DSN"
+	GddDBTablePrefix            envVariable = "GDD_DB_TABLE_PREFIX"
+	GddDBSkipDefaultTransaction envVariable = "GDD_DB_SKIPDEFAULTTRANSACTION"
+	GddDBMaxIdleConns           envVariable = "GDD_DB_POOL_MAXIDLECONNS"
+	GddDBMaxOpenConns           envVariable = "GDD_DB_POOL_MAXOPENCONNS"
+	GddDBConnMaxLifetime        envVariable = "GDD_DB_POOL_CONNMAXLIFETIME"
+	GddDBConnMaxIdleTime        envVariable = "GDD_DB_POOL_CONNMAXIDLETIME"
 
 	GddDBLogSlowThreshold             envVariable = "GDD_DB_LOG_SLOWTHRESHOLD"
 	GddDBLogIgnoreRecordNotFoundError envVariable = "GDD_DB_LOG_IGNORERECORDNOTFOUNDERROR"

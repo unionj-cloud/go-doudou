@@ -282,3 +282,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0
 )
+
+replace github.com/wubin1989/gorm v0.0.1 => E:\workspace\gorm

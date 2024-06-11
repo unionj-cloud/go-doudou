@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wubin1989/mysql"
-	"github.com/wubin1989/postgres"
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/gorm/logger"
 	"github.com/wubin1989/gorm/schema"
+	"github.com/wubin1989/mysql"
+	"github.com/wubin1989/postgres"
 	"github.com/wubin1989/prometheus"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
@@ -72,6 +72,7 @@ func init() {
 	gormConf := &gorm.Config{
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
+		SkipDefaultTransaction:                   cast.ToBoolOrDefault(config.GddDBSkipDefaultTransaction.Load(), config.DefaultGddDBSkipDefaultTransaction),
 	}
 	tablePrefix := strings.TrimSuffix(config.GddDBTablePrefix.LoadOrDefault(config.DefaultGddDBTablePrefix), ".")
 	if stringutils.IsNotEmpty(tablePrefix) {
@@ -194,6 +195,7 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 	gormConf := &gorm.Config{
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
+		SkipDefaultTransaction:                   cast.ToBoolOrDefault(config.GddDBSkipDefaultTransaction.Load(), config.DefaultGddDBSkipDefaultTransaction),
 	}
 	tablePrefix := strings.TrimSuffix(conf.Db.Table.Prefix, ".")
 	if stringutils.IsNotEmpty(tablePrefix) {

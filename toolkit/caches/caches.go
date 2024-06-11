@@ -10,7 +10,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/wubin1989/gorm"
-	"github.com/wubin1989/gorm/callbacks"
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
 	"github.com/xwb1989/sqlparser"
@@ -152,8 +151,6 @@ func (c *Caches) AfterWrite(db *gorm.DB) {
 		return
 	}
 
-	callbacks.BuildQuerySQL(db)
-
 	tables := getTables(db)
 
 	if len(tables) == 0 {
@@ -260,7 +257,6 @@ func (c *Caches) checkCache(identifier string) (res *Query, ok bool) {
 }
 
 func getTables(db *gorm.DB) []string {
-	callbacks.BuildQuerySQL(db)
 	switch db.Dialector.(type) {
 	case *mysql.Dialector:
 		return getTablesMysql(db)

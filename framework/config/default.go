@@ -149,4 +149,6 @@ const (
 
 	DefaultGddCacheGocacheExpiration      = "5m"
 	DefaultGddCacheGocacheCleanupInterval = "10m"
+
+	DefaultGddDBSkipDefaultTransaction = false
 )
