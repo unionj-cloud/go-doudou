@@ -50,7 +50,7 @@ message {{.Name}} {
   {{- if $f.Comments }}
   {{ toComment $f.Comments }}
   {{- end }}
-  {{$f.Type.GetName}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
+  optional {{$f.Type.GetName}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
   {{- end }}
 }
 {{- end}}
