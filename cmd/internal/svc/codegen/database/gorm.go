@@ -8,11 +8,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
 	"github.com/wubin1989/sqlite"
 	"github.com/wubin1989/sqlserver"
-	"github.com/wubin1989/gorm"
 	"strings"
 )
 
@@ -136,12 +136,6 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		FieldWithTypeTag: true,
 		// if you need unit tests for query code, set WithUnitTest true
 		WithUnitTest: false,
-	})
-	g.WithTableNameStrategy(func(tableName string) (targetTableName string) {
-		if stringutils.IsNotEmpty(gg.TablePrefix) {
-			return gg.TablePrefix + "." + tableName
-		}
-		return tableName
 	})
 	g.WithOpts(gormgen.FieldGORMTag("", func(tag field.GormTag) field.GormTag {
 		if defaultTag, ok := tag["default"]; ok {

@@ -20,10 +20,10 @@ import (
 	"strings"
 	"text/template"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/imports"
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/gorm/schema"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/imports"
 
 	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/helper"

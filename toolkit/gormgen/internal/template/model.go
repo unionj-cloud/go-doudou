@@ -18,20 +18,6 @@ import (
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
-{{if .TableName -}}var TableName{{.ModelStructName}} string{{- end}}
-
-func init() {
-	{{- if contains .TableName "." }}
-	TableName{{.ModelStructName}} = "{{.TableName}}"
-	{{- else }}
-	if stringutils.IsNotEmpty(config.G_Config.Db.Name) {
-		TableName{{.ModelStructName}} = fmt.Sprintf("%s.{{.TableName}}", config.G_Config.Db.Name)
-	} else {
-		TableName{{.ModelStructName}} = "{{.TableName}}"
-	}
-	{{- end }}
-}
-
 // {{.ModelStructName}} {{.StructComment}}
 type {{.ModelStructName}} struct {
     {{range .Fields}}
@@ -45,6 +31,18 @@ type {{.ModelStructName}} struct {
 	`{{end}}
 }
 
+// TableName {{.ModelStructName}}'s table name
+func (*{{.ModelStructName}}) TableName() string {
+	{{if .TableName -}}var TableName{{.ModelStructName}} string{{- end}}
+	
+	if stringutils.IsNotEmpty(config.G_Config.Db.Name) {
+		TableName{{.ModelStructName}} = fmt.Sprintf("%s.{{.TableName}}", config.G_Config.Db.Name)
+	} else {
+		TableName{{.ModelStructName}} = "{{.TableName}}"
+	}
+
+	return TableName{{.ModelStructName}}
+}
 `
 
 // ModelMethod model struct DIY method
