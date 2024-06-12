@@ -9,16 +9,6 @@ import (
 	"strings"
 )
 
-func DefaultMethodTableName(structName string) *Method {
-	return &Method{
-		Receiver:   Param{IsPointer: true, Type: structName},
-		MethodName: "TableName",
-		Doc:        fmt.Sprint("TableName ", structName, "'s table name "),
-		Result:     []Param{{Type: "string"}},
-		Body:       fmt.Sprintf("{\n\treturn TableName%s\n} ", structName),
-	}
-}
-
 // Method Apply to query struct and base struct custom method
 type Method struct {
 	Receiver   Param
