@@ -50,7 +50,7 @@ message {{.Name}} {
   {{- if $f.Comments }}
   {{ toComment $f.Comments }}
   {{- end }}
-  optional {{$f.Type.GetName}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
+  {{$f.Type.GetName | label}} {{$f.Name}} = {{$f.Number}}{{if $f.JsonName}} [json_name="{{$f.JsonName}}"]{{end}};
   {{- end }}
 }
 {{- end}}
@@ -127,6 +127,13 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p protov3.ProtoGen
 	funcMap := make(map[string]interface{})
 	funcMap["toComment"] = toComment
 	funcMap["Eval"] = templateutils.Eval(tpl)
+	funcMap["label"] = func(input string) string {
+		if !strings.Contains(input, "repeated ") && !strings.Contains(input, "map<") &&
+			!strings.Contains(input, "required ") && !strings.Contains(input, "optional ") {
+			return "optional " + input
+		}
+		return input
+	}
 	if tpl, err = tpl.Funcs(funcMap).Parse(protoTmpl); err != nil {
 		panic(err)
 	}
