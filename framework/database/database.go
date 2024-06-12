@@ -1,7 +1,7 @@
 package database
 
 import (
-	gocache "github.com/eko/gocache/lib/v4/cache"
+	gocache "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/wubin1989/clickhouse"
 	"github.com/wubin1989/sqlite"
 	"github.com/wubin1989/sqlserver"

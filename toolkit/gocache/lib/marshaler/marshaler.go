@@ -1,11 +1,11 @@
-package database
+package marshaler
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 // Marshaler is the struct that marshal and unmarshal cache values
@@ -13,8 +13,8 @@ type Marshaler struct {
 	cache cache.CacheInterface[any]
 }
 
-// NewMarshaler creates a new marshaler that marshals/unmarshals cache values
-func NewMarshaler(cache cache.CacheInterface[any]) *Marshaler {
+// New creates a new marshaler that marshals/unmarshals cache values
+func New(cache cache.CacheInterface[any]) *Marshaler {
 	return &Marshaler{
 		cache: cache,
 	}
@@ -29,9 +29,9 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 	switch v := result.(type) {
 	case []byte:
-		err = json.Unmarshal(v, returnObj)
+		err = msgpack.Unmarshal(v, returnObj)
 	case string:
-		err = json.Unmarshal([]byte(v), returnObj)
+		err = msgpack.Unmarshal([]byte(v), returnObj)
 	}
 
 	if err != nil {
@@ -43,7 +43,7 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 // Set sets a value in cache by marshaling value
 func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.Option) error {
-	bytes, err := json.Marshal(object)
+	bytes, err := msgpack.Marshal(object)
 	if err != nil {
 		return err
 	}
