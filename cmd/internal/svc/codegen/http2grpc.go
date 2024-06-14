@@ -89,7 +89,19 @@ var appendHttp2GrpcTmpl = `
 				rest.HandleInternalServerError(_err)
 			}
 		{{- else }}
-			if _err := json.NewEncoder(_writer).Encode({{- range $r := $m.Results }}{{- if ne $r.Type "error" }}{{- $r.Name }}{{- end }}{{- end }}); _err != nil {
+			if _err := json.NewEncoder(_writer).Encode(struct {
+				{{- range $r := $m.Results }}
+				{{- if ne $r.Type "error" }}
+				{{ $r.Name | toCamel }} *{{ trimLeft $r.Type "*" | replacePkg }} ` + "`" + `json:"{{ $r.Name | convertCase }}{{if $.Config.Omitempty}},omitempty{{end}}"` + "`" + `
+				{{- end }}
+				{{- end }}
+			}{
+				{{- range $r := $m.Results }}
+				{{- if ne $r.Type "error" }}
+				{{ $r.Name | toCamel }}: {{ $r.Name }},
+				{{- end }}
+				{{- end }}
+			}); _err != nil {
 				rest.HandleInternalServerError(_err)
 			}
 		{{- end }}
@@ -123,7 +135,9 @@ var importHttp2GrpcTmpl = `
 `
 
 type GenHttp2GrpcConfig struct {
+	Omitempty           bool
 	AllowGetWithReqBody bool
+	CaseConvertor       func(string) string
 }
 
 // GenHttp2Grpc generates http handler implementation
@@ -177,6 +191,8 @@ func GenHttp2Grpc(dir string, ic astutils.InterfaceCollector, config GenHttp2Grp
 		return "pb" + input[strings.LastIndex(input, "."):]
 	}
 	funcMap["trimLeft"] = strings.TrimLeft
+	funcMap["toCamel"] = strcase.ToCamel
+	funcMap["convertCase"] = config.CaseConvertor
 	if tpl, err = template.New(tmpl).Funcs(funcMap).Parse(tmpl); err != nil {
 		panic(err)
 	}

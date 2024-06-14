@@ -266,6 +266,12 @@ func WithCaseConverter(fn func(string) string) SvcOption {
 	}
 }
 
+func WithOmitempty(omitempty bool) SvcOption {
+	return func(svc *Svc) {
+		svc.Omitempty = omitempty
+	}
+}
+
 func WithJsonCase(jsonCase string) SvcOption {
 	return func(svc *Svc) {
 		svc.JsonCase = jsonCase
@@ -541,6 +547,8 @@ func (receiver *Svc) Grpc() {
 		codegen.GenHttpHandler(dir, ic, receiver.RoutePatternStrategy)
 		codegen.GenHttp2Grpc(dir, ic, codegen.GenHttp2GrpcConfig{
 			AllowGetWithReqBody: receiver.AllowGetWithReqBody,
+			CaseConvertor:       receiver.CaseConverter,
+			Omitempty:           receiver.Omitempty,
 		})
 		codegen.GenMainGrpcHttp(dir, ic, grpcSvc)
 		parser.GenDoc(dir, ic, parser.GenDocConfig{
