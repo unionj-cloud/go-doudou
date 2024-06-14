@@ -25,6 +25,8 @@ var grpcCmd = &cobra.Command{
 			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))),
 			svc.WithHttp2Grpc(http2grpc),
 			svc.WithAllowGetWithReqBody(allowGetWithReqBody),
+			svc.WithCaseConverter(fn),
+			svc.WithOmitempty(omitempty),
 		)
 		s.Grpc()
 	},
@@ -32,6 +34,7 @@ var grpcCmd = &cobra.Command{
 
 func init() {
 	svcCmd.AddCommand(grpcCmd)
+	grpcCmd.Flags().BoolVarP(&omitempty, "omitempty", "o", false, `if true, ",omitempty" will be appended to json tag of fields in every generated anonymous struct in handlers`)
 	grpcCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
 	grpcCmd.Flags().BoolVar(&http2grpc, "http2grpc", false, `whether need RESTful api for your grpc service`)
 	grpcCmd.Flags().BoolVar(&allowGetWithReqBody, "allowGetWithReqBody", false, "Whether allow get http request with request body.")
