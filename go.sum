@@ -1568,12 +1568,12 @@ github.com/rbretecher/go-postman-collection v0.9.0 h1:vXw6KBhASpz0L0igH3OsJCx5pj
 github.com/rbretecher/go-postman-collection v0.9.0/go.mod h1:pptkyjdB/sqPycH+CCa1zrA6Wpj2Kc8Nz846qRstVVs=
 github.com/redis/go-redis/v9 v9.1.0 h1:137FnGdk+EQdCbye1FW+qOEcY5S+SpY9T0NiuqvtfMY=
 github.com/redis/go-redis/v9 v9.1.0/go.mod h1:urWj3He21Dj5k4TK1y59xH8Uj6ATueP8AH1cY3lZl4c=
-github.com/redis/rueidis v1.0.38 h1:ZlEBumHM+ECCMgf/zQZImLfmxb/sxGKnBP0R0AxoH/Y=
-github.com/redis/rueidis v1.0.38/go.mod h1:bnbkk4+CkXZgDPEbUtSos/o55i4RhFYYesJ4DS2zmq0=
+github.com/redis/rueidis v1.0.39 h1:RNMbL7/tMkiVga/0ukbbFFslcPQckq4zs7c81mkIfTk=
+github.com/redis/rueidis v1.0.39/go.mod h1:bnbkk4+CkXZgDPEbUtSos/o55i4RhFYYesJ4DS2zmq0=
 github.com/redis/rueidis/mock v1.0.38 h1:E49z0pptMAs3xbWSW9ZgSp+cAmAiE4SvF7Q5mhDU9hw=
 github.com/redis/rueidis/mock v1.0.38/go.mod h1:oOKSGb4CKjvUzGCQ7PupeCEp6W+TdEfzR8YYLejU5Sk=
-github.com/redis/rueidis/rueidiscompat v1.0.38 h1:JREqnP+y4Gte4p66ZwBB2jT1m9W0RHFr+lRavpaGno4=
-github.com/redis/rueidis/rueidiscompat v1.0.38/go.mod h1:pQaGNQkzKsyxSY0BP/r5lrzP4kUdfWXb/gsquXhbDtA=
+github.com/redis/rueidis/rueidiscompat v1.0.39 h1:WS0dPjfkeKhTbmaxLpgO4zd68JppqwAbLmQjbOuidlA=
+github.com/redis/rueidis/rueidiscompat v1.0.39/go.mod h1:RM345vR0KB66y8TIZ3vqlnhuS6PlYFmyZ9vBIdeZlZ4=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/rivo/uniseg v0.1.0 h1:+2KBaVoUmb9XzDsrx/Ct0W/EYOSFf/nWTauy++DprtY=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
