@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/pkg/errors"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"io"

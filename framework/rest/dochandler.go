@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/rs/cors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"

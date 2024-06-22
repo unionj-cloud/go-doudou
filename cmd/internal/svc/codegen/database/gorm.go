@@ -93,6 +93,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Grpc = conf.Grpc
 	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
 	gg.TableGlob = conf.TableGlob
+	gg.TableExcludeGlob = conf.TableExcludeGlob
 	gg.GenGenGo = conf.GenGenGo
 	gg.CaseConverter = conf.CaseConverter
 	var db *gorm.DB
@@ -158,14 +159,20 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	var models []interface{}
 	if stringutils.IsNotEmpty(gg.TableGlob) {
 		g.FilterTableGlob = glob.MustCompile(gg.TableGlob)
-		models = g.GenerateFilteredTables(
-			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
-			gormgen.FieldGenType(conf.Soft, "Time"))
-	} else {
+	}
+	if stringutils.IsNotEmpty(gg.TableExcludeGlob) {
+		g.ExcludeTableGlob = glob.MustCompile(gg.TableExcludeGlob)
+	}
+
+	if stringutils.IsEmpty(gg.TableGlob) && stringutils.IsEmpty(gg.TableExcludeGlob) {
 		models = g.GenerateAllTable(
 			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
 			gormgen.FieldGenType(conf.Soft, "Time"),
 		)
+	} else {
+		models = g.GenerateFilteredTables(
+			gormgen.FieldType(conf.Soft, "gorm.DeletedAt"),
+			gormgen.FieldGenType(conf.Soft, "Time"))
 	}
 	g.ApplyBasic(models...)
 	gg.g = g

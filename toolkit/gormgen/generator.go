@@ -25,7 +25,6 @@ import (
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 
-	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/helper"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/generate"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/model"
@@ -151,15 +150,22 @@ func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{
 	return tableModels
 }
 
-// GenerateTablesByGlob generate all tables filterd by glob syntax in db
-func (g *Generator) GenerateTablesByGlob(gl glob.Glob, opts ...ModelOpt) (tableModels []interface{}) {
+// GenerateFilteredTables generate all tables filterd by glob syntax in db
+func (g *Generator) GenerateFilteredTables(opts ...ModelOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Errorf("get all tables fail: %w", err))
 	}
 	filteredTables := make([]string, 0)
 	for _, item := range tableList {
-		if gl.Match(item) {
+		match := false
+		if g.FilterTableGlob != nil && g.FilterTableGlob.Match(item) {
+			match = true
+		}
+		if g.ExcludeTableGlob != nil && g.ExcludeTableGlob.Match(item) {
+			match = false
+		}
+		if match {
 			filteredTables = append(filteredTables, item)
 		}
 	}
@@ -171,11 +177,6 @@ func (g *Generator) GenerateTablesByGlob(gl glob.Glob, opts ...ModelOpt) (tableM
 		tableModels[i] = g.GenerateModel(tableName, opts...)
 	}
 	return tableModels
-}
-
-// GenerateFilteredTables generate all tables filterd by glob syntax in db
-func (g *Generator) GenerateFilteredTables(opts ...ModelOpt) (tableModels []interface{}) {
-	return g.GenerateTablesByGlob(g.FilterTableGlob, opts...)
 }
 
 // GenerateModelFrom generate model from object

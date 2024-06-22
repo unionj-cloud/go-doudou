@@ -19,6 +19,7 @@ var dbGrpc bool
 var dbService bool
 var dbTablePrefix string
 var dbTableGlob string
+var dbTableExcludeGlob string
 var module bool
 var dbGenGenGo bool
 var dbOmitempty bool
@@ -39,16 +40,17 @@ var initCmd = &cobra.Command{
 		}
 		options := []svc.SvcOption{svc.WithModName(modName), svc.WithDocPath(docfile), svc.WithModule(module)}
 		dbConf := svc.DbConfig{
-			Driver:      dbDriver,
-			Dsn:         dbDsn,
-			TablePrefix: dbTablePrefix,
-			TableGlob:   dbTableGlob,
-			GenGenGo:    dbGenGenGo,
-			Orm:         dbOrm,
-			Soft:        dbSoft,
-			Grpc:        dbGrpc,
-			Service:     dbService,
-			Omitempty:   dbOmitempty,
+			Driver:           dbDriver,
+			Dsn:              dbDsn,
+			TablePrefix:      dbTablePrefix,
+			TableGlob:        dbTableGlob,
+			TableExcludeGlob: dbTableExcludeGlob,
+			GenGenGo:         dbGenGenGo,
+			Orm:              dbOrm,
+			Soft:             dbSoft,
+			Grpc:             dbGrpc,
+			Service:          dbService,
+			Omitempty:        dbOmitempty,
 		}
 		if stringutils.IsNotEmpty(dbConf.Driver) && stringutils.IsNotEmpty(dbConf.Dsn) {
 			options = append(options, svc.WithDbConfig(&dbConf))
@@ -79,6 +81,7 @@ func init() {
 	initCmd.Flags().BoolVar(&dbGenGenGo, "db_gen_gen", false, `whether generate gen.go file`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	initCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
+	initCmd.Flags().StringVar(&dbTableExcludeGlob, "db_table_exclude_glob", "", `used to filter glob-matched tables`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
 	initCmd.Flags().BoolVar(&dbOmitempty, "db_omitempty", false, `whether add omitempty json tag to generated model field"`)
 }

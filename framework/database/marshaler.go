@@ -2,11 +2,13 @@ package database
 
 import (
 	"context"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Marshaler is the struct that marshal and unmarshal cache values
 type Marshaler struct {

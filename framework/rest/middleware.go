@@ -3,7 +3,7 @@ package rest
 import (
 	"context"
 	"crypto/subtle"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"fmt"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/ascarter/requestid"
@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var (
 	Tracing             = tracing

@@ -23,7 +23,7 @@ package client
 
 import (
 	"context"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/klauspost/compress/gzip"
@@ -43,6 +43,8 @@ import (
 	"strings"
 	"{{.DtoPackage}}"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type {{.Meta.Name}}Client struct {
 	provider registry.IServiceProvider

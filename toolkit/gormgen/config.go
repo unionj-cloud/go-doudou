@@ -66,6 +66,7 @@ type Config struct {
 	ConfigPackage string
 
 	FilterTableGlob glob.Glob
+	ExcludeTableGlob glob.Glob
 	GenGenGo        bool
 }
 

@@ -5,7 +5,7 @@ const AppendSvcImplGrpc = `
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}Rpc(ctx context.Context, request *pb.{{.ModelStructName}}) (*pb.PostGen{{.ModelStructName}}RpcResponse, error) {
 	var body dto.{{.ModelStructName}}
-	jsoncopier.DeepCopy(request, &body)
+	copier.DeepCopy(request, &body)
 	data, err := receiver.PostGen{{.ModelStructName}}(ctx, body)
 	return &pb.PostGen{{.ModelStructName}}RpcResponse{
 		Data: data,
@@ -18,7 +18,7 @@ func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}sRpc(ctx cont
 	list := make([]dto.{{.ModelStructName}}, 0, len(request.Body))
 	for _, item := range request.Body {
 		var d dto.{{.ModelStructName}}
-		jsoncopier.DeepCopy(item, &d)
+		copier.DeepCopy(item, &d)
 		list = append(list, d)
 	}
 	data, err := receiver.PostGen{{.ModelStructName}}s(ctx, list)
@@ -35,7 +35,7 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}IdRpc(ctx cont
 		return nil, errors.WithStack(err)
 	}
 	var ret pb.{{.ModelStructName}}
-	jsoncopier.DeepCopy(data, &ret)
+	copier.DeepCopy(data, &ret)
 	return &ret, nil
 }
 
@@ -43,7 +43,7 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}IdRpc(ctx cont
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) PutGen{{.ModelStructName}}Rpc(ctx context.Context, request *pb.{{.ModelStructName}}) (*emptypb.Empty, error) {
 	var body dto.{{.ModelStructName}}
-	jsoncopier.DeepCopy(request, &body)
+	copier.DeepCopy(request, &body)
 	return &emptypb.Empty{}, errors.WithStack(receiver.PutGen{{.ModelStructName}}(ctx, body))
 }
 
@@ -65,7 +65,7 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}sRpc(ctx conte
 		filters = append(filters, str.Value)
 	}
 	var parameter dto.Parameter
-	jsoncopier.DeepCopy(request, &parameter)
+	copier.DeepCopy(request, &parameter)
 	parameter.Filters = filters
 	data, err := receiver.GetGen{{.ModelStructName}}s(ctx, parameter)
 	if err != nil {
@@ -75,7 +75,7 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}sRpc(ctx conte
 	for _, item := range data.Items {
 		d := dto.{{.ModelStructName}}(item.(model.{{.ModelStructName}}))
 		var msg pb.{{.ModelStructName}}
-		jsoncopier.DeepCopy(d, &msg)
+		copier.DeepCopy(d, &msg)
 		a, err := anypb.New(&msg)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -83,7 +83,7 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}sRpc(ctx conte
 		items = append(items, a)
 	}
 	var ret pb.Page
-	jsoncopier.DeepCopy(data, &ret)
+	copier.DeepCopy(data, &ret)
 	ret.Items = items
 	return &ret, nil
 }

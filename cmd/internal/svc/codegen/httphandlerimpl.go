@@ -393,7 +393,7 @@ var appendHttpHandlerImplTmpl = `
 
 var importTmpl = `
 	"context"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
@@ -409,6 +409,8 @@ var importTmpl = `
 var initHttpHandlerImplTmpl = templates.EditableHeaderTmpl + `package httpsrv
 
 import ()
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type {{.Meta.Name}}HandlerImpl struct{
 	{{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}

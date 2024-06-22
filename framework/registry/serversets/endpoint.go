@@ -1,8 +1,8 @@
 package serversets
 
 import (
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"net/url"
@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-zookeeper/zk"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // An Endpoint is a service (host and port) registered on Zookeeper
 // to be discovered by clients/watchers.

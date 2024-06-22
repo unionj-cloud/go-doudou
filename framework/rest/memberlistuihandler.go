@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/hako/durafmt"
 	registry "github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
