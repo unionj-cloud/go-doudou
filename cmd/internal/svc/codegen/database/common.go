@@ -33,16 +33,17 @@ func GetOrmGenerator(kind OrmKind) IOrmGenerator {
 }
 
 type OrmGeneratorConfig struct {
-	Driver        string
-	Dsn           string
-	TablePrefix   string
-	TableGlob     string
-	GenGenGo      bool
-	CaseConverter func(string) string
-	Dir           string
-	Soft          string
-	Grpc          bool
-	Omitempty     bool
+	Driver           string
+	Dsn              string
+	TablePrefix      string
+	TableGlob        string
+	TableExcludeGlob string
+	GenGenGo         bool
+	CaseConverter    func(string) string
+	Dir              string
+	Soft             string
+	Grpc             bool
+	Omitempty        bool
 }
 
 type IOrmGenerator interface {
@@ -64,6 +65,7 @@ type AbstractBaseGenerator struct {
 	Dsn                 string
 	TablePrefix         string
 	TableGlob           string
+	TableExcludeGlob    string
 	GenGenGo            bool
 	Dir                 string
 	g                   *gormgen.Generator

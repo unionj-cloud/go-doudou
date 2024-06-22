@@ -2,21 +2,21 @@ package rest_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/agcache/memory"
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/mock/gomock"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/slok/goresilience"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr/mock"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	httpMock "github.com/unionj-cloud/go-doudou/v2/framework/rest/mock"
@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type IMocksvcHandler interface {
 	GetUser(w http.ResponseWriter, r *http.Request)

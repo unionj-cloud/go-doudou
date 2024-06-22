@@ -2,8 +2,8 @@ package gorm
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"log"
@@ -16,6 +16,8 @@ import (
 	"github.com/morkid/gocache"
 	"github.com/wubin1989/gorm"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // ResponseContext interface
 type ResponseContext interface {

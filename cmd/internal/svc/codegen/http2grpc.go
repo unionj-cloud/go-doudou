@@ -113,6 +113,8 @@ var initHttp2GrpcTmpl = templates.EditableHeaderTmpl + `package httpsrv
 
 import ()
 
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
 type {{.Meta.Name}}Http2Grpc struct{
 	{{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}ServiceServer
 }
@@ -128,7 +130,7 @@ func New{{.Meta.Name}}Http2Grpc({{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}S
 
 var importHttp2GrpcTmpl = `
 	"context"
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"net/http"
 	pb "{{.TransportGrpcPackage}}"

@@ -4,7 +4,8 @@ const AppendSvcImpl = `
 // PostGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
-	m := model.{{.ModelStructName}}(body)
+	var m model.{{.ModelStructName}}
+	copier.DeepCopy(body, &m)
 	u := receiver.q.{{.ModelStructName}}
 	err = errors.WithStack(u.WithContext(ctx).Create(&m))
 	data = m.ID
@@ -16,7 +17,8 @@ func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}(ctx context.
 func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error) {
 	list := make([]*model.{{.ModelStructName}}, 0, len(body))
 	for _, item := range body {
-		m := model.{{.ModelStructName}}(item)
+		var m model.{{.ModelStructName}}
+		copier.DeepCopy(item, &m)
 		list = append(list, &m)
 	}
 	u := receiver.q.{{.ModelStructName}}
@@ -38,13 +40,15 @@ func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}_Id(ctx contex
 	if err != nil {
 		return dto.{{.ModelStructName}}{}, errors.WithStack(err)
 	}
-	return dto.{{.ModelStructName}}(*m), nil
+	copier.DeepCopy(m, &data)
+	return
 }
 
 // PutGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) PutGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
-	m := model.{{.ModelStructName}}(body)
+	var m model.{{.ModelStructName}}
+	copier.DeepCopy(body, &m)
 	u := receiver.q.{{.ModelStructName}}
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
 	return errors.WithStack(err)

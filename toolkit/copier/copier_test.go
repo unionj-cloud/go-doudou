@@ -1,7 +1,6 @@
 package copier
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 )

@@ -101,8 +101,9 @@ type DbConfig struct {
 	Driver string
 	Dsn    string
 	// or schema for pg
-	TablePrefix string
-	TableGlob   string
+	TablePrefix      string
+	TableGlob        string
+	TableExcludeGlob string
 	// whether generate gen.go file
 	GenGenGo  bool
 	Orm       string
@@ -187,16 +188,17 @@ func (receiver *Svc) Init() {
 		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
 		assert.NotNil(gen, "Unknown orm kind")
 		gen.Initialize(database.OrmGeneratorConfig{
-			Driver:        receiver.DbConfig.Driver,
-			Dsn:           receiver.DbConfig.Dsn,
-			TablePrefix:   receiver.DbConfig.TablePrefix,
-			TableGlob:     receiver.DbConfig.TableGlob,
-			GenGenGo:      receiver.DbConfig.GenGenGo,
-			CaseConverter: receiver.CaseConverter,
-			Dir:           receiver.dir,
-			Soft:          receiver.DbConfig.Soft,
-			Grpc:          receiver.DbConfig.Grpc,
-			Omitempty:     receiver.DbConfig.Omitempty,
+			Driver:           receiver.DbConfig.Driver,
+			Dsn:              receiver.DbConfig.Dsn,
+			TablePrefix:      receiver.DbConfig.TablePrefix,
+			TableGlob:        receiver.DbConfig.TableGlob,
+			TableExcludeGlob: receiver.DbConfig.TableExcludeGlob,
+			GenGenGo:         receiver.DbConfig.GenGenGo,
+			CaseConverter:    receiver.CaseConverter,
+			Dir:              receiver.dir,
+			Soft:             receiver.DbConfig.Soft,
+			Grpc:             receiver.DbConfig.Grpc,
+			Omitempty:        receiver.DbConfig.Omitempty,
 		})
 		if receiver.DbConfig.Service {
 			gen.GenService()

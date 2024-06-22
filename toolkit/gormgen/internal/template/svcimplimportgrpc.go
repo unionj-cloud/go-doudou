@@ -4,7 +4,7 @@ const SvcImplImportGrpc = `
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	jsoncopier "github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"google.golang.org/protobuf/types/known/emptypb"
 	pb "{{.TransportGrpcPackage}}"
 `
