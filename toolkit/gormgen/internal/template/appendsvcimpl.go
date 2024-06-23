@@ -65,7 +65,7 @@ func (receiver *{{.InterfaceName}}Impl) DeleteGen{{.ModelStructName}}_Id(ctx con
 // GetGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
 func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error) {
-	paginated := receiver.pg.With(database.Db.Model(&model.{{.ModelStructName}}{})).Request(parameter).Response(&[]model.{{.ModelStructName}}{})
+	paginated := receiver.pg.With(receiver.q.Db().Model(&model.{{.ModelStructName}}{})).Request(parameter).Response(&[]model.{{.ModelStructName}}{})
 	data = dto.Page(paginated)
 	return
 }
