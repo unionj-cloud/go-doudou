@@ -243,7 +243,7 @@ require (
 	github.com/arl/statsviz v0.6.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/containerd/containerd v1.7.15 // indirect
-	github.com/docker/docker v26.0.1+incompatible
+	github.com/docker/docker v27.0.1+incompatible
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/ghodss/yaml v1.0.0
