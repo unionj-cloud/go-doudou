@@ -57,9 +57,9 @@ require (
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/morkid/gocache v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/redis/rueidis v1.0.38
+	github.com/redis/rueidis v1.0.40
 	github.com/redis/rueidis/mock v1.0.38
-	github.com/redis/rueidis/rueidiscompat v1.0.38
+	github.com/redis/rueidis/rueidiscompat v1.0.40
 	github.com/rs/cors v1.9.0
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
