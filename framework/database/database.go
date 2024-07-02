@@ -288,7 +288,7 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		ConfigureMetrics(db, conf.Db.Prometheus.DBName, uint32(conf.Db.Prometheus.RefreshInterval),
 			nil, collectors...)
 	}
-	if conf.Db.Cache.Enable && stringutils.IsNotEmpty(conf.Cache.Stores) {
+	if conf.Db.Cache.Enable && stringutils.IsNotEmpty(conf.Cache.Stores) && !conf.Db.Cache.ManualConfigure {
 		ConfigureDBCache(db, cache.NewCacheManager(conf))
 	}
 	return

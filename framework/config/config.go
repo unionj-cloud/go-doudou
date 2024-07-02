@@ -501,7 +501,8 @@ type Config struct {
 			ConnMaxIdleTime string
 		}
 		Cache struct {
-			Enable bool
+			Enable          bool
+			ManualConfigure bool
 		}
 		Prometheus struct {
 			Enable          bool
