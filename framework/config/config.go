@@ -518,6 +518,12 @@ type Config struct {
 			Password       string
 			RouteByLatency bool `default:"true"`
 			RouteRandomly  bool
+			DB             int
+			Sentinel       struct {
+				Master   string
+				Nodes    []string `values_by:"index"`
+				Password string
+			}
 		}
 		Ristretto struct {
 			NumCounters int64 `default:"1000"`
