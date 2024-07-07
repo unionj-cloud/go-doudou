@@ -43,6 +43,12 @@ func init() {
 				Password       string
 				RouteByLatency bool `default:"true"`
 				RouteRandomly  bool
+				DB             int
+				Sentinel       struct {
+					Master   string
+					Nodes    []string `values_by:"index"`
+					Password string
+				}
 			}
 			Ristretto struct {
 				NumCounters int64 `default:"1000"`
@@ -71,6 +77,12 @@ func init() {
 				Password       string
 				RouteByLatency bool `default:"true"`
 				RouteRandomly  bool
+				DB             int
+				Sentinel       struct {
+					Master   string
+					Nodes    []string `values_by:"index"`
+					Password string
+				}
 			}{
 				Addr:           config.GddCacheRedisAddr.LoadOrDefault(config.DefaultGddCacheRedisAddr),
 				Username:       config.GddCacheRedisUser.LoadOrDefault(config.DefaultGddCacheRedisUser),
@@ -131,10 +143,18 @@ func NewCacheManager(conf config.Config) gocache.CacheInterface[any] {
 	}
 
 	if sliceutils.StringContains(stores, CacheStoreRedis) {
-		redisAddr := conf.Cache.Redis.Addr
-		if stringutils.IsNotEmpty(redisAddr) {
+		var redisClient redis_store.RedisClientInterface
+		if len(conf.Cache.Redis.Sentinel.Nodes) > 0 {
+			redisClient = redis.NewFailoverClusterClient(&redis.FailoverOptions{
+				MasterName:       conf.Cache.Redis.Sentinel.Master,
+				SentinelAddrs:    conf.Cache.Redis.Sentinel.Nodes,
+				SentinelPassword: conf.Cache.Redis.Sentinel.Password,
+				Password:         conf.Cache.Redis.Password,
+				DB:               conf.Cache.Redis.DB,
+			})
+		} else if stringutils.IsNotEmpty(conf.Cache.Redis.Addr) {
+			redisAddr := conf.Cache.Redis.Addr
 			addrs := strings.Split(redisAddr, ",")
-			var redisClient redis_store.RedisClientInterface
 			if len(addrs) > 1 {
 				redisClient = redis.NewClusterClient(&redis.ClusterOptions{
 					Addrs:          addrs,
@@ -148,16 +168,17 @@ func NewCacheManager(conf config.Config) gocache.CacheInterface[any] {
 					Addr:     addrs[0],
 					Username: conf.Cache.Redis.Username,
 					Password: conf.Cache.Redis.Password,
+					DB:       conf.Cache.Redis.DB,
 				})
 			}
-			var redisStore *redis_store.RedisStore
-			if ttl > 0 {
-				redisStore = redis_store.NewRedis(redisClient, store.WithExpiration(time.Duration(ttl)*time.Second))
-			} else {
-				redisStore = redis_store.NewRedis(redisClient)
-			}
-			setterCaches = append(setterCaches, gocache.New[any](redisStore))
 		}
+		var redisStore *redis_store.RedisStore
+		if ttl > 0 {
+			redisStore = redis_store.NewRedis(redisClient, store.WithExpiration(time.Duration(ttl)*time.Second))
+		} else {
+			redisStore = redis_store.NewRedis(redisClient)
+		}
+		setterCaches = append(setterCaches, gocache.New[any](redisStore))
 	}
 
 	var cacheManager gocache.CacheInterface[any]
