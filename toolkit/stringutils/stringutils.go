@@ -8,7 +8,7 @@ import (
 
 // IsEmpty asserts s is empty
 func IsEmpty(s string) bool {
-	return strings.TrimSpace(s) == ""
+	return strings.TrimSpace(s) == "" || strings.TrimSpace(s) == "<nil>"
 }
 
 // IsNotEmpty asserts s is not empty
