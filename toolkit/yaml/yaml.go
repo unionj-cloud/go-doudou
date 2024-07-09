@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/jeremywohl/flatten"
+	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
 	"os"
@@ -27,7 +28,7 @@ func load(data []byte) error {
 	for k, v := range flat {
 		upperK := strings.ToUpper(strings.ReplaceAll(k, "-", ""))
 		if !currentEnv[upperK] {
-			_ = os.Setenv(upperK, fmt.Sprint(v))
+			_ = os.Setenv(upperK, cast.ToString(v))
 		}
 	}
 	return nil
