@@ -522,7 +522,7 @@ type Config struct {
 			DB             int
 			Sentinel       struct {
 				Master   string
-				Nodes    []string `values_by:"index"`
+				Nodes    string
 				Password string
 			}
 		}

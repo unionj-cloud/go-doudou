@@ -46,7 +46,7 @@ func init() {
 				DB             int
 				Sentinel       struct {
 					Master   string
-					Nodes    []string `values_by:"index"`
+					Nodes    string
 					Password string
 				}
 			}
@@ -80,7 +80,7 @@ func init() {
 				DB             int
 				Sentinel       struct {
 					Master   string
-					Nodes    []string `values_by:"index"`
+					Nodes    string
 					Password string
 				}
 			}{
@@ -144,10 +144,10 @@ func NewCacheManager(conf config.Config) gocache.CacheInterface[any] {
 
 	if sliceutils.StringContains(stores, CacheStoreRedis) {
 		var redisClient redis_store.RedisClientInterface
-		if len(conf.Cache.Redis.Sentinel.Nodes) > 0 {
+		if stringutils.IsNotEmpty(conf.Cache.Redis.Sentinel.Nodes) {
 			redisClient = redis.NewFailoverClusterClient(&redis.FailoverOptions{
 				MasterName:       conf.Cache.Redis.Sentinel.Master,
-				SentinelAddrs:    conf.Cache.Redis.Sentinel.Nodes,
+				SentinelAddrs:    strings.Split(conf.Cache.Redis.Sentinel.Nodes, ","),
 				SentinelPassword: conf.Cache.Redis.Sentinel.Password,
 				Password:         conf.Cache.Redis.Password,
 				DB:               conf.Cache.Redis.DB,
