@@ -214,9 +214,11 @@ func (r *resContext) Response(res interface{}) Page {
 		Unscoped().
 		Table("(?) AS s1", result)
 
-	result = result.Count(&page.Total).
-		Limit(int(causes.Limit)).
-		Offset(int(causes.Offset))
+	if pr.Page >= 0 {
+		result = result.Count(&page.Total).
+			Limit(int(causes.Limit)).
+			Offset(int(causes.Offset))
+	}
 	if result.Error != nil {
 		r.error = result.Error
 		return page
