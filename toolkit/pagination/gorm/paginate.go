@@ -651,11 +651,10 @@ func GetLowerColNameFromAlias(alias, tableName string) string {
 }
 
 func fieldName(field string) string {
-	slices := strings.Split(field, ".")
-	if len(slices) == 1 {
+	if strings.HasPrefix(field, `"`) && strings.HasSuffix(field, `"`) {
 		return field
 	}
-	return FieldAs(slices[0], slices[1])
+	return `"` + strings.ToLower(field) + `"`
 }
 
 // Config for customize pagination result
