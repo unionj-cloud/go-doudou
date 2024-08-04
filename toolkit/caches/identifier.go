@@ -2,7 +2,9 @@ package caches
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"github.com/wubin1989/gorm/callbacks"
+	"reflect"
 
 	"github.com/wubin1989/gorm"
 )
@@ -19,7 +21,13 @@ func buildIdentifier(db *gorm.DB) string {
 		queryArgs  string
 	)
 	query = db.Statement.SQL.String()
-	queryArgs = fmt.Sprintf("%v", db.Statement.Vars)
+	vars := lo.Map[interface{}, interface{}](db.Statement.Vars, func(item interface{}, index int) interface{} {
+		if reflect.ValueOf(item).Kind() == reflect.Ptr {
+			return reflect.ValueOf(item).Elem().Interface()
+		}
+		return item
+	})
+	queryArgs = fmt.Sprintf("%v", vars)
 	identifier = fmt.Sprintf("%s-%s", query, queryArgs)
 
 	return identifier
