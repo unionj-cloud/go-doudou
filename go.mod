@@ -37,6 +37,7 @@ require (
 )
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20220519103347-ba0e68465cd5
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/auxten/postgresql-parser v1.0.1

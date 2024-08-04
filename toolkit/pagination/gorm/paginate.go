@@ -25,6 +25,7 @@ type ResponseContext interface {
 	Fields([]string) ResponseContext
 	Distinct([]string) ResponseContext
 	Response(interface{}) Page
+	BuildWhereClause() (string, []interface{})
 	Error() error
 }
 
@@ -273,6 +274,37 @@ func (r *resContext) Response(res interface{}) Page {
 	}
 
 	return page
+}
+
+func (r *resContext) BuildWhereClause() (statement string, args []interface{}) {
+	p := r.Pagination
+	query := r.Statement
+	p.Config = defaultConfig(p.Config)
+	p.Config.Statement = query.Statement
+	if p.Config.DefaultSize == 0 {
+		p.Config.DefaultSize = 10
+	}
+
+	if p.Config.FieldWrapper == "" && p.Config.ValueWrapper == "" {
+		defaultWrapper := "LOWER(%s)"
+		wrappers := map[string]string{
+			"sqlite":   defaultWrapper,
+			"mysql":    defaultWrapper,
+			"postgres": "LOWER((%s)::text)",
+		}
+		p.Config.FieldWrapper = defaultWrapper
+		if wrapper, ok := wrappers[query.Dialector.Name()]; ok {
+			p.Config.FieldWrapper = wrapper
+		}
+	}
+
+	pr, err := parseRequest(r.Parameter, *p.Config)
+	if err != nil {
+		r.error = err
+		return "", nil
+	}
+	causes := createCauses(pr)
+	return causes.WhereString, causes.Params
 }
 
 // New Pagination instance
