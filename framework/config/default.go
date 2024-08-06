@@ -151,4 +151,5 @@ const (
 	DefaultGddCacheGocacheCleanupInterval = "10m"
 
 	DefaultGddDBSkipDefaultTransaction = false
+	DefaultGddDBPrepareStmt            = false
 )
