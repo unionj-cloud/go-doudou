@@ -273,6 +273,7 @@ const (
 	GddDBMaxOpenConns           envVariable = "GDD_DB_POOL_MAXOPENCONNS"
 	GddDBConnMaxLifetime        envVariable = "GDD_DB_POOL_CONNMAXLIFETIME"
 	GddDBConnMaxIdleTime        envVariable = "GDD_DB_POOL_CONNMAXIDLETIME"
+	GddDBPrepareStmt            envVariable = "GDD_DB_PREPARESTMT"
 
 	GddDBLogSlowThreshold             envVariable = "GDD_DB_LOG_SLOWTHRESHOLD"
 	GddDBLogIgnoreRecordNotFoundError envVariable = "GDD_DB_LOG_IGNORERECORDNOTFOUNDERROR"
@@ -473,7 +474,10 @@ type Config struct {
 			// for postgresql schema only
 			Prefix string
 		}
-		Log struct {
+		PrepareStmt              bool
+		SkipDefaultTransaction   bool
+		DisableNestedTransaction bool
+		Log                      struct {
 			Level                     string
 			SlowThreshold             string `default:"200ms"`
 			IgnoreRecordNotFoundError bool

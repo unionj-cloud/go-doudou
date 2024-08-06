@@ -70,6 +70,7 @@ func init() {
 		},
 	)
 	gormConf := &gorm.Config{
+		PrepareStmt:                              cast.ToBoolOrDefault(config.GddDBPrepareStmt.Load(), config.DefaultGddDBPrepareStmt),
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
 		SkipDefaultTransaction:                   cast.ToBoolOrDefault(config.GddDBSkipDefaultTransaction.Load(), config.DefaultGddDBSkipDefaultTransaction),
@@ -193,9 +194,11 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		},
 	)
 	gormConf := &gorm.Config{
+		PrepareStmt:                              conf.Db.PrepareStmt,
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
-		SkipDefaultTransaction:                   cast.ToBoolOrDefault(config.GddDBSkipDefaultTransaction.Load(), config.DefaultGddDBSkipDefaultTransaction),
+		SkipDefaultTransaction:                   conf.Db.SkipDefaultTransaction,
+		DisableNestedTransaction:                 conf.Db.DisableNestedTransaction,
 	}
 	tablePrefix := strings.TrimSuffix(conf.Db.Table.Prefix, ".")
 	if stringutils.IsNotEmpty(tablePrefix) {
