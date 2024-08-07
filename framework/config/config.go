@@ -2,11 +2,16 @@ package config
 
 import (
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"log"
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/apolloconfig/agollo/v4"
@@ -92,6 +97,18 @@ func CheckDev() bool {
 	return stringutils.IsEmpty(os.Getenv("GDD_ENV")) || os.Getenv("GDD_ENV") == "dev"
 }
 
+var G_LogFile *os.File
+var lock sync.Mutex
+
+func Shutdown() {
+	lock.Lock()
+	defer lock.Unlock()
+	if G_LogFile != nil {
+		G_LogFile.Close()
+		G_LogFile = nil
+	}
+}
+
 func init() {
 	LoadConfigFromLocal()
 	LoadConfigFromRemote()
@@ -105,6 +122,28 @@ func init() {
 		zlogger.WithCaller(cast.ToBoolOrDefault(GddLogCaller.Load(), DefaultGddLogCaller)),
 		zlogger.WithDiscard(cast.ToBoolOrDefault(GddLogDiscard.Load(), DefaultGddLogDiscard)),
 		zlogger.WithZeroLogLevel(zl),
+	}
+	logPath := GddLogPath.LoadOrDefault(DefaultGddLogPath)
+	if stringutils.IsNotEmpty(logPath) {
+		fileutils.CreateDirectory(logPath)
+		logFile := filepath.Join(logPath, "app.log")
+		G_LogFile, err = os.OpenFile(
+			logFile,
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+			0664,
+		)
+		if err != nil {
+			panic(err)
+		}
+		logStyle := GddLogStyle.LoadOrDefault(DefaultGddLogStyle)
+		switch logStyle {
+		case "console":
+			output := zerolog.ConsoleWriter{Out: G_LogFile, TimeFormat: constants.FORMAT, NoColor: true}
+			opts = append(opts, zlogger.WithWriter(output))
+		default:
+			opts = append(opts, zlogger.WithWriter(G_LogFile))
+		}
+		log.Printf("GDD_LOG_PATH is configured. Please view app log from %s", logFile)
 	}
 	zlogger.InitEntry(zlogger.NewLoggerConfig(opts...))
 }
@@ -134,6 +173,10 @@ const (
 	GddLogReqEnable envVariable = "GDD_LOG_REQ_ENABLE"
 	GddLogCaller    envVariable = "GDD_LOG_CALLER"
 	GddLogDiscard   envVariable = "GDD_LOG_DISCARD"
+	GddLogPath      envVariable = "GDD_LOG_PATH"
+	// GddLogStyle is only valid when GDD_LOG_PATH is specified, accepts json or console.
+	// Default is json
+	GddLogStyle envVariable = "GDD_LOG_STYLE"
 	// GddGraceTimeout sets graceful shutdown timeout
 	GddGraceTimeout envVariable = "GDD_GRACE_TIMEOUT"
 	// GddWriteTimeout sets http connection write timeout

@@ -98,6 +98,7 @@ func (srv *GrpcServer) RunWithPipe(pipe net.Listener) {
 		// performed if the parent doesn't exit.
 		time.AfterFunc(config.GddConfig.GraceTimeout, func() {
 			logger.Error().Msg("Graceful shutdown timed out")
+			config.Shutdown()
 			os.Exit(1)
 		})
 		register.ShutdownGrpc()

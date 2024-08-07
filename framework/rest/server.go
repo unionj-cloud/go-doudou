@@ -374,12 +374,13 @@ func (srv *RestServer) Run() {
 	}
 	srv.Serve(ln)
 	defer func() {
-		logger.Info().Msgf("Grpc server is gracefully shutting down in %s", config.GddConfig.GraceTimeout)
+		logger.Info().Msgf("Rest server is gracefully shutting down in %s", config.GddConfig.GraceTimeout)
 		// Make sure to set a deadline on exiting the process
 		// after upg.Exit() is closed. No new upgrades can be
 		// performed if the parent doesn't exit.
 		time.AfterFunc(config.GddConfig.GraceTimeout, func() {
 			logger.Error().Msg("Graceful shutdown timed out")
+			config.Shutdown()
 			os.Exit(1)
 		})
 		register.ShutdownRest()

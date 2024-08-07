@@ -69,7 +69,7 @@ func InitEntry(lc LoggerConfig) {
 		if lc.Writer != nil {
 			output = lc.Writer
 		} else if lc.Dev {
-			output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT}
+			output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: constants.FORMAT, NoColor: true}
 		} else {
 			output = os.Stdout
 		}

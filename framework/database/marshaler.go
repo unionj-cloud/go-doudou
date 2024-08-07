@@ -2,13 +2,15 @@ package database
 
 import (
 	"context"
-	jsoniter "github.com/json-iterator/go"
-
+	"fmt"
+	"github.com/bytedance/sonic"
+	"github.com/samber/lo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/reflectutils"
+	"reflect"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Marshaler is the struct that marshal and unmarshal cache values
 type Marshaler struct {
@@ -31,9 +33,9 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 	switch v := result.(type) {
 	case []byte:
-		err = json.Unmarshal(v, returnObj)
+		err = sonic.Unmarshal(v, returnObj)
 	case string:
-		err = json.Unmarshal([]byte(v), returnObj)
+		err = sonic.Unmarshal([]byte(v), returnObj)
 	}
 
 	if err != nil {
@@ -45,7 +47,24 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 // Set sets a value in cache by marshaling value
 func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.Option) error {
-	bytes, err := json.Marshal(object)
+	query := object.(*caches.Query)
+	source := reflectutils.ValueOf(query.Dest).Interface()
+	t := fmt.Sprintf("%T", source)
+	if t == "map[string]interface {}" {
+		query.Dest = lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
+			return value == nil || reflect.ValueOf(value).IsZero()
+		})
+	} else if t == "[]map[string]interface {}" {
+		rows := source.([]map[string]interface{})
+		_rows := make([]map[string]interface{}, len(rows))
+		lo.ForEach[map[string]interface{}](rows, func(item map[string]interface{}, index int) {
+			_rows[index] = lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
+				return value == nil || reflect.ValueOf(value).IsZero()
+			})
+		})
+		query.Dest = _rows
+	}
+	bytes, err := sonic.Marshal(query)
 	if err != nil {
 		return err
 	}

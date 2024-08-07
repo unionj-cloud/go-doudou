@@ -17,6 +17,8 @@ const (
 	DefaultGddLogReqEnable       = false
 	DefaultGddLogCaller          = true
 	DefaultGddLogDiscard         = false
+	DefaultGddLogPath            = ""
+	DefaultGddLogStyle           = "json"
 	DefaultGddGraceTimeout       = "15s"
 	DefaultGddWriteTimeout       = "15s"
 	DefaultGddReadTimeout        = "15s"
