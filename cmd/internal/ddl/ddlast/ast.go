@@ -1,10 +1,11 @@
 package ddlast
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"sort"
 	"strings"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 )
 
 type sortableFieldMeta []astutils.FieldMeta

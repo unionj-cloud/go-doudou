@@ -1,13 +1,14 @@
 package astutils
 
 import (
-	"github.com/pkg/errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"golang.org/x/tools/go/packages"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"golang.org/x/tools/go/packages"
 )
 
 func IsSlice(t string) bool {

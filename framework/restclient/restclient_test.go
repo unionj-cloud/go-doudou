@@ -1,14 +1,15 @@
 package restclient_test
 
 import (
+	"os"
+	"testing"
+
 	"github.com/go-resty/resty/v2"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
 	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
-	"os"
-	"testing"
 )
 
 var clientConfigTest = *constant.NewClientConfig(

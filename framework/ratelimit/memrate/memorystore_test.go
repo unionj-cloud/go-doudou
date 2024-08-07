@@ -3,11 +3,12 @@ package memrate
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
+
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
-	"reflect"
-	"testing"
 )
 
 func TestMemoryStore_addKey(t *testing.T) {

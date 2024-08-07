@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 )

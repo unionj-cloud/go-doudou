@@ -1,16 +1,17 @@
 package memberlist_test
 
 import (
-	"github.com/golang/mock/gomock"
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
 	"io"
 	"net"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
 
 	"github.com/stretchr/testify/require"
 )

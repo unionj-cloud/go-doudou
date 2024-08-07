@@ -3,9 +3,10 @@ package maputils_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
 	"reflect"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
 )
 
 func TestDiff(t *testing.T) {

@@ -1,12 +1,13 @@
 package memberlist
 
 import (
-	jsoniter "github.com/json-iterator/go"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"testing"
+
+	"github.com/bytedance/sonic"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 func Test_eventDelegate_NotifyJoin(t *testing.T) {
 	mm := NodeMeta{

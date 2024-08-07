@@ -2,6 +2,11 @@ package database
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/docker/docker/pkg/fileutils"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
@@ -11,10 +16,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var OrmGeneratorRegistry = make(map[OrmKind]IOrmGenerator)

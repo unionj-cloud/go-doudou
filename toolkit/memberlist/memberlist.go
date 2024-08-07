@@ -18,7 +18,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"log"
 	"net"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 
 	multierror "github.com/hashicorp/go-multierror"
 )

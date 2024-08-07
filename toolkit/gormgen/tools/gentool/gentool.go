@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
-	"gopkg.in/yaml.v3"
 	"github.com/wubin1989/clickhouse"
+	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
 	"github.com/wubin1989/sqlite"
 	"github.com/wubin1989/sqlserver"
-	"github.com/wubin1989/gorm"
+	"gopkg.in/yaml.v3"
 )
 
 // DBType database type

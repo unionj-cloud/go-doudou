@@ -2,9 +2,10 @@ package cast
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
-	"strconv"
 )
 
 func ToInt(s string) int {

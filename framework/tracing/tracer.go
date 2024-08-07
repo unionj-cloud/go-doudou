@@ -1,6 +1,8 @@
 package tracing
 
 import (
+	"io"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -11,7 +13,6 @@ import (
 	ddconfig "github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"io"
 )
 
 // Init returns an instance of Jaeger Tracer.

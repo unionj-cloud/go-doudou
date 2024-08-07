@@ -18,7 +18,7 @@ var svcCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(svcCmd)
-	
+
 	deployCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	shutdownCmd.Flags().StringVarP(&k8sfile, "k8sfile", "k", "", `k8s yaml file for deploying service`)
 	pushCmd.Flags().StringVarP(&imageRepo, "repo", "r", "", `your private docker image repository`)

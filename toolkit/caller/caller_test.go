@@ -2,8 +2,9 @@ package caller_test
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 )
 
 func TestCaller_String(t *testing.T) {

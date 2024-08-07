@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/ascarter/requestid"
-	"github.com/gorilla/handlers"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	service "testsvc"
 	"testsvc/config"
 	"testsvc/transport/httpsrv"
+
+	"github.com/ascarter/requestid"
+	"github.com/gorilla/handlers"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 )
 
 func main() {

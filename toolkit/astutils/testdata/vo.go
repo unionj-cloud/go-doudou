@@ -10,7 +10,7 @@ type PageFilter struct {
 	Dept int `json:"dept,omitempty"`
 }
 
-//排序条件
+// 排序条件
 type Order struct {
 	Col                string `json:"col,omitempty"`
 	Sort, Name, Banana string

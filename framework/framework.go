@@ -1,9 +1,10 @@
 package framework
 
 import (
+	"sync"
+
 	"github.com/common-nighthawk/go-figure"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"sync"
 )
 
 type Annotation struct {

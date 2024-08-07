@@ -3,18 +3,19 @@ package codegen
 import (
 	"bytes"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 var mainTmplGrpc = templates.EditableHeaderTmpl + `package main

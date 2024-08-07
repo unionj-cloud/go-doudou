@@ -2,6 +2,12 @@ package codegen
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
@@ -9,11 +15,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 var appendHttpHandlerImplTmpl = `
@@ -393,7 +394,7 @@ var appendHttpHandlerImplTmpl = `
 
 var importTmpl = `
 	"context"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/bytedance/sonic"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
@@ -410,7 +411,7 @@ var initHttpHandlerImplTmpl = templates.EditableHeaderTmpl + `package httpsrv
 
 import ()
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 type {{.Meta.Name}}HandlerImpl struct{
 	{{.Meta.Name | toLowerCamel}} {{.ServiceAlias}}.{{.Meta.Name}}

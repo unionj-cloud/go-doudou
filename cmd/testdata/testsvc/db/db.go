@@ -1,8 +1,9 @@
 package db
 
 import (
-	"testsvc/config"
 	"fmt"
+	"testsvc/config"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"

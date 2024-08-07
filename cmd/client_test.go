@@ -1,9 +1,10 @@
 package cmd_test
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/cmd"
 	"os"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd"
 )
 
 func TestClientCmd(t *testing.T) {

@@ -2,15 +2,16 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
 )
 
 var protoTmpl = `/**

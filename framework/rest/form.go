@@ -1,11 +1,12 @@
 package rest
 
 import (
-	"github.com/go-playground/form/v4"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"net/url"
 	"reflect"
 	"strings"
+
+	"github.com/go-playground/form/v4"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 var decoder = form.NewDecoder()

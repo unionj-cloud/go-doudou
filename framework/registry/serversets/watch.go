@@ -2,12 +2,13 @@ package serversets
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 
 	"github.com/go-zookeeper/zk"
 )

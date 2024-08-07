@@ -6,8 +6,8 @@ import (
 	"math"
 	"testing"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/hazelcast/hazelcast-go-client"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 func BenchmarkHazelcastSet(b *testing.B) {

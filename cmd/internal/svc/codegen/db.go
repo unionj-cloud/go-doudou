@@ -1,13 +1,14 @@
 package codegen
 
 import (
+	"os"
+	"path/filepath"
+	"text/template"
+
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"os"
-	"path/filepath"
-	"text/template"
 )
 
 var dbTmpl = templates.EditableHeaderTmpl + `package db
@@ -48,11 +49,11 @@ var Stat = os.Stat
 // GenDb generates db connection code
 func GenDb(dir string) {
 	var (
-		err       error
-		dbfile    string
-		f         *os.File
-		tpl       *template.Template
-		dbDir     string
+		err    error
+		dbfile string
+		f      *os.File
+		tpl    *template.Template
+		dbDir  string
 	)
 	dbDir = filepath.Join(dir, "db")
 	if err = MkdirAll(dbDir, os.ModePerm); err != nil {

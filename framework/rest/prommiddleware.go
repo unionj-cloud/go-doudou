@@ -4,14 +4,15 @@ package rest
 // Many thanks to TannerGabriel https://github.com/TannerGabriel
 // Post link https://gabrieltanner.org/blog/collecting-prometheus-metrics-in-golang written by TannerGabriel
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"net/http"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 type responseWriter struct {

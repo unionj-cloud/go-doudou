@@ -1,9 +1,10 @@
 package cmd_test
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/cmd"
 	"testing"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd"
 )
 
 func TestRootCmd(t *testing.T) {

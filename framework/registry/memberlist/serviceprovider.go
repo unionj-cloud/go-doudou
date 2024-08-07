@@ -3,13 +3,14 @@ package memberlist
 import (
 	"context"
 	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"google.golang.org/grpc"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 // IMemberlistServiceProvider defines service provider interface for server discovery

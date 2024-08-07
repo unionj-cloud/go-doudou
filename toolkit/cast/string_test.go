@@ -1,9 +1,10 @@
 package cast
 
 import (
-	"github.com/shopspring/decimal"
 	"reflect"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestToInt(t *testing.T) {

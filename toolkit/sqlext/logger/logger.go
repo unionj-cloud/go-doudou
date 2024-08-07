@@ -3,6 +3,9 @@ package logger
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/ascarter/requestid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -13,8 +16,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/reflectutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"os"
-	"strings"
 )
 
 type SqlLogger struct {

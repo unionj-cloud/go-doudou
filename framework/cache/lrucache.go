@@ -1,10 +1,11 @@
 package cache
 
 import (
+	"time"
+
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
-	"time"
 )
 
 type LruCache struct {

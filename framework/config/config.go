@@ -2,8 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 	"log"
 	"net"
 	"net/url"
@@ -13,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"

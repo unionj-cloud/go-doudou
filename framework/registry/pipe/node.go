@@ -2,12 +2,13 @@ package pipe
 
 import (
 	"context"
+	"net"
+	"time"
+
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"time"
 )
 
 func NewGrpcClientConn(dialCtx pipeconn.DialContextFunc) *grpc.ClientConn {

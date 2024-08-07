@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/codec"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/codec"
 )
 
 const (

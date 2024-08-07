@@ -3,9 +3,19 @@ package zk
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"os"
+	"runtime"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_zk"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_zk"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/interfaces"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/serversets"
@@ -16,15 +26,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"google.golang.org/grpc"
-	"net/url"
-	"os"
-	"runtime"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var restEndpoint *serversets.Endpoint

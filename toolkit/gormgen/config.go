@@ -2,10 +2,11 @@ package gormgen
 
 import (
 	"fmt"
-	"github.com/gobwas/glob"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gobwas/glob"
 
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/gorm/utils/tests"
@@ -65,9 +66,9 @@ type Config struct {
 
 	ConfigPackage string
 
-	FilterTableGlob glob.Glob
+	FilterTableGlob  glob.Glob
 	ExcludeTableGlob glob.Glob
-	GenGenGo        bool
+	GenGenGo         bool
 }
 
 // WithOpts set global  model options

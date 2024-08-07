@@ -2,11 +2,12 @@ package templateutils
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 )
 
 // String return result of calling template Execute as string

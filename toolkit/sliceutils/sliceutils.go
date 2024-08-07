@@ -1,8 +1,9 @@
 package sliceutils
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // StringSlice2InterfaceSlice converts string slice to interface slice

@@ -1,8 +1,9 @@
 package memberlist
 
 import (
-	"github.com/miekg/dns"
 	"time"
+
+	"github.com/miekg/dns"
 )
 
 //go:generate mockgen -destination ./mock/mock_dns_client_interface.go -package mock -source=./dns_client_interface.go

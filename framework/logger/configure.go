@@ -1,11 +1,12 @@
 package logger
 
 import (
+	"io"
+
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"io"
 )
 
 type LoggerOption func(*logrus.Logger)

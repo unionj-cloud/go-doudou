@@ -1,11 +1,12 @@
 package memberlist_test
 
 import (
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
-	"testing"
 )
 
 func Test_weightBroadcast_Invalidates(t *testing.T) {

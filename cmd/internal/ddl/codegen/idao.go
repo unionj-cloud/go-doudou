@@ -1,15 +1,16 @@
 package codegen
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/table"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 var idaoTmpl = templates.EditableHeaderTmpl + `package dao

@@ -3,11 +3,12 @@ package rest
 import (
 	"bytes"
 	"fmt"
-	"github.com/rs/cors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/rs/cors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 //	 window.docs = [

@@ -74,8 +74,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest/profile"
 	"html"
 	"io"
 	log2 "log"
@@ -89,6 +87,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest/profile"
 )
 
 func init() {

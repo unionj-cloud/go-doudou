@@ -2,9 +2,10 @@ package cast
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
 	"reflect"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestToIntSliceE(t *testing.T) {

@@ -2,9 +2,10 @@ package caches
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/samber/lo"
 	"github.com/wubin1989/gorm/callbacks"
-	"reflect"
 
 	"github.com/wubin1989/gorm"
 )
@@ -13,7 +14,7 @@ func buildIdentifier(db *gorm.DB) string {
 	// Build query identifier,
 	//	for that reason we need to compile all arguments into a string
 	//	and concat them with the SQL query itself
-	
+
 	callbacks.BuildQuerySQL(db)
 	var (
 		identifier string

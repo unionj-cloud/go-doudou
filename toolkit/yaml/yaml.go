@@ -2,14 +2,15 @@ package yaml
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/jeremywohl/flatten"
-	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ghodss/yaml"
+	"github.com/jeremywohl/flatten"
+	"github.com/spf13/cast"
 )
 
 func load(data []byte) error {

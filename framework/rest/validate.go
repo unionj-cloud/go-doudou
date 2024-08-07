@@ -1,11 +1,12 @@
 package rest
 
 import (
+	"strings"
+
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"strings"
 )
 
 var validate = validator.New()

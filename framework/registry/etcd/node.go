@@ -3,6 +3,14 @@ package etcd
 import (
 	"context"
 	"fmt"
+	"runtime"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
@@ -12,17 +20,10 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
 	"google.golang.org/grpc"
-	"runtime"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var onceEtcd sync.Once

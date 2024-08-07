@@ -1,11 +1,12 @@
 package astutils
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestEnum(t *testing.T) {

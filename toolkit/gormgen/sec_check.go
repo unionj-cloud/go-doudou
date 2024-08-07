@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wubin1989/dbresolver"
 	"github.com/wubin1989/gorm/clause"
 	"github.com/wubin1989/hints"
-	"github.com/wubin1989/dbresolver"
 )
 
 func checkConds(conds []clause.Expression) error {

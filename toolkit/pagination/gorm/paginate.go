@@ -3,9 +3,6 @@ package gorm
 import (
 	"crypto/md5"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"log"
 	"math"
 	"reflect"
@@ -13,11 +10,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bytedance/sonic"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+
 	"github.com/morkid/gocache"
 	"github.com/wubin1989/gorm"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 // ResponseContext interface
 type ResponseContext interface {

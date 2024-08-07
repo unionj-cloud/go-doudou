@@ -3,22 +3,7 @@ package rest
 import (
 	"context"
 	"crypto/subtle"
-	jsoniter "github.com/json-iterator/go"
 	"fmt"
-	"github.com/apolloconfig/agollo/v4/storage"
-	"github.com/ascarter/requestid"
-	"github.com/felixge/httpsnoop"
-	"github.com/klauspost/compress/gzip"
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/slok/goresilience"
-	"github.com/slok/goresilience/bulkhead"
-	"github.com/uber/jaeger-client-go"
-	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -27,16 +12,32 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/apolloconfig/agollo/v4/storage"
+	"github.com/ascarter/requestid"
+	"github.com/bytedance/sonic"
+	"github.com/felixge/httpsnoop"
+	"github.com/klauspost/compress/gzip"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/slok/goresilience"
+	"github.com/slok/goresilience/bulkhead"
+	"github.com/uber/jaeger-client-go"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 var (
-	Tracing             = tracing
-	Metrics             = metrics
-	Log                 = log
-	BasicAuth           = basicAuth
-	Recovery            = recovery
+	Tracing   = tracing
+	Metrics   = metrics
+	Log       = log
+	BasicAuth = basicAuth
+	Recovery  = recovery
 )
 
 type httpConfigListener struct {

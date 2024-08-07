@@ -2,8 +2,9 @@ package numberutils
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
 	"sort"
+
+	"github.com/shopspring/decimal"
 )
 
 type Percentage struct {

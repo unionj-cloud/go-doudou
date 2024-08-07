@@ -7,7 +7,6 @@ package envconfig
 import (
 	"encoding"
 	"fmt"
-	"github.com/pkg/errors"
 	"math"
 	"os"
 	"reflect"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // ErrInvalidSpecification indicates that a specification is of the wrong type.

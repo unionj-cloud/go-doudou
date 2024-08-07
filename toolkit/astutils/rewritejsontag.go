@@ -3,16 +3,17 @@ package astutils
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
-	"golang.org/x/tools/go/ast/astutil"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 func isExport(field string) bool {

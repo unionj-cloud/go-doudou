@@ -3,12 +3,17 @@ package rest_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/agcache/memory"
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
+	"github.com/bytedance/sonic"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang/mock/gomock"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -25,13 +30,9 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
-	"net/http"
-	"os"
-	"testing"
-	"time"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 type IMocksvcHandler interface {
 	GetUser(w http.ResponseWriter, r *http.Request)

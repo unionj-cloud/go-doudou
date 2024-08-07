@@ -1,8 +1,9 @@
 package fileutils
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestCreateDirectory(t *testing.T) {

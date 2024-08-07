@@ -1,17 +1,18 @@
 package restclient
 
 import (
+	"net"
+	"net/http"
+	"os"
+	"runtime"
+	"time"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"net"
-	"net/http"
-	"os"
-	"runtime"
-	"time"
 )
 
 // RestClient defines service client interface

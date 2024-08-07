@@ -2,6 +2,12 @@ package codegen
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
@@ -13,11 +19,6 @@ import (
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 const svcTmpl = templates.EditableHeaderTmpl + `package service

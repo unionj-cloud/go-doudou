@@ -2,12 +2,6 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
-	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -15,6 +9,13 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 var cpimportTmpl = `

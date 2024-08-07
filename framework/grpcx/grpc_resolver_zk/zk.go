@@ -1,12 +1,13 @@
 package grpc_resolver_zk
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
-	"net/url"
-	"strings"
 )
 
 const schemeName = "zk"

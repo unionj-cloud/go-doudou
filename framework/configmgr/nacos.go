@@ -2,6 +2,11 @@ package configmgr
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strings"
+	"sync"
+
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
@@ -13,10 +18,6 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/util"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
-	"io"
-	"os"
-	"strings"
-	"sync"
 )
 
 type nacosConfigType string

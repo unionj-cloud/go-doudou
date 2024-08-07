@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	redis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"go.uber.org/mock/gomock"
 )
 

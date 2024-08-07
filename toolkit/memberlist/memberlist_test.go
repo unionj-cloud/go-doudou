@@ -3,9 +3,6 @@ package memberlist_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
 	"io/ioutil"
 	"log"
 	"net"
@@ -17,6 +14,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"

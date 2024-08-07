@@ -1,6 +1,11 @@
 package common
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/cache"
@@ -8,10 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 // InitGitRepo inits git repository.

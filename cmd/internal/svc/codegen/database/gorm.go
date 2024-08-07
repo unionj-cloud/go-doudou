@@ -1,6 +1,8 @@
 package database
 
 import (
+	"strings"
+
 	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
@@ -13,7 +15,6 @@ import (
 	"github.com/wubin1989/postgres"
 	"github.com/wubin1989/sqlite"
 	"github.com/wubin1989/sqlserver"
-	"strings"
 )
 
 const (

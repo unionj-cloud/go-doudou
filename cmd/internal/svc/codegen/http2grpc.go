@@ -2,17 +2,18 @@ package codegen
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 var appendHttp2GrpcTmpl = `
@@ -113,7 +114,7 @@ var initHttp2GrpcTmpl = templates.EditableHeaderTmpl + `package httpsrv
 
 import ()
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 type {{.Meta.Name}}Http2Grpc struct{
 	{{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}ServiceServer
@@ -130,7 +131,7 @@ func New{{.Meta.Name}}Http2Grpc({{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}S
 
 var importHttp2GrpcTmpl = `
 	"context"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/bytedance/sonic"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"net/http"
 	pb "{{.TransportGrpcPackage}}"

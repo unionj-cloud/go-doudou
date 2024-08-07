@@ -1,10 +1,11 @@
 package ratelimit
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"reflect"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestParse(t *testing.T) {

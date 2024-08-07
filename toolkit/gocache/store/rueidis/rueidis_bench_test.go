@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/redis/rueidis"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 func BenchmarkRueidisSet(b *testing.B) {

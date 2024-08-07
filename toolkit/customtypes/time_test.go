@@ -2,9 +2,10 @@ package customtypes
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"testing"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 )
 
 type User struct {

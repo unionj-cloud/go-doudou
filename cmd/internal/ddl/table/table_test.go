@@ -2,20 +2,21 @@ package table
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/extraenum"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/keyenum"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/nullenum"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/extraenum"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/keyenum"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/nullenum"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func ExampleNewTableFromStruct() {

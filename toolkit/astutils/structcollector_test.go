@@ -3,13 +3,14 @@ package astutils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestStruct(t *testing.T) {

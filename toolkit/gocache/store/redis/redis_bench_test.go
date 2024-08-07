@@ -6,8 +6,8 @@ import (
 	"math"
 	"testing"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	redis "github.com/redis/go-redis/v9"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 func BenchmarkRedisSet(b *testing.B) {

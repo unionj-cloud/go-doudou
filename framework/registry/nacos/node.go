@@ -3,10 +3,17 @@ package nacos
 import (
 	"context"
 	"fmt"
+	"runtime"
+	"sort"
+	"strconv"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
-	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_nacos"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/grpc_resolver_nacos"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
@@ -18,12 +25,6 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/v2/model"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
 	"google.golang.org/grpc"
-	"runtime"
-	"sort"
-	"strconv"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var NamingClient naming_client.INamingClient

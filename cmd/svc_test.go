@@ -1,9 +1,10 @@
 package cmd_test
 
 import (
+	"testing"
+
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/cmd"
-	"testing"
 )
 
 func Test_svcCmd(t *testing.T) {

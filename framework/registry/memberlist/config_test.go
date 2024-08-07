@@ -1,10 +1,11 @@
 package memberlist
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"os"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 )
 
 func TestMain(m *testing.M) {

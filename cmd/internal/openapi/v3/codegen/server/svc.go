@@ -2,14 +2,15 @@ package server
 
 import (
 	"bufio"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var dtoTmpl = templates.EditableHeaderTmpl + `package {{.Pkg}}

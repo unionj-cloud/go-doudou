@@ -1,8 +1,9 @@
 package etcd
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"sync"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"

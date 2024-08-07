@@ -1,13 +1,14 @@
 package codegen
 
 import (
-	"github.com/stretchr/testify/assert"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"path"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestPattern2Method(t *testing.T) {

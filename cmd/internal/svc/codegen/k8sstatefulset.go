@@ -1,11 +1,12 @@
 package codegen
 
 import (
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/sirupsen/logrus"
 )
 
 var statefulsetTmpl = `apiVersion: apps/v1

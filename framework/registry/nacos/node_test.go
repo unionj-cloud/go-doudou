@@ -2,6 +2,8 @@ package nacos_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,7 +15,6 @@ import (
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/model"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
-	"testing"
 )
 
 func setup() {

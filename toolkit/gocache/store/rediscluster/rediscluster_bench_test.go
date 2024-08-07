@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	redis "github.com/redis/go-redis/v9"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 // should be configured to connect to real Redis Cluster

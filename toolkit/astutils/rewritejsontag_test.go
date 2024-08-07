@@ -2,9 +2,10 @@ package astutils
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
-	"testing"
 )
 
 func ExampleRewriteTag() {

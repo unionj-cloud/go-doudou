@@ -9,8 +9,6 @@ package memrate
 
 import (
 	"context"
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
 	"log"
 	"math"
 	"runtime"
@@ -18,6 +16,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
 )
 
 func TestLimit(t *testing.T) {

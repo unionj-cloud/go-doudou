@@ -11,11 +11,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest/lazyregexp"
 	"io"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest/lazyregexp"
 )
 
 var (

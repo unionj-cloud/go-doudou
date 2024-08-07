@@ -1,13 +1,14 @@
 package codegen
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func genGrpc(dir string, ic astutils.InterfaceCollector, runner executils.Runner, protoGenerator v3.ProtoGenerator) {

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	cache "github.com/patrickmn/go-cache"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 func BenchmarkGoCacheSet(b *testing.B) {

@@ -2,14 +2,15 @@ package rest
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 // Route wraps config for route

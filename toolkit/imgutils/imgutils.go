@@ -3,10 +3,6 @@ package imgutils
 import (
 	"bytes"
 	"fmt"
-	"github.com/nfnt/resize"
-	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"image"
 	"image/draw"
 	"image/gif"
@@ -15,6 +11,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/nfnt/resize"
+	"github.com/pkg/errors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 func ResizeKeepAspectRatio(input io.Reader, multiplier float64, output string) (string, error) {

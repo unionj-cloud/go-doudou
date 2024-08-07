@@ -2,6 +2,7 @@ package cast
 
 import (
 	"fmt"
+
 	"github.com/shopspring/decimal"
 )
 

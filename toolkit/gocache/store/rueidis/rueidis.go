@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 const (

@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
 )
 
 type Config struct {
-	DbConf   DbConfig
+	DbConf DbConfig
 }
 
 type DbConfig struct {

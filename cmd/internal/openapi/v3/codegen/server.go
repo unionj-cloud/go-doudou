@@ -3,6 +3,12 @@ package codegen
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
@@ -13,11 +19,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"text/template"
 )
 
 type IOperationConverter interface {

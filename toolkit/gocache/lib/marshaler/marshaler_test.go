@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
-	"github.com/stretchr/testify/assert"
 	"github.com/vmihailenco/msgpack/v5"
 	"go.uber.org/mock/gomock"
 )

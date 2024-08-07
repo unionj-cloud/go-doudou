@@ -1,12 +1,13 @@
 package dotenv_test
 
 import (
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
 )
 
 func TestLoadAsMap(t *testing.T) {

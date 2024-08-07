@@ -1,15 +1,16 @@
 package v3
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"strings"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func Test_isSupport(t *testing.T) {

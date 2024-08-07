@@ -1,12 +1,13 @@
 package codegen
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 var httpMwTmpl = templates.EditableHeaderTmpl + `package httpsrv`

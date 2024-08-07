@@ -2,11 +2,12 @@ package cmd_test
 
 import (
 	"bytes"
+	"os"
+	"os/exec"
+
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
-	"os"
-	"os/exec"
 )
 
 var testDir string

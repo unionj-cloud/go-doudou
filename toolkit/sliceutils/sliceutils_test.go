@@ -1,10 +1,11 @@
 package sliceutils
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 )
 
 func TestContains(t *testing.T) {

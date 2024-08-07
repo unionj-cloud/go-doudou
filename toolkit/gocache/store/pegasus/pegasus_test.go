@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/cast"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 )
 
 // run go test -run='TestPegasus*' -race -cover -coverprofile=coverage.txt -covermode=atomic -v ./...

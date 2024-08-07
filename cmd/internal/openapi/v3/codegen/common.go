@@ -3,6 +3,13 @@ package codegen
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -13,12 +20,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
-	"text/template"
 )
 
 type OpenAPICodeGenerator struct {
@@ -118,6 +119,7 @@ func string2Go(schema *v3.Schema) string {
 }
 
 // integer2Go converts integer schema to golang basic type
+//
 //	Int32F    Format = "int32"
 //	Int64F    Format = "int64"
 //	FloatF    Format = "float"
@@ -147,6 +149,7 @@ func number2Go(schema *v3.Schema) string {
 }
 
 // toGoType converts schema to golang type
+//
 //	IntegerT Type = "integer"
 //	StringT  Type = "string"
 //	BooleanT Type = "boolean"

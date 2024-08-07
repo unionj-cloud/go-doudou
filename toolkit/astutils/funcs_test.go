@@ -2,12 +2,6 @@ package astutils
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -15,6 +9,13 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 func TestFixImport(t *testing.T) {

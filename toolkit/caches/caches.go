@@ -3,6 +3,9 @@ package caches
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/auxten/postgresql-parser/pkg/sql/parser"
 	"github.com/auxten/postgresql-parser/pkg/sql/sem/tree"
 	"github.com/auxten/postgresql-parser/pkg/walk"
@@ -13,8 +16,6 @@ import (
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
 	"github.com/xwb1989/sqlparser"
-	"strings"
-	"sync"
 )
 
 type ctxKey int

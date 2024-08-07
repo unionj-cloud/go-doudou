@@ -2,10 +2,11 @@ package templateutils
 
 import (
 	"bytes"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 )
 
 func formatTime(t time.Time) string {

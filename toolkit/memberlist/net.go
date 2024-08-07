@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"hash/crc32"
 	"io"
 	"net"
 	"sync/atomic"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 
 	metrics "github.com/armon/go-metrics"
 	"github.com/hashicorp/go-msgpack/codec"

@@ -2,13 +2,14 @@ package mock
 
 import (
 	"container/list"
+
 	"github.com/apolloconfig/agollo/v4/agcache"
 	"github.com/apolloconfig/agollo/v4/storage"
 )
 
 //go:generate mockgen -destination mock_apollo_client_interface.go -package mock -source=./apollo_client_interface.go
 
-//Client apollo 客户端接口
+// Client apollo 客户端接口
 type Client interface {
 	GetConfig(namespace string) *storage.Config
 	GetConfigAndInit(namespace string) *storage.Config

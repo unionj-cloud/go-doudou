@@ -3,12 +3,13 @@ package zlogger
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/pkgerrors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"io"
 	"os"
 	"strconv"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 )
 
 var Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()

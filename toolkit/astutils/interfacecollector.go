@@ -2,16 +2,17 @@ package astutils
 
 import (
 	"fmt"
-	"github.com/iancoleman/strcase"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/iancoleman/strcase"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 // InterfaceCollector collect interfaces by parsing source code

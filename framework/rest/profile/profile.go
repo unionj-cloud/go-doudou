@@ -11,10 +11,11 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest/lazyregexp"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest/lazyregexp"
 )
 
 // Profile is an in-memory representation of profile.proto.

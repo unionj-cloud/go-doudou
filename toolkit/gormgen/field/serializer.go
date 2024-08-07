@@ -2,9 +2,10 @@ package field
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/wubin1989/gorm/clause"
 	"github.com/wubin1989/gorm/schema"
-	"reflect"
 
 	"github.com/wubin1989/gorm"
 )

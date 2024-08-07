@@ -2,10 +2,11 @@ package gorm
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/postgres"
-	"testing"
 )
 
 type Parameter struct {

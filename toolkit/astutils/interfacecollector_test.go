@@ -2,12 +2,13 @@ package astutils
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestInterfaceCollector(t *testing.T) {

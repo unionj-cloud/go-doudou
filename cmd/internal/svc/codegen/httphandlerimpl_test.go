@@ -2,10 +2,11 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"path/filepath"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 )
 
 func Test_unimplementedMethods(t *testing.T) {

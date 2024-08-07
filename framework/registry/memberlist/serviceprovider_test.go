@@ -1,8 +1,9 @@
 package memberlist
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"sync"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 )
 
 type mockServiceProvider struct {

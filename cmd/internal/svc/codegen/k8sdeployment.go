@@ -1,14 +1,15 @@
 package codegen
 
 import (
-	"github.com/Jeffail/gabs/v2"
-	"github.com/goccy/go-yaml"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/Jeffail/gabs/v2"
+	"github.com/goccy/go-yaml"
+	"github.com/sirupsen/logrus"
 )
 
 var deploymentTmpl = `apiVersion: apps/v1

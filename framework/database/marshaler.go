@@ -3,14 +3,19 @@ package database
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/bytedance/sonic"
+	"github.com/lithammer/shortuuid/v4"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/reflectutils"
-	"reflect"
 )
+
+var json = sonic.ConfigDefault
 
 // Marshaler is the struct that marshal and unmarshal cache values
 type Marshaler struct {
@@ -26,6 +31,7 @@ func NewMarshaler(cache cache.CacheInterface[any]) *Marshaler {
 
 // Get obtains a value from cache and unmarshal value with given object
 func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error) {
+	key = c.shortenKey(key)
 	result, err := c.cache.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -33,9 +39,9 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 	switch v := result.(type) {
 	case []byte:
-		err = sonic.Unmarshal(v, returnObj)
+		err = json.Unmarshal(v, returnObj)
 	case string:
-		err = sonic.Unmarshal([]byte(v), returnObj)
+		err = json.Unmarshal([]byte(v), returnObj)
 	}
 
 	if err != nil {
@@ -47,6 +53,7 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 
 // Set sets a value in cache by marshaling value
 func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.Option) error {
+	key = c.shortenKey(key)
 	query := object.(*caches.Query)
 	source := reflectutils.ValueOf(query.Dest).Interface()
 	t := fmt.Sprintf("%T", source)
@@ -64,7 +71,7 @@ func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.O
 		})
 		query.Dest = _rows
 	}
-	bytes, err := sonic.Marshal(query)
+	bytes, err := json.Marshal(query)
 	if err != nil {
 		return err
 	}
@@ -74,6 +81,7 @@ func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.O
 
 // Delete removes a value from the cache
 func (c *Marshaler) Delete(ctx context.Context, key any) error {
+	key = c.shortenKey(key)
 	return c.cache.Delete(ctx, key)
 }
 
@@ -85,4 +93,12 @@ func (c *Marshaler) Invalidate(ctx context.Context, options ...store.InvalidateO
 // Clear reset all cache data
 func (c *Marshaler) Clear(ctx context.Context) error {
 	return c.cache.Clear(ctx)
+}
+
+func (c *Marshaler) shortenKey(key any) string {
+	_key := cast.ToString(key)
+	if len(_key) > 1000 {
+		return shortuuid.NewWithNamespace(_key)
+	}
+	return _key
 }

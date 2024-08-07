@@ -8,7 +8,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/internal/parser"
 )
 
-//GetTestParamInTmpl return param list
+// GetTestParamInTmpl return param list
 func (m *InterfaceMethod) GetTestParamInTmpl() string {
 	return testParamToString(m.Params)
 }

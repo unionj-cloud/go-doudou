@@ -1,9 +1,10 @@
 package codegen
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"path/filepath"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 )
 
 func TestGenGoIClient(t *testing.T) {

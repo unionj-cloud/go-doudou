@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+
 	"github.com/slok/goresilience"
 )
 

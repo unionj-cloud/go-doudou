@@ -8,8 +8,8 @@ import (
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/mock"
 
-	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"github.com/stretchr/testify/assert"
+	lib_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
 	"go.uber.org/mock/gomock"
 )
 

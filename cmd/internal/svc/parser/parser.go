@@ -4,14 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/iancoleman/strcase"
-	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -23,6 +15,15 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/iancoleman/strcase"
+	"github.com/samber/lo"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 func getSchemaNames(vofile string) []string {

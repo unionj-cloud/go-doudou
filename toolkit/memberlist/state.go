@@ -3,13 +3,14 @@ package memberlist
 import (
 	"bytes"
 	"fmt"
-	"github.com/shirou/gopsutil/cpu"
 	"math"
 	"math/rand"
 	"net"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/shirou/gopsutil/cpu"
 
 	metrics "github.com/armon/go-metrics"
 )

@@ -2,6 +2,15 @@ package svc
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"os/user"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"syscall"
+	"time"
+
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
@@ -15,14 +24,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"os"
-	"os/exec"
-	"os/user"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"syscall"
-	"time"
 )
 
 //go:generate mockgen -destination ../../mock/mock_svc.go -package mock -source=./svc.go

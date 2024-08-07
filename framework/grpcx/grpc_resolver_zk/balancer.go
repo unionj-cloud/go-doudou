@@ -1,10 +1,11 @@
 package grpc_resolver_zk
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"math/rand"
 	"sort"
 	"sync"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"

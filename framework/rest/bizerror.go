@@ -2,8 +2,9 @@ package rest
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // BizError is used for business error implemented error interface

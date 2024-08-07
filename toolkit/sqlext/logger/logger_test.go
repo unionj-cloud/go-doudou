@@ -2,14 +2,15 @@ package logger_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/ascarter/requestid"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/unionj-cloud/go-doudou/v2/framework/tracing"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/logger"
-	"os"
-	"testing"
 )
 
 func TestMain(m *testing.M) {

@@ -1,13 +1,14 @@
 package cmd_test
 
 import (
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/unionj-cloud/go-doudou/v2/cmd"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/mock"
-	"testing"
 )
 
 func Test_versionCmd_Yes(t *testing.T) {

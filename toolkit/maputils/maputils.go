@@ -1,8 +1,9 @@
 package maputils
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"reflect"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 )
 
 type ChangeType int

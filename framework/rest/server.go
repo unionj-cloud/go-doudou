@@ -2,6 +2,14 @@ package rest
 
 import (
 	"context"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"path"
+	"strings"
+	"time"
+
 	"github.com/arl/statsviz"
 	"github.com/ascarter/requestid"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -16,13 +24,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"path"
-	"strings"
-	"time"
 )
 
 type MiddlewareFunc func(http.Handler) http.Handler

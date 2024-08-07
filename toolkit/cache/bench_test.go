@@ -1,10 +1,10 @@
 package cache_test
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cache"
 	"strings"
 	"testing"
 
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cache"
 )
 
 func BenchmarkOnce(b *testing.B) {

@@ -2,6 +2,11 @@ package codegen
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
@@ -9,10 +14,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"text/template"
 )
 
 var svcimportTmpl = `
@@ -96,21 +97,23 @@ var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
     {{- end }}
 {{- end }}`
 
-/**
-type Service struct {
-	Name      string
-	Package   string
-	GoPackage string
-	Syntax    string
-	// go-doudou version
-	Version  string
-	ProtoVer string
-	Rpcs     []Rpc
-	Messages []Message
-	Enums    []Enum
-	Comments []string
-	Imports  []string
-}
+/*
+*
+
+	type Service struct {
+		Name      string
+		Package   string
+		GoPackage string
+		Syntax    string
+		// go-doudou version
+		Version  string
+		ProtoVer string
+		Rpcs     []Rpc
+		Messages []Message
+		Enums    []Enum
+		Comments []string
+		Imports  []string
+	}
 */
 var svcimplTmplGrpc = templates.EditableHeaderTmpl + `package {{.SvcPackage}}
 

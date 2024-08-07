@@ -2,6 +2,13 @@ package v3
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"unicode"
+
 	"github.com/getkin/kin-openapi/openapi2"
 	"github.com/getkin/kin-openapi/openapi2conv"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -10,12 +17,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"unicode"
 )
 
 // Schemas from components of OpenAPI3.0 json document

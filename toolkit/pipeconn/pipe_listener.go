@@ -17,8 +17,9 @@ package pipeconn
 import (
 	"context"
 	"errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/concurrency"
 	"net"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/concurrency"
 )
 
 const (

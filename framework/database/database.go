@@ -1,14 +1,15 @@
 package database
 
 import (
-	gocache "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
-	"github.com/wubin1989/clickhouse"
-	"github.com/wubin1989/sqlite"
-	"github.com/wubin1989/sqlserver"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	gocache "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
+	"github.com/wubin1989/clickhouse"
+	"github.com/wubin1989/sqlite"
+	"github.com/wubin1989/sqlserver"
 
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/gorm/logger"

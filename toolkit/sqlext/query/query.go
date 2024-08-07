@@ -2,12 +2,13 @@ package query
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/arithsymbol"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/logicsymbol"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/sortenum"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"reflect"
-	"strings"
 )
 
 // Base sql expression

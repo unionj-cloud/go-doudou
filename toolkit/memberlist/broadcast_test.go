@@ -1,12 +1,13 @@
 package memberlist_test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	memmock "github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist/mock"
-	"reflect"
-	"testing"
 )
 
 func TestMemberlistBroadcast_Invalidates(t *testing.T) {

@@ -1,11 +1,12 @@
 package memberlist
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	"sync"
-	"testing"
 )
 
 func Test_delegate_NodeMeta(t *testing.T) {

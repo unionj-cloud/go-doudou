@@ -7,12 +7,13 @@ package envconfig
 import (
 	"flag"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type HonorDecodeInStruct struct {

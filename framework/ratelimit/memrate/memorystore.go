@@ -2,11 +2,12 @@ package memrate
 
 import (
 	"context"
+	"sync"
+
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/hashicorp/golang-lru/simplelru"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
-	"sync"
+	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 )
 
 const defaultMaxKeys = 256

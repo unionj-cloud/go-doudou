@@ -2,10 +2,11 @@ package fileutils
 
 import (
 	"bufio"
-	"github.com/mholt/archiver/v3"
-	"github.com/pkg/errors"
 	"io"
 	"os"
+
+	"github.com/mholt/archiver/v3"
+	"github.com/pkg/errors"
 )
 
 // CreateDirectory dir didn't exist, then create dir, otherwise do nothing.

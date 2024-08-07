@@ -1,11 +1,12 @@
 package dotenv
 
 import (
-	"github.com/joho/godotenv"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 func Load(env string) {

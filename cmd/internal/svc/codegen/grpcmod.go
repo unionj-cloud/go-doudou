@@ -1,12 +1,13 @@
 package codegen
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 )
 
 var goModFixGrpc = `

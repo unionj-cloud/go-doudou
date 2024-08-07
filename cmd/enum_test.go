@@ -1,9 +1,10 @@
 package cmd_test
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/cmd"
 	"path/filepath"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd"
 )
 
 func TestEnumCmd(t *testing.T) {

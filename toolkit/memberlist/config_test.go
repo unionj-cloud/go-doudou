@@ -1,9 +1,10 @@
 package memberlist
 
 import (
-	"github.com/stretchr/testify/require"
 	"net"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_IsValidAddressDefaults(t *testing.T) {

@@ -1,10 +1,11 @@
 package ratelimit
 
 import (
-	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Limit struct {
@@ -101,7 +102,6 @@ func PerDayBurst(rate float64, burst int) Limit {
 // * 10 reqs/minute with burst 200: "10-M-200"
 // * 1000 reqs/hour with burst 500: "1000-H-500"
 // * 2000 reqs/day with burst 1000: "2000-D-1000"
-//
 func Parse(value string) (Limit, error) {
 	var l Limit
 

@@ -1,8 +1,9 @@
 package memberlist
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestChannelEventDelegate_NotifyJoin(t *testing.T) {

@@ -1,10 +1,11 @@
 package pathutils
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 // Abs converts relative path to absolute path

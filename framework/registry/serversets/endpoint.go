@@ -2,18 +2,19 @@ package serversets
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	"net/url"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+
 	"github.com/go-zookeeper/zk"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 // An Endpoint is a service (host and port) registered on Zookeeper
 // to be discovered by clients/watchers.

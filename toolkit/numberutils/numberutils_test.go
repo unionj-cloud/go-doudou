@@ -2,8 +2,9 @@ package numberutils_test
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/numberutils"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/numberutils"
 )
 
 func TestLargestRemainder(t *testing.T) {

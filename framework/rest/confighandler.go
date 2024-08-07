@@ -2,10 +2,11 @@ package rest
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
 var ConfigRoutes = configRoutes

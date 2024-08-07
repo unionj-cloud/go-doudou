@@ -1,10 +1,11 @@
 package astutils
 
 import (
-	"github.com/sirupsen/logrus"
 	"go/ast"
 	"go/parser"
 	"go/token"
+
+	"github.com/sirupsen/logrus"
 )
 
 // StaticMethodCollector collect methods by parsing source code

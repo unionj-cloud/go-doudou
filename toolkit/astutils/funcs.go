@@ -5,14 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"go/ast"
 	"go/format"
-	"golang.org/x/tools/imports"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,6 +16,13 @@ import (
 	"strings"
 	"text/template"
 	"unicode"
+
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"golang.org/x/tools/imports"
 )
 
 func GetImportStatements(input []byte) []byte {

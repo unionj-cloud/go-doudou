@@ -1,13 +1,14 @@
 package astutils
 
 import (
-	"github.com/sirupsen/logrus"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/sirupsen/logrus"
 )
 
 // StructCollector collect structs by parsing source code

@@ -2,12 +2,13 @@ package rest
 
 import (
 	"bytes"
-	"github.com/hako/durafmt"
-	registry "github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 	"net/http"
 	"text/template"
 	"time"
+
+	"github.com/hako/durafmt"
+	registry "github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
 )
 
 type Row struct {

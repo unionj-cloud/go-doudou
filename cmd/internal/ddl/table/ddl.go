@@ -3,6 +3,15 @@ package table
 import (
 	"context"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"time"
+
 	mapset "github.com/deckarep/golang-set"
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
@@ -23,14 +32,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/wrapper"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"os"
-	"path/filepath"
-	"reflect"
-	"strings"
-	"time"
 )
 
 // CreateTable create table from Table
@@ -597,7 +598,7 @@ func setupMySQLContainer(logger zerolog.Logger, initdb string, dbname string) (f
 			"MYSQL_ROOT_PASSWORD": "1234",
 			"MYSQL_DATABASE":      dbname,
 		},
-		Mounts: make(testcontainers.ContainerMounts, 0),
+		Mounts:     make(testcontainers.ContainerMounts, 0),
 		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL").WithStartupTimeout(60 * time.Second),
 	}
 

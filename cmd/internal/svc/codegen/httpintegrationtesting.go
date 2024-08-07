@@ -3,11 +3,6 @@ package codegen
 import (
 	"bytes"
 	"fmt"
-	"github.com/rbretecher/go-postman-collection"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -16,6 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/rbretecher/go-postman-collection"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 var appendIntegrationTestingTmpl = `

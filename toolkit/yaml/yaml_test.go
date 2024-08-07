@@ -2,14 +2,15 @@ package yaml_test
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
 )
 
 func TestLoad_dev(t *testing.T) {

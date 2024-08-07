@@ -10,7 +10,7 @@ type PageFilter struct {
 	Dept int
 }
 
-//排序条件
+// 排序条件
 type Order struct {
 	Col  string
 	Sort string

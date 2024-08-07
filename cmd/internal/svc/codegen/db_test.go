@@ -1,10 +1,11 @@
 package codegen
 
 import (
-	"github.com/pkg/errors"
-	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
+
+	"github.com/pkg/errors"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestGenDbPanic(t *testing.T) {

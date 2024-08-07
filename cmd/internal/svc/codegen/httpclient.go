@@ -2,6 +2,11 @@ package codegen
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
@@ -9,10 +14,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 var clientTmpl = `/**
@@ -23,7 +24,7 @@ package client
 
 import (
 	"context"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/bytedance/sonic"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/klauspost/compress/gzip"
@@ -44,7 +45,7 @@ import (
 	"{{.DtoPackage}}"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 type {{.Meta.Name}}Client struct {
 	provider registry.IServiceProvider

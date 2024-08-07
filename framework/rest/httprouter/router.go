@@ -82,10 +82,11 @@ package httprouter
 
 import (
 	"context"
-	"github.com/ucarion/urlpath"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/ucarion/urlpath"
 )
 
 // Handle is a function that can be registered to a route to handle HTTP

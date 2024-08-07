@@ -2,10 +2,11 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
 )
 
 func TestModifyVersion(t *testing.T) {

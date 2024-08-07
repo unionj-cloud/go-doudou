@@ -1,12 +1,13 @@
 package copier
 
 import (
-	jsoniter "github.com/json-iterator/go"
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/bytedance/sonic"
+	"github.com/pkg/errors"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var json = sonic.ConfigDefault
 
 // DeepCopy src to target with json marshal and unmarshal
 func DeepCopy(src, target interface{}) error {

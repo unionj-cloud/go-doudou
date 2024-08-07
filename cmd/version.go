@@ -3,14 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/google/go-github/v42/github"
 	goversion "github.com/hashicorp/go-version"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/version"
-	"os"
-	"time"
 )
 
 func LatestReleaseVer() string {

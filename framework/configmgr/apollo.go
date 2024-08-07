@@ -2,14 +2,15 @@ package configmgr
 
 import (
 	"fmt"
+	"os"
+	"strings"
+	"sync"
+
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/pkg/errors"
 	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"os"
-	"strings"
-	"sync"
 )
 
 var onceApollo sync.Once
