@@ -47,6 +47,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/elliotchance/orderedmap/v2 v2.2.0
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/gobwas/glob v0.2.3
