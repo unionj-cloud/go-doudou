@@ -2,11 +2,14 @@ package form
 
 import (
 	"fmt"
+	"github.com/samber/lo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"log"
 	"net/url"
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,7 +36,23 @@ func (d *decoder) setError(namespace []byte, err error) {
 	d.errs[string(namespace)] = err
 }
 
-func (d *decoder) findAlias(ns string) *recursiveData {
+func (d *decoder) findAlias(item string) *recursiveData {
+	ns := item
+	if stringutils.IsNotEmpty(item) && !strings.HasPrefix(item, "[") {
+		ns = "["
+		_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
+			if item == '[' || item == '.' {
+				return true
+			}
+			return false
+		})
+		if ok {
+			ns = ns + item[:i] + "]" + item[i:]
+		} else {
+			ns = ns + item + "]"
+		}
+	}
+
 	for i := 0; i < len(d.dm); i++ {
 		if d.dm[i].alias == ns {
 			return d.dm[i]
@@ -52,13 +71,14 @@ func (d *decoder) append(k string, i, idx int, isNum bool) {
 			dm := make(dataMap, l)
 			copy(dm, d.dm)
 			rd = new(recursiveData)
+			rd.sliceLen = defaultSliceLen
 			dm[len(d.dm)] = rd
 			d.dm = dm
 		} else {
 			l = len(d.dm)
 			d.dm = d.dm[:l+1]
 			rd = d.dm[l]
-			rd.sliceLen = 0
+			rd.sliceLen = defaultSliceLen
 			rd.keys = rd.keys[0:0]
 		}
 
@@ -70,6 +90,10 @@ func (d *decoder) append(k string, i, idx int, isNum bool) {
 		ivalue:      -1,
 		value:       k[idx+1 : i],
 		searchValue: k[idx : i+1],
+	}
+
+	if idx == 0 {
+		ke.searchValue = ke.value
 	}
 
 	// is key is number, most likely array key, keep track of just in case an array/slice.
@@ -93,39 +117,6 @@ func (d *decoder) append(k string, i, idx int, isNum bool) {
 	rd.keys = append(rd.keys, ke)
 }
 
-func (d *decoder) appendKey(k string) {
-	var rd *recursiveData
-	if rd = d.findAlias(""); rd == nil {
-
-		l := len(d.dm) + 1
-
-		if l > cap(d.dm) {
-			dm := make(dataMap, l)
-			copy(dm, d.dm)
-			rd = new(recursiveData)
-			dm[len(d.dm)] = rd
-			d.dm = dm
-		} else {
-			l = len(d.dm)
-			d.dm = d.dm[:l+1]
-			rd = d.dm[l]
-			rd.sliceLen = 0
-			rd.keys = rd.keys[0:0]
-		}
-
-		rd.alias = ""
-	}
-
-	// is map + key
-	ke := key{
-		ivalue:      -1,
-		value:       k,
-		searchValue: k,
-	}
-
-	rd.keys = append(rd.keys, ke)
-}
-
 func (d *decoder) parseMapData() {
 	// already parsed
 	if len(d.dm) > 0 {
@@ -139,13 +130,24 @@ func (d *decoder) parseMapData() {
 	var idx int
 	var insideBracket bool
 	var isNum bool
+	var ok bool
 
-	for k := range d.values {
+	for item := range d.values {
+		k := "["
+		_, i, ok = lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
+			if item == '[' || item == '.' {
+				return true
+			}
+			return false
+		})
+		if ok {
+			k = k + item[:i] + "]" + item[i:]
+		} else {
+			k = k + item + "]"
+		}
 
-		d.appendKey(k)
-
-		if len(k) > d.maxKeyLen {
-			d.maxKeyLen = len(k)
+		if len(item) > d.maxKeyLen {
+			d.maxKeyLen = len(item)
 		}
 
 		for i = 0; i < len(k); i++ {
@@ -230,6 +232,165 @@ func (d *decoder) traverseStruct(v reflect.Value, typ reflect.Type, namespace []
 	return
 }
 
+func (d *decoder) populateMap(v reflect.Value, namespace []byte) (set bool) {
+	var rd *recursiveData
+
+	d.parseMapData()
+
+	// no natural map support so skip directly to dm lookup
+	if rd = d.findAlias(string(namespace)); rd == nil {
+		return
+	}
+
+	var existing bool
+	var kv key
+	var mp reflect.Value
+	var mk reflect.Value
+
+	typ := v.Type()
+
+	if v.IsNil() {
+		mp = reflect.MakeMap(typ)
+	} else {
+		existing = true
+		mp = v
+	}
+
+	for i := 0; i < len(rd.keys); i++ {
+		newVal := reflect.New(typ.Elem()).Elem()
+		mk = reflect.New(typ.Key()).Elem()
+		kv = rd.keys[i]
+
+		if err := d.getMapKey(kv.value, mk, namespace); err != nil {
+			d.setError(namespace, err)
+			continue
+		}
+
+		if d.setFieldByType(newVal, append(namespace, kv.searchValue...), 0) {
+			set = true
+			mp.SetMapIndex(mk, newVal)
+		}
+	}
+
+	if !set || existing {
+		return
+	}
+
+	v.Set(mp)
+	return
+}
+
+func (d *decoder) populateSlice(ok bool, arr []string, v reflect.Value, namespace []byte) (set bool) {
+	d.parseMapData()
+	// slice elements could be mixed eg. number and non-numbers Value[0]=[]string{"10"} and Value=[]string{"10","20"}
+
+	if ok && len(arr) > 0 {
+		var varr reflect.Value
+
+		var ol int
+		l := len(arr)
+
+		if v.IsNil() {
+			varr = reflect.MakeSlice(v.Type(), len(arr), len(arr))
+		} else {
+
+			ol = v.Len()
+			l += ol
+
+			if v.Cap() <= l {
+				varr = reflect.MakeSlice(v.Type(), l, l)
+			} else {
+				// preserve predefined capacity, possibly for reuse after decoding
+				varr = reflect.MakeSlice(v.Type(), l, v.Cap())
+			}
+			reflect.Copy(varr, v)
+		}
+
+		for i := ol; i < l; i++ {
+			newVal := reflect.New(v.Type().Elem()).Elem()
+
+			if d.setFieldByType(newVal, namespace, i-ol) {
+				set = true
+				varr.Index(i).Set(newVal)
+			}
+		}
+
+		v.Set(varr)
+	}
+
+	// maybe it's an numbered array i.e. Phone[0].Number
+	if rd := d.findAlias(string(namespace)); rd != nil {
+
+		var varr reflect.Value
+		var kv key
+
+		sl := rd.sliceLen + 1
+
+		// checking below for maxArraySize, but if array exists and already
+		// has sufficient capacity allocated then we do not check as the code
+		// obviously allows a capacity greater than the maxArraySize.
+
+		if v.IsNil() {
+
+			if sl > d.d.maxArraySize {
+				d.setError(namespace, fmt.Errorf(errArraySize, sl, d.d.maxArraySize))
+				return
+			}
+
+			if v.Type().Kind() != reflect.Slice {
+				var a interface{}
+				a = struct {
+				}{}
+				varr = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(a)), sl, sl)
+			} else {
+				varr = reflect.MakeSlice(v.Type(), sl, sl)
+			}
+
+		} else if v.Len() < sl {
+
+			if v.Cap() <= sl {
+
+				if sl > d.d.maxArraySize {
+					d.setError(namespace, fmt.Errorf(errArraySize, sl, d.d.maxArraySize))
+					return
+				}
+
+				varr = reflect.MakeSlice(v.Type(), sl, sl)
+			} else {
+				varr = reflect.MakeSlice(v.Type(), sl, v.Cap())
+			}
+
+			reflect.Copy(varr, v)
+
+		} else {
+			varr = v
+		}
+
+		for i := 0; i < len(rd.keys); i++ {
+
+			kv = rd.keys[i]
+			newVal := reflect.New(varr.Type().Elem()).Elem()
+
+			if kv.ivalue == -1 {
+				d.setError(namespace, fmt.Errorf("invalid slice index '%s'", kv.value))
+				continue
+			}
+
+			if d.setFieldByType(newVal, append(namespace, kv.searchValue...), 0) {
+				set = true
+				varr.Index(kv.ivalue).Set(newVal)
+			}
+		}
+
+		if !set {
+			return
+		}
+
+		v.Set(varr)
+	}
+	return
+}
+
 func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx int) (set bool) {
 	if slices.Contains(d.decoded, string(namespace)) {
 		return false
@@ -258,7 +419,37 @@ func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx in
 	}
 	switch kind {
 	case reflect.Interface:
-		if !ok || idx == len(arr) {
+		if !ok {
+			item := string(namespace)
+			ns := item
+			if stringutils.IsNotEmpty(item) && !strings.HasPrefix(item, "[") {
+				ns = "["
+				_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
+					if item == '[' || item == '.' {
+						return true
+					}
+					return false
+				})
+				if ok {
+					ns = ns + item[:i] + "]" + item[i:]
+				} else {
+					ns = ns + item + "]"
+				}
+			}
+			rds := lo.Filter[*recursiveData](d.dm, func(item *recursiveData, index int) bool {
+				return item.alias == ns
+			})
+			if len(rds) > 0 {
+				rd := rds[0]
+				if rd.sliceLen >= 0 {
+					set = d.populateSlice(ok, arr, v, namespace)
+				}
+				//else {
+				//	set = d.populateMap(v, namespace)
+				//}
+			}
+			return
+		} else if idx == len(arr) {
 			return
 		}
 		v.Set(reflect.ValueOf(arr[idx]))
@@ -410,106 +601,7 @@ func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx in
 		set = true
 
 	case reflect.Slice:
-		d.parseMapData()
-		// slice elements could be mixed eg. number and non-numbers Value[0]=[]string{"10"} and Value=[]string{"10","20"}
-
-		if ok && len(arr) > 0 {
-			var varr reflect.Value
-
-			var ol int
-			l := len(arr)
-
-			if v.IsNil() {
-				varr = reflect.MakeSlice(v.Type(), len(arr), len(arr))
-			} else {
-
-				ol = v.Len()
-				l += ol
-
-				if v.Cap() <= l {
-					varr = reflect.MakeSlice(v.Type(), l, l)
-				} else {
-					// preserve predefined capacity, possibly for reuse after decoding
-					varr = reflect.MakeSlice(v.Type(), l, v.Cap())
-				}
-				reflect.Copy(varr, v)
-			}
-
-			for i := ol; i < l; i++ {
-				newVal := reflect.New(v.Type().Elem()).Elem()
-
-				if d.setFieldByType(newVal, namespace, i-ol) {
-					set = true
-					varr.Index(i).Set(newVal)
-				}
-			}
-
-			v.Set(varr)
-		}
-
-		// maybe it's an numbered array i.e. Phone[0].Number
-		if rd := d.findAlias(string(namespace)); rd != nil {
-
-			var varr reflect.Value
-			var kv key
-
-			sl := rd.sliceLen + 1
-
-			// checking below for maxArraySize, but if array exists and already
-			// has sufficient capacity allocated then we do not check as the code
-			// obviously allows a capacity greater than the maxArraySize.
-
-			if v.IsNil() {
-
-				if sl > d.d.maxArraySize {
-					d.setError(namespace, fmt.Errorf(errArraySize, sl, d.d.maxArraySize))
-					return
-				}
-
-				varr = reflect.MakeSlice(v.Type(), sl, sl)
-
-			} else if v.Len() < sl {
-
-				if v.Cap() <= sl {
-
-					if sl > d.d.maxArraySize {
-						d.setError(namespace, fmt.Errorf(errArraySize, sl, d.d.maxArraySize))
-						return
-					}
-
-					varr = reflect.MakeSlice(v.Type(), sl, sl)
-				} else {
-					varr = reflect.MakeSlice(v.Type(), sl, v.Cap())
-				}
-
-				reflect.Copy(varr, v)
-
-			} else {
-				varr = v
-			}
-
-			for i := 0; i < len(rd.keys); i++ {
-
-				kv = rd.keys[i]
-				newVal := reflect.New(varr.Type().Elem()).Elem()
-
-				if kv.ivalue == -1 {
-					d.setError(namespace, fmt.Errorf("invalid slice index '%s'", kv.value))
-					continue
-				}
-
-				if d.setFieldByType(newVal, append(namespace, kv.searchValue...), 0) {
-					set = true
-					varr.Index(kv.ivalue).Set(newVal)
-				}
-			}
-
-			if !set {
-				return
-			}
-
-			v.Set(varr)
-		}
+		set = d.populateSlice(ok, arr, v, namespace)
 
 	case reflect.Array:
 		d.parseMapData()
@@ -581,50 +673,7 @@ func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx in
 		}
 
 	case reflect.Map:
-		var rd *recursiveData
-
-		d.parseMapData()
-
-		// no natural map support so skip directly to dm lookup
-		if rd = d.findAlias(string(namespace)); rd == nil {
-			return
-		}
-
-		var existing bool
-		var kv key
-		var mp reflect.Value
-		var mk reflect.Value
-
-		typ := v.Type()
-
-		if v.IsNil() {
-			mp = reflect.MakeMap(typ)
-		} else {
-			existing = true
-			mp = v
-		}
-
-		for i := 0; i < len(rd.keys); i++ {
-			newVal := reflect.New(typ.Elem()).Elem()
-			mk = reflect.New(typ.Key()).Elem()
-			kv = rd.keys[i]
-
-			if err := d.getMapKey(kv.value, mk, namespace); err != nil {
-				d.setError(namespace, err)
-				continue
-			}
-
-			if d.setFieldByType(newVal, append(namespace, kv.searchValue...), 0) {
-				set = true
-				mp.SetMapIndex(mk, newVal)
-			}
-		}
-
-		if !set || existing {
-			return
-		}
-
-		v.Set(mp)
+		set = d.populateMap(v, namespace)
 
 	case reflect.Struct:
 		typ := v.Type()

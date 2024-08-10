@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-playground/form/v4"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/form"
 	"log"
 	"net/url"
 )
@@ -44,7 +44,7 @@ type User struct {
 		Other2 int
 		Others map[string]interface{} `form:"+"`
 	}
-	Leader *User
+	//Leader *User
 }
 
 // use a single instance of Decoder, it caches struct info
@@ -72,27 +72,31 @@ func main() {
 // this simulates the results of http.Request's ParseForm() function
 func parseForm() url.Values {
 	return url.Values{
-		"Name":                []string{"joeybloggs"},
-		"Age":                 []string{"3"},
-		"Gender":              []string{"Male"},
-		"Address[0].Name":     []string{"26 Here Blvd."},
-		"Address[0].Phone":    []string{"9(999)999-9999"},
-		"Address[1].Name":     []string{"26 There Blvd."},
-		"Address[1].Phone":    []string{"1(111)111-1111"},
-		"active":              []string{"true"},
-		"MapExample[key]":     []string{"value"},
-		"NestedMap[key][key]": []string{"value"},
-		"NestedArray[0][0]":   []string{"value"},
-		"other1":              []string{"1"},
-		"other2":              []string{"2"},
-		"Leader.Name":         []string{"jack"},
-		"Others.Other1":       []string{"1"},
-		"Others.Other2":       []string{"2"},
-		"Others[Other3]":      []string{"3"},
-		"Others[Other4]":      []string{"4"},
-		"a":                   []string{"5"},
-		"b":                   []string{"b"},
-		"c":                   []string{"c"},
+		"Name":                 []string{"joeybloggs"},
+		"Age":                  []string{"3"},
+		"Gender":               []string{"Male"},
+		"Address[0].Name":      []string{"26 Here Blvd."},
+		"Address[0].Phone":     []string{"9(999)999-9999"},
+		"Address[1].Name":      []string{"26 There Blvd."},
+		"Address[1].Phone":     []string{"1(111)111-1111"},
+		"active":               []string{"true"},
+		"MapExample[key]":      []string{"value"},
+		"MapExample[key1]":     []string{"value1"},
+		"NestedMap[key][key]":  []string{"value"},
+		"NestedMap[key][key1]": []string{"value1"},
+		"NestedArray[0][0]":    []string{"value"},
+		"other1":               []string{"1"},
+		"other2":               []string{"2"},
+		"Leader.Name":          []string{"jack"},
+		"Others.Other1":        []string{"1"},
+		"Others.Other2":        []string{"2"},
+		"Others[Other3]":       []string{"3"},
+		"Others[Other4]":       []string{"4"},
+		"a":                    []string{"5"},
+		"b":                    []string{"b"},
+		"c[0]":                 []string{"c"},
+		"c[1]":                 []string{"d"},
+		"c[2]":                 []string{"e"},
 	}
 }
 
@@ -118,6 +122,6 @@ func parseForm2() url.Values {
 		"Others[Other4]":      []string{"4"},
 		"a":                   []string{"5"},
 		"b":                   []string{"b"},
-		"c":                   []string{"c"},
+		"c":                   []string{"c", "d", "e"},
 	}
 }

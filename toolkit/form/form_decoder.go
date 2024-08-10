@@ -53,6 +53,8 @@ type key struct {
 	searchValue string
 }
 
+const defaultSliceLen = -1
+
 type recursiveData struct {
 	alias    string
 	sliceLen int
