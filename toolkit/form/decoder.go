@@ -3,13 +3,11 @@ package form
 import (
 	"fmt"
 	"github.com/samber/lo"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"log"
 	"net/url"
 	"reflect"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -36,23 +34,7 @@ func (d *decoder) setError(namespace []byte, err error) {
 	d.errs[string(namespace)] = err
 }
 
-func (d *decoder) findAlias(item string) *recursiveData {
-	ns := item
-	if stringutils.IsNotEmpty(item) && !strings.HasPrefix(item, "[") {
-		ns = "["
-		_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
-			if item == '[' || item == '.' {
-				return true
-			}
-			return false
-		})
-		if ok {
-			ns = ns + item[:i] + "]" + item[i:]
-		} else {
-			ns = ns + item + "]"
-		}
-	}
-
+func (d *decoder) findAlias(ns string) *recursiveData {
 	for i := 0; i < len(d.dm); i++ {
 		if d.dm[i].alias == ns {
 			return d.dm[i]
@@ -92,10 +74,6 @@ func (d *decoder) append(k string, i, idx int, isNum bool) {
 		searchValue: k[idx : i+1],
 	}
 
-	if idx == 0 {
-		ke.searchValue = ke.value
-	}
-
 	// is key is number, most likely array key, keep track of just in case an array/slice.
 	if isNum {
 
@@ -130,24 +108,10 @@ func (d *decoder) parseMapData() {
 	var idx int
 	var insideBracket bool
 	var isNum bool
-	var ok bool
 
-	for item := range d.values {
-		k := "["
-		_, i, ok = lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
-			if item == '[' || item == '.' {
-				return true
-			}
-			return false
-		})
-		if ok {
-			k = k + item[:i] + "]" + item[i:]
-		} else {
-			k = k + item + "]"
-		}
-
-		if len(item) > d.maxKeyLen {
-			d.maxKeyLen = len(item)
+	for k := range d.values {
+		if len(k) > d.maxKeyLen {
+			d.maxKeyLen = len(k)
 		}
 
 		for i = 0; i < len(k); i++ {
@@ -211,7 +175,8 @@ func (d *decoder) traverseStruct(v reflect.Value, typ reflect.Type, namespace []
 		}
 
 		if first {
-			namespace = append(namespace, f.name...)
+			name := "[" + f.name + "]"
+			namespace = append(namespace, name...)
 		} else {
 			namespace = append(namespace, d.d.namespacePrefix...)
 			namespace = append(namespace, f.name...)
@@ -248,6 +213,9 @@ func (d *decoder) populateMap(v reflect.Value, namespace []byte) (set bool) {
 	var mk reflect.Value
 
 	typ := v.Type()
+	if typ.Kind() != reflect.Map {
+		typ = reflect.TypeOf(map[string]interface{}{})
+	}
 
 	if v.IsNil() {
 		mp = reflect.MakeMap(typ)
@@ -338,10 +306,7 @@ func (d *decoder) populateSlice(ok bool, arr []string, v reflect.Value, namespac
 			}
 
 			if v.Type().Kind() != reflect.Slice {
-				var a interface{}
-				a = struct {
-				}{}
-				varr = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(a)), sl, sl)
+				varr = reflect.MakeSlice(reflect.TypeOf(make([]interface{}, 0)), sl, sl)
 			} else {
 				varr = reflect.MakeSlice(v.Type(), sl, sl)
 			}
@@ -420,33 +385,16 @@ func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx in
 	switch kind {
 	case reflect.Interface:
 		if !ok {
-			item := string(namespace)
-			ns := item
-			if stringutils.IsNotEmpty(item) && !strings.HasPrefix(item, "[") {
-				ns = "["
-				_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
-					if item == '[' || item == '.' {
-						return true
-					}
-					return false
-				})
-				if ok {
-					ns = ns + item[:i] + "]" + item[i:]
-				} else {
-					ns = ns + item + "]"
-				}
-			}
 			rds := lo.Filter[*recursiveData](d.dm, func(item *recursiveData, index int) bool {
-				return item.alias == ns
+				return item.alias == string(namespace)
 			})
 			if len(rds) > 0 {
 				rd := rds[0]
 				if rd.sliceLen >= 0 {
 					set = d.populateSlice(ok, arr, v, namespace)
+				} else {
+					set = d.populateMap(v, namespace)
 				}
-				//else {
-				//	set = d.populateMap(v, namespace)
-				//}
 			}
 			return
 		} else if idx == len(arr) {
@@ -705,7 +653,7 @@ func (d *decoder) setFieldByType(current reflect.Value, namespace []byte, idx in
 		set = d.traverseStruct(v, typ, namespace)
 	}
 
-	if ok {
+	if set {
 		d.decoded = append(d.decoded, string(namespace))
 	}
 	return

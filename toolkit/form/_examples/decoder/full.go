@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/form"
 	"log"
 	"net/url"
@@ -44,7 +45,7 @@ type User struct {
 		Other2 int
 		Others map[string]interface{} `form:"+"`
 	}
-	//Leader *User
+	Leader *User
 }
 
 // use a single instance of Decoder, it caches struct info
@@ -52,21 +53,31 @@ var decoder *form.Decoder
 
 func main() {
 	decoder = form.NewDecoder()
-	//decoder.SetNamespacePrefix("[")
-	//decoder.SetNamespaceSuffix("]")
+	decoder.SetNamespacePrefix("[")
+	decoder.SetNamespaceSuffix("]")
 
 	// this simulates the results of http.Request's ParseForm() function
-	values := parseForm()
+	values := parseForm2()
+	//
+	//var user User
+	//
+	//// must pass a pointer
+	//err := decoder.Decode(&user, values)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//fmt.Printf("%#v\n", user)
 
-	var user User
-
+	userMap := make(map[string]interface{})
 	// must pass a pointer
-	err := decoder.Decode(&user, values)
+	err := decoder.Decode(&userMap, values)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	fmt.Printf("%#v\n", user)
+	fmt.Printf("%#v\n", userMap)
+
 }
 
 // this simulates the results of http.Request's ParseForm() function
@@ -97,6 +108,13 @@ func parseForm() url.Values {
 		"c[0]":                 []string{"c"},
 		"c[1]":                 []string{"d"},
 		"c[2]":                 []string{"e"},
+		"d[key]":               []string{"value"},
+		"d[key1]":              []string{"value1"},
+		"e[key][key]":          []string{"value"},
+		"e[key][key1]":         []string{"value1"},
+		"f[0][0]":              []string{"value"},
+		"f[0][1]":              []string{"value1"},
+		"f[1][0]":              []string{"value10"},
 	}
 }
 
@@ -122,6 +140,15 @@ func parseForm2() url.Values {
 		"Others[Other4]":      []string{"4"},
 		"a":                   []string{"5"},
 		"b":                   []string{"b"},
-		"c":                   []string{"c", "d", "e"},
+		"c[0]":                []string{"c"},
+		"c[1]":                []string{"d"},
+		"c[2]":                []string{"e"},
+		"d[key]":              []string{"value"},
+		"d[key1]":             []string{"value1"},
+		"e[key][key]":         []string{"value"},
+		"e[key][key1]":        []string{"value1"},
+		"f[0][0]":             []string{"value"},
+		"f[0][1]":             []string{"value1"},
+		"f[1][0]":             []string{"value10"},
 	}
 }

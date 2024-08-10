@@ -2,6 +2,7 @@ package form
 
 import (
 	"bytes"
+	"github.com/samber/lo"
 	"net/url"
 	"reflect"
 	"strings"
@@ -166,7 +167,23 @@ func (d *Decoder) Decode(v interface{}, values url.Values) (err error) {
 	}
 
 	dec := d.dataPool.Get().(*decoder)
-	dec.values = values
+	valuesCopy := make(url.Values, len(values))
+	for item, v := range values {
+		k := "["
+		_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
+			if item == '[' || item == '.' {
+				return true
+			}
+			return false
+		})
+		if ok {
+			k = k + item[:i] + "]" + item[i:]
+		} else {
+			k = k + item + "]"
+		}
+		valuesCopy[k] = v
+	}
+	dec.values = valuesCopy
 	dec.dm = dec.dm[0:0]
 
 	val = val.Elem()
