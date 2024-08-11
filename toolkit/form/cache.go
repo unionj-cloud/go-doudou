@@ -117,7 +117,9 @@ func (s *structCacheMap) parseStruct(mode Mode, current reflect.Value, key refle
 		// check for omitempty
 		if idx = strings.LastIndexByte(name, ','); idx != -1 {
 			isOmitEmpty = name[idx+1:] == "omitempty"
-			name = name[:idx]
+			if isOmitEmpty {
+				name = name[:idx]
+			}
 		}
 
 		if len(name) == 0 {

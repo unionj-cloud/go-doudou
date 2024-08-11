@@ -2,12 +2,13 @@ package form
 
 import (
 	"fmt"
+	"github.com/goccy/go-reflect"
 	"github.com/samber/lo"
 	"log"
 	"net/url"
-	"github.com/goccy/go-reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -146,9 +147,6 @@ func (d *decoder) parseMapData() {
 }
 
 func (d *decoder) traverseStruct(v reflect.Value, typ reflect.Type, namespace []byte) (set bool) {
-	old := make([]byte, len(namespace))
-	copy(old, namespace)
-
 	l := len(namespace)
 	first := l == 0
 
@@ -174,22 +172,28 @@ func (d *decoder) traverseStruct(v reflect.Value, typ reflect.Type, namespace []
 			}
 		}
 
-		if first {
-			name := "[" + f.name + "]"
-			namespace = append(namespace, name...)
-		} else {
-			namespace = append(namespace, d.d.namespacePrefix...)
-			namespace = append(namespace, f.name...)
-			namespace = append(namespace, d.d.namespaceSuffix...)
-		}
+		names := strings.Split(f.name, ",")
+		for _, name := range names {
+			namespace = namespace[:l]
+			if first {
+				name := "[" + name + "]"
+				namespace = append(namespace, name...)
+			} else {
+				namespace = append(namespace, d.d.namespacePrefix...)
+				namespace = append(namespace, name...)
+				namespace = append(namespace, d.d.namespaceSuffix...)
+			}
 
-		if d.setFieldByType(v.Field(f.idx), namespace, 0) {
-			set = true
+			if d.setFieldByType(v.Field(f.idx), namespace, 0) {
+				set = true
+				break
+			}
 		}
 	}
 
 	if extraField != nil {
-		if d.setFieldByType(v.Field(extraField.idx), old, 0) {
+		namespace = namespace[:l]
+		if d.setFieldByType(v.Field(extraField.idx), namespace, 0) {
 			set = true
 		}
 	}
