@@ -57,17 +57,19 @@ func main() {
 	decoder.SetNamespaceSuffix("]")
 
 	// this simulates the results of http.Request's ParseForm() function
-	values := parseForm2()
+	values := parseForm3()
 
-	var user User
+	for i := 0; i < 20; i++ {
+		var user ParameterWrapper
 
-	// must pass a pointer
-	err := decoder.Decode(&user, values)
-	if err != nil {
-		log.Panic(err)
+		// must pass a pointer
+		err := decoder.Decode(&user, values)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		fmt.Printf("%#v\n", user)
 	}
-
-	fmt.Printf("%#v\n", user)
 
 	//userMap := make(map[string]interface{})
 	//// must pass a pointer
@@ -151,5 +153,20 @@ func parseForm2() url.Values {
 		"f[0][0]":             []string{"value"},
 		"f[0][1]":             []string{"value1"},
 		"f[1][0]":             []string{"value10"},
+	}
+}
+
+type A struct {
+	B string `json:"b" form:"b"`
+}
+
+type ParameterWrapper struct {
+	Parameter A `json:"parameter" form:"parameter"`
+}
+
+func parseForm3() url.Values {
+	// parameter[product_code]
+	return url.Values{
+		"parameter[b]": []string{"b"},
 	}
 }

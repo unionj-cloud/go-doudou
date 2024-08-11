@@ -185,6 +185,7 @@ func (d *Decoder) Decode(v interface{}, values url.Values) (err error) {
 	}
 	dec.values = valuesCopy
 	dec.dm = dec.dm[0:0]
+	dec.decoded = dec.decoded[0:0]
 
 	val = val.Elem()
 	typ := val.Type()
