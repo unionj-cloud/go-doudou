@@ -171,7 +171,7 @@ func (d *Decoder) Decode(v interface{}, values url.Values) (err error) {
 	for item, v := range values {
 		k := "["
 		_, i, ok := lo.FindIndexOf[byte]([]byte(item), func(item byte) bool {
-			if item == '[' || item == '.' {
+			if item == '[' || item == d.namespacePrefix[0] {
 				return true
 			}
 			return false

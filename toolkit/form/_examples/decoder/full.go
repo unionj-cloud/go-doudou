@@ -58,25 +58,25 @@ func main() {
 
 	// this simulates the results of http.Request's ParseForm() function
 	values := parseForm2()
-	//
-	//var user User
-	//
-	//// must pass a pointer
-	//err := decoder.Decode(&user, values)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//fmt.Printf("%#v\n", user)
 
-	userMap := make(map[string]interface{})
+	var user User
+
 	// must pass a pointer
-	err := decoder.Decode(&userMap, values)
+	err := decoder.Decode(&user, values)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	fmt.Printf("%#v\n", userMap)
+	fmt.Printf("%#v\n", user)
+
+	//userMap := make(map[string]interface{})
+	//// must pass a pointer
+	//err := decoder.Decode(&userMap, values)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//fmt.Printf("%#v\n", userMap)
 
 }
 
@@ -133,6 +133,7 @@ func parseForm2() url.Values {
 		"NestedArray[0][0]":   []string{"value"},
 		"other1":              []string{"1"},
 		"other2":              []string{"2"},
+		"Leader.Name":         []string{"jack"},
 		"Leader[Name]":        []string{"jack"},
 		"Others[Other1]":      []string{"1"},
 		"Others[Other2]":      []string{"2"},
