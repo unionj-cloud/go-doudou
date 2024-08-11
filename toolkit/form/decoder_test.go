@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strings"
 	"testing"
 	"time"

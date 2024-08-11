@@ -2,9 +2,9 @@ package form
 
 import (
 	"bytes"
+	"github.com/goccy/go-reflect"
 	"github.com/samber/lo"
 	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 )

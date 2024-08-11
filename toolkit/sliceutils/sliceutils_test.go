@@ -1,7 +1,7 @@
 package sliceutils
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

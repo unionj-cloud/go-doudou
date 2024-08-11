@@ -2,7 +2,7 @@ package caches
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 
 	"github.com/samber/lo"
 	"github.com/wubin1989/gorm/callbacks"

@@ -1,6 +1,6 @@
 package reflectutils
 
-import "reflect"
+import "github.com/goccy/go-reflect"
 
 // ValueOf returns underlying value of interface data
 func ValueOf(data interface{}) reflect.Value {

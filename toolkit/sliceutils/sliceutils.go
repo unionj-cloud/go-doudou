@@ -1,7 +1,7 @@
 package sliceutils
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 
 	"github.com/pkg/errors"
 )

@@ -2,7 +2,7 @@ package form
 
 import (
 	"errors"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strings"
 	"testing"
 	"time"

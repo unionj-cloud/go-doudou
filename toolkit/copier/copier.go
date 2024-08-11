@@ -1,7 +1,7 @@
 package copier
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"

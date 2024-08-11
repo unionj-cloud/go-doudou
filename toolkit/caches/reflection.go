@@ -3,7 +3,7 @@ package caches
 import (
 	"errors"
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
 

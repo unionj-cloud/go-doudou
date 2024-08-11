@@ -5,7 +5,7 @@ import (
 	"github.com/samber/lo"
 	"log"
 	"net/url"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"slices"
 	"strconv"
 	"time"

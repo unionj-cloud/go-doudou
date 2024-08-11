@@ -3,7 +3,7 @@ package form
 import (
 	"fmt"
 	"net/url"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strconv"
 	"time"
 )

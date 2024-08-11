@@ -3,7 +3,7 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"regexp"
 	"strings"
 	"unicode"

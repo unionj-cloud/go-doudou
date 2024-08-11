@@ -2,7 +2,7 @@ package v3
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strings"
 	"time"
 

@@ -1,7 +1,7 @@
 package caches
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"testing"
 )
 

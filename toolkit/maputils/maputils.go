@@ -1,7 +1,7 @@
 package maputils
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 )

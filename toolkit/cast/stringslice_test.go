@@ -2,7 +2,7 @@ package cast
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"testing"
 
 	"github.com/shopspring/decimal"

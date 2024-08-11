@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"regexp"
 	"strconv"
 	"strings"

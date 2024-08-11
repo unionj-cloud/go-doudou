@@ -1,7 +1,7 @@
 package form
 
 import (
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"sort"
 	"strings"
 	"sync"

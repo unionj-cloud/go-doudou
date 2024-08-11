@@ -3,7 +3,7 @@ package form
 import (
 	"bytes"
 	"net/url"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strings"
 	"sync"
 )

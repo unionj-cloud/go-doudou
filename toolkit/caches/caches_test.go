@@ -2,7 +2,7 @@ package caches
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"sync"
 	"sync/atomic"
 	"testing"

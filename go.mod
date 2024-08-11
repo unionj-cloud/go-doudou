@@ -51,6 +51,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/gobwas/glob v0.2.3
+	github.com/goccy/go-reflect v1.2.0
 	github.com/google/go-github/v42 v42.0.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-sockaddr v1.0.2

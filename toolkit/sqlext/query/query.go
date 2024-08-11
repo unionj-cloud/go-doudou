@@ -2,7 +2,7 @@ package query
 
 import (
 	"fmt"
-	"reflect"
+	"github.com/goccy/go-reflect"
 	"strings"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/arithsymbol"
