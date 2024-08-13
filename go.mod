@@ -116,6 +116,7 @@ require (
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pegasus-kv/thrift v0.13.0 // indirect
@@ -253,7 +254,7 @@ require (
 	github.com/arl/statsviz v0.6.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/containerd/containerd v1.7.15 // indirect
-	github.com/docker/docker v26.0.1+incompatible
+	github.com/docker/docker v27.1.2+incompatible
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/ghodss/yaml v1.0.0
