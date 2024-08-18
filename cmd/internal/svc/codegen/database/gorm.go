@@ -151,9 +151,16 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		}
 		return tag
 	}))
-	if conf.Omitempty {
-		g.WithJSONTagNameStrategy(func(n string) string { return gg.CaseConverter(n) + ",omitempty" })
-	}
+	g.WithJSONTagNameStrategy(func(n string, t string) string {
+		tagContent := gg.CaseConverter(n)
+		if strings.Contains(t, "int64") {
+			tagContent = tagContent + ",string"
+		}
+		if conf.Omitempty {
+			tagContent = tagContent + ",omitempty"
+		}
+		return tagContent
+	})
 	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
 	g.GenGenGo = gg.GenGenGo
