@@ -3,6 +3,7 @@ package copier
 import (
 	"bytes"
 	"fmt"
+	"github.com/spf13/cast"
 	"reflect"
 	"strings"
 
@@ -107,6 +108,65 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 			} else {
 				fieldVal.Set(v)
 				return nil
+			}
+		}
+
+		if val.Kind() == reflect.String {
+			switch fieldVal.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				fieldVal.SetInt(cast.ToInt64(val.String()))
+				return nil
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				fieldVal.SetUint(cast.ToUint64(val.String()))
+				return nil
+			case reflect.Float32, reflect.Float64:
+				fieldVal.SetFloat(cast.ToFloat64(val.String()))
+				return nil
+			case reflect.Ptr:
+				v := reflect.New(fieldVal.Type().Elem())
+				switch fieldVal.Type().Elem().Kind() {
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					v.Elem().SetInt(cast.ToInt64(val.String()))
+					fieldVal.Set(v)
+					return nil
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					v.Elem().SetUint(cast.ToUint64(val.String()))
+					fieldVal.Set(v)
+					return nil
+				case reflect.Float32, reflect.Float64:
+					v.Elem().SetFloat(cast.ToFloat64(val.String()))
+					fieldVal.Set(v)
+					return nil
+				}
+			}
+		} else if val.Kind() == reflect.Ptr && val.Type().Elem().Kind() == reflect.String {
+			underlyingV := val.Elem().String()
+			switch fieldVal.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				fieldVal.SetInt(cast.ToInt64(underlyingV))
+				return nil
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				fieldVal.SetUint(cast.ToUint64(underlyingV))
+				return nil
+			case reflect.Float32, reflect.Float64:
+				fieldVal.SetFloat(cast.ToFloat64(underlyingV))
+				return nil
+			case reflect.Ptr:
+				v := reflect.New(fieldVal.Type().Elem())
+				switch fieldVal.Type().Elem().Kind() {
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					v.Elem().SetInt(cast.ToInt64(underlyingV))
+					fieldVal.Set(v)
+					return nil
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					v.Elem().SetUint(cast.ToUint64(underlyingV))
+					fieldVal.Set(v)
+					return nil
+				case reflect.Float32, reflect.Float64:
+					v.Elem().SetFloat(cast.ToFloat64(underlyingV))
+					fieldVal.Set(v)
+					return nil
+				}
 			}
 		}
 

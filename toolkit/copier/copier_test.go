@@ -195,3 +195,26 @@ func TestDeepCopy3(t *testing.T) {
 	//{jack 18}
 
 }
+
+func TestDeepCopy4(t *testing.T) {
+	//t1 := `{"name":"jack", "age": 18.0, "school": "beijing"}`
+	p := make(map[string]interface{})
+	p["name"] = nil
+	p["age"] = "18"
+	type Student struct {
+		Name *string `json:"name"`
+		Age  *int64    `json:"age,string"`
+	}
+	var s Student
+	if err := DeepCopy(p, &s); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(p)
+	fmt.Println(s)
+
+	// Output:
+	// {jack 18}
+	//{jack 18}
+
+}
