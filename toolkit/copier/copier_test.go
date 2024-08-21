@@ -144,17 +144,17 @@ func TestDeepCopy_ShouldHasError(t *testing.T) {
 }
 
 func TestDeepCopy2(t *testing.T) {
-	t1 := `{"name":"jack", "age": 18.0}`
+	t1 := `{"name":"jack", "age": "18.0"}`
 	type Person struct {
 		Name string
-		Age  float64
+		Age  float64 `json:"age,string"`
 	}
 	var p Person
 	json.Unmarshal([]byte(t1), &p)
 
 	type Student struct {
 		Name string
-		Age  int
+		Age  int `json:"age,string"`
 	}
 	var s Student
 	DeepCopy(p, &s)
@@ -169,7 +169,7 @@ func TestDeepCopy2(t *testing.T) {
 }
 
 func TestDeepCopy3(t *testing.T) {
-	t1 := `{"name":"jack", "age": 18.0}`
+	t1 := `{"name":"jack", "age": 18.0, "school": "beijing"}`
 	p := make(map[string]interface{})
 	dec := decoder.NewDecoder(t1)
 	dec.UseInt64()
@@ -181,7 +181,9 @@ func TestDeepCopy3(t *testing.T) {
 		Age  int    `json:"age,string"`
 	}
 	var s Student
-	DeepCopy(p, &s)
+	if err := DeepCopy(p, &s); err != nil {
+		panic(err)
+	}
 
 	fmt.Println(p)
 	fmt.Println(s)
