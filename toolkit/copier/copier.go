@@ -94,7 +94,7 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 
 		}
 
-		return fmt.Errorf("Map value type don't match struct field type")
+		return fmt.Errorf("map attribute %s value type don't match struct field %s type", fieldName, fName)
 	}
 
 	fieldVal.Set(val)
