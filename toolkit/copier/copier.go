@@ -1,9 +1,12 @@
 package copier
 
 import (
+	"bytes"
 	"github.com/goccy/go-reflect"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytedance/sonic/decoder"
+	"github.com/duke-git/lancet/v2/maputil"
 	"github.com/pkg/errors"
 )
 
@@ -14,12 +17,24 @@ func DeepCopy(src, target interface{}) error {
 	if src == nil || target == nil {
 		return nil
 	}
-	b, err := json.Marshal(src)
-	if err != nil {
-		return errors.WithStack(err)
-	}
 	if reflect.ValueOf(target).Kind() != reflect.Ptr {
 		return errors.New("Target should be a pointer")
 	}
-	return json.Unmarshal(b, target)
+	switch value := src.(type) {
+	case *map[string]interface{}:
+		if value == nil {
+			return nil
+		}
+		return maputil.MapToStruct(*value, target)
+	case map[string]interface{}:
+		return maputil.MapToStruct(value, target)
+	default:
+		b, err := json.Marshal(src)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		dec := decoder.NewStreamDecoder(bytes.NewReader(b))
+		dec.UseInt64()
+		return dec.Decode(target)
+	}
 }

@@ -2,6 +2,7 @@ package copier
 
 import (
 	"fmt"
+	"github.com/bytedance/sonic/decoder"
 	"testing"
 )
 
@@ -154,6 +155,30 @@ func TestDeepCopy2(t *testing.T) {
 	type Student struct {
 		Name string
 		Age  int
+	}
+	var s Student
+	DeepCopy(p, &s)
+
+	fmt.Println(p)
+	fmt.Println(s)
+
+	// Output:
+	// {jack 18}
+	//{jack 18}
+
+}
+
+func TestDeepCopy3(t *testing.T) {
+	t1 := `{"name":"jack", "age": 18.0}`
+	p := make(map[string]interface{})
+	dec := decoder.NewDecoder(t1)
+	dec.UseInt64()
+	dec.Decode(&p)
+	ddd, _ := json.Marshal(p)
+	fmt.Println(string(ddd))
+	type Student struct {
+		Name string `json:"name"`
+		Age  int    `json:"age,string"`
 	}
 	var s Student
 	DeepCopy(p, &s)
