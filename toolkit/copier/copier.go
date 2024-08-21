@@ -71,6 +71,10 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 
 	val := reflect.ValueOf(fieldValue)
 
+	if !val.IsValid() {
+		return nil
+	}
+
 	if fieldVal.Type() != val.Type() {
 
 		if val.CanConvert(fieldVal.Type()) {

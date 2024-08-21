@@ -171,7 +171,7 @@ func TestDeepCopy2(t *testing.T) {
 func TestDeepCopy3(t *testing.T) {
 	//t1 := `{"name":"jack", "age": 18.0, "school": "beijing"}`
 	p := make(map[string]interface{})
-	p["name"] = lo.ToPtr("jack")
+	p["name"] = nil
 	p["age"] = lo.ToPtr(18)
 	//dec := decoder.NewDecoder(t1)
 	//dec.UseInt64()
@@ -179,8 +179,8 @@ func TestDeepCopy3(t *testing.T) {
 	//ddd, _ := json.Marshal(p)
 	//fmt.Println(string(ddd))
 	type Student struct {
-		Name string `json:"name"`
-		Age  int    `json:"age,string"`
+		Name *string `json:"name"`
+		Age  *int    `json:"age,string"`
 	}
 	var s Student
 	if err := DeepCopy(p, &s); err != nil {
