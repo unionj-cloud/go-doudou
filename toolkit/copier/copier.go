@@ -78,6 +78,34 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 			return nil
 		}
 
+		if fieldVal.Kind() == reflect.Ptr {
+			v := reflect.New(fieldVal.Type().Elem())
+			if fieldVal.Type().Elem() != val.Type() {
+				if val.CanConvert(fieldVal.Type().Elem()) {
+					v.Elem().Set(val.Convert(fieldVal.Type().Elem()))
+					fieldVal.Set(v)
+					return nil
+				}
+			} else {
+				v.Elem().Set(val)
+				fieldVal.Set(v)
+				return nil
+			}
+		}
+
+		if val.Kind() == reflect.Ptr {
+			v := val.Elem()
+			if fieldVal.Type() != v.Type() {
+				if v.CanConvert(fieldVal.Type()) {
+					fieldVal.Set(v.Convert(fieldVal.Type()))
+					return nil
+				}
+			} else {
+				fieldVal.Set(v)
+				return nil
+			}
+		}
+
 		if m, ok := fieldValue.(map[string]any); ok {
 
 			if fieldVal.Kind() == reflect.Struct {
@@ -94,7 +122,7 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 
 		}
 
-		return fmt.Errorf("map attribute %s value type don't match struct field %s type", fieldName, fName)
+		return fmt.Errorf("map attribute [%s] value type don't match struct field [%s] type", fieldName, fName)
 	}
 
 	fieldVal.Set(val)
