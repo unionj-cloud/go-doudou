@@ -11,7 +11,7 @@ import (
 )
 
 func SetPointedValue(dest interface{}, src interface{}) {
-	copier.DeepCopyAsJson(src, dest)
+	copier.DeepCopy(src, dest)
 }
 
 func deepCopy(src, dst interface{}) error {
