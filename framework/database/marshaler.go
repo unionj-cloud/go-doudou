@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
 	"reflect"
 
 	"github.com/bytedance/sonic"
@@ -62,7 +61,6 @@ func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.O
 		compactMap := lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
 			return value == nil || reflect.ValueOf(value).IsZero()
 		})
-		maputils.ConvertInt642String(compactMap)
 		query.Dest = compactMap
 	} else if t == "[]map[string]interface {}" {
 		rows := source.([]map[string]interface{})
@@ -71,7 +69,6 @@ func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.O
 			compactMap := lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
 				return value == nil || reflect.ValueOf(value).IsZero()
 			})
-			maputils.ConvertInt642String(compactMap)
 			_rows[index] = compactMap
 		})
 		query.Dest = _rows

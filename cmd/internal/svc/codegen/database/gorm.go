@@ -153,9 +153,6 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	}))
 	g.WithJSONTagNameStrategy(func(n string, t string) string {
 		tagContent := gg.CaseConverter(n)
-		if strings.Contains(t, "int64") {
-			tagContent = tagContent + ",string"
-		}
 		if conf.Omitempty {
 			tagContent = tagContent + ",omitempty"
 		}
