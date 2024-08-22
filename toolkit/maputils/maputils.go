@@ -2,6 +2,8 @@ package maputils
 
 import (
 	"github.com/goccy/go-reflect"
+	"github.com/samber/lo"
+	"strconv"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 )
@@ -151,4 +153,41 @@ func mapify(i interface{}) (map[string]interface{}, bool) {
 		return m, true
 	}
 	return map[string]interface{}{}, false
+}
+
+func ConvertInt642String(data map[string]interface{}) {
+	lo.ForEach(lo.Entries(data), func(item lo.Entry[string, interface{}], index int) {
+		if item.Value != nil {
+			data[item.Key] = convertInt642String(item.Value)
+		}
+	})
+}
+
+func convertInt642String(data interface{}) interface{} {
+	switch v := data.(type) {
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case *int64:
+		if v != nil {
+			return lo.ToPtr(strconv.FormatInt(*v, 10))
+		} else {
+			return (*string)(nil)
+		}
+	case []int64:
+		return lo.Map[int64, string](v, func(item int64, index int) string {
+			return strconv.FormatInt(item, 10)
+		})
+	case []*int64:
+		return lo.Map[*int64, *string](v, func(item *int64, index int) *string {
+			if item != nil {
+				return lo.ToPtr(strconv.FormatInt(*item, 10))
+			}
+			return (*string)(nil)
+		})
+	case []interface{}:
+		return lo.Map[interface{}, interface{}](v, func(item interface{}, index int) interface{} {
+			return convertInt642String(item)
+		})
+	}
+	return data
 }

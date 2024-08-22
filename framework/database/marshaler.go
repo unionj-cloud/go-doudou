@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
 	"reflect"
 
 	"github.com/bytedance/sonic"
@@ -58,16 +59,20 @@ func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.O
 	source := reflectutils.ValueOf(query.Dest).Interface()
 	t := fmt.Sprintf("%T", source)
 	if t == "map[string]interface {}" {
-		query.Dest = lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
+		compactMap := lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
 			return value == nil || reflect.ValueOf(value).IsZero()
 		})
+		maputils.ConvertInt642String(compactMap)
+		query.Dest = compactMap
 	} else if t == "[]map[string]interface {}" {
 		rows := source.([]map[string]interface{})
 		_rows := make([]map[string]interface{}, len(rows))
 		lo.ForEach[map[string]interface{}](rows, func(item map[string]interface{}, index int) {
-			_rows[index] = lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
+			compactMap := lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
 				return value == nil || reflect.ValueOf(value).IsZero()
 			})
+			maputils.ConvertInt642String(compactMap)
+			_rows[index] = compactMap
 		})
 		query.Dest = _rows
 	}
