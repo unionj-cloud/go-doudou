@@ -1,8 +1,11 @@
 package database
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"github.com/bytedance/sonic/decoder"
+	"github.com/pkg/errors"
 	"reflect"
 
 	"github.com/bytedance/sonic"
@@ -29,23 +32,30 @@ func NewMarshaler(cache cache.CacheInterface[any]) *Marshaler {
 	}
 }
 
+type idecoder interface {
+	UseInt64()
+	Decode(val interface{}) (err error)
+}
+
 // Get obtains a value from cache and unmarshal value with given object
 func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error) {
 	key = c.shortenKey(key)
 	result, err := c.cache.Get(ctx, key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
+	var dec idecoder
 	switch v := result.(type) {
 	case []byte:
-		err = json.Unmarshal(v, returnObj)
+		dec = decoder.NewStreamDecoder(bytes.NewBuffer(v))
 	case string:
-		err = json.Unmarshal([]byte(v), returnObj)
+		dec = decoder.NewDecoder(v)
 	}
 
-	if err != nil {
-		return nil, err
+	dec.UseInt64()
+	if err = dec.Decode(returnObj); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	return returnObj, nil
