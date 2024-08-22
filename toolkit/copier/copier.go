@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/spf13/cast"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
 	"reflect"
 	"strings"
 
@@ -183,7 +184,16 @@ func setStructField(structObj any, fieldName string, fieldValue any) error {
 
 				return MapToStruct(m, fieldVal.Interface())
 			}
+		}
 
+		if j, err := json.MarshalToString(fieldValue); err == nil {
+			v := reflect.New(fieldVal.Type())
+			if err := json.UnmarshalFromString(j, v.Interface()); err == nil {
+				fieldVal.Set(v.Elem())
+				return nil
+			} else {
+				zlogger.Error().Err(err).Msg(err.Error())
+			}
 		}
 
 		return fmt.Errorf("map attribute [%s] value type don't match struct field [%s] type", fieldName, fName)

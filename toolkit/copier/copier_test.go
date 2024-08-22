@@ -3,6 +3,8 @@ package copier
 import (
 	"fmt"
 	"github.com/samber/lo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes"
+	"github.com/wubin1989/gorm"
 	"testing"
 )
 
@@ -203,7 +205,30 @@ func TestDeepCopy4(t *testing.T) {
 	p["age"] = "18"
 	type Student struct {
 		Name *string `json:"name"`
-		Age  *int64    `json:"age,string"`
+		Age  *int64  `json:"age,string"`
+	}
+	var s Student
+	if err := DeepCopy(p, &s); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(p)
+	fmt.Println(s)
+
+	// Output:
+	// {jack 18}
+	//{jack 18}
+
+}
+
+func TestDeepCopy5(t *testing.T) {
+	t1 := `{"updated_at":"2024-07-27 13:34:27","deleted_at":"2006-01-02T15:04:05Z"}`
+	p := make(map[string]interface{})
+	json.Unmarshal([]byte(t1), &p)
+
+	type Student struct {
+		UpdatedAt *customtypes.Time `json:"updated_at"`
+		DeletedAt gorm.DeletedAt    `json:"deleted_at"`
 	}
 	var s Student
 	if err := DeepCopy(p, &s); err != nil {
