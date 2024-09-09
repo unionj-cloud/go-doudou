@@ -64,7 +64,7 @@ require (
 	github.com/redis/rueidis v1.0.38
 	github.com/redis/rueidis/mock v1.0.38
 	github.com/redis/rueidis/rueidiscompat v1.0.38
-	github.com/rs/cors v1.9.0
+	github.com/rs/cors v1.11.1
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
 	github.com/wubin1989/clickhouse v0.0.3-0.20240611142627-b655b8690cda
