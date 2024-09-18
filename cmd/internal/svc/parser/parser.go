@@ -26,6 +26,17 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
+func getStructs(vofile string) []astutils.StructMeta {
+	fset := token.NewFileSet()
+	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	sc := astutils.NewStructCollector(ExprStringP)
+	ast.Walk(sc, root)
+	return sc.Structs
+}
+
 func getSchemaNames(vofile string) []string {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
@@ -44,7 +55,7 @@ func getSchemaNames(vofile string) []string {
 	return ret
 }
 
-func schemasOf(vofile string) []v3.Schema {
+func schemasOf(vofile string, globalStructs []astutils.StructMeta) []v3.Schema {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
 	if err != nil {
@@ -52,6 +63,7 @@ func schemasOf(vofile string) []v3.Schema {
 	}
 	sc := astutils.NewStructCollector(ExprStringP)
 	ast.Walk(sc, root)
+	sc.GlobalStructs = globalStructs
 	structs := sc.DocFlatEmbed()
 	var ret []v3.Schema
 	for _, item := range structs {
@@ -463,8 +475,10 @@ func ParseDto(dir string, dtoDir string) {
 	if err != nil {
 		panic(err)
 	}
+	globalStructs := make([]astutils.StructMeta, 0)
 	for _, file := range files {
 		v3.SchemaNames = append(v3.SchemaNames, getSchemaNames(file)...)
+		globalStructs = append(globalStructs, getStructs(file)...)
 	}
 	allMethods = make(map[string][]astutils.MethodMeta)
 	allConsts = make(map[string][]string)
@@ -486,7 +500,7 @@ func ParseDto(dir string, dtoDir string) {
 		}
 	}
 	for _, file := range files {
-		vos = append(vos, schemasOf(file)...)
+		vos = append(vos, schemasOf(file, globalStructs)...)
 	}
 	for _, item := range vos {
 		v3.Schemas[item.Title] = item
@@ -592,6 +606,7 @@ func messagesOf(vofile string, p protov3.ProtoGenerator) []protov3.Message {
 	}
 	sc := astutils.NewStructCollector(ExprStringP)
 	ast.Walk(sc, root)
+	sc.GlobalStructs = p.Structs
 	structs := sc.DocFlatEmbed()
 	var ret []protov3.Message
 	for _, item := range structs {
@@ -618,6 +633,7 @@ func ParseDtoGrpc(dir string, p protov3.ProtoGenerator, dtoDir string) {
 	}
 	for _, file := range files {
 		protov3.MessageNames = append(protov3.MessageNames, getSchemaNames(file)...)
+		p.Structs = append(p.Structs, getStructs(file)...)
 	}
 	allMethods = make(map[string][]astutils.MethodMeta)
 	allConsts = make(map[string][]string)
