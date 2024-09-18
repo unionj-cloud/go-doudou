@@ -10,6 +10,7 @@ import (
 
 var naming string
 var http2grpc bool
+var annotatedOnly bool
 
 var grpcCmd = &cobra.Command{
 	Use:   "grpc",
@@ -22,7 +23,7 @@ var grpcCmd = &cobra.Command{
 			fn = strcase.ToSnake
 		}
 		s := svc.NewSvc("",
-			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))),
+			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithAnnotatedOnly(annotatedOnly))),
 			svc.WithHttp2Grpc(http2grpc),
 			svc.WithAllowGetWithReqBody(allowGetWithReqBody),
 			svc.WithCaseConverter(fn),
@@ -38,4 +39,5 @@ func init() {
 	grpcCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field naming strategy, only support "lowerCamel" and "snake"`)
 	grpcCmd.Flags().BoolVar(&http2grpc, "http2grpc", false, `whether need RESTful api for your grpc service`)
 	grpcCmd.Flags().BoolVar(&allowGetWithReqBody, "allowGetWithReqBody", false, "Whether allow get http request with request body.")
+	grpcCmd.Flags().BoolVar(&annotatedOnly, "annotatedOnly", false, "Whether generate grpc api only for method annotated with @grpc or not")
 }

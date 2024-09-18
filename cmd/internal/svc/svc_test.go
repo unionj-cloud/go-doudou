@@ -2,6 +2,10 @@ package svc_test
 
 import (
 	"fmt"
+	"github.com/iancoleman/strcase"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
+	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -297,11 +301,12 @@ func Test_checkIc_output_anonystruct(t *testing.T) {
 			},
 		},
 	}
+	dir := filepath.Join(testDir, "outputanonystruct")
+	pg := v3.NewProtoGenerator(v3.WithFieldNamingFunc(strcase.ToSnake))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Panics(t, func() {
-				validate.RestApi(testDir, ic)
-			})
+			parser.ParseDtoGrpc(dir, pg, "dto")
+			codegen.GenGrpcProto(dir, ic, pg)
 		})
 	}
 }

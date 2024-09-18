@@ -28,8 +28,12 @@ type Page struct {
 
 // 分页筛选条件
 type PageQuery struct {
-	Filter PageFilter
-	Page   Page
+	Filter  PageFilter
+	Page    Page
+	Options []struct {
+		Label string `json:"label" form:"label"`
+		Value string `json:"value" form:"value"`
+	} `json:"options" form:"options"`
 }
 
 type PageRet struct {

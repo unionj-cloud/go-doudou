@@ -3,6 +3,7 @@ package v3
 import (
 	"fmt"
 	"github.com/goccy/go-reflect"
+	"github.com/samber/lo"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 type ProtoGenerator struct {
 	fieldNamingFunc func(string) string
 	Structs []astutils.StructMeta
+	annotatedOnly bool
 }
 
 type ProtoGeneratorOption func(*ProtoGenerator)
@@ -22,6 +24,12 @@ type ProtoGeneratorOption func(*ProtoGenerator)
 func WithFieldNamingFunc(fn func(string) string) ProtoGeneratorOption {
 	return func(p *ProtoGenerator) {
 		p.fieldNamingFunc = fn
+	}
+}
+
+func WithAnnotatedOnly(annotatedOnly bool) ProtoGeneratorOption {
+	return func(p *ProtoGenerator) {
+		p.annotatedOnly = annotatedOnly
 	}
 }
 
@@ -78,7 +86,14 @@ type Rpc struct {
 	StreamType StreamType
 }
 
-func (receiver ProtoGenerator) NewRpc(method astutils.MethodMeta) Rpc {
+func (receiver ProtoGenerator) NewRpc(method astutils.MethodMeta) *Rpc {
+	if receiver.annotatedOnly {
+		if lo.CountBy(method.Comments, func(item string) bool {
+			return strings.Contains(item, "@grpc")
+		}) == 0 {
+			return nil
+		}
+	}
 	rpcName := strcase.ToCamel(method.Name) + "Rpc"
 	rpcRequest := receiver.newRequest(rpcName, method.Params)
 	if reflect.DeepEqual(rpcRequest, Empty) {
@@ -106,7 +121,7 @@ func (receiver ProtoGenerator) NewRpc(method astutils.MethodMeta) Rpc {
 	} else if strings.HasPrefix(rpcResponse.Name, "stream ") {
 		st = serverStream
 	}
-	return Rpc{
+	return &Rpc{
 		Name:       rpcName,
 		Request:    rpcRequest,
 		Response:   rpcResponse,
