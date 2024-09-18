@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-reflect"
+	"github.com/lithammer/shortuuid/v4"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 	"unicode"
@@ -242,11 +244,13 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 		key := ft[4:strings.Index(ft, "]")]
 		keyMessage := receiver.MessageOf(key)
 		if reflect.DeepEqual(keyMessage, Float) || reflect.DeepEqual(keyMessage, Double) || reflect.DeepEqual(keyMessage, Bytes) {
-			panic("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			log.Error("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			return Any
 		}
 		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
-			panic("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			log.Error("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			return Any
 		}
 		return Message{
 			Name:  fmt.Sprintf("map<%s, %s>", keyMessage.GetName(), elemMessage.GetName()),
@@ -257,7 +261,8 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 		elem := ft[strings.Index(ft, "]")+1:]
 		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
-			panic("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			log.Error("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
+			return Any
 		}
 		messageName := elemMessage.GetName()
 		if strings.Contains(elemMessage.GetName(), "repeated ") {
@@ -289,6 +294,8 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 		message := receiver.NewMessage(structmeta)
 		message.IsInner = true
 		message.IsTopLevel = false
+		message.Name = "Anonystruct" + shortuuid.NewWithNamespace(result[1])
+		MessageStore[message.Name] = message
 		return message
 	}
 	var title string

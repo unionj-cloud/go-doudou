@@ -106,7 +106,11 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p protov3.ProtoGen
 	service = p.NewService(svcname, servicePkg+"/transport/grpc")
 	service.Comments = ic.Interfaces[0].Comments
 	for _, method := range ic.Interfaces[0].Methods {
-		service.Rpcs = append(service.Rpcs, p.NewRpc(method))
+		rpc := p.NewRpc(method)
+		if rpc == nil {
+			continue
+		}
+		service.Rpcs = append(service.Rpcs, *rpc)
 	}
 	for k := range protov3.ImportStore {
 		service.Imports = append(service.Imports, k)
