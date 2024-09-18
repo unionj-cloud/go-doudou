@@ -14,6 +14,7 @@ import (
 
 type ProtoGenerator struct {
 	fieldNamingFunc func(string) string
+	Structs []astutils.StructMeta
 }
 
 type ProtoGeneratorOption func(*ProtoGenerator)
@@ -26,6 +27,7 @@ func WithFieldNamingFunc(fn func(string) string) ProtoGeneratorOption {
 
 func NewProtoGenerator(options ...ProtoGeneratorOption) ProtoGenerator {
 	var p ProtoGenerator
+	p.Structs = make([]astutils.StructMeta, 0)
 	for _, opt := range options {
 		opt(&p)
 	}

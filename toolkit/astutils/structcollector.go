@@ -19,6 +19,7 @@ type StructCollector struct {
 	NonStructTypeMap map[string]ast.Expr
 	exprString       func(ast.Expr) string
 	enums            map[string]EnumMeta
+	GlobalStructs    []StructMeta
 }
 
 // Visit traverse each node from source code
@@ -75,15 +76,19 @@ func (sc *StructCollector) Collect(n ast.Node) ast.Visitor {
 
 // DocFlatEmbed flatten embed struct fields
 func (sc *StructCollector) DocFlatEmbed() []StructMeta {
+	structs := sc.GlobalStructs
+	if len(structs) == 0 {
+		structs = sc.Structs
+	}
 	structMap := make(map[string]StructMeta)
-	for _, structMeta := range sc.Structs {
+	for _, structMeta := range structs {
 		if _, exists := structMap[structMeta.Name]; !exists {
 			structMap[structMeta.Name] = structMeta
 		}
 	}
 
 	var exStructs []StructMeta
-	for _, structMeta := range sc.Structs {
+	for _, structMeta := range structs {
 		if !structMeta.IsExport {
 			continue
 		}
