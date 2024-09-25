@@ -99,6 +99,12 @@ func (m Message) String() string {
 	switch {
 	case reflect.DeepEqual(m, Any):
 		return "anypb.Any"
+	case reflect.DeepEqual(m, Struct):
+		return "structpb.Struct"
+	case reflect.DeepEqual(m, Value):
+		return "structpb.Value"
+	case reflect.DeepEqual(m, ListValue):
+		return "structpb.ListValue"
 	case reflect.DeepEqual(m, Empty):
 		return "emptypb.Empty"
 	default:
@@ -188,6 +194,21 @@ var (
 		IsTopLevel: true,
 		IsImported: true,
 	}
+	Struct = Message{
+		Name:       "google.protobuf.Struct",
+		IsTopLevel: true,
+		IsImported: true,
+	}
+	Value = Message{
+		Name:       "google.protobuf.Value",
+		IsTopLevel: true,
+		IsImported: true,
+	}
+	ListValue = Message{
+		Name:       "google.protobuf.ListValue",
+		IsTopLevel: true,
+		IsImported: true,
+	}
 	Empty = Message{
 		Name:       "google.protobuf.Empty",
 		IsTopLevel: true,
@@ -239,18 +260,27 @@ func init() {
 }
 
 func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
+	var title string
+	if ft == "map[string]interface{}" {
+		ImportStore["google/protobuf/struct.proto"] = struct{}{}
+		return Struct
+	}
+	if ft == "[]interface{}" {
+		ImportStore["google/protobuf/struct.proto"] = struct{}{}
+		return ListValue
+	}
 	if strings.HasPrefix(ft, "map[") {
 		elem := ft[strings.Index(ft, "]")+1:]
 		key := ft[4:strings.Index(ft, "]")]
 		keyMessage := receiver.MessageOf(key)
 		if reflect.DeepEqual(keyMessage, Float) || reflect.DeepEqual(keyMessage, Double) || reflect.DeepEqual(keyMessage, Bytes) {
 			log.Error("floating point types and bytes cannot be key_type of maps, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
-			return Any
+			goto ANY
 		}
 		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			log.Error("the value_type cannot be another map, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
-			return Any
+			goto ANY
 		}
 		return Message{
 			Name:  fmt.Sprintf("map<%s, %s>", keyMessage.GetName(), elemMessage.GetName()),
@@ -262,7 +292,7 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 		elemMessage := receiver.MessageOf(elem)
 		if strings.HasPrefix(elemMessage.GetName(), "map<") {
 			log.Error("map fields cannot be repeated, please refer to https://developers.google.com/protocol-buffers/docs/proto3#maps")
-			return Any
+			goto ANY
 		}
 		messageName := elemMessage.GetName()
 		if strings.Contains(elemMessage.GetName(), "repeated ") {
@@ -298,7 +328,6 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 		MessageStore[message.Name] = message
 		return message
 	}
-	var title string
 	if !strings.Contains(ft, ".") {
 		title = ft
 	}
@@ -318,6 +347,7 @@ func (receiver ProtoGenerator) handleDefaultCase(ft string) ProtobufType {
 			return e
 		}
 	}
-	ImportStore["google/protobuf/any.proto"] = struct{}{}
-	return Any
+ANY:
+	ImportStore["google/protobuf/struct.proto"] = struct{}{}
+	return Value
 }
