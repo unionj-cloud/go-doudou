@@ -16,6 +16,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
+var re = regexp.MustCompile(`json:"(.*?)"`)
+
 var _ ProtobufType = (*Enum)(nil)
 var _ ProtobufType = (*Message)(nil)
 
@@ -142,7 +144,16 @@ func (receiver ProtoGenerator) newField(field astutils.FieldMeta, index int) Fie
 		message.Name = strcase.ToCamel(field.Name)
 		t = message
 	}
-	fieldName := receiver.fieldNamingFunc(field.Name)
+	var fieldName string
+	if stringutils.IsNotEmpty(field.Tag) && re.MatchString(field.Tag) {
+		jsonName := re.FindStringSubmatch(field.Tag)[1]
+		fieldName = strings.Split(jsonName, ",")[0]
+		if fieldName == "-" {
+			fieldName = receiver.fieldNamingFunc(field.Name)
+		}
+	} else {
+		fieldName = receiver.fieldNamingFunc(field.Name)
+	}
 	return Field{
 		Name:     fieldName,
 		Type:     t,
