@@ -207,7 +207,8 @@ func NewStructMeta(structType *ast.StructType, exprString func(ast.Expr) string)
 		if field.Tag != nil {
 			tag = strings.Trim(field.Tag.Value, "`")
 			if re.MatchString(tag) {
-				docName = strings.TrimSuffix(re.FindStringSubmatch(tag)[1], ",omitempty")
+				jsonTag := re.FindStringSubmatch(tag)[1]
+				docName = strings.Split(jsonTag, ",")[0]
 			}
 		}
 

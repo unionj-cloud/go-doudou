@@ -35,7 +35,7 @@ message Page {
   // 页码
   optional int32 page_no = 2 [json_name="page_no"];
   // 每页行数
-  optional int32 size = 3 [json_name="size"];
+  optional int32 size = 3 [json_name="size,omitempty"];
   optional UserVo user = 4 [json_name="user"];
 }
 
@@ -53,7 +53,8 @@ message PageQuery {
   optional Page page = 2 [json_name="page"];
   optional google.protobuf.Struct condtions = 3 [json_name="condtions"];
   optional google.protobuf.ListValue a_condtions = 4 [json_name="a_condtions"];
-  repeated Anonystructkfvagz8uXPWVpn5z9xyjWS options = 5 [json_name="options"];
+  optional int64 id = 5 [json_name="id,string"];
+  repeated Anonystructkfvagz8uXPWVpn5z9xyjWS options = 6 [json_name="options"];
 }
 
 message PageRet {

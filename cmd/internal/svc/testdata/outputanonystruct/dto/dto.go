@@ -24,17 +24,18 @@ type Page struct {
 	// 页码
 	PageNo int
 	// 每页行数
-	Size int
+	Size int `json:"size,omitempty"`
 	User UserVo
 }
 
 // 分页筛选条件
 type PageQuery struct {
-	Filter    PageFilter
-	Page      Page
-	Condtions map[string]interface{}
+	Filter     PageFilter
+	Page       Page
+	Condtions  map[string]interface{}
 	ACondtions []interface{}
-	Options   []struct {
+	ID         int64 `json:"id,string"`
+	Options    []struct {
 		Label string `json:"label" form:"label"`
 		Value string `json:"value" form:"value"`
 	} `json:"options" form:"options"`
