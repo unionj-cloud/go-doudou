@@ -44,6 +44,7 @@ type OrmGeneratorConfig struct {
 	Dir              string
 	Soft             string
 	Grpc             bool
+	ProtoGenerator   v3.ProtoGenerator
 	Omitempty        bool
 }
 
@@ -71,6 +72,7 @@ type AbstractBaseGenerator struct {
 	Dir                 string
 	g                   *gormgen.Generator
 	CaseConverter       func(string) string
+	ProtoGenerator      v3.ProtoGenerator
 	Omitempty           bool
 	AllowGetWithReqBody bool
 	Client              bool
@@ -174,19 +176,12 @@ func (b *AbstractBaseGenerator) GenService() {
 	})
 
 	if b.Grpc {
-		p := v3.NewProtoGenerator(v3.WithFieldNamingFunc(b.CaseConverter))
-		parser.ParseDtoGrpc(b.Dir, p, "dto")
-		grpcSvc, protoFile := codegen.GenGrpcProto(b.Dir, ic, p)
+		parser.ParseDtoGrpc(b.Dir, b.ProtoGenerator, "dto")
+		grpcSvc, protoFile := codegen.GenGrpcProto(b.Dir, ic, b.ProtoGenerator)
 		protoFile, _ = filepath.Rel(b.Dir, protoFile)
 		wd, _ := os.Getwd()
 		os.Chdir(filepath.Join(b.Dir))
-		// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
-		if err = b.runner.Run("protoc", "--proto_path=.",
-			"--go_out=.",
-			"--go_opt=paths=source_relative",
-			"--go-grpc_out=.",
-			"--go-grpc_opt=paths=source_relative",
-			protoFile); err != nil {
+		if err := b.ProtoGenerator.Generate(protoFile, b.runner); err != nil {
 			panic(err)
 		}
 		os.Chdir(wd)

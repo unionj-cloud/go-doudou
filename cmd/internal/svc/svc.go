@@ -199,6 +199,7 @@ func (receiver *Svc) Init() {
 			Dir:              receiver.dir,
 			Soft:             receiver.DbConfig.Soft,
 			Grpc:             receiver.DbConfig.Grpc,
+			ProtoGenerator:   receiver.protoGenerator,
 			Omitempty:        receiver.DbConfig.Omitempty,
 		})
 		if receiver.DbConfig.Service {
@@ -536,13 +537,7 @@ func (receiver *Svc) Grpc() {
 	codegen.GenConfig(dir, ic)
 	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
-	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
-	if err := receiver.runner.Run("protoc", "--proto_path=.",
-		"--go_out=.",
-		"--go_opt=paths=source_relative",
-		"--go-grpc_out=.",
-		"--go-grpc_opt=paths=source_relative",
-		protoFile); err != nil {
+	if err := receiver.protoGenerator.Generate(protoFile, receiver.runner); err != nil {
 		panic(err)
 	}
 	codegen.GenSvcImplGrpc(dir, ic, grpcSvc)

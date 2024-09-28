@@ -3,7 +3,10 @@ package v3
 import (
 	"fmt"
 	"github.com/goccy/go-reflect"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"strings"
 	"time"
 
@@ -15,11 +18,18 @@ import (
 
 type ProtoGenerator struct {
 	fieldNamingFunc func(string) string
-	Structs []astutils.StructMeta
-	annotatedOnly bool
+	Structs         []astutils.StructMeta
+	annotatedOnly   bool
+	protocCmd       string
 }
 
 type ProtoGeneratorOption func(*ProtoGenerator)
+
+func WithProtocCmd(cmd string) ProtoGeneratorOption {
+	return func(p *ProtoGenerator) {
+		p.protocCmd = cmd
+	}
+}
 
 func WithFieldNamingFunc(fn func(string) string) ProtoGeneratorOption {
 	return func(p *ProtoGenerator) {
@@ -186,4 +196,15 @@ func (receiver ProtoGenerator) newResponse(rpcName string, params []astutils.Fie
 		Fields:     fields,
 		IsTopLevel: true,
 	}
+}
+
+// Generate depends on protoc-gen-go-json plugin, so run go install github.com/mfridman/protoc-gen-go-json@v1.4.0 first.
+func (receiver ProtoGenerator) Generate(protoFile string, runner executils.Runner) error {
+	if stringutils.IsEmpty(receiver.protocCmd) {
+		return errors.New("Command cannot be empty")
+	}
+	// default: protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative transport/grpc/usersvc.proto
+	args := strings.Split(receiver.protocCmd, " ")
+	args = append(args, protoFile)
+	return runner.Run(args[0], args[1:]...)
 }

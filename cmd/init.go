@@ -60,7 +60,7 @@ var initCmd = &cobra.Command{
 		case "snake":
 			fn = strcase.ToSnake
 		}
-		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn))))
+		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithProtocCmd(protocCmd))))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},
@@ -77,6 +77,7 @@ func init() {
 	initCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
 	initCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
 	initCmd.Flags().BoolVar(&dbGrpc, "db_grpc", false, `If true, grpc code will also be generated`)
+	initCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative", `command to generate grpc service and message code`)
 	initCmd.Flags().BoolVar(&dbService, "db_service", false, `If false, service will not be generated, and db_grpc will be ignored. Only dao layer code will be generated.`)
 	initCmd.Flags().BoolVar(&dbGenGenGo, "db_gen_gen", false, `whether generate gen.go file`)
 	initCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)

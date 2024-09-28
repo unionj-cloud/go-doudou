@@ -17,13 +17,7 @@ func genGrpc(dir string, ic astutils.InterfaceCollector, runner executils.Runner
 	oldWd, _ := os.Getwd()
 	os.Chdir(dir)
 	protoFile = strings.TrimPrefix(protoFile, dir+string(filepath.Separator))
-	// protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative transport/grpc/helloworld.proto
-	if err := runner.Run("protoc", "--proto_path=.",
-		"--go_out=.",
-		"--go_opt=paths=source_relative",
-		"--go-grpc_out=.",
-		"--go-grpc_opt=paths=source_relative",
-		protoFile); err != nil {
+	if err := protoGenerator.Generate(protoFile, runner); err != nil {
 		panic(err)
 	}
 	os.Chdir(oldWd)

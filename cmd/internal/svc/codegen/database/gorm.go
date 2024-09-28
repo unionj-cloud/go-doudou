@@ -97,6 +97,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.TableExcludeGlob = conf.TableExcludeGlob
 	gg.GenGenGo = conf.GenGenGo
 	gg.CaseConverter = conf.CaseConverter
+	gg.ProtoGenerator = conf.ProtoGenerator
 	var db *gorm.DB
 	var err error
 	switch gg.Driver {
