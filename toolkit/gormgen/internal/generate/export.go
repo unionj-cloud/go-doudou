@@ -3,6 +3,7 @@ package generate
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/protoc-gen-go/generator"
 	"reflect"
 	"strings"
 
@@ -38,9 +39,11 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 
 	fields := getFields(db, conf, columns)
 	priKeyType := "string"
+	pbPrimaryProp := "Id"
 	for _, field := range fields {
 		if field.PriKey {
 			priKeyType = field.Type
+			pbPrimaryProp = generator.CamelCase(field.ColumnName)
 			break
 		}
 	}
@@ -58,6 +61,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		ImportPkgPaths:  conf.ImportPkgPaths,
 		Fields:          fields,
 		PriKeyType:      priKeyType,
+		PbPrimaryProp:   pbPrimaryProp,
 	}).addMethodFromAddMethodOpt(conf.GetModelMethods()...), nil
 }
 

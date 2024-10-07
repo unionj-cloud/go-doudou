@@ -70,7 +70,7 @@ require (
 	github.com/wubin1989/clickhouse v0.0.3-0.20240611142627-b655b8690cda
 	github.com/wubin1989/datatypes v0.0.2-0.20240611143143-56e1066d0d46
 	github.com/wubin1989/dbresolver v0.0.2-0.20240611143237-5d31d83b04ba
-	github.com/wubin1989/gorm v0.0.3
+	github.com/wubin1989/gorm v0.0.4
 	github.com/wubin1989/hints v0.0.2-0.20240611143337-989d3cd7fd24
 	github.com/wubin1989/mysql v0.0.2-0.20240611142742-11722462c1f3
 	github.com/wubin1989/prometheus v0.0.2-0.20240611143457-960b4a499cef
@@ -166,7 +166,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/golang/protobuf v1.5.4
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
@@ -299,5 +299,3 @@ require (
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0
 )
-
-replace github.com/wubin1989/gorm v0.0.3 => E:\workspace\gorm

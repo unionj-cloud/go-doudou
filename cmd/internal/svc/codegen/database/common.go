@@ -121,7 +121,6 @@ func (b *AbstractBaseGenerator) GenService() {
 		panic(err)
 	}
 	os.Chdir(wd)
-	//b.svcImplGrpc(grpcSvc)
 	codegen.GenHttpHandler(b.Dir, ic, 0)
 	codegen.GenHttp2Grpc(b.Dir, ic, codegen.GenHttp2GrpcConfig{
 		AllowGetWithReqBody: b.AllowGetWithReqBody,

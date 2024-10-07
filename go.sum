@@ -1738,6 +1738,9 @@ github.com/wubin1989/datatypes v0.0.2-0.20240611143143-56e1066d0d46 h1:2PtAVdFag
 github.com/wubin1989/datatypes v0.0.2-0.20240611143143-56e1066d0d46/go.mod h1:zf0H8F3yk6l0WxQTtuf6c5cQ1KyMniqPGVi+wsP+Pwo=
 github.com/wubin1989/dbresolver v0.0.2-0.20240611143237-5d31d83b04ba h1:t8iGZmi0DDV3fFXQLTbvJo3oi6FIrcW+QoIq1JyaR40=
 github.com/wubin1989/dbresolver v0.0.2-0.20240611143237-5d31d83b04ba/go.mod h1:fdp9eyI05mcyy42qGZzxmxX9JMCMjeId9pzIb7ETN2M=
+github.com/wubin1989/gorm v0.0.3/go.mod h1:sv3afa8/Q6XTgEbTTWTjJd0NIlBMH4bMq5VpEnXr/Cc=
+github.com/wubin1989/gorm v0.0.4 h1:ItRawZeMeGsGFw9H2biEV2o8Bg3qv+07MWwZrnZfLOE=
+github.com/wubin1989/gorm v0.0.4/go.mod h1:sv3afa8/Q6XTgEbTTWTjJd0NIlBMH4bMq5VpEnXr/Cc=
 github.com/wubin1989/hints v0.0.2-0.20240611143337-989d3cd7fd24 h1:ZCC6dSYWh4251NNDrQ8LnR8vGVTqJmUJQ6OvGyjj86c=
 github.com/wubin1989/hints v0.0.2-0.20240611143337-989d3cd7fd24/go.mod h1:D2RyfIt/EQDPauzJoc21JHaEPRDtkJXjpCyJii6Qowo=
 github.com/wubin1989/mysql v0.0.2-0.20240611142742-11722462c1f3 h1:23Whb/nEWyGXOrXs41cvzqZOKrtxE6iq4+9K5yhoRC0=
