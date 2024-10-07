@@ -187,7 +187,6 @@ import (
 )
 
 //go:generate go-doudou svc http
-//go:generate go-doudou svc grpc
 
 {{ range $i, $c := .Meta.Comments }}
 {{- if eq $i 0}}

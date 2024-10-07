@@ -3,70 +3,61 @@ package template
 const AppendSvcImpl = `
 // PostGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error) {
+func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}Rpc(ctx context.Context, body *pb.{{.ModelStructName}}) (data *pb.{{.ModelStructName}}, err error) {
 	var m model.{{.ModelStructName}}
 	copier.DeepCopy(body, &m)
 	u := receiver.q.{{.ModelStructName}}
-	err = errors.WithStack(u.WithContext(ctx).Create(&m))
-	data = m.ID
+	if err = u.WithContext(ctx).Create(&m); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	data = new(pb.{{.ModelStructName}})
+	copier.DeepCopy(m, data)
 	return
 }
 
-// PostGen{{.ModelStructName}}s {{.StructComment}}
+// GetGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) PostGen{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error) {
-	list := make([]*model.{{.ModelStructName}}, 0, len(body))
-	for _, item := range body {
-		var m model.{{.ModelStructName}}
-		copier.DeepCopy(item, &m)
-		list = append(list, &m)
-	}
+func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}Rpc(ctx context.Context, body *pb.{{.ModelStructName}}) (data *pb.{{.ModelStructName}}, err error) {
 	u := receiver.q.{{.ModelStructName}}
-	if err = errors.WithStack(u.WithContext(ctx).Create(list...)); err != nil {
-		return
-	}
-	data = make([]{{.PriKeyType}}, 0, len(list))
-	for _, item := range list {
-		data = append(data, item.ID)
-	}
-	return
-}
-
-// GetGen{{.ModelStructName}}_Id {{.StructComment}}
-` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error) {
-	u := receiver.q.{{.ModelStructName}}
-	m, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
+	m, err := u.WithContext(ctx).Where(u.ID.Eq(body.ID)).First()
 	if err != nil {
-		return dto.{{.ModelStructName}}{}, errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
-	copier.DeepCopy(m, &data)
+	data = new(pb.{{.ModelStructName}})
+	copier.DeepCopy(m, data)
 	return
 }
 
 // PutGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) PutGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (err error) {
+func (receiver *{{.InterfaceName}}Impl) PutGen{{.ModelStructName}}Rpc(ctx context.Context, body *pb.{{.ModelStructName}}) (*emptypb.Empty, error) {
 	var m model.{{.ModelStructName}}
 	copier.DeepCopy(body, &m)
 	u := receiver.q.{{.ModelStructName}}
-	_, err = u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
-	return errors.WithStack(err)
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Updates(m)
+	return &emptypb.Empty{}, errors.WithStack(err)
 }
 
-// DeleteGen{{.ModelStructName}}_Id {{.StructComment}}
+// DeleteGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) DeleteGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (err error) {
+func (receiver *{{.InterfaceName}}Impl) DeleteGen{{.ModelStructName}}Rpc(ctx context.Context, body *pb.{{.ModelStructName}}) (*emptypb.Empty, error) {
 	u := receiver.q.{{.ModelStructName}}
-	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).Delete()
-	return errors.WithStack(err)
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(body.ID)).Delete()
+	return &emptypb.Empty{}, errors.WithStack(err)
 }
 
 // GetGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}s(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error) {
-	paginated := receiver.pg.With(receiver.q.Db().Model(&model.{{.ModelStructName}}{})).Request(parameter).Response(&[]model.{{.ModelStructName}}{})
-	data = dto.Page(paginated)
+func (receiver *{{.InterfaceName}}Impl) GetGen{{.ModelStructName}}sRpc(ctx context.Context, request *pb.Parameter) (data *pb.Page, err error) {
+	var body dto.Parameter
+	copier.DeepCopy(request, &body)
+	resCxt := receiver.pg.With(receiver.q.Db().Model(&model.{{.ModelStructName}}{})).Request(body)
+	paginated := resCxt.Response(&[]model.{{.ModelStructName}}{})
+	if resCxt.Error() != nil {
+		return nil, errors.WithStack(resCxt.Error())
+	}
+	data = new(pb.Page)
+	copier.DeepCopy(paginated, data)
 	return
 }
 

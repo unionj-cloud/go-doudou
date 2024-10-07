@@ -253,7 +253,7 @@ require (
 	github.com/arl/statsviz v0.6.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/containerd/containerd v1.7.15 // indirect
-	github.com/docker/docker v26.0.1+incompatible
+	github.com/docker/docker v26.0.1+incompatible // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/ghodss/yaml v1.0.0
@@ -299,3 +299,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0
 )
+
+replace github.com/wubin1989/gorm v0.0.3 => E:\workspace\gorm

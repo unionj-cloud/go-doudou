@@ -14,16 +14,18 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
 )
 
-func DataType(dir string) {
+func DataType(dir string, dtoDirs ...string) {
 	astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), parser.ExprStringP)
 	var files []string
-	dtodir := filepath.Join(dir, "dto")
-	if _, err := os.Stat(dtodir); !os.IsNotExist(err) {
-		files = nil
-		_ = filepath.Walk(dtodir, astutils.Visit(&files))
-		for _, file := range files {
-			astutils.BuildStructCollector(file, parser.ExprStringP)
+	for i := 0; i < len(dtoDirs); i++ {
+		dtodir := filepath.Join(dir, dtoDirs[i])
+		if _, err := os.Stat(dtodir); err != nil {
+			continue
 		}
+		_ = filepath.Walk(dtodir, astutils.Visit(&files))
+	}
+	for _, file := range files {
+		astutils.BuildStructCollector(file, parser.ExprStringP)
 	}
 }
 
@@ -38,7 +40,7 @@ func RestApi(dir string, ic astutils.InterfaceCollector) {
 		panic(errors.New("no service interface found"))
 	}
 	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
-		parser.ParseDto(dir, "dto")
+		parser.ParseDto(dir, parser.DEFAULT_DTO_PKGS...)
 	}
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)
@@ -60,7 +62,7 @@ func GrpcApi(dir string, ic astutils.InterfaceCollector, http2grpc bool) {
 		panic(errors.New("no service interface found"))
 	}
 	if len(v3helper.SchemaNames) == 0 && len(v3helper.Enums) == 0 {
-		parser.ParseDto(dir, "dto")
+		parser.ParseDto(dir, parser.DEFAULT_DTO_PKGS...)
 	}
 	svcInter := ic.Interfaces[0]
 	re := regexp.MustCompile(`anonystruct«(.*)»`)
@@ -92,7 +94,10 @@ func checkResults(params []astutils.FieldMeta) bool {
 	pass := true
 	var passedParams []string
 	for _, param := range params {
-		if param.Type == "error" || strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") {
+		if param.Type == "error" ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "vo.") ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "model.") {
 			passedParams = append(passedParams, param.Type)
 			continue
 		}
@@ -111,7 +116,10 @@ func checkParams(params []astutils.FieldMeta) bool {
 	pass := true
 	var passedParams []string
 	for _, param := range params {
-		if param.Type == "context.Context" || strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") {
+		if param.Type == "context.Context" ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "vo.") ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "dto.") ||
+			strings.HasPrefix(strings.TrimLeft(param.Type, "*"), "model.") {
 			passedParams = append(passedParams, param.Type)
 			continue
 		}

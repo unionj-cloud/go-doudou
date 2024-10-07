@@ -22,7 +22,6 @@ package client
 import (
 	"context"
 	"github.com/go-resty/resty/v2"
-	"{{.DtoPackage}}"
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
 )
@@ -79,19 +78,15 @@ func GenGoIClient(dir string, ic astutils.InterfaceCollector) {
 	if err != nil {
 		panic(err)
 	}
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if tpl, err = template.New("iclient.go.tmpl").Parse(iclientTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		VoPackage  string
-		DtoPackage string
-		Meta       astutils.InterfaceMeta
-		Version    string
+		Meta    astutils.InterfaceMeta
+		Version string
 	}{
-		DtoPackage: dtoPkg,
-		Meta:       meta,
-		Version:    version.Release,
+		Meta:    meta,
+		Version: version.Release,
 	}); err != nil {
 		panic(err)
 	}

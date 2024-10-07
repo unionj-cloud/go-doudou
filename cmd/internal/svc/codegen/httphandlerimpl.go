@@ -403,7 +403,6 @@ var importTmpl = `
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"net/http"
-	"{{.DtoPackage}}"
 	"github.com/pkg/errors"
 `
 
@@ -480,7 +479,6 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	}
 
 	servicePkg := astutils.GetPkgPath(dir)
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
@@ -505,15 +503,12 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	if err = tpl.Execute(&buf, struct {
 		ServicePackage string
 		ServiceAlias   string
-		VoPackage      string
-		DtoPackage     string
 		Meta           astutils.InterfaceMeta
 		Config         GenHttpHandlerImplConfig
 		Version        string
 	}{
 		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
-		DtoPackage:     dtoPkg,
 		Meta:           meta,
 		Config:         config,
 		Version:        version.Release,
@@ -532,12 +527,9 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	if err = tpl.Execute(&importBuf, struct {
 		ServicePackage string
 		ServiceAlias   string
-		VoPackage      string
-		DtoPackage     string
 	}{
 		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
-		DtoPackage:     dtoPkg,
 	}); err != nil {
 		panic(err)
 	}

@@ -10,7 +10,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/unionj-cloud/go-doudou/v2 {{.GoDoudouVersion}}
-	google.golang.org/grpc v1.50.0
+	google.golang.org/grpc v1.59.0
 )
 
 require (
@@ -122,5 +122,5 @@ require (
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	github.com/wubin1989/gorm v1.25.1-0.20230505075827-e61b98d69677 // indirect
+	github.com/wubin1989/gorm v0.0.3 // indirect
 )`

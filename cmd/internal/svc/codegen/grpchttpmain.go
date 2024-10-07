@@ -63,7 +63,8 @@ func main() {
 
 	handler := httpsrv.New{{.SvcName}}Http2Grpc(svc)
 	srv := rest.NewRestServer()
-	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.AddRoutes(httpsrv.Routes(handler))
+	srv.AddRoutes(rest.DocRoutes(service.Oas))
 	srv.Run()
 }
 `

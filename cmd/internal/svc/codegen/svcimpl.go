@@ -19,7 +19,6 @@ import (
 var svcimportTmpl = `
 	"context"
 	"{{.ConfigPackage}}"
-	"{{.DtoPackage}}"
 	"github.com/jmoiron/sqlx"
 	"github.com/brianvoe/gofakeit/v6"
 `
@@ -66,7 +65,6 @@ func New{{.Meta.Name}}(conf *config.Config) *{{.Meta.Name}}Impl {
 var svcimportTmplGrpc = `
 	"context"
 	"{{.ConfigPackage}}"
-	"{{.DtoPackage}}"
 	pb "{{.PbPackage}}"
 `
 
@@ -97,24 +95,6 @@ var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
     {{- end }}
 {{- end }}`
 
-/*
-*
-
-	type Service struct {
-		Name      string
-		Package   string
-		GoPackage string
-		Syntax    string
-		// go-doudou version
-		Version  string
-		ProtoVer string
-		Rpcs     []Rpc
-		Messages []Message
-		Enums    []Enum
-		Comments []string
-		Imports  []string
-	}
-*/
 var svcimplTmplGrpc = templates.EditableHeaderTmpl + `package {{.SvcPackage}}
 
 import ()
@@ -153,7 +133,6 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if _, err = os.Stat(svcimplfile); os.IsNotExist(err) {
 		if f, err = os.Create(svcimplfile); err != nil {
 			panic(err)
@@ -195,12 +174,10 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	if err = tpl.Execute(&buf, struct {
 		ConfigPackage string
 		VoPackage     string
-		DtoPackage    string
 		SvcPackage    string
 		Meta          astutils.InterfaceMeta
 		Version       string
 	}{
-		DtoPackage:    dtoPkg,
 		ConfigPackage: cfgPkg,
 		SvcPackage:    ic.Package.Name,
 		Meta:          meta,
@@ -220,10 +197,7 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
-		VoPackage     string
-		DtoPackage    string
 	}{
-		DtoPackage:    dtoPkg,
 		ConfigPackage: cfgPkg,
 	}); err != nil {
 		panic(err)
@@ -298,19 +272,15 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 		panic(err)
 	}
 	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	pbPkg := astutils.GetPkgPath(filepath.Join(dir, "transport", "grpc"))
 	if err = tpl.Execute(&buf, struct {
 		ConfigPackage string
-		VoPackage     string
-		DtoPackage    string
 		PbPackage     string
 		SvcPackage    string
 		Meta          astutils.InterfaceMeta
 		GrpcSvc       v3.Service
 		Version       string
 	}{
-		DtoPackage:    dtoPkg,
 		ConfigPackage: cfgPkg,
 		PbPackage:     pbPkg,
 		SvcPackage:    ic.Package.Name,
@@ -333,10 +303,8 @@ func GenSvcImplGrpc(dir string, ic astutils.InterfaceCollector, grpcSvc v3.Servi
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
 		VoPackage     string
-		DtoPackage    string
 		PbPackage     string
 	}{
-		DtoPackage:    dtoPkg,
 		ConfigPackage: cfgPkg,
 		PbPackage:     pbPkg,
 	}); err != nil {

@@ -16,7 +16,7 @@ type Column struct {
 	Indexes     []*Index                                                      `gorm:"-"`
 	UseScanType bool                                                          `gorm:"-"`
 	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
-	jsonTagNS   func(columnName string, columnType string) string                                `gorm:"-"`
+	jsonTagNS   func(columnName string, columnType string) string             `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
@@ -131,15 +131,17 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 	if defaultTagValue == "" {
 		return false
 	}
-	switch c.ScanType().Kind() {
-	case reflect.Bool:
-		return defaultTagValue != "false"
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
-		return defaultTagValue != "0"
-	case reflect.String:
-		return defaultTagValue != ""
-	case reflect.Struct:
-		return strings.Trim(defaultTagValue, "'0:- ") != ""
+	if c.ScanType() != nil {
+		switch c.ScanType().Kind() {
+		case reflect.Bool:
+			return defaultTagValue != "false"
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+			return defaultTagValue != "0"
+		case reflect.String:
+			return defaultTagValue != ""
+		case reflect.Struct:
+			return strings.Trim(defaultTagValue, "'0:- ") != ""
+		}
 	}
 	return c.Name() != "created_at" && c.Name() != "updated_at"
 }

@@ -3,23 +3,19 @@ package template
 const AppendSvc = `
 // PostGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-PostGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) (data {{.PriKeyType}}, err error)
+PostGen{{.ModelStructName}}(ctx context.Context, body model.{{.ModelStructName}}) (model.{{.ModelStructName}}, error)
 
-// PostGen{{.ModelStructName}}s {{.StructComment}}
+// GetGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-PostGen{{.ModelStructName}}s(ctx context.Context, body []dto.{{.ModelStructName}}) (data []{{.PriKeyType}}, err error)
-
-// GetGen{{.ModelStructName}}_Id {{.StructComment}}
-` + NotEditMarkForGDDShort + `
-GetGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) (data dto.{{.ModelStructName}}, err error)
+GetGen{{.ModelStructName}}(ctx context.Context, body model.{{.ModelStructName}}) (model.{{.ModelStructName}}, error)
 
 // PutGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-PutGen{{.ModelStructName}}(ctx context.Context, body dto.{{.ModelStructName}}) error
+PutGen{{.ModelStructName}}(ctx context.Context, body model.{{.ModelStructName}}) error
 
-// DeleteGen{{.ModelStructName}}_Id {{.StructComment}}
+// DeleteGen{{.ModelStructName}} {{.StructComment}}
 ` + NotEditMarkForGDDShort + `
-DeleteGen{{.ModelStructName}}_Id(ctx context.Context, id {{.PriKeyType}}) error
+DeleteGen{{.ModelStructName}}(ctx context.Context, body model.{{.ModelStructName}}) error
 
 // GetGen{{.ModelStructName}}s {{.StructComment}}
 ` + NotEditMarkForGDDShort + `

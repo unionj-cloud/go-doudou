@@ -26,6 +26,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 )
 
+var DEFAULT_DTO_PKGS = []string{"vo", "dto", "model"}
+
 func getStructs(vofile string) []astutils.StructMeta {
 	fset := token.NewFileSet()
 	root, err := parser.ParseFile(fset, vofile, nil, parser.ParseComments)
@@ -459,21 +461,22 @@ func GenDoc(dir string, ic astutils.InterfaceCollector, config GenDocConfig) {
 	astutils.FixImport([]byte(source), gofile)
 }
 
-func ParseDto(dir string, dtoDir string) {
+func ParseDto(dir string, dtoDir ...string) {
 	var (
 		err        error
 		vos        []v3.Schema
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
+		files      []string
 	)
-	vodir := filepath.Join(dir, dtoDir)
-	if _, err = os.Stat(vodir); os.IsNotExist(err) {
-		return
-	}
-	var files []string
-	err = filepath.Walk(vodir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
+	for i := 0; i < len(dtoDir); i++ {
+		vodir := filepath.Join(dir, dtoDir[i])
+		if _, err = os.Stat(vodir); err != nil {
+			continue
+		}
+		if err = filepath.Walk(vodir, astutils.Visit(&files)); err != nil {
+			panic(err)
+		}
 	}
 	globalStructs := make([]astutils.StructMeta, 0)
 	for _, file := range files {
@@ -572,6 +575,7 @@ func parseSelectorExpr(expr *ast.SelectorExpr) string {
 	result := ExprStringP(expr.X) + "." + expr.Sel.Name
 	if !strings.HasPrefix(result, "vo.") &&
 		!strings.HasPrefix(result, "dto.") &&
+		!strings.HasPrefix(result, "model.") &&
 		!strings.HasPrefix(result, "gorm.") &&
 		!strings.HasPrefix(result, "customtypes.") &&
 		result != "context.Context" &&
@@ -615,21 +619,22 @@ func messagesOf(vofile string, p protov3.ProtoGenerator) []protov3.Message {
 	return ret
 }
 
-func ParseDtoGrpc(dir string, p protov3.ProtoGenerator, dtoDir string) {
+func ParseDtoGrpc(dir string, p protov3.ProtoGenerator, dtoDir ...string) {
 	var (
 		err        error
 		messages   []protov3.Message
 		allMethods map[string][]astutils.MethodMeta
 		allConsts  map[string][]string
+		files      []string
 	)
-	vodir := filepath.Join(dir, dtoDir)
-	if _, err = os.Stat(vodir); os.IsNotExist(err) {
-		return
-	}
-	var files []string
-	err = filepath.Walk(vodir, astutils.Visit(&files))
-	if err != nil {
-		panic(err)
+	for i := 0; i < len(dtoDir); i++ {
+		vodir := filepath.Join(dir, dtoDir[i])
+		if _, err = os.Stat(vodir); err != nil {
+			continue
+		}
+		if err = filepath.Walk(vodir, astutils.Visit(&files)); err != nil {
+			panic(err)
+		}
 	}
 	for _, file := range files {
 		protov3.MessageNames = append(protov3.MessageNames, getSchemaNames(file)...)

@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
@@ -128,6 +129,7 @@ var (
 		"tinytext":   func(string) string { return "string" },
 		"mediumtext": func(string) string { return "string" },
 		"longtext":   func(string) string { return "string" },
+		"bytea":      func(string) string { return "[]byte" },
 		"binary":     func(string) string { return "[]byte" },
 		"varbinary":  func(string) string { return "[]byte" },
 		"tinyblob":   func(string) string { return "[]byte" },
@@ -161,6 +163,14 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 	if convert, ok := m[strings.ToLower(dataType)]; ok {
 		return convert(detailType)
 	}
+	d := detailType
+	if strings.Contains(detailType, " ") {
+		d = detailType[:strings.Index(detailType, " ")]
+	}
+	if convert, ok := m[strings.ToLower(d)]; ok {
+		return convert(detailType)
+	}
+	logrus.Info(dataType+" ===> ", detailType)
 	return defaultDataType
 }
 

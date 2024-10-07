@@ -305,7 +305,7 @@ func Test_checkIc_output_anonystruct(t *testing.T) {
 	pg := v3.NewProtoGenerator(v3.WithFieldNamingFunc(strcase.ToSnake))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parser.ParseDtoGrpc(dir, pg, "dto")
+			parser.ParseDtoGrpc(dir, pg, parser.DEFAULT_DTO_PKGS...)
 			codegen.GenGrpcProto(dir, ic, pg)
 		})
 	}

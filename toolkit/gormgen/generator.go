@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -312,25 +313,13 @@ func (g *Generator) Execute() {
 	g.info("Generate orm related code done.")
 }
 
-// GenerateDtoFile generate dto code to output path
-func (g *Generator) GenerateDtoFile() {
-	g.info("Start generating dto code.")
-
-	if err := g.generateDtoFile(); err != nil {
-		g.db.Logger.Error(context.Background(), "generate dto struct fail: %s", err)
-		panic("generate dto struct fail")
-	}
-
-	g.info("Generate dto code done.")
-}
-
 // GenerateSvcGo ...
 func (g *Generator) GenerateSvcGo() {
 	g.info("Start generating svc.go.")
 
-	if err := g.generateSvcGoFile(); err != nil {
+	if err := g.generateSvcGo(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate svc.go fail: %s", err)
-		panic("generate svc.go fail")
+		return
 	}
 
 	g.info("Generate code svc.go done.")
@@ -340,7 +329,7 @@ func (g *Generator) GenerateSvcGo() {
 func (g *Generator) GenerateSvcImplGo() {
 	g.info("Start generating svcimpl.go.")
 
-	if err := g.generateSvcImplGoFile(); err != nil {
+	if err := g.generateSvcImplGo(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate svcimpl.go fail: %s", err)
 		panic("generate svcimpl.go fail")
 	}
@@ -368,9 +357,9 @@ func (g *Generator) filterNewModels(meta astutils.InterfaceMeta) []*generate.Que
 		}
 		targets := []string{
 			fmt.Sprintf("PostGen%s", data.ModelStructName),
-			fmt.Sprintf("GetGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("GetGen%s", data.ModelStructName),
 			fmt.Sprintf("PutGen%s", data.ModelStructName),
-			fmt.Sprintf("DeleteGen%s_Id", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%s", data.ModelStructName),
 			fmt.Sprintf("GetGen%ss", data.ModelStructName),
 		}
 		count := 0
@@ -394,9 +383,9 @@ func (g *Generator) filterNewModelsGrpc(meta astutils.InterfaceMeta) []*generate
 		}
 		targets := []string{
 			fmt.Sprintf("PostGen%sRpc", data.ModelStructName),
-			fmt.Sprintf("GetGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("GetGen%sRpc", data.ModelStructName),
 			fmt.Sprintf("PutGen%sRpc", data.ModelStructName),
-			fmt.Sprintf("DeleteGen%sIdRpc", data.ModelStructName),
+			fmt.Sprintf("DeleteGen%sRpc", data.ModelStructName),
 			fmt.Sprintf("GetGen%ssRpc", data.ModelStructName),
 		}
 		count := 0
@@ -412,47 +401,27 @@ func (g *Generator) filterNewModelsGrpc(meta astutils.InterfaceMeta) []*generate
 	return models
 }
 
-// generateSvcGoFile generate svc.go code and save to file
-func (g *Generator) generateSvcGoFile() error {
+// generateSvcGo generate svc.go code and save to file
+func (g *Generator) generateSvcGo() error {
 	if len(g.models) == 0 {
 		return nil
 	}
 	svcFile := filepath.Join(g.RootDir, "svc.go")
-	fi, err := os.Stat(svcFile)
-	if err != nil && !os.IsNotExist(err) {
-		return errors.WithStack(err)
+	var err error
+	if _, err = os.Stat(svcFile); err != nil {
+		return errors.New("svc.go file is not found, maybe the project has not been initialized yet")
 	}
 	var interfaceMeta astutils.InterfaceMeta
-	var f *os.File
-	if fi != nil {
-		ic := astutils.BuildInterfaceCollector(svcFile, astutils.ExprString)
-		if len(ic.Interfaces) > 0 {
-			interfaceMeta = ic.Interfaces[0]
-		}
-		g.info("New content will be append to svc.go file")
-		if f, err = os.OpenFile(svcFile, os.O_APPEND, os.ModePerm); err != nil {
-			return errors.WithStack(err)
-		}
-		defer f.Close()
-	} else {
-		if f, err = os.Create(svcFile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		var buf bytes.Buffer
-		if err = render(tmpl.Svc, &buf, struct {
-			InterfaceName string
-			DtoPackage    string
-		}{
-			InterfaceName: strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir))),
-			DtoPackage:    g.Config.dtoPkgPath,
-		}); err != nil {
-			return errors.WithStack(err)
-		}
-		if err = ioutil.WriteFile(svcFile, buf.Bytes(), 0640); err != nil {
-			return errors.WithStack(err)
-		}
+	ic := astutils.BuildInterfaceCollector(svcFile, astutils.ExprString)
+	if len(ic.Interfaces) > 0 {
+		interfaceMeta = ic.Interfaces[0]
 	}
+	g.info("New content will be append to svc.go file")
+	var f *os.File
+	if f, err = os.OpenFile(svcFile, os.O_APPEND, os.ModePerm); err != nil {
+		return errors.WithStack(err)
+	}
+	defer f.Close()
 	models := g.filterNewModels(interfaceMeta)
 	var buf bytes.Buffer
 	for _, model := range models {
@@ -479,46 +448,28 @@ func (g *Generator) generateSvcGoFile() error {
 	return nil
 }
 
-// generateSvcImplGoFile generate svcimpl.go code and save to file
-func (g *Generator) generateSvcImplGoFile() error {
+// generateSvcImplGo generate svcimpl.go code and save to file
+func (g *Generator) generateSvcImplGo() error {
 	if len(g.models) == 0 {
 		return nil
 	}
 	svcImplFile := filepath.Join(g.RootDir, "svcimpl.go")
-	fi, err := os.Stat(svcImplFile)
-	if err != nil && !os.IsNotExist(err) {
-		return errors.WithStack(err)
+	var err error
+	if _, err = os.Stat(svcImplFile); err != nil {
+		return errors.New("svcimpl.go file is not found, maybe the project has not been initialized yet")
 	}
 	var interfaceMeta astutils.InterfaceMeta
 	interfaceMeta.Name = strcase.ToCamel(strcase.ToCamel(filepath.Base(g.RootDir)))
+	sc := astutils.NewStructCollector(astutils.ExprString)
+	astutils.CollectStructsInFolder(g.RootDir, sc)
+	interfaceMeta.Methods = sc.Methods[interfaceMeta.Name+"Impl"]
+	g.info("New content will be append to svcimpl.go file")
 	var f *os.File
-	if fi != nil {
-		sc := astutils.NewStructCollector(astutils.ExprString)
-		astutils.CollectStructsInFolder(g.RootDir, sc)
-		interfaceMeta.Methods = sc.Methods[interfaceMeta.Name+"Impl"]
-		g.info("New content will be append to svcimpl.go file")
-		if f, err = os.OpenFile(svcImplFile, os.O_APPEND, os.ModePerm); err != nil {
-			return errors.WithStack(err)
-		}
-		defer f.Close()
-	} else {
-		if f, err = os.Create(svcImplFile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		var buf bytes.Buffer
-		if err = render(tmpl.SvcImpl, &buf, struct {
-			InterfaceName string
-		}{
-			InterfaceName: interfaceMeta.Name,
-		}); err != nil {
-			return errors.WithStack(err)
-		}
-		if err = ioutil.WriteFile(svcImplFile, buf.Bytes(), 0640); err != nil {
-			return errors.WithStack(err)
-		}
+	if f, err = os.OpenFile(svcImplFile, os.O_APPEND, os.ModePerm); err != nil {
+		return errors.WithStack(err)
 	}
-	models := g.filterNewModels(interfaceMeta)
+	defer f.Close()
+	models := g.filterNewModelsGrpc(interfaceMeta)
 	var buf bytes.Buffer
 	for _, model := range models {
 		if err = render(tmpl.AppendSvcImpl, &buf, struct {
@@ -540,19 +491,23 @@ func (g *Generator) generateSvcImplGoFile() error {
 	confPkg := g.GetPkgPath(filepath.Join(g.RootDir, "config"))
 	dtoPkg := g.GetPkgPath(filepath.Join(g.RootDir, "dto"))
 	queryPkg := g.GetPkgPath(g.OutPath)
+	fileutils.CreateDirectory(filepath.Join(g.RootDir, "transport", "grpc"))
+	transGrpcPkg := g.GetPkgPath(filepath.Join(g.RootDir, "transport", "grpc"))
 
 	// fix import block
 	var importBuf bytes.Buffer
 	if err = render(tmpl.SvcImplImport, &importBuf, struct {
-		ConfigPackage string
-		DtoPackage    string
-		ModelPackage  string
-		QueryPackage  string
+		ConfigPackage        string
+		DtoPackage           string
+		ModelPackage         string
+		QueryPackage         string
+		TransportGrpcPackage string
 	}{
-		ConfigPackage: confPkg,
-		DtoPackage:    dtoPkg,
-		ModelPackage:  g.modelPkgPath,
-		QueryPackage:  queryPkg,
+		ConfigPackage:        confPkg,
+		DtoPackage:           dtoPkg,
+		ModelPackage:         g.modelPkgPath,
+		QueryPackage:         queryPkg,
+		TransportGrpcPackage: transGrpcPkg,
 	}); err != nil {
 		return errors.WithStack(err)
 	}
@@ -790,7 +745,7 @@ func (g *Generator) generateModelFile() error {
 			var buf bytes.Buffer
 			funcMap := make(map[string]interface{})
 			funcMap["convert"] = func(s string) string {
-				return strings.ReplaceAll(s, "time.Time", "customtypes.Time")
+				return s
 			}
 			funcMap["contains"] = strings.Contains
 			t, err := template.New(tmpl.Model).Funcs(funcMap).Parse(tmpl.Model)
@@ -929,103 +884,6 @@ func getImportPkgPaths(data *genInfo) []string {
 		importPkgPaths = append(importPkgPaths, importPath)
 	}
 	return importPkgPaths
-}
-
-// generateDtoFile generate dto structures and save to file
-func (g *Generator) generateDtoFile() error {
-	if len(g.models) == 0 {
-		return nil
-	}
-
-	dtoOutPath, err := g.getDtoOutputPath()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err = os.MkdirAll(dtoOutPath, os.ModePerm); err != nil {
-		return fmt.Errorf("create model pkg path(%s) fail: %s", dtoOutPath, err)
-	}
-
-	errChan := make(chan error)
-	pool := pools.NewPool(concurrent)
-	for _, data := range g.models {
-		if data == nil || !data.Generated {
-			continue
-		}
-		pool.Wait()
-		go func(data *generate.QueryStructMeta) {
-			defer pool.Done()
-
-			dtoFile := dtoOutPath + data.FileName + ".gen.go"
-			fi, err := os.Stat(dtoFile)
-			if err != nil && !os.IsNotExist(err) {
-				panic(err)
-			}
-			if fi != nil {
-				g.info(fmt.Sprintf("skip generating dto file(table <%s> -> {%s.%s}): %s as it already exists", data.TableName, data.StructInfo.Package, data.StructInfo.Type, dtoFile))
-				return
-			}
-
-			var buf bytes.Buffer
-			funcMap := make(map[string]interface{})
-			funcMap["convert"] = func(s string) string {
-				return strings.ReplaceAll(s, "time.Time", "customtypes.Time")
-			}
-			t, err := template.New(tmpl.Dto).Funcs(funcMap).Parse(tmpl.Dto)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			err = t.Execute(&buf, data)
-			if err != nil {
-				errChan <- err
-				return
-			}
-
-			err = g.output(dtoFile, buf.Bytes())
-			if err != nil {
-				errChan <- err
-				return
-			}
-
-			g.info(fmt.Sprintf("generate dto file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, dtoFile))
-		}(data)
-	}
-	select {
-	case err = <-errChan:
-		return errors.WithStack(err)
-	case <-pool.AsyncWaitAll():
-		g.fillDtoPkgPath(dtoOutPath)
-	}
-	return nil
-}
-
-func (g *Generator) getDtoOutputPath() (outPath string, err error) {
-	if strings.Contains(g.DtoPkgPath, string(os.PathSeparator)) {
-		outPath, err = filepath.Abs(g.DtoPkgPath)
-		if err != nil {
-			return "", fmt.Errorf("cannot parse model pkg path: %w", err)
-		}
-	} else {
-		outPath = filepath.Join(filepath.Dir(g.OutPath), g.DtoPkgPath)
-	}
-	return outPath + string(os.PathSeparator), nil
-}
-
-func (g *Generator) fillDtoPkgPath(filePath string) {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName,
-		Dir:  filePath,
-	})
-	if err != nil {
-		g.db.Logger.Warn(context.Background(), "parse dto pkg path fail: %s", err)
-		return
-	}
-	if len(pkgs) == 0 {
-		g.db.Logger.Warn(context.Background(), "parse dto pkg path fail: got 0 packages")
-		return
-	}
-	g.Config.dtoPkgPath = pkgs[0].PkgPath
 }
 
 func (g *Generator) GetPkgPath(filePath string) string {

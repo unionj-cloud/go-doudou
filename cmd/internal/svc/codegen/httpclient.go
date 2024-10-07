@@ -42,7 +42,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"{{.DtoPackage}}"
 )
 
 var json = sonic.ConfigDefault
@@ -433,8 +432,6 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 
 	_ = copier.DeepCopy(ic.Interfaces[0], &meta)
 
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
-
 	funcMap := make(map[string]interface{})
 	funcMap["toLowerCamel"] = strcase.ToLowerCamel
 	funcMap["toCamel"] = strcase.ToCamel
@@ -454,15 +451,13 @@ func GenGoClient(dir string, ic astutils.InterfaceCollector, config GenGoClientC
 		panic(err)
 	}
 	if err = tpl.Execute(&sqlBuf, struct {
-		DtoPackage string
-		Meta       astutils.InterfaceMeta
-		Config     GenGoClientConfig
-		Version    string
+		Meta    astutils.InterfaceMeta
+		Config  GenGoClientConfig
+		Version string
 	}{
-		DtoPackage: dtoPkg,
-		Meta:       meta,
-		Config:     config,
-		Version:    version.Release,
+		Meta:    meta,
+		Config:  config,
+		Version: version.Release,
 	}); err != nil {
 		panic(err)
 	}

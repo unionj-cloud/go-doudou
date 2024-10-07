@@ -127,7 +127,7 @@ func (receiver *Work) mainPkg(goVersion string) {
 		if err != nil {
 			panic(err)
 		}
-		modName := filepath.Join(filepath.Base(receiver.GetWorkDir()), mainDirName)
+		modName := filepath.Base(receiver.GetWorkDir()) + "/" + mainDirName
 		receiver.goModInMainPkg(mainDir, modName, goVersion)
 		receiver.dotenv(mainDir)
 		receiver.cmdPkg(mainDir)
@@ -143,9 +143,6 @@ func (receiver *Work) Init() {
 	}
 	workDir := receiver.GetWorkDir()
 	_ = os.MkdirAll(workDir, os.ModePerm)
-
-	common.InitGitRepo(workDir)
-	common.GitIgnore(workDir)
 
 	goVersion, err := common.GetGoVersionNum(receiver.runner)
 	if err != nil {

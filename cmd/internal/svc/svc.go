@@ -14,7 +14,6 @@ import (
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/client"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
@@ -34,6 +33,7 @@ type ISvc interface {
 	GetDir() string
 	Http()
 	Init()
+	Crud()
 	Push(cfg PushConfig)
 	Deploy(k8sfile string)
 	Shutdown(k8sfile string)
@@ -109,7 +109,6 @@ type DbConfig struct {
 	GenGenGo  bool
 	Orm       string
 	Soft      string
-	Grpc      bool
 	Service   bool
 	Omitempty bool
 }
@@ -134,8 +133,8 @@ func (receiver *Svc) SetRunner(runner executils.Runner) {
 // from the result of ast parsing svc.go file in the project root. It may panic if validation failed
 func (receiver *Svc) Http() {
 	dir := receiver.dir
-	parser.ParseDto(dir, "dto")
-	validate.DataType(dir)
+	parser.ParseDto(dir, parser.DEFAULT_DTO_PKGS...)
+	validate.DataType(dir, parser.DEFAULT_DTO_PKGS...)
 
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.RestApi(dir, ic)
@@ -178,45 +177,32 @@ func (receiver *Svc) Init() {
 		Dir:            receiver.dir,
 		ModName:        receiver.ModName,
 		Runner:         receiver.runner,
-		GenSvcGo:       receiver.DbConfig == nil,
 		Module:         receiver.module,
 		ProtoGenerator: receiver.protoGenerator,
-		CaseConverter:  receiver.CaseConverter,
 		JsonCase:       receiver.JsonCase,
 	})
-	// generate or overwrite svc.go file
-	if receiver.DbConfig != nil {
-		gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
-		assert.NotNil(gen, "Unknown orm kind")
-		gen.Initialize(database.OrmGeneratorConfig{
-			Driver:           receiver.DbConfig.Driver,
-			Dsn:              receiver.DbConfig.Dsn,
-			TablePrefix:      receiver.DbConfig.TablePrefix,
-			TableGlob:        receiver.DbConfig.TableGlob,
-			TableExcludeGlob: receiver.DbConfig.TableExcludeGlob,
-			GenGenGo:         receiver.DbConfig.GenGenGo,
-			CaseConverter:    receiver.CaseConverter,
-			Dir:              receiver.dir,
-			Soft:             receiver.DbConfig.Soft,
-			Grpc:             receiver.DbConfig.Grpc,
-			ProtoGenerator:   receiver.protoGenerator,
-			Omitempty:        receiver.DbConfig.Omitempty,
-		})
-		if receiver.DbConfig.Service {
-			gen.GenService()
-		} else {
-			gen.GenDao()
-		}
-	} else if !receiver.module {
-		if stringutils.IsEmpty(receiver.DocPath) {
-			matches, _ := filepath.Glob(filepath.Join(receiver.dir, "*_openapi3.json"))
-			if len(matches) > 0 {
-				receiver.DocPath = matches[0]
-			}
-		}
-		if stringutils.IsNotEmpty(receiver.DocPath) {
-			server.GenSvcGo(receiver.dir, receiver.DocPath)
-		}
+}
+
+func (receiver *Svc) Crud() {
+	gen := database.GetOrmGenerator(database.OrmKind(receiver.DbConfig.Orm))
+	assert.NotNil(gen, "Unknown orm kind")
+	gen.Initialize(database.OrmGeneratorConfig{
+		Driver:           receiver.DbConfig.Driver,
+		Dsn:              receiver.DbConfig.Dsn,
+		TablePrefix:      receiver.DbConfig.TablePrefix,
+		TableGlob:        receiver.DbConfig.TableGlob,
+		TableExcludeGlob: receiver.DbConfig.TableExcludeGlob,
+		GenGenGo:         receiver.DbConfig.GenGenGo,
+		CaseConverter:    receiver.CaseConverter,
+		Dir:              receiver.dir,
+		Soft:             receiver.DbConfig.Soft,
+		ProtoGenerator:   receiver.protoGenerator,
+		Omitempty:        receiver.DbConfig.Omitempty,
+	})
+	if receiver.DbConfig.Service {
+		gen.GenService()
+	} else {
+		gen.GenDao()
 	}
 }
 
@@ -531,11 +517,11 @@ func (receiver *Svc) Upgrade(version string) {
 
 func (receiver *Svc) Grpc() {
 	dir := receiver.dir
-	validate.DataType(dir)
+	validate.DataType(dir, parser.DEFAULT_DTO_PKGS...)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
 	validate.GrpcApi(dir, ic, receiver.http2grpc)
 	codegen.GenConfig(dir, ic)
-	parser.ParseDtoGrpc(dir, receiver.protoGenerator, "dto")
+	parser.ParseDtoGrpc(dir, receiver.protoGenerator, parser.DEFAULT_DTO_PKGS...)
 	grpcSvc, protoFile := codegen.GenGrpcProto(dir, ic, receiver.protoGenerator)
 	if err := receiver.protoGenerator.Generate(protoFile, receiver.runner); err != nil {
 		panic(err)

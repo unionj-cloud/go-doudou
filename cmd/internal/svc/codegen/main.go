@@ -32,7 +32,8 @@ func main() {
     svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	handler := httpsrv.New{{.SvcName}}Handler(svc)
 	srv := rest.NewRestServer()
-	srv.AddRoute(httpsrv.Routes(handler)...)
+	srv.AddRoutes(httpsrv.Routes(handler))
+	srv.AddRoutes(rest.DocRoutes(service.Oas))
 	srv.Run()
 }
 `

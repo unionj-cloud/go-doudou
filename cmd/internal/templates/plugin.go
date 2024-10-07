@@ -29,7 +29,7 @@ var _ plugin.ServicePlugin = (*{{.SvcName}}Plugin)(nil)
 
 type {{.SvcName}}Plugin struct {
 	grpcConns []*grpc.ClientConn
-	serviceInstance service.{{.SvcName}}
+	serviceInstance pb.{{.SvcName}}ServiceServer
 }
 
 func (receiver *{{.SvcName}}Plugin) GetServiceInstance() interface{} {
@@ -58,7 +58,7 @@ func (receiver *{{.SvcName}}Plugin) Initialize(restServer *rest.RestServer, grpc
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	receiver.serviceInstance = svc
-	routes := httpsrv.Routes(httpsrv.New{{.SvcName}}Handler(svc))
+	routes := httpsrv.Routes(httpsrv.New{{.SvcName}}Http2Grpc(svc))
 	restServer.GroupRoutes("/{{.SvcName | toLower}}", routes)
 	restServer.GroupRoutes("/{{.SvcName | toLower}}", rest.DocRoutes(service.Oas))
 	if grpcServer.Server == nil {

@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,7 +12,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/common"
@@ -28,17 +28,15 @@ import (
 	"{{.DtoPackage}}"
 )
 
-//go:generate go-doudou svc http
-//go:generate go-doudou svc grpc
+//go:generate go-doudou svc grpc --http2grpc --case {{ .JsonCase }}
 
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
 	// You can also add annotations here like @role(admin) to add meta data to routes for 
 	// implementing your own middlewares
-	PostUser(ctx context.Context, user dto.GddUser) (data int32, err error)
-	GetUser_Id(ctx context.Context, id int32) (data dto.GddUser, err error)
+	PostUser(ctx context.Context, user dto.GddUser) (data dto.GddUser, err error)
 	PutUser(ctx context.Context, user dto.GddUser) error
-	DeleteUser_Id(ctx context.Context, id int32) error
+	DeleteUser(ctx context.Context, user dto.GddUser) error
 	GetUsers(ctx context.Context, parameter dto.Parameter) (data dto.Page, err error)
 }
 `
@@ -177,11 +175,10 @@ type InitProjConfig struct {
 	Dir            string
 	ModName        string
 	Runner         executils.Runner
-	GenSvcGo       bool
 	Module         bool
 	ProtoGenerator v3.ProtoGenerator
-	CaseConverter  func(string) string
 	JsonCase       string
+	DocPath        string
 }
 
 // InitProj inits a service project
@@ -198,18 +195,13 @@ func InitProj(conf InitProjConfig) {
 		f         *os.File
 		tpl       *template.Template
 		envfile   string
+		docPath   string
 	)
-	dir, modName, runner, genSvcGo, module, protoGenerator, caseConverter, jsonCase :=
-		conf.Dir, conf.ModName, conf.Runner, conf.GenSvcGo, conf.Module, conf.ProtoGenerator, conf.CaseConverter, conf.JsonCase
+	dir, modName, runner, module, jsonCase, docPath := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
 	_ = os.MkdirAll(dir, os.ModePerm)
-
-	if !module {
-		common.InitGitRepo(dir)
-		common.GitIgnore(dir)
-	}
 
 	goVersion, err = common.GetGoVersionNum(runner)
 	if err != nil {
@@ -234,7 +226,8 @@ func InitProj(conf InitProjConfig) {
 			GoVersion: goVersion,
 		})
 	} else {
-		logrus.Warnf("file %s already exists", modfile)
+		logrus.Warn("Project has already been initialized, it is not safe to be reinitialized")
+		return
 	}
 	if module {
 		if err = runner.Run("go", "work", "use", filepath.Base(dir)); err != nil {
@@ -243,28 +236,26 @@ func InitProj(conf InitProjConfig) {
 	}
 
 	envfile = filepath.Join(dir, ".env")
-	if _, err = os.Stat(envfile); os.IsNotExist(err) {
-		if f, err = os.Create(envfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New(".env.tmpl").Parse(envTmpl)
-		_ = tpl.Execute(f, struct {
-			SvcName string
-		}{
-			SvcName: modName,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", envfile)
-	}
-
-	dtodir = filepath.Join(dir, "dto")
-	if err = os.MkdirAll(dtodir, os.ModePerm); err != nil {
+	if f, err = os.Create(envfile); err != nil {
 		panic(err)
 	}
-	dtofile = filepath.Join(dtodir, "dto.go")
-	if _, err = os.Stat(dtofile); os.IsNotExist(err) {
+	defer f.Close()
+
+	tpl, _ = template.New(".env.tmpl").Parse(envTmpl)
+	_ = tpl.Execute(f, struct {
+		SvcName string
+	}{
+		SvcName: modName,
+	})
+
+	if stringutils.IsNotEmpty(docPath) {
+		server.GenSvcGo(dir, docPath)
+	} else {
+		dtodir = filepath.Join(dir, "dto")
+		if err = os.MkdirAll(dtodir, os.ModePerm); err != nil {
+			panic(err)
+		}
+		dtofile = filepath.Join(dtodir, "dto.go")
 		if f, err = os.Create(dtofile); err != nil {
 			panic(err)
 		}
@@ -278,73 +269,56 @@ func InitProj(conf InitProjConfig) {
 			Version:  version.Release,
 			JsonCase: jsonCase,
 		})
-		oldWd, _ := os.Getwd()
-		os.Chdir(dir)
-		if err = runner.Run("go", "generate", "./..."); err != nil {
-			panic(err)
-		}
-		os.Chdir(oldWd)
-	} else {
-		logrus.Warnf("file %s already exists", dtofile)
-	}
 
-	if genSvcGo {
 		svcName = strcase.ToCamel(filepath.Base(dir))
 		svcfile = filepath.Join(dir, "svc.go")
-		if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-			if f, err = os.Create(svcfile); err != nil {
-				panic(err)
-			}
-			defer f.Close()
-
-			tpl, _ = template.New(svcTmpl).Parse(svcTmpl)
-			_ = tpl.Execute(f, struct {
-				DtoPackage string
-				SvcName    string
-				Version    string
-			}{
-				DtoPackage: strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
-				SvcName:    svcName,
-				Version:    version.Release,
-			})
-		} else {
-			logrus.Warnf("file %s already exists", svcfile)
+		if f, err = os.Create(svcfile); err != nil {
+			panic(err)
 		}
+		defer f.Close()
+
+		tpl, _ = template.New(svcTmpl).Parse(svcTmpl)
+		_ = tpl.Execute(f, struct {
+			DtoPackage string
+			SvcName    string
+			Version    string
+			JsonCase   string
+		}{
+			DtoPackage: strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
+			SvcName:    svcName,
+			Version:    version.Release,
+			JsonCase:   jsonCase,
+		})
 	}
+
+	oldWd, _ := os.Getwd()
+	os.Chdir(dir)
+	if err = runner.Run("go", "generate", "./..."); err != nil {
+		panic(err)
+	}
+	os.Chdir(oldWd)
 
 	dockerfile := filepath.Join(dir, "Dockerfile")
-	if _, err = os.Stat(dockerfile); os.IsNotExist(err) {
-		if f, err = os.Create(dockerfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
-		_ = tpl.Execute(f, nil)
-	} else {
-		logrus.Warnf("file %s already exists", dockerfile)
+	if f, err = os.Create(dockerfile); err != nil {
+		panic(err)
 	}
+	defer f.Close()
+
+	tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
+	_ = tpl.Execute(f, nil)
 
 	dockerignorefile := filepath.Join(dir, ".dockerignore")
-	if _, err = os.Stat(dockerignorefile); os.IsNotExist(err) {
-		if f, err = os.Create(dockerignorefile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("dockerignorefile.tmpl").Parse(dockerignorefileTmpl)
-		_ = tpl.Execute(f, nil)
-	} else {
-		logrus.Warnf("file %s already exists", dockerignorefile)
+	if f, err = os.Create(dockerignorefile); err != nil {
+		panic(err)
 	}
+	defer f.Close()
+
+	tpl, _ = template.New("dockerignorefile.tmpl").Parse(dockerignorefileTmpl)
+	_ = tpl.Execute(f, nil)
 
 	if module {
-		parser.ParseDto(dir, "dto")
-		validate.DataType(dir)
+		parser.ParseDto(dir, parser.DEFAULT_DTO_PKGS...)
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-		validate.RestApi(dir, ic)
-		genHttp(dir, ic, caseConverter)
-		genGrpc(dir, ic, runner, protoGenerator)
 		genPlugin(dir, ic)
 		genMainModule(dir)
 		mainMainFile := filepath.Join(filepath.Dir(dir), "main", "cmd", "main.go")
@@ -363,119 +337,4 @@ func InitProj(conf InitProjConfig) {
 
 // InitSvc inits a service project, test purpose only
 func InitSvc(dir string) {
-	var (
-		err       error
-		svcName   string
-		svcfile   string
-		dtodir    string
-		dtofile   string
-		goVersion string
-		f         *os.File
-		tpl       *template.Template
-		envfile   string
-	)
-	if stringutils.IsEmpty(dir) {
-		dir, _ = os.Getwd()
-	}
-	_ = os.MkdirAll(dir, os.ModePerm)
-
-	common.InitGitRepo(dir)
-	common.GitIgnore(dir)
-
-	goVersion, err = common.GetGoVersionNum(executils.CmdRunner{})
-	if err != nil {
-		panic(err)
-	}
-	modName := filepath.Base(dir)
-	modfile := filepath.Join(dir, "go.mod")
-	if _, err = os.Stat(modfile); os.IsNotExist(err) {
-		if f, err = os.Create(modfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("go.mod.tmpl").Parse(modTmpl)
-		_ = tpl.Execute(f, struct {
-			ModName   string
-			GoVersion string
-		}{
-			ModName:   modName,
-			GoVersion: goVersion,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", "go.mod")
-	}
-
-	envfile = filepath.Join(dir, ".env")
-	if _, err = os.Stat(envfile); os.IsNotExist(err) {
-		if f, err = os.Create(envfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New(".env.tmpl").Parse(envTmpl)
-		_ = tpl.Execute(f, struct {
-			SvcName string
-		}{
-			SvcName: modName,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", dtofile)
-	}
-
-	dtodir = filepath.Join(dir, "dto")
-	if err = os.MkdirAll(dtodir, os.ModePerm); err != nil {
-		panic(err)
-	}
-	dtofile = filepath.Join(dtodir, "dto.go")
-	if _, err = os.Stat(dtofile); os.IsNotExist(err) {
-		if f, err = os.Create(dtofile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("dto.go.tmpl").Parse(dtoTmpl)
-		_ = tpl.Execute(f, struct {
-			Version string
-		}{
-			Version: version.Release,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", dtofile)
-	}
-
-	svcName = strcase.ToCamel(filepath.Base(dir))
-	svcfile = filepath.Join(dir, "svc.go")
-	if _, err = os.Stat(svcfile); os.IsNotExist(err) {
-		if f, err = os.Create(svcfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("svc.go.tmpl").Parse(svcTmpl)
-		_ = tpl.Execute(f, struct {
-			DtoPackage string
-			SvcName    string
-			Version    string
-		}{
-			DtoPackage: filepath.Join(modName, "dto"),
-			SvcName:    svcName,
-			Version:    version.Release,
-		})
-	} else {
-		logrus.Warnf("file %s already exists", svcfile)
-	}
-
-	dockerfile := filepath.Join(dir, "Dockerfile")
-	if _, err = os.Stat(dockerfile); os.IsNotExist(err) {
-		if f, err = os.Create(dockerfile); err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
-		_ = tpl.Execute(f, nil)
-	} else {
-		logrus.Warnf("file %s already exists", dockerfile)
-	}
 }

@@ -34,7 +34,6 @@ var cpimportTmpl = `
 	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
 	"os"
 	"time"
-	"{{.DtoPackage}}"
 `
 
 var appendTmpl = `
@@ -219,7 +218,6 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 
 	servicePkg := astutils.GetPkgPath(dir)
 	cfgPkg := astutils.GetPkgPath(filepath.Join(dir, "config"))
-	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 
 	funcMap := make(map[string]interface{})
 	funcMap["isVarargs"] = v3helper.IsVarargs
@@ -227,15 +225,12 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 		panic(err)
 	}
 	if err = tpl.Execute(&buf, struct {
-		VoPackage      string
-		DtoPackage     string
 		Meta           astutils.InterfaceMeta
 		ServicePackage string
 		ServiceAlias   string
 		SvcName        string
 		Version        string
 	}{
-		DtoPackage:     dtoPkg,
 		Meta:           meta,
 		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
@@ -256,10 +251,7 @@ func GenGoClientProxy(dir string, ic astutils.InterfaceCollector) {
 	}
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
-		VoPackage     string
-		DtoPackage    string
 	}{
-		DtoPackage:    dtoPkg,
 		ConfigPackage: cfgPkg,
 	}); err != nil {
 		panic(err)

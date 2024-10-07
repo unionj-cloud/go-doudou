@@ -17,7 +17,6 @@ func TestInitProj(t *testing.T) {
 		Dir:      dir,
 		ModName:  "testinit",
 		Runner:   executils.CmdRunner{},
-		GenSvcGo: true,
 	}
 	assert.NotPanics(t, func() {
 		InitProj(conf)

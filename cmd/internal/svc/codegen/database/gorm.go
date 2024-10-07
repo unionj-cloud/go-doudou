@@ -1,6 +1,8 @@
 package database
 
 import (
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"path/filepath"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -45,10 +47,6 @@ func (gg *GormGenerator) svcImplGo() {
 	gg.g.GenerateSvcImplGo()
 }
 
-func (gg *GormGenerator) dto() {
-	gg.g.GenerateDtoFile()
-}
-
 func (gg *GormGenerator) svcImplGrpc(grpcService v3.Service) {
 	gg.g.GenerateSvcImplGrpc(grpcService)
 }
@@ -91,7 +89,6 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	gg.Driver = conf.Driver
 	gg.Dsn = conf.Dsn
 	gg.Client = false
-	gg.Grpc = conf.Grpc
 	gg.TablePrefix = strings.TrimSuffix(conf.TablePrefix, ".")
 	gg.TableGlob = conf.TableGlob
 	gg.TableExcludeGlob = conf.TableExcludeGlob
@@ -129,8 +126,8 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		OutPath:       gg.Dir + "/query",
 		Mode:          gormgen.WithDefaultQuery | gormgen.WithQueryInterface,
 		FieldNullable: true,
-		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true, reference: https://github.com/wubin1989/docs/create.html#Default-Values
-		FieldCoverable: false,
+		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true
+		FieldCoverable: true,
 		// if you want to generate field with unsigned integer type, set FieldSignable true
 		FieldSignable: false,
 		// if you want to generate index tags from database, set FieldWithIndexTag true
@@ -159,7 +156,6 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		}
 		return tagContent
 	})
-	g.WithImportPkgPath("github.com/unionj-cloud/go-doudou/v2/toolkit/customtypes")
 	g.UseDB(db)
 	g.GenGenGo = gg.GenGenGo
 	var models []interface{}
@@ -181,5 +177,6 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 			gormgen.FieldGenType(conf.Soft, "Time"))
 	}
 	g.ApplyBasic(models...)
+	g.ConfigPackage = astutils.GetPkgPath(filepath.Join(gg.Dir, "config"))
 	gg.g = g
 }
