@@ -95,7 +95,8 @@ type Svc struct {
 	JsonCase      string
 	CaseConverter func(string) string
 
-	http2grpc bool
+	http2grpc   bool
+	projectType string
 }
 
 type DbConfig struct {
@@ -180,6 +181,7 @@ func (receiver *Svc) Init() {
 		Module:         receiver.module,
 		ProtoGenerator: receiver.protoGenerator,
 		JsonCase:       receiver.JsonCase,
+		ProjectType:    receiver.projectType,
 	})
 }
 
@@ -265,6 +267,12 @@ func WithOmitempty(omitempty bool) SvcOption {
 func WithJsonCase(jsonCase string) SvcOption {
 	return func(svc *Svc) {
 		svc.JsonCase = jsonCase
+	}
+}
+
+func WithProjectType(projectType string) SvcOption {
+	return func(svc *Svc) {
+		svc.projectType = projectType
 	}
 }
 

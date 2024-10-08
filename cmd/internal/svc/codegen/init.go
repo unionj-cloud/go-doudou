@@ -28,7 +28,11 @@ import (
 	"{{.DtoPackage}}"
 )
 
+{{ if eq .ProjectType "rest" }}
+//go:generate go-doudou svc http --case {{ .JsonCase }}
+{{ else }}
 //go:generate go-doudou svc grpc --http2grpc --case {{ .JsonCase }}
+{{ end }}
 
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
@@ -179,6 +183,7 @@ type InitProjConfig struct {
 	ProtoGenerator v3.ProtoGenerator
 	JsonCase       string
 	DocPath        string
+	ProjectType    string
 }
 
 // InitProj inits a service project
@@ -186,18 +191,19 @@ type InitProjConfig struct {
 // modName is module name
 func InitProj(conf InitProjConfig) {
 	var (
-		err       error
-		svcName   string
-		svcfile   string
-		dtodir    string
-		dtofile   string
-		goVersion string
-		f         *os.File
-		tpl       *template.Template
-		envfile   string
-		docPath   string
+		err         error
+		svcName     string
+		svcfile     string
+		dtodir      string
+		dtofile     string
+		goVersion   string
+		f           *os.File
+		tpl         *template.Template
+		envfile     string
+		docPath     string
+		projectType string
 	)
-	dir, modName, runner, module, jsonCase, docPath := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath
+	dir, modName, runner, module, jsonCase, docPath, projectType := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath, conf.ProjectType
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
@@ -279,15 +285,17 @@ func InitProj(conf InitProjConfig) {
 
 		tpl, _ = template.New(svcTmpl).Parse(svcTmpl)
 		_ = tpl.Execute(f, struct {
-			DtoPackage string
-			SvcName    string
-			Version    string
-			JsonCase   string
+			DtoPackage  string
+			SvcName     string
+			Version     string
+			JsonCase    string
+			ProjectType string
 		}{
-			DtoPackage: strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
-			SvcName:    svcName,
-			Version:    version.Release,
-			JsonCase:   jsonCase,
+			DtoPackage:  strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
+			SvcName:     svcName,
+			Version:     version.Release,
+			JsonCase:    jsonCase,
+			ProjectType: projectType,
 		})
 	}
 
