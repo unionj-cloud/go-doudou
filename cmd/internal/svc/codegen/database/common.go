@@ -138,11 +138,12 @@ func (b *AbstractBaseGenerator) GenService() {
 }
 
 func (b *AbstractBaseGenerator) goModTidy() {
-	wd, _ := os.Getwd()
-	os.Chdir(filepath.Join(b.Dir))
-	err := b.runner.Run("go", "mod", "tidy")
-	if err != nil {
-		panic(err)
-	}
-	os.Chdir(wd)
+	// here go mod tidy cause performance issue on some computer
+	//wd, _ := os.Getwd()
+	//os.Chdir(filepath.Join(b.Dir))
+	//err := b.runner.Run("go", "mod", "tidy")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//os.Chdir(wd)
 }

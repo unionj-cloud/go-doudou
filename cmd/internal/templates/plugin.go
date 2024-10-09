@@ -3,10 +3,18 @@ package templates
 var PluginTmpl = EditableHeaderTmpl + `package plugin
 
 import (
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
+	"github.com/unionj-cloud/go-doudou/v2/framework/plugin"
+	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
+	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"{{.ConfigPackage}}"
-	pb "{{.TransportGrpcPackage}}"
 	"{{.TransportHttpPackage}}"
+	"google.golang.org/grpc"
+	"os"
+	{{- if ne .ProjectType "rest" }}
+	pb "{{.TransportGrpcPackage}}"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpczerolog "github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -15,21 +23,19 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
-	"github.com/unionj-cloud/go-doudou/v2/framework/plugin"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
-	"google.golang.org/grpc"
-	"os"
+	{{- end }}
 )
 
 var _ plugin.ServicePlugin = (*{{.SvcName}}Plugin)(nil)
 
 type {{.SvcName}}Plugin struct {
 	grpcConns []*grpc.ClientConn
+	{{- if eq .ProjectType "rest" }}
+	serviceInstance service.{{.SvcName}}
+	{{- else }}
 	serviceInstance pb.{{.SvcName}}ServiceServer
+	{{- end }}
 }
 
 func (receiver *{{.SvcName}}Plugin) GetServiceInstance() interface{} {
@@ -58,9 +64,14 @@ func (receiver *{{.SvcName}}Plugin) Initialize(restServer *rest.RestServer, grpc
 	conf := config.LoadFromEnv()
 	svc := {{.ServiceAlias}}.New{{.SvcName}}(conf)
 	receiver.serviceInstance = svc
+	{{- if eq .ProjectType "rest" }}
+	routes := httpsrv.Routes(httpsrv.New{{.SvcName}}Handler(svc))
+	{{- else }}
 	routes := httpsrv.Routes(httpsrv.New{{.SvcName}}Http2Grpc(svc))
+	{{- end }}
 	restServer.GroupRoutes("/{{.SvcName | toLower}}", routes)
 	restServer.GroupRoutes("/{{.SvcName | toLower}}", rest.DocRoutes(service.Oas))
+	{{- if ne .ProjectType "rest" }}
 	if grpcServer.Server == nil {
 		grpcServer.Server = grpc.NewServer(
 			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
@@ -82,6 +93,7 @@ func (receiver *{{.SvcName}}Plugin) Initialize(restServer *rest.RestServer, grpc
 		)
 	}
 	pb.Register{{.SvcName}}ServiceServer(grpcServer, svc)
+	{{- end }}
 }
 
 func init() {

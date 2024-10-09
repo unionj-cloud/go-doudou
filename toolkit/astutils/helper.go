@@ -1,14 +1,14 @@
 package astutils
 
 import (
+	"bufio"
+	"github.com/pkg/errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/pkg/errors"
-	"golang.org/x/tools/go/packages"
 )
 
 func IsSlice(t string) bool {
@@ -50,21 +50,50 @@ func CollectStructsInFolder(dir string, sc *StructCollector) {
 	}
 }
 
+//func GetPkgPath1(filePath string) string {
+//	pkgs, err := packages.Load(&packages.Config{
+//		Mode: packages.NeedName,
+//		Dir:  filePath,
+//	})
+//	if err != nil {
+//		panic(err)
+//	}
+//	if len(pkgs) == 0 {
+//		panic(errors.New("no package found"))
+//	}
+//	if len(pkgs[0].Errors) > 0 {
+//		for _, err = range pkgs[0].Errors {
+//			panic(err)
+//		}
+//	}
+//	return pkgs[0].PkgPath
+//}
+
 func GetPkgPath(filePath string) string {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName,
-		Dir:  filePath,
-	})
+	modf, err := FindGoMod(filePath)
 	if err != nil {
 		panic(err)
 	}
-	if len(pkgs) == 0 {
-		panic(errors.New("no package found"))
+	defer modf.Close()
+	reader := bufio.NewReader(modf)
+	firstLine, _ := reader.ReadString('\n')
+	modName := strings.TrimSpace(strings.TrimPrefix(firstLine, "module"))
+	filePath, _ = filepath.Abs(filePath)
+	filePath = filepath.ToSlash(filePath)
+	result := filePath[strings.Index(filePath, modName):]
+	return result
+}
+
+func FindGoMod(filePath string) (*os.File, error) {
+	path, _ := filepath.Abs(filePath)
+	if os.IsPathSeparator(path[0]) {
+		return nil, errors.New("Can not find go.mod")
 	}
-	if len(pkgs[0].Errors) > 0 {
-		for _, err = range pkgs[0].Errors {
-			panic(err)
-		}
+	var err error
+	mf := filepath.Join(path, "go.mod")
+	var f *os.File
+	if f, err = os.Open(mf); err != nil {
+		return FindGoMod(filepath.Dir(path))
 	}
-	return pkgs[0].PkgPath
+	return f, nil
 }

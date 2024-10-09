@@ -12,17 +12,14 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
 
-	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
 	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"golang.org/x/tools/imports"
 )
 
 func GetImportStatements(input []byte) []byte {
@@ -102,34 +99,36 @@ func RestRelatedModify(src []byte, metaName string) []byte {
 
 // FixImport format source code and add missing import syntax automatically
 func FixImport(src []byte, file string) {
-	var (
-		res []byte
-		err error
-	)
-	if res, err = imports.Process(file, src, &imports.Options{
-		TabWidth:  8,
-		TabIndent: true,
-		Comments:  true,
-		Fragment:  true,
-	}); err != nil {
-		lines := strings.Split(string(src), "\n")
-		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		startLine, endLine := errLine-5, errLine+5
-		fmt.Println("Format fail:", errLine, err)
-		if startLine < 0 {
-			startLine = 0
-		}
-		if endLine > len(lines)-1 {
-			endLine = len(lines) - 1
-		}
-		for i := startLine; i <= endLine; i++ {
-			fmt.Println(i, lines[i])
-		}
-		errors.WithStack(fmt.Errorf("cannot format file: %w", err))
-	} else {
-		_ = ioutil.WriteFile(file, res, os.ModePerm)
-		return
-	}
+	//defer utils.TimeTrack(time.Now(), fmt.Sprintf("FixImport: %s", file), logrus.StandardLogger())
+	// here import format cause performance issue on some computer
+	//var (
+	//	res []byte
+	//	err error
+	//)
+	//if res, err = imports.Process(file, src, &imports.Options{
+	//	TabWidth:  8,
+	//	TabIndent: true,
+	//	Comments:  true,
+	//	Fragment:  true,
+	//}); err != nil {
+	//	lines := strings.Split(string(src), "\n")
+	//	errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+	//	startLine, endLine := errLine-5, errLine+5
+	//	fmt.Println("Format fail:", errLine, err)
+	//	if startLine < 0 {
+	//		startLine = 0
+	//	}
+	//	if endLine > len(lines)-1 {
+	//		endLine = len(lines) - 1
+	//	}
+	//	for i := startLine; i <= endLine; i++ {
+	//		fmt.Println(i, lines[i])
+	//	}
+	//	errors.WithStack(fmt.Errorf("cannot format file: %w", err))
+	//} else {
+	//	_ = ioutil.WriteFile(file, res, os.ModePerm)
+	//	return
+	//}
 	_ = ioutil.WriteFile(file, src, os.ModePerm)
 }
 

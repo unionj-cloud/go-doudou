@@ -165,11 +165,12 @@ func (receiver *Svc) Http() {
 		RoutePatternStrategy: receiver.RoutePatternStrategy,
 		AllowGetWithReqBody:  receiver.AllowGetWithReqBody,
 	})
-	runner := receiver.runner
-	if runner == nil {
-		runner = executils.CmdRunner{}
-	}
-	runner.Run("go", "mod", "tidy")
+	// here go mod tidy cause performance issue on some computer
+	//runner := receiver.runner
+	//if runner == nil {
+	//	runner = executils.CmdRunner{}
+	//}
+	//runner.Run("go", "mod", "tidy")
 }
 
 // Init inits a project
@@ -552,9 +553,10 @@ func (receiver *Svc) Grpc() {
 	}
 	codegen.FixModGrpc(dir)
 	codegen.GenMethodAnnotationStore(dir, ic)
-	runner := receiver.runner
-	if runner == nil {
-		runner = executils.CmdRunner{}
-	}
-	runner.Run("go", "mod", "tidy")
+	// here go mod tidy cause performance issue on some computer
+	//runner := receiver.runner
+	//if runner == nil {
+	//	runner = executils.CmdRunner{}
+	//}
+	//runner.Run("go", "mod", "tidy")
 }

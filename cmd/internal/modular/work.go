@@ -174,7 +174,8 @@ func (receiver *Work) Init() {
 	if err = receiver.runner.Run("go", "work", "use", "main"); err != nil {
 		panic(err)
 	}
-	if err = receiver.runner.Run("go", "work", "sync"); err != nil {
-		panic(err)
-	}
+	// Comment below code due to performance issue
+	//if err = receiver.runner.Run("go", "work", "sync"); err != nil {
+	//	panic(err)
+	//}
 }
