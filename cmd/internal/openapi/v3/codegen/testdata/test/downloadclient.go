@@ -20,8 +20,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/fileutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 type DownloadClient struct {

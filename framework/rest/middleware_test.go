@@ -26,7 +26,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	httpMock "github.com/unionj-cloud/go-doudou/v2/framework/rest/mock"
 	"github.com/unionj-cloud/go-doudou/v2/framework/restclient"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/maputils"
+	"github.com/unionj-cloud/toolkit/maputils"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"

@@ -5,7 +5,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/executils"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 var testDir string

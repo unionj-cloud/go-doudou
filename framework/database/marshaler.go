@@ -12,10 +12,10 @@ import (
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/reflectutils"
+	"github.com/unionj-cloud/toolkit/caches"
+	"github.com/unionj-cloud/toolkit/gocache/lib/cache"
+	"github.com/unionj-cloud/toolkit/gocache/lib/store"
+	"github.com/unionj-cloud/toolkit/reflectutils"
 )
 
 var json = sonic.ConfigDefault

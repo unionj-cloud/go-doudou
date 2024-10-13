@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 var testDir string

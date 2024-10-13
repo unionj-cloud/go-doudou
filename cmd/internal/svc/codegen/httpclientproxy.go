@@ -11,10 +11,10 @@ import (
 	"text/template"
 
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
-	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/copier"
+	v3helper "github.com/unionj-cloud/toolkit/openapi/v3"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
@@ -23,7 +23,7 @@ var cpimportTmpl = `
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"github.com/slok/goresilience"
 	"github.com/go-resty/resty/v2"
 	"github.com/slok/goresilience/circuitbreaker"
@@ -31,7 +31,7 @@ var cpimportTmpl = `
 	"github.com/slok/goresilience/metrics"
 	"github.com/slok/goresilience/retry"
 	"github.com/slok/goresilience/timeout"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 	"os"
 	"time"
 `

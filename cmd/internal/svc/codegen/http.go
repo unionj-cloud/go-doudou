@@ -2,7 +2,7 @@ package codegen
 
 import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/astutils"
 )
 
 func genHttp(dir string, ic astutils.InterfaceCollector, caseConvertor func(string) string) {

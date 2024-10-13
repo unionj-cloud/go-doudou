@@ -24,14 +24,14 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/ddlast"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/extraenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/wrapper"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/caller"
+	"github.com/unionj-cloud/toolkit/envconfig"
+	"github.com/unionj-cloud/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/sliceutils"
+	"github.com/unionj-cloud/toolkit/sqlext/wrapper"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 // CreateTable create table from Table

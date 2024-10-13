@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 // Route wraps config for route

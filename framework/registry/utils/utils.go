@@ -3,8 +3,8 @@ package utils
 import (
 	"github.com/hashicorp/go-sockaddr"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var GetPrivateIP = sockaddr.GetPrivateIP

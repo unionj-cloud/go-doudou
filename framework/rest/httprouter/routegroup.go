@@ -3,7 +3,7 @@ package httprouter
 import (
 	"net/http"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 type RouteGroup struct {

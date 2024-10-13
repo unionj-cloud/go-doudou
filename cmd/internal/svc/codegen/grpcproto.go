@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"os"
 	"path/filepath"
 	"sort"
@@ -9,9 +10,9 @@ import (
 	"text/template"
 
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/templateutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	protov3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/templateutils"
 )
 
 var protoTmpl = `/**
@@ -103,7 +104,7 @@ func GenGrpcProto(dir string, ic astutils.InterfaceCollector, p protov3.ProtoGen
 	}
 	defer f.Close()
 	servicePkg := astutils.GetPkgPath(dir)
-	service = p.NewService(svcname, servicePkg+"/transport/grpc")
+	service = p.NewService(svcname, servicePkg+"/transport/grpc", version.Release)
 	service.Comments = ic.Interfaces[0].Comments
 	for _, method := range ic.Interfaces[0].Methods {
 		rpc := p.NewRpc(method)

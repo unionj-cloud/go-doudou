@@ -9,7 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"testdata/vo"
 	"testdata/dto"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 	"os"
 )
 

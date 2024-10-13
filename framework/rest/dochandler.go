@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	"github.com/rs/cors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 //	 window.docs = [

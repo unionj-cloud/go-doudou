@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/testdata/vo"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 )
 
 // 用户服务接口

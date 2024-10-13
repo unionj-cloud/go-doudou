@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 	"google.golang.org/grpc"
 )
 

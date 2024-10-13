@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
 
 	"github.com/spf13/cobra"
 )

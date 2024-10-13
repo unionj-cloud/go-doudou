@@ -9,9 +9,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	v3helper "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	v3helper "github.com/unionj-cloud/toolkit/openapi/v3"
+	"github.com/unionj-cloud/toolkit/sliceutils"
 )
 
 func DataType(dir string, dtoDirs ...string) {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/astutils"
 )
 
 func TestGenMainPanic_Stat(t *testing.T) {

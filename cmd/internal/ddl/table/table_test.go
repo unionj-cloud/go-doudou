@@ -15,8 +15,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/keyenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/nullenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 func ExampleNewTableFromStruct() {

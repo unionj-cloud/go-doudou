@@ -10,7 +10,7 @@ import (
 	"github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
 	"github.com/pkg/errors"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var onceApollo sync.Once

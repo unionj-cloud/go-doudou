@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/memberlist"
 )
 
 func Test_delegate_NodeMeta(t *testing.T) {

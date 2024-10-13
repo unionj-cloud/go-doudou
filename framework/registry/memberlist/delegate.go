@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/memberlist"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 type Service struct {

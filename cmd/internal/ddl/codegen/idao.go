@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/table"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/astutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
@@ -17,7 +17,7 @@ var idaoTmpl = templates.EditableHeaderTmpl + `package dao
 
 import (
 	"context"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/query"
+	"github.com/unionj-cloud/toolkit/sqlext/query"
 	"{{.EntityPackage}}"
 )
 

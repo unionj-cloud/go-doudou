@@ -4,8 +4,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/modular"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/executils"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 // initCmd initializes the service

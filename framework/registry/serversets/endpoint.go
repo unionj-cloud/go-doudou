@@ -9,7 +9,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/cast"
 
 	"github.com/go-zookeeper/zk"
 )

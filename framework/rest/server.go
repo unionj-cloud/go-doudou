@@ -22,8 +22,8 @@ import (
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 type MiddlewareFunc func(http.Handler) http.Handler

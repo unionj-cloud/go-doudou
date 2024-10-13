@@ -12,10 +12,10 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
+	"github.com/unionj-cloud/toolkit/sliceutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -183,7 +183,7 @@ var svcTmpl = templates.EditableHeaderTmpl + `package service
 import (
 	"context"
 	"{{.DtoPackage}}"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 )
 
 //go:generate go-doudou svc http

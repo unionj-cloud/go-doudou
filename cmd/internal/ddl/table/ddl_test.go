@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/columnenum"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/ddl/sortenum"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sqlext/wrapper"
+	"github.com/unionj-cloud/toolkit/sqlext/wrapper"
 )
 
 func ExampleCreateTable() {

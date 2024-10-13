@@ -7,7 +7,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/nacos"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/zk"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 type IServiceProvider interface {

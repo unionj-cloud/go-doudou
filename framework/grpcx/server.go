@@ -14,8 +14,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	register "github.com/unionj-cloud/go-doudou/v2/framework/registry"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/timeutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/timeutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

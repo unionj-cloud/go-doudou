@@ -11,10 +11,10 @@ import (
 	"text/template"
 
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/fileutils"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
@@ -84,7 +84,7 @@ var gRPCImportBlock = `
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"google.golang.org/grpc"
     "github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
 	{{.ServiceAlias}} "{{.ServicePackage}}"

@@ -8,17 +8,17 @@ import (
 	"github.com/dgraph-io/ristretto"
 	go_cache "github.com/patrickmn/go-cache"
 	"github.com/redis/go-redis/v9"
-	gocache "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/metrics"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
-	go_cache_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/store/go_cache"
-	redis_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/store/redis"
-	ristretto_store "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/store/ristretto"
+	gocache "github.com/unionj-cloud/toolkit/gocache/lib/cache"
+	"github.com/unionj-cloud/toolkit/gocache/lib/metrics"
+	"github.com/unionj-cloud/toolkit/gocache/lib/store"
+	go_cache_store "github.com/unionj-cloud/toolkit/gocache/store/go_cache"
+	redis_store "github.com/unionj-cloud/toolkit/gocache/store/redis"
+	ristretto_store "github.com/unionj-cloud/toolkit/gocache/store/ristretto"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/sliceutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/sliceutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 var CacheManager gocache.CacheInterface[any]

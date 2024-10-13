@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/cast"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 )

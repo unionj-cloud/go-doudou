@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	gocache "github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
+	gocache "github.com/unionj-cloud/toolkit/gocache/lib/cache"
 	"github.com/wubin1989/clickhouse"
 	"github.com/wubin1989/sqlite"
 	"github.com/wubin1989/sqlserver"
@@ -20,11 +20,11 @@ import (
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/cache"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/caches"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/errorx"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 const (

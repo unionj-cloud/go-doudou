@@ -20,11 +20,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/interfaces"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/serversets"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry/utils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/errorx"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"google.golang.org/grpc"
 )
 
