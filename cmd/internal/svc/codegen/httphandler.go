@@ -24,7 +24,6 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"github.com/unionj-cloud/go-doudou/v2/framework"
 	"net/http"
-	"os"
 )
 
 type {{.Meta.Name}}Handler interface {

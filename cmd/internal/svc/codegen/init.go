@@ -28,7 +28,11 @@ import (
 	"{{.DtoPackage}}"
 )
 
+{{- if eq .ProjectType "rest" }}
+//go:generate go-doudou svc http --case {{ .JsonCase }}
+{{- else }}
 //go:generate go-doudou svc grpc --http2grpc --case {{ .JsonCase }}
+{{- end }}
 
 type {{.SvcName}} interface {
 	// You can define your service methods as your need. Below is an example.
@@ -115,7 +119,6 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/iancoleman/strcase v0.1.3
-	github.com/jmoiron/sqlx v1.3.1
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
@@ -179,6 +182,7 @@ type InitProjConfig struct {
 	ProtoGenerator v3.ProtoGenerator
 	JsonCase       string
 	DocPath        string
+	ProjectType    string
 }
 
 // InitProj inits a service project
@@ -186,18 +190,19 @@ type InitProjConfig struct {
 // modName is module name
 func InitProj(conf InitProjConfig) {
 	var (
-		err       error
-		svcName   string
-		svcfile   string
-		dtodir    string
-		dtofile   string
-		goVersion string
-		f         *os.File
-		tpl       *template.Template
-		envfile   string
-		docPath   string
+		err         error
+		svcName     string
+		svcfile     string
+		dtodir      string
+		dtofile     string
+		goVersion   string
+		f           *os.File
+		tpl         *template.Template
+		envfile     string
+		docPath     string
+		projectType string
 	)
-	dir, modName, runner, module, jsonCase, docPath := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath
+	dir, modName, runner, module, jsonCase, docPath, projectType := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath, conf.ProjectType
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
@@ -279,15 +284,17 @@ func InitProj(conf InitProjConfig) {
 
 		tpl, _ = template.New(svcTmpl).Parse(svcTmpl)
 		_ = tpl.Execute(f, struct {
-			DtoPackage string
-			SvcName    string
-			Version    string
-			JsonCase   string
+			DtoPackage  string
+			SvcName     string
+			Version     string
+			JsonCase    string
+			ProjectType string
 		}{
-			DtoPackage: strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
-			SvcName:    svcName,
-			Version:    version.Release,
-			JsonCase:   jsonCase,
+			DtoPackage:  strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
+			SvcName:     svcName,
+			Version:     version.Release,
+			JsonCase:    jsonCase,
+			ProjectType: projectType,
 		})
 	}
 
@@ -319,8 +326,12 @@ func InitProj(conf InitProjConfig) {
 	if module {
 		parser.ParseDto(dir, parser.DEFAULT_DTO_PKGS...)
 		ic := astutils.BuildInterfaceCollector(filepath.Join(dir, "svc.go"), astutils.ExprString)
-		genPlugin(dir, ic)
-		genMainModule(dir)
+		genPlugin(dir, ic, CodeGenConfig{
+			ProjectType: projectType,
+		})
+		genMain(dir, CodeGenConfig{
+			ProjectType: projectType,
+		})
 		mainMainFile := filepath.Join(filepath.Dir(dir), "main", "cmd", "main.go")
 		fileContent, err := ioutil.ReadFile(mainMainFile)
 		if err != nil {
@@ -329,9 +340,10 @@ func InitProj(conf InitProjConfig) {
 		pluginPkg := astutils.GetPkgPath(filepath.Join(dir, "plugin"))
 		original := astutils.AppendImportStatements(fileContent, []byte(fmt.Sprintf(`_ "%s"`, pluginPkg)))
 		astutils.FixImport(original, mainMainFile)
-		if err = runner.Run("go", "work", "sync"); err != nil {
-			panic(err)
-		}
+		// Comment below code due to performance issue
+		//if err = runner.Run("go", "work", "sync"); err != nil {
+		//	panic(err)
+		//}
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
-func genMainModule(dir string) {
+func genMain(dir string, conf CodeGenConfig) {
 	var (
 		err      error
 		mainfile string
@@ -31,16 +31,18 @@ func genMainModule(dir string) {
 	}
 	defer f.Close()
 
-	if tpl, err = template.New(templates.MainModuleTmpl).Parse(templates.MainModuleTmpl); err != nil {
+	if tpl, err = template.New(templates.MainTmpl).Parse(templates.MainTmpl); err != nil {
 		panic(err)
 	}
 	pluginPkg := astutils.GetPkgPath(filepath.Join(dir, "plugin"))
 	if err = tpl.Execute(&buf, struct {
+		CodeGenConfig
 		PluginPackage string
 		Version       string
 	}{
 		PluginPackage: pluginPkg,
 		Version:       version.Release,
+		CodeGenConfig: conf,
 	}); err != nil {
 		panic(err)
 	}

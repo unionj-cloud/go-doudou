@@ -19,7 +19,7 @@ import (
 var svcimportTmpl = `
 	"context"
 	"{{.ConfigPackage}}"
-	"github.com/jmoiron/sqlx"
+	"{{.DtoPackage}}"
 	"github.com/brianvoe/gofakeit/v6"
 `
 
@@ -66,6 +66,7 @@ var svcimportTmplGrpc = `
 	"context"
 	"{{.ConfigPackage}}"
 	pb "{{.PbPackage}}"
+	"google.golang.org/protobuf/types/known/emptypb"
 `
 
 var appendPartGrpc = `{{- range $m := .GrpcSvc.Rpcs }}
@@ -192,13 +193,16 @@ func GenSvcImpl(dir string, ic astutils.InterfaceCollector) {
 	}
 
 	original = append(original, buf.Bytes()...)
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if tpl, err = template.New(svcimportTmpl).Parse(svcimportTmpl); err != nil {
 		panic(err)
 	}
 	if err = tpl.Execute(&importBuf, struct {
 		ConfigPackage string
+		DtoPackage    string
 	}{
 		ConfigPackage: cfgPkg,
+		DtoPackage:    dtoPkg,
 	}); err != nil {
 		panic(err)
 	}

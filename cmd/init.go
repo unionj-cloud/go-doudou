@@ -11,6 +11,7 @@ import (
 
 var modName string
 var module bool
+var projectType string
 
 // initCmd initializes the service
 var initCmd = &cobra.Command{
@@ -32,7 +33,8 @@ var initCmd = &cobra.Command{
 		case "snake":
 			fn = strcase.ToSnake
 		}
-		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithProtocCmd(protocCmd))))
+		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProjectType(projectType),
+			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithProtocCmd(protocCmd))))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},
@@ -46,4 +48,5 @@ func init() {
 	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
 	initCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative", `command to generate grpc service and message code`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
+	initCmd.Flags().StringVarP(&projectType, "type", "t", "grpc", `Indicate project type, accept values: grpc or rest`)
 }

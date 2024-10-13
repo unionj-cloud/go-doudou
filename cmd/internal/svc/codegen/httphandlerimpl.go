@@ -395,15 +395,10 @@ var appendHttpHandlerImplTmpl = `
 var importTmpl = `
 	"context"
 	"github.com/bytedance/sonic"
-	"fmt"
-	"github.com/sirupsen/logrus"
-	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/framework/rest/httprouter"
-	"github.com/unionj-cloud/toolkit/cast"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
+	"{{.DtoPackage}}"
 	"net/http"
-	"github.com/pkg/errors"
 `
 
 var initHttpHandlerImplTmpl = templates.EditableHeaderTmpl + `package httpsrv
@@ -521,15 +516,18 @@ func GenHttpHandlerImpl(dir string, ic astutils.InterfaceCollector, config GenHt
 	}
 
 	original = append(original, buf.Bytes()...)
-	if tpl, err = template.New("himportimpl.go.tmpl").Parse(importTmpl); err != nil {
+	if tpl, err = template.New(importTmpl).Parse(importTmpl); err != nil {
 		panic(err)
 	}
+	dtoPkg := astutils.GetPkgPath(filepath.Join(dir, "dto"))
 	if err = tpl.Execute(&importBuf, struct {
 		ServicePackage string
 		ServiceAlias   string
+		DtoPackage     string
 	}{
 		ServicePackage: servicePkg,
 		ServiceAlias:   ic.Package.Name,
+		DtoPackage:     dtoPkg,
 	}); err != nil {
 		panic(err)
 	}

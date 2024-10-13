@@ -12,7 +12,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
-func genPlugin(dir string, ic astutils.InterfaceCollector) {
+type CodeGenConfig struct {
+	ProjectType string
+}
+
+func genPlugin(dir string, ic astutils.InterfaceCollector, conf CodeGenConfig) {
 	var (
 		err        error
 		pluginFile string
@@ -44,6 +48,7 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 	svcName := ic.Interfaces[0].Name
 	alias := ic.Package.Name
 	if err = tpl.Execute(&buf, struct {
+		CodeGenConfig
 		ServicePackage       string
 		ConfigPackage        string
 		TransportGrpcPackage string
@@ -59,6 +64,7 @@ func genPlugin(dir string, ic astutils.InterfaceCollector) {
 		ServiceAlias:         alias,
 		SvcName:              svcName,
 		Version:              version.Release,
+		CodeGenConfig:        conf,
 	}); err != nil {
 		panic(err)
 	}
