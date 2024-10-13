@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caller"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/caller"
+	"github.com/unionj-cloud/toolkit/zlogger"
 
 	"github.com/go-zookeeper/zk"
 )

@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 )
 
 var dtoTmpl = templates.EditableHeaderTmpl + `package {{.Pkg}}

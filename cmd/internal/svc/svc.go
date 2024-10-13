@@ -18,11 +18,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/codegen/database"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/assert"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/executils"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 //go:generate mockgen -destination ../../mock/mock_svc.go -package mock -source=./svc.go

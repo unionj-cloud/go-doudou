@@ -6,8 +6,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
 	"github.com/unionj-cloud/go-doudou/v2/framework/plugin"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/pipeconn"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	{{.ServiceAlias}} "{{.ServicePackage}}"
 	"{{.ConfigPackage}}"
 	"{{.TransportHttpPackage}}"
@@ -23,7 +23,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	{{- end }}
 )
 

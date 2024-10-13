@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"github.com/unionj-cloud/toolkit/fileutils"
 )
 
 func Test_notGenerated(t *testing.T) {

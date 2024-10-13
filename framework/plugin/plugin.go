@@ -4,7 +4,7 @@ import (
 	"github.com/elliotchance/orderedmap/v2"
 	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pipeconn"
+	"github.com/unionj-cloud/toolkit/pipeconn"
 )
 
 var servicePlugins = orderedmap.NewOrderedMap[string, ServicePlugin]()

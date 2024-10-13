@@ -19,11 +19,11 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	protov3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/constants"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
+	protov3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 var DEFAULT_DTO_PKGS = []string{"vo", "dto", "model"}

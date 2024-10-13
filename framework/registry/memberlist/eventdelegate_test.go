@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/memberlist"
 )
 
 var json = sonic.ConfigDefault

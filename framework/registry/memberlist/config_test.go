@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/memberlist"
 )
 
 func TestMain(m *testing.M) {

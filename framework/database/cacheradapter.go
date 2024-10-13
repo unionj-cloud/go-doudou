@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/caches"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/cache"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gocache/lib/store"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/caches"
+	"github.com/unionj-cloud/toolkit/gocache/lib/cache"
+	"github.com/unionj-cloud/toolkit/gocache/lib/store"
+	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var _ caches.Cacher = (*CacherAdapter)(nil)

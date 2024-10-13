@@ -13,11 +13,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/common"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/common"
+	"github.com/unionj-cloud/toolkit/executils"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 

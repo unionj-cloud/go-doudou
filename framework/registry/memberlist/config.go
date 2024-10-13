@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 func setGddMemDeadTimeout(conf *memberlist.Config) {

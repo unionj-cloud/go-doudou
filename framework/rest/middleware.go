@@ -26,8 +26,8 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var json = sonic.ConfigDefault

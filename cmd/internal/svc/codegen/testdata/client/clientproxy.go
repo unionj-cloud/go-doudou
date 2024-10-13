@@ -17,7 +17,7 @@ import (
 	"github.com/slok/goresilience/metrics"
 	"github.com/slok/goresilience/retry"
 	"github.com/slok/goresilience/timeout"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 )
 
 type UsersvcClientProxy struct {

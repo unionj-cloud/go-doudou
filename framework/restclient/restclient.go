@@ -12,7 +12,7 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/registry"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/cast"
 )
 
 // RestClient defines service client interface

@@ -1,7 +1,7 @@
 package memberlist
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/memberlist"
 )
 
 type eventDelegate struct {

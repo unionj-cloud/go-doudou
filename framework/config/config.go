@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/fileutils"
 
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
@@ -25,12 +25,12 @@ import (
 	_ "go.uber.org/automaxprocs"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/dotenv"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/envconfig"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/yaml"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/dotenv"
+	"github.com/unionj-cloud/toolkit/envconfig"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/yaml"
+	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var GddConfig = &gddConfig{}

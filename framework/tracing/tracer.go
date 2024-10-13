@@ -11,8 +11,8 @@ import (
 	"github.com/uber/jaeger-lib/metrics"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	ddconfig "github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 // Init returns an instance of Jaeger Tracer.

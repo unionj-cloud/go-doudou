@@ -14,8 +14,8 @@ import (
 
 	"github.com/rbretecher/go-postman-collection"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
@@ -73,7 +73,7 @@ var integrationTestingImportTmpl = `
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	"github.com/steinfletcher/apitest"
 	jsonpath "github.com/steinfletcher/apitest-jsonpath"
 	"net/http"

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 var ConfigRoutes = configRoutes

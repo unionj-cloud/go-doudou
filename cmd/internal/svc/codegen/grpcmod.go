@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/fileutils"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/fileutils"
 )
 
 var goModFixGrpc = `

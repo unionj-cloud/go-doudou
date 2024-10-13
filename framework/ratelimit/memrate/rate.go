@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 // Limit defines the maximum frequency of some events.

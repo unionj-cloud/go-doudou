@@ -1,17 +1,17 @@
 package database
 
 import (
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/astutils"
 	"path/filepath"
 	"strings"
 
 	"github.com/gobwas/glob"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/errorx"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen/field"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/errorx"
+	"github.com/unionj-cloud/toolkit/executils"
+	"github.com/wubin1989/gen"
+	"github.com/wubin1989/gen/field"
+	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
@@ -71,7 +71,7 @@ func (gg *GormGenerator) fix() {
 	//		panic(err)
 	//	}
 	//	fileContent := string(source)
-	//	fileContent = strings.ReplaceAll(fileContent, "github.com/wubin1989/gen", "github.com/unionj-cloud/go-doudou/v2/toolkit/gormgen")
+	//	fileContent = strings.ReplaceAll(fileContent, "github.com/wubin1989/gen", "github.com/wubin1989/gen")
 	//	ioutil.WriteFile(file, []byte(fileContent), os.ModePerm)
 	//}
 }

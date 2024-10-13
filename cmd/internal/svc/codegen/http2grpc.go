@@ -11,8 +11,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/copier"
+	"github.com/unionj-cloud/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/copier"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 

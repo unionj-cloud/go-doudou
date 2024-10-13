@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/executils"
+	"github.com/unionj-cloud/toolkit/executils"
 )
 
 func TestInitProj(t *testing.T) {

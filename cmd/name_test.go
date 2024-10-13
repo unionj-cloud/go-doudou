@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/unionj-cloud/go-doudou/v2/cmd"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/astutils"
+	"github.com/unionj-cloud/toolkit/astutils"
 )
 
 func TestNameCmd(t *testing.T) {

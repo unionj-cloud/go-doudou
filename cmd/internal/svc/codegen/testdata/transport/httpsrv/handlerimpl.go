@@ -17,8 +17,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
+	"github.com/unionj-cloud/toolkit/cast"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
 )
 
 type UsersvcHandlerImpl struct {

@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v3 "github.com/unionj-cloud/go-doudou/v2/toolkit/openapi/v3"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	v3 "github.com/unionj-cloud/toolkit/openapi/v3"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 func TestPattern2Method(t *testing.T) {

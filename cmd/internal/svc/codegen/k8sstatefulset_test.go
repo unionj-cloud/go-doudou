@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/pathutils"
+	"github.com/unionj-cloud/toolkit/pathutils"
 )
 
 func TestGenK8sStatefulset(t *testing.T) {

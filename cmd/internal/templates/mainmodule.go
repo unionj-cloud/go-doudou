@@ -8,7 +8,7 @@ import (
 	{{- end }}
 	"github.com/unionj-cloud/go-doudou/v2/framework/plugin"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/zlogger"
 	_ "{{.PluginPackage}}"
 )
 

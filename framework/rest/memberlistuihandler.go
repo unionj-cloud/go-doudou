@@ -8,7 +8,7 @@ import (
 
 	"github.com/hako/durafmt"
 	registry "github.com/unionj-cloud/go-doudou/v2/framework/registry/memberlist"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/memberlist"
 )
 
 type Row struct {

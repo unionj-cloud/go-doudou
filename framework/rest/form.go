@@ -2,8 +2,8 @@ package rest
 
 import (
 	"github.com/goccy/go-reflect"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/form"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/form"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	"net/url"
 )
 

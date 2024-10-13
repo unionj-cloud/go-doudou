@@ -19,11 +19,11 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 	cons "github.com/unionj-cloud/go-doudou/v2/framework/registry/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/cast"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/memberlist"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
-	logger "github.com/unionj-cloud/go-doudou/v2/toolkit/zlogger"
+	"github.com/unionj-cloud/toolkit/cast"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/memberlist"
+	"github.com/unionj-cloud/toolkit/stringutils"
+	logger "github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var mlist memberlist.IMemberlist

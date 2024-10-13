@@ -9,8 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/framework/buildinfo"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/constants"
-	"github.com/unionj-cloud/go-doudou/v2/toolkit/stringutils"
+	"github.com/unionj-cloud/toolkit/constants"
+	"github.com/unionj-cloud/toolkit/stringutils"
 )
 
 var (
