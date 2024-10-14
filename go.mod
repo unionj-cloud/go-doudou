@@ -31,7 +31,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/unionj-cloud/toolkit v0.0.1
-	github.com/wubin1989/gen v0.0.1
+	github.com/wubin1989/gen v0.0.2
 	golang.org/x/tools v0.26.0 // indirect
 )
 
