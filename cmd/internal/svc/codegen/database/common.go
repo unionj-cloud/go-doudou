@@ -6,8 +6,8 @@ import (
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/validate"
 	"github.com/unionj-cloud/toolkit/astutils"
 	"github.com/unionj-cloud/toolkit/executils"
-	"github.com/wubin1989/gen"
 	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
+	"github.com/wubin1989/gen"
 	"os"
 	"path/filepath"
 )
@@ -43,12 +43,13 @@ type OrmGeneratorConfig struct {
 
 type IOrmGenerator interface {
 	svcGo()
-	svcImplGo()
-	svcImplGrpc(v3.Service)
+	svcImplGrpc()
+	svcImplRest()
 	orm()
 	fix()
 	Initialize(conf OrmGeneratorConfig)
-	GenService()
+	GenGrpc()
+	GenRest()
 	GenDao()
 }
 
@@ -74,6 +75,39 @@ type AbstractBaseGenerator struct {
 	ConfigPackage       string
 }
 
+func (b *AbstractBaseGenerator) GenRest() {
+	b.orm()
+	b.svcGo()
+	b.svcImplRest()
+
+	validate.DataType(b.Dir, parser.DEFAULT_DTO_PKGS...)
+	ic := astutils.BuildInterfaceCollector(filepath.Join(b.Dir, "svc.go"), astutils.ExprString)
+	validate.RestApi(b.Dir, ic)
+
+	codegen.GenHttpMiddleware(b.Dir)
+	codegen.GenHttpHandler(b.Dir, ic, 0)
+	codegen.GenHttpHandlerImpl(b.Dir, ic, codegen.GenHttpHandlerImplConfig{
+		Omitempty:           b.Omitempty,
+		AllowGetWithReqBody: b.AllowGetWithReqBody,
+		CaseConvertor:       b.CaseConverter,
+	})
+	if b.Client {
+		codegen.GenGoIClient(b.Dir, ic)
+		codegen.GenGoClient(b.Dir, ic, codegen.GenGoClientConfig{
+			Env:                 b.Env,
+			AllowGetWithReqBody: b.AllowGetWithReqBody,
+			CaseConvertor:       b.CaseConverter,
+		})
+		codegen.GenGoClientProxy(b.Dir, ic)
+	}
+	parser.GenDoc(b.Dir, ic, parser.GenDocConfig{
+		AllowGetWithReqBody: b.AllowGetWithReqBody,
+	})
+
+	b.fix()
+	b.goModTidy()
+}
+
 func (b *AbstractBaseGenerator) GenDao() {
 	b.orm()
 	b.goModTidy()
@@ -87,16 +121,16 @@ func (b *AbstractBaseGenerator) orm() {
 	b.impl.orm()
 }
 
-func (b *AbstractBaseGenerator) svcImplGrpc(grpcService v3.Service) {
-	b.impl.svcImplGrpc(grpcService)
+func (b *AbstractBaseGenerator) svcImplRest() {
+	b.impl.svcImplRest()
 }
 
 func (b *AbstractBaseGenerator) svcGo() {
 	b.impl.svcGo()
 }
 
-func (b *AbstractBaseGenerator) svcImplGo() {
-	b.impl.svcImplGo()
+func (b *AbstractBaseGenerator) svcImplGrpc() {
+	b.impl.svcImplGrpc()
 }
 
 func (b *AbstractBaseGenerator) Initialize(conf OrmGeneratorConfig) {
@@ -104,10 +138,10 @@ func (b *AbstractBaseGenerator) Initialize(conf OrmGeneratorConfig) {
 	panic("implement me")
 }
 
-func (b *AbstractBaseGenerator) GenService() {
+func (b *AbstractBaseGenerator) GenGrpc() {
 	b.orm()
 	b.svcGo()
-	b.svcImplGo()
+	b.svcImplGrpc()
 
 	validate.DataType(b.Dir, parser.DEFAULT_DTO_PKGS...)
 	ic := astutils.BuildInterfaceCollector(filepath.Join(b.Dir, "svc.go"), astutils.ExprString)

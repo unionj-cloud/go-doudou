@@ -110,7 +110,7 @@ type DbConfig struct {
 	GenGenGo  bool
 	Orm       string
 	Soft      string
-	Service   bool
+	Service   string
 	Omitempty bool
 }
 
@@ -202,8 +202,13 @@ func (receiver *Svc) Crud() {
 		ProtoGenerator:   receiver.protoGenerator,
 		Omitempty:        receiver.DbConfig.Omitempty,
 	})
-	if receiver.DbConfig.Service {
-		gen.GenService()
+	if stringutils.IsNotEmpty(receiver.DbConfig.Service) {
+		switch receiver.DbConfig.Service {
+		case "grpc":
+			gen.GenGrpc()
+		case "rest":
+			gen.GenRest()
+		}
 	} else {
 		gen.GenDao()
 	}

@@ -14,7 +14,7 @@ var dbDriver string
 var dbDsn string
 var dbOrm string
 var dbSoft string
-var dbService bool
+var dbService string
 var dbTablePrefix string
 var dbTableGlob string
 var dbTableExcludeGlob string
@@ -62,7 +62,7 @@ func init() {
 	crudCmd.Flags().StringVar(&dbDriver, "db_driver", "", `Choose one database driver from "mysql", "postgres", "sqlite", "sqlserver", "tidb"`)
 	crudCmd.Flags().StringVar(&dbDsn, "db_dsn", "", `Specify database connection url`)
 	crudCmd.Flags().StringVar(&dbSoft, "db_soft", "deleted_at", `Specify database soft delete column name`)
-	crudCmd.Flags().BoolVar(&dbService, "db_service", false, `If false, only dao layer code will be generated.`)
+	crudCmd.Flags().StringVar(&dbService, "db_service", "", `Generate grpc or rest service, accept values: grpc or rest`)
 	crudCmd.Flags().BoolVar(&dbGenGenGo, "db_gen_gen", false, `whether generate gen.go file`)
 	crudCmd.Flags().StringVar(&dbTablePrefix, "db_table_prefix", "", `table prefix or schema name for pg`)
 	crudCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)

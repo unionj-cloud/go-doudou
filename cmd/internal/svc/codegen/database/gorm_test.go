@@ -15,5 +15,5 @@ func TestInitialize(t *testing.T) {
 		TablePrefix: "tutorial",
 		Dir:         dir,
 	})
-	gen.GenService()
+	gen.GenGrpc()
 }

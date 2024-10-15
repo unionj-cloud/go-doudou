@@ -42,7 +42,9 @@ func (receiver *Work) SetWorkDir(workDir string) {
 	receiver.conf.WorkDir = workDir
 }
 
-const workTmpl = `go {{.GoVersion}}
+const workTmpl = `go 1.22.2
+
+toolchain go1.22.3
 `
 
 func (receiver *Work) goModInMainPkg(dir, modName, goVersion string) {

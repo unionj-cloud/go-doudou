@@ -31,12 +31,14 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/unionj-cloud/toolkit v0.0.1
+	github.com/wubin1989/dbresolver v0.0.2
 	github.com/wubin1989/gen v0.0.2
+	github.com/wubin1989/gorm v0.0.5
 	golang.org/x/tools v0.26.0 // indirect
 )
 
 require (
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.12.3
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/elliotchance/orderedmap/v2 v2.2.0
@@ -54,7 +56,6 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
 	github.com/wubin1989/clickhouse v0.0.3
-	github.com/wubin1989/gorm v0.0.5
 	github.com/wubin1989/mysql v0.0.2
 	github.com/wubin1989/prometheus v0.0.2-0.20240611143457-960b4a499cef
 	github.com/wubin1989/sqlite v0.0.3
@@ -108,7 +109,6 @@ require (
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/wubin1989/datatypes v0.0.2 // indirect
-	github.com/wubin1989/dbresolver v0.0.2 // indirect
 	github.com/wubin1989/hints v0.0.2 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
@@ -280,3 +280,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/grpc v1.64.1
 )
+
+replace github.com/wubin1989/gen v0.0.2 => /Users/wubin1989/workspace/cloud/gorm-repo/gen

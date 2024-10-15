@@ -8,10 +8,9 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/unionj-cloud/toolkit/errorx"
 	"github.com/unionj-cloud/toolkit/executils"
+	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/wubin1989/gen"
 	"github.com/wubin1989/gen/field"
-	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
-	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/wubin1989/gorm"
 	"github.com/wubin1989/mysql"
 	"github.com/wubin1989/postgres"
@@ -43,12 +42,12 @@ func (gg *GormGenerator) svcGo() {
 	gg.g.GenerateSvcGo()
 }
 
-func (gg *GormGenerator) svcImplGo() {
-	gg.g.GenerateSvcImplGo()
+func (gg *GormGenerator) svcImplGrpc() {
+	gg.g.GenerateSvcImplGrpc()
 }
 
-func (gg *GormGenerator) svcImplGrpc(grpcService v3.Service) {
-	gg.g.GenerateSvcImplGrpc(grpcService)
+func (gg *GormGenerator) svcImplRest() {
+	gg.g.GenerateSvcImplRest()
 }
 
 func (gg *GormGenerator) orm() {
