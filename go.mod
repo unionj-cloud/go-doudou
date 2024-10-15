@@ -30,9 +30,9 @@ require (
 	github.com/testcontainers/testcontainers-go v0.33.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
-	github.com/unionj-cloud/toolkit v0.0.1
-	github.com/wubin1989/dbresolver v0.0.2
-	github.com/wubin1989/gen v0.0.2
+	github.com/unionj-cloud/toolkit v0.0.2-0.20241015161618-e812d3db7021
+	github.com/wubin1989/dbresolver v0.0.2 // indirect
+	github.com/wubin1989/gen v0.0.3-0.20241015161334-f98498e86daf
 	github.com/wubin1989/gorm v0.0.5
 	golang.org/x/tools v0.26.0 // indirect
 )
@@ -280,5 +280,3 @@ require (
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/grpc v1.64.1
 )
-
-replace github.com/wubin1989/gen v0.0.2 => /Users/wubin1989/workspace/cloud/gorm-repo/gen
