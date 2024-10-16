@@ -68,6 +68,6 @@ func init() {
 	crudCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	crudCmd.Flags().StringVar(&dbTableExcludeGlob, "db_table_exclude_glob", "", `used to filter glob-matched tables`)
 	crudCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
-	crudCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative", `command to generate grpc service and message code`)
+	crudCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative,allow_unknown=true", `command to generate grpc service and message code`)
 	crudCmd.Flags().BoolVar(&dbOmitempty, "db_omitempty", false, `whether add omitempty json tag to generated model field"`)
 }

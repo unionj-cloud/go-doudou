@@ -46,7 +46,7 @@ func init() {
 	initCmd.Flags().BoolVar(&module, "module", false, `If true, a module will be initialized for building modular application`)
 	initCmd.Flags().StringVarP(&modName, "mod", "m", "", `Module name`)
 	initCmd.Flags().StringVarP(&docfile, "file", "f", "", `OpenAPI 3.0 or Swagger 2.0 spec json file path or download link`)
-	initCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative", `command to generate grpc service and message code`)
+	initCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative,allow_unknown=true", `command to generate grpc service and message code`)
 	initCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
 	initCmd.Flags().StringVarP(&projectType, "type", "t", "grpc", `Indicate project type, accept values: grpc or rest`)
 }

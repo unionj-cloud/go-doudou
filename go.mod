@@ -88,6 +88,7 @@ require (
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/gobuffalo/flect v1.0.3 // indirect
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
@@ -280,3 +281,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/grpc v1.64.1
 )
+
+replace github.com/unionj-cloud/toolkit v0.0.2-0.20241015161618-e812d3db7021 => E:\workspace\unionj-cloud\github.com\unionj-cloud\toolkit
