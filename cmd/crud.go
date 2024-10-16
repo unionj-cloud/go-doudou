@@ -20,6 +20,7 @@ var dbTableGlob string
 var dbTableExcludeGlob string
 var dbGenGenGo bool
 var dbOmitempty bool
+var dbTypeMapping string
 
 var crudCmd = &cobra.Command{
 	Use:   "crud",
@@ -42,6 +43,7 @@ var crudCmd = &cobra.Command{
 			Soft:             dbSoft,
 			Service:          dbService,
 			Omitempty:        dbOmitempty,
+			TypeMapping:      dbTypeMapping,
 		}))
 		fn := strcase.ToLowerCamel
 		switch naming {
@@ -68,6 +70,7 @@ func init() {
 	crudCmd.Flags().StringVar(&dbTableGlob, "db_table_glob", "", `used to filter glob-matched tables`)
 	crudCmd.Flags().StringVar(&dbTableExcludeGlob, "db_table_exclude_glob", "", `used to filter glob-matched tables`)
 	crudCmd.Flags().StringVar(&naming, "case", "lowerCamel", `protobuf message field and json tag case, only support "lowerCamel" and "snake"`)
+	crudCmd.Flags().StringVar(&dbTypeMapping, "db_type_mapping", "", `Specify custom column type to go type mapping, multiple mappings can be joined by comma, eg. bigint:string,tinyint:bool`)
 	crudCmd.Flags().StringVar(&protocCmd, "grpc_gen_cmd", "protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative --go-json_out=. --go-json_opt=paths=source_relative,allow_unknown=true", `command to generate grpc service and message code`)
 	crudCmd.Flags().BoolVar(&dbOmitempty, "db_omitempty", false, `whether add omitempty json tag to generated model field"`)
 }

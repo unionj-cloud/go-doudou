@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/samber/lo"
 	"github.com/unionj-cloud/toolkit/astutils"
 	"path/filepath"
 	"strings"
@@ -155,6 +156,21 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 		}
 		return tagContent
 	})
+	if stringutils.IsNotEmpty(conf.TypeMapping) {
+		typeMapping := make(map[string]func(gorm.ColumnType) (dataType string))
+		lo.ForEach(strings.Split(conf.TypeMapping, ","), func(item string, index int) {
+			kv := strings.Split(item, ":")
+			columnType := kv[0]
+			goType := kv[1]
+			typeMapping[columnType] = func(columnType gorm.ColumnType) (dataType string) {
+				if n, ok := columnType.Nullable(); ok && n {
+					return "*" + goType
+				}
+				return goType
+			}
+		})
+		g.WithDataTypeMap(typeMapping)
+	}
 	g.UseDB(db)
 	g.GenGenGo = gg.GenGenGo
 	var models []interface{}

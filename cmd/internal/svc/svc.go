@@ -107,11 +107,12 @@ type DbConfig struct {
 	TableGlob        string
 	TableExcludeGlob string
 	// whether generate gen.go file
-	GenGenGo  bool
-	Orm       string
-	Soft      string
-	Service   string
-	Omitempty bool
+	GenGenGo    bool
+	Orm         string
+	Soft        string
+	Service     string
+	Omitempty   bool
+	TypeMapping string
 }
 
 func (receiver *Svc) SetWatcher(w *watcher.Watcher) {
@@ -201,6 +202,7 @@ func (receiver *Svc) Crud() {
 		Soft:             receiver.DbConfig.Soft,
 		ProtoGenerator:   receiver.protoGenerator,
 		Omitempty:        receiver.DbConfig.Omitempty,
+		TypeMapping:      receiver.DbConfig.TypeMapping,
 	})
 	if stringutils.IsNotEmpty(receiver.DbConfig.Service) {
 		switch receiver.DbConfig.Service {

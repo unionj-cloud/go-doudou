@@ -39,6 +39,7 @@ type OrmGeneratorConfig struct {
 	Soft             string
 	ProtoGenerator   v3.ProtoGenerator
 	Omitempty        bool
+	TypeMapping      string
 }
 
 type IOrmGenerator interface {
