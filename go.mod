@@ -38,7 +38,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.12.3
+	github.com/bytedance/sonic v1.12.1
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/elliotchance/orderedmap/v2 v2.2.0
