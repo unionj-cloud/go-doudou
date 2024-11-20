@@ -124,7 +124,7 @@ func (gg *GormGenerator) Initialize(conf OrmGeneratorConfig) {
 	g := gormgen.NewGenerator(gormgen.Config{
 		RootDir:       gg.Dir,
 		OutPath:       gg.Dir + "/query",
-		Mode:          gormgen.WithDefaultQuery | gormgen.WithQueryInterface,
+		Mode:          gormgen.WithoutContext | gormgen.WithDefaultQuery | gormgen.WithQueryInterface,
 		FieldNullable: true,
 		// if you want to assign field which has a default value in the `Create` API, set FieldCoverable true
 		FieldCoverable: true,
