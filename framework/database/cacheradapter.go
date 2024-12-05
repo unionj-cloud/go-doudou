@@ -7,7 +7,6 @@ import (
 	"github.com/unionj-cloud/toolkit/caches"
 	"github.com/unionj-cloud/toolkit/gocache/lib/cache"
 	"github.com/unionj-cloud/toolkit/gocache/lib/store"
-	"github.com/unionj-cloud/toolkit/zlogger"
 )
 
 var _ caches.Cacher = (*CacherAdapter)(nil)
@@ -29,7 +28,6 @@ func (c *CacherAdapter) Get(key string) *caches.Query {
 	result := new(caches.Query)
 	_, err := c.marshaler.Get(context.Background(), key, result)
 	if err != nil {
-		zlogger.Err(err).Msg(err.Error())
 		return nil
 	}
 	return result
