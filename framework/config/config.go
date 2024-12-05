@@ -541,6 +541,7 @@ type Config struct {
 		Postgres struct {
 			PreferSimpleProtocol bool
 			WithoutReturning     bool
+			WithoutQuotingCheck  bool
 		}
 		Pool struct {
 			MaxIdleConns    int `default:"2"`

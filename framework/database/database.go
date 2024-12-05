@@ -235,6 +235,7 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 			DSN:                  dsn,
 			PreferSimpleProtocol: conf.Db.Postgres.PreferSimpleProtocol,
 			WithoutReturning:     conf.Db.Postgres.WithoutReturning,
+			WithoutQuotingCheck:  conf.Db.Postgres.WithoutQuotingCheck,
 		}
 		db, err = gorm.Open(postgres.New(conf), gormConf)
 	case DriverSqlite:
