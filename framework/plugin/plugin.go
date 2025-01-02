@@ -14,7 +14,6 @@ type ServicePlugin interface {
 	GetName() string
 	Close()
 	GoDoudouServicePlugin()
-	GetServiceInstance() interface{}
 }
 
 func RegisterServicePlugin(plugin ServicePlugin) {
