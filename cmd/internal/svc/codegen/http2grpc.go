@@ -11,9 +11,9 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"github.com/unionj-cloud/toolkit/astutils"
 	"github.com/unionj-cloud/toolkit/copier"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 var appendHttp2GrpcTmpl = `
@@ -114,8 +114,6 @@ var initHttp2GrpcTmpl = templates.EditableHeaderTmpl + `package httpsrv
 
 import ()
 
-var json = sonic.ConfigDefault
-
 type {{.Meta.Name}}Http2Grpc struct{
 	{{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}ServiceServer
 }
@@ -131,7 +129,6 @@ func New{{.Meta.Name}}Http2Grpc({{.Meta.Name | toLowerCamel}} pb.{{.Meta.Name}}S
 
 var importHttp2GrpcTmpl = `
 	"context"
-	"github.com/bytedance/sonic"
 	"github.com/unionj-cloud/go-doudou/v2/framework/rest"
 	"net/http"
 	pb "{{.TransportGrpcPackage}}"
