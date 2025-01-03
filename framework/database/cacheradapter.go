@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/unionj-cloud/toolkit/zlogger"
 
 	"github.com/pkg/errors"
 	"github.com/unionj-cloud/toolkit/caches"
@@ -28,6 +29,7 @@ func (c *CacherAdapter) Get(key string) *caches.Query {
 	result := new(caches.Query)
 	_, err := c.marshaler.Get(context.Background(), key, result)
 	if err != nil {
+		zlogger.Info().Msgf("Cache missing: key %s %s\n", key, err.Error())
 		return nil
 	}
 	return result
