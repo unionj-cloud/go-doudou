@@ -25,6 +25,7 @@ import (
 	"github.com/unionj-cloud/toolkit/errorx"
 	"github.com/unionj-cloud/toolkit/stringutils"
 	"github.com/unionj-cloud/toolkit/zlogger"
+	"github.com/wubin1989/gorm-dameng"
 )
 
 const (
@@ -34,6 +35,7 @@ const (
 	DriverSqlserver  = "sqlserver"
 	DriverTidb       = "tidb"
 	DriverClickhouse = "clickhouse"
+	DriverDm         = "dm"
 )
 
 var Db *gorm.DB
@@ -118,6 +120,8 @@ func init() {
 		Db, err = gorm.Open(sqlserver.Open(dsn), gormConf)
 	case DriverClickhouse:
 		Db, err = gorm.Open(clickhouse.Open(dsn), gormConf)
+	case DriverDm:
+		Db, err = gorm.Open(dameng.Open(dsn), gormConf)
 	default:
 		errorx.Panic("Not support driver")
 	}
@@ -244,6 +248,8 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 		db, err = gorm.Open(sqlserver.Open(dsn), gormConf)
 	case DriverClickhouse:
 		db, err = gorm.Open(clickhouse.Open(dsn), gormConf)
+	case DriverDm:
+		db, err = gorm.Open(dameng.Open(dsn), gormConf)
 	default:
 		errorx.Panic("Not support driver")
 	}
