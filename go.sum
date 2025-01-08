@@ -1651,8 +1651,8 @@ github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oW
 github.com/ulikunitz/xz v0.5.9/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/ulikunitz/xz v0.5.11 h1:kpFauv27b6ynzBNT/Xy+1k+fK4WswhN/6PN5WhFAGw8=
 github.com/ulikunitz/xz v0.5.11/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
-github.com/unionj-cloud/toolkit v0.0.2 h1:1pNdQGiGPpeTHcYTuV7fRLaU8um2PtsnBKxs/am+fmc=
-github.com/unionj-cloud/toolkit v0.0.2/go.mod h1:U3eZuLQ9pGdREtjD3s7gDrv9ySiFcxrOQQE1pnCcJ+A=
+github.com/unionj-cloud/toolkit v0.0.3-0.20250107140835-68415cd57cee h1:iVGVlbGokn8rwVQpHNx55xb6xJkyqYX7ngrrXmatveU=
+github.com/unionj-cloud/toolkit v0.0.3-0.20250107140835-68415cd57cee/go.mod h1:U3eZuLQ9pGdREtjD3s7gDrv9ySiFcxrOQQE1pnCcJ+A=
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.6.0/go.mod h1:FstJa9V+Pj9vQ7OJie2qMHdwemEDaDiSdBnvPM1Su9w=
