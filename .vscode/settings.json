@@ -1,0 +1,25 @@
+{
+  "vscode.tsc.compiler.alertTSConfigChanges": "never",
+  "go.useLanguageServer": true,
+  "go.toolsManagement.autoUpdate": true,
+  "go.gopath": "/Users/wubin1989/.gvm/pkgsets/go1.23.4/global",
+  "go.goroot": "/Users/wubin1989/.gvm/gos/go1.23.4",
+  "go.formatTool": "goimports",
+  "[go]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+      }
+  },
+  "go.delveConfig": {
+      "dlvLoadConfig": {
+          "followPointers": true,
+          "maxVariableRecurse": 1,
+          "maxStringLen": 2048,
+          "maxArrayValues": 64,
+          "maxStructFields": -1
+      },
+      "apiVersion": 2,
+      "showGlobalVariables": false
+  }
+}

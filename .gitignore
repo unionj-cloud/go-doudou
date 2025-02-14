@@ -7,3 +7,5 @@ cmd/testdata/testsvc/cmd/cmd
 coverage.out
 resources
 cmd/internal/openapi/v3/codegen/testdata/mytest
+.cursorrules
+.cursorignore

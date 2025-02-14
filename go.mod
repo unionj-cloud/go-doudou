@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.33.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
-	github.com/unionj-cloud/toolkit v0.0.3-0.20250107140835-68415cd57cee
+	github.com/unionj-cloud/toolkit v0.0.4
 	github.com/wubin1989/dbresolver v0.0.2 // indirect
 	github.com/wubin1989/gen v0.0.4
 	github.com/wubin1989/gorm v0.0.5
@@ -56,7 +56,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/slok/goresilience v0.2.0
 	github.com/wubin1989/clickhouse v0.0.3
-	github.com/wubin1989/gorm-dameng v0.5.1-0.20250106095453-7466d5274bbd
+	github.com/wubin1989/gorm-dameng v0.5.1
 	github.com/wubin1989/mysql v0.0.2
 	github.com/wubin1989/prometheus v0.0.2-0.20240611143457-960b4a499cef
 	github.com/wubin1989/sqlite v0.0.3
