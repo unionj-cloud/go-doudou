@@ -433,19 +433,19 @@ func (srv *RestServer) Serve(ln net.Listener) {
 	framework.PrintLock.Unlock()
 }
 
-func (srv *RestServer)addStaticResource(storage fs.FS, routePattern string) {
+func (srv *RestServer) AddStaticResource(storage fs.FS, routePattern string) {
 	assetHandler := http.FileServer(http.FS(storage))
 	name := strcase.ToCamel(strings.ReplaceAll(routePattern, "/", "_"))
-	srv.AddRoute(rest.Route{
+	srv.AddRoute(Route{
 		Name:        name + "Home",
 		Method:      http.MethodGet,
 		Pattern:     routePattern,
-		HandlerFunc: http.StripPrefix(gddconf.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
+		HandlerFunc: http.StripPrefix(config.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
 	})
-	srv.AddRoute(rest.Route{
+	srv.AddRoute(Route{
 		Name:        name + "Assets",
 		Method:      http.MethodGet,
 		Pattern:     routePattern + "/*",
-		HandlerFunc: http.StripPrefix(gddconf.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
+		HandlerFunc: http.StripPrefix(config.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
 	})
 }
