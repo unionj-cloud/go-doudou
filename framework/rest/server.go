@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/ascarter/requestid"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gorilla/handlers"
+	"github.com/iancoleman/strcase"
 	"github.com/klauspost/compress/gzhttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/samber/lo"
@@ -429,4 +431,21 @@ func (srv *RestServer) Serve(ln net.Listener) {
 	logger.Info().Msgf("Http server is listening at %v", ln.Addr().String())
 	logger.Info().Msgf("Http server started in %s", time.Since(startAt))
 	framework.PrintLock.Unlock()
+}
+
+func (srv *RestServer)addStaticResource(storage fs.FS, routePattern string) {
+	assetHandler := http.FileServer(http.FS(storage))
+	name := strcase.ToCamel(strings.ReplaceAll(routePattern, "/", "_"))
+	srv.AddRoute(rest.Route{
+		Name:        name + "Home",
+		Method:      http.MethodGet,
+		Pattern:     routePattern,
+		HandlerFunc: http.StripPrefix(gddconf.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
+	})
+	srv.AddRoute(rest.Route{
+		Name:        name + "Assets",
+		Method:      http.MethodGet,
+		Pattern:     routePattern + "/*",
+		HandlerFunc: http.StripPrefix(gddconf.GddConfig.RouteRootPath+routePattern, assetHandler).ServeHTTP,
+	})
 }
