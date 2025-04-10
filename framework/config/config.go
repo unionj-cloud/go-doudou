@@ -552,6 +552,7 @@ type Config struct {
 		Cache struct {
 			Enable          bool
 			ManualConfigure bool
+			CompactMap      bool
 		}
 		Prometheus struct {
 			Enable          bool

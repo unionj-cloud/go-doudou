@@ -166,7 +166,7 @@ func init() {
 			nil, collectors...)
 	}
 	if cast.ToBoolOrDefault(config.GddDbCacheEnable.Load(), config.DefaultGddDbCacheEnable) && cache.CacheManager != nil {
-		ConfigureDBCache(Db, cache.CacheManager)
+		ConfigureDBCache(Db, cache.CacheManager, CacherAdapterConfig{})
 	}
 }
 
@@ -300,7 +300,12 @@ func NewDb(conf config.Config) (db *gorm.DB) {
 			nil, collectors...)
 	}
 	if conf.Db.Cache.Enable && stringutils.IsNotEmpty(conf.Cache.Stores) && !conf.Db.Cache.ManualConfigure {
-		ConfigureDBCache(db, cache.NewCacheManager(conf))
+		cacherAdapterConfig := CacherAdapterConfig{
+			MarshalerConfig: MarshalerConfig{
+				CompactMap: conf.Db.Cache.CompactMap,
+			},
+		}
+		ConfigureDBCache(db, cache.NewCacheManager(conf), cacherAdapterConfig)
 	}
 	return
 }
@@ -314,9 +319,9 @@ func ConfigureMetrics(db *gorm.DB, dbName string, refreshInterval uint32, labels
 	}))
 }
 
-func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any]) {
+func ConfigureDBCache(db *gorm.DB, cacheManager gocache.CacheInterface[any], conf CacherAdapterConfig) {
 	db.Use(&caches.Caches{Conf: &caches.Config{
 		Easer:  true,
-		Cacher: NewCacherAdapter(cacheManager),
+		Cacher: NewCacherAdapter(cacheManager, conf),
 	}})
 }

@@ -20,15 +20,21 @@ import (
 
 var json = sonic.ConfigDefault
 
+type MarshalerConfig struct {
+	CompactMap bool
+}
+
 // Marshaler is the struct that marshal and unmarshal cache values
 type Marshaler struct {
 	cache cache.CacheInterface[any]
+	conf  MarshalerConfig
 }
 
 // NewMarshaler creates a new marshaler that marshals/unmarshals cache values
-func NewMarshaler(cache cache.CacheInterface[any]) *Marshaler {
+func NewMarshaler(cache cache.CacheInterface[any], config MarshalerConfig) *Marshaler {
 	return &Marshaler{
 		cache: cache,
+		conf:  config,
 	}
 }
 
@@ -65,24 +71,28 @@ func (c *Marshaler) Get(ctx context.Context, key any, returnObj any) (any, error
 func (c *Marshaler) Set(ctx context.Context, key, object any, options ...store.Option) error {
 	key = c.shortenKey(key)
 	query := object.(*caches.Query)
-	source := reflectutils.ValueOf(query.Dest).Interface()
-	t := fmt.Sprintf("%T", source)
-	if t == "map[string]interface {}" {
-		compactMap := lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
-			return value == nil || reflect.ValueOf(value).IsZero()
-		})
-		query.Dest = compactMap
-	} else if t == "[]map[string]interface {}" {
-		rows := source.([]map[string]interface{})
-		_rows := make([]map[string]interface{}, len(rows))
-		lo.ForEach[map[string]interface{}](rows, func(item map[string]interface{}, index int) {
-			compactMap := lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
+
+	if c.conf.CompactMap {
+		source := reflectutils.ValueOf(query.Dest).Interface()
+		t := fmt.Sprintf("%T", source)
+		if t == "map[string]interface {}" {
+			compactMap := lo.OmitBy[string, interface{}](source.(map[string]interface{}), func(key string, value interface{}) bool {
 				return value == nil || reflect.ValueOf(value).IsZero()
 			})
-			_rows[index] = compactMap
-		})
-		query.Dest = _rows
+			query.Dest = compactMap
+		} else if t == "[]map[string]interface {}" {
+			rows := source.([]map[string]interface{})
+			_rows := make([]map[string]interface{}, len(rows))
+			lo.ForEach[map[string]interface{}](rows, func(item map[string]interface{}, index int) {
+				compactMap := lo.OmitBy[string, interface{}](item, func(key string, value interface{}) bool {
+					return value == nil || reflect.ValueOf(value).IsZero()
+				})
+				_rows[index] = compactMap
+			})
+			query.Dest = _rows
+		}
 	}
+
 	bytes, err := json.Marshal(query)
 	if err != nil {
 		return err

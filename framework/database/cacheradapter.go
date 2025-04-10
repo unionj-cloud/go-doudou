@@ -12,8 +12,13 @@ import (
 
 var _ caches.Cacher = (*CacherAdapter)(nil)
 
+type CacherAdapterConfig struct {
+	MarshalerConfig
+}
+
 type CacherAdapter struct {
 	marshaler *Marshaler
+	conf      CacherAdapterConfig
 }
 
 func (c *CacherAdapter) Delete(tag string, tags ...string) error {
@@ -42,8 +47,8 @@ func (c *CacherAdapter) Store(key string, val *caches.Query) error {
 	return nil
 }
 
-func NewCacherAdapter(cacheManager cache.CacheInterface[any]) *CacherAdapter {
+func NewCacherAdapter(cacheManager cache.CacheInterface[any], config CacherAdapterConfig) *CacherAdapter {
 	return &CacherAdapter{
-		marshaler: NewMarshaler(cacheManager),
+		marshaler: NewMarshaler(cacheManager, config.MarshalerConfig),
 	}
 }
