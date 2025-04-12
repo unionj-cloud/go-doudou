@@ -2,7 +2,6 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,13 +10,15 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
-	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/toolkit/astutils"
 	"github.com/unionj-cloud/toolkit/common"
 	"github.com/unionj-cloud/toolkit/executils"
 	v3 "github.com/unionj-cloud/toolkit/protobuf/v3"
 	"github.com/unionj-cloud/toolkit/stringutils"
+
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/openapi/v3/codegen/server"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/svc/parser"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
 	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
