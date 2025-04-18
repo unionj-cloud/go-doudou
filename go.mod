@@ -38,7 +38,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.13.2
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/elliotchance/orderedmap/v2 v2.2.0
@@ -69,11 +69,10 @@ require (
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.29.0 // indirect
 	github.com/auxten/postgresql-parser v1.0.1 // indirect
-	github.com/bytedance/sonic/loader v0.2.0 // indirect
+	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054 // indirect
-	github.com/cloudwego/base64x v0.1.4 // indirect
-	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cockroachdb/apd v1.1.1-0.20181017181144-bced77f817b4 // indirect
 	github.com/cockroachdb/errors v1.8.2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
