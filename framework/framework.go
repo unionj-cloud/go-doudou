@@ -1,11 +1,36 @@
 package framework
 
 import (
+	"golang.org/x/exp/maps"
 	"sync"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/unionj-cloud/go-doudou/v2/framework/config"
 )
+
+var annotationStoreInstance = make(AnnotationStore)
+
+func RegisterAnnotationStore(store AnnotationStore) {
+	maps.Copy(annotationStoreInstance, store)
+}
+
+func HasAnnotation(key string, annotationName string) bool {
+	for _, item := range annotationStoreInstance[key] {
+		if item.Name == annotationName {
+			return true
+		}
+	}
+	return false
+}
+
+func GetAnnotation(key string, annotationName string) (Annotation, bool) {
+	for _, item := range annotationStoreInstance[key] {
+		if item.Name == annotationName {
+			return item, true
+		}
+	}
+	return Annotation{}, false
+}
 
 type Annotation struct {
 	Name   string

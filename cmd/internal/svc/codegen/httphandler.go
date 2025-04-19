@@ -66,6 +66,10 @@ var RouteAnnotationStore = framework.AnnotationStore{
 	{{- end }}
 	{{- end }}
 }
+
+func init() {
+	framework.RegisterAnnotationStore(RouteAnnotationStore)
+}
 `
 
 // GenHttpHandler generates http handler interface and routes
