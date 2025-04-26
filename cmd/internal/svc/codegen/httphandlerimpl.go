@@ -344,11 +344,14 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 			{{- end }}
 		)
+		{{- $hasBizResult := false }}
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
 					panic({{ $r.Name }})
 				}
+			{{- else }}
+			{{- $hasBizResult = true }}	
 			{{- end }}
 		{{- end }}
 		{{- $done := false }}
@@ -370,7 +373,7 @@ var appendHttpHandlerImplTmpl = `
 				{{- $done = true }}	
 			{{- end }}
 		{{- end }}
-		{{- if not $done }}
+		{{- if and (not $done) ($hasBizResult) }}
 			_writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			if _err := json.NewEncoder(_writer).Encode(struct {
 				{{- range $r := $m.Results }}
