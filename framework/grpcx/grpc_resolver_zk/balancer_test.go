@@ -100,6 +100,6 @@ func TestChooserInit(t *testing.T) {
 	// 验证总权重计算正确
 	assert.Equal(t, 16, chooser.max) // 10 + 5 + 1 = 16
 
-	// 验证累计权重数组计算正确
-	assert.Equal(t, []int{10, 15, 16}, chooser.totals)
+	// 验证累计权重数组计算正确 - 由于排序方向相反，期望值也需要调整
+	assert.Equal(t, []int{1, 6, 16}, chooser.totals)
 }
