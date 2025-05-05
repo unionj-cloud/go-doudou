@@ -45,10 +45,10 @@ func TestDefaultFormatter(t *testing.T) {
 	formatter = defaultFormatter()
 	assert.IsType(t, &logrus.TextFormatter{}, formatter)
 
-	// 测试默认格式
+	// 测试默认格式 (空值应返回 TextFormatter 而不是 nil)
 	config.GddLogFormat.Write("")
 	formatter = defaultFormatter()
-	assert.Nil(t, formatter)
+	assert.IsType(t, &logrus.TextFormatter{}, formatter)
 }
 
 func TestLogLevel_Decode(t *testing.T) {

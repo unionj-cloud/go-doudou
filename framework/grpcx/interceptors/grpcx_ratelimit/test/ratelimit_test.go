@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/interceptors/grpcx_ratelimit"
-	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit/memrate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/grpcx/interceptors/grpcx_ratelimit"
+	"github.com/unionj-cloud/go-doudou/v2/framework/ratelimit/memrate"
 )
 
 // 模拟 ServerStream 接口
