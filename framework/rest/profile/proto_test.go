@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestPackedEncoding(t *testing.T) {
+func TestPackedEncodingNew(t *testing.T) {
 
 	type testcase struct {
 		uint64s []uint64

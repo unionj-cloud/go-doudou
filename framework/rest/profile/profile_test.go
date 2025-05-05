@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestParseContention(t *testing.T) {
+func TestParseContentionNew(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      string

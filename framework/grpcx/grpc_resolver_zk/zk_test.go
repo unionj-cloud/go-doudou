@@ -1,12 +1,13 @@
 package grpc_resolver_zk
 
 import (
-	"context"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/resolver"
+	"google.golang.org/grpc/serviceconfig"
 )
 
 // 模拟 ClientConn 接口，用于测试
@@ -35,12 +36,12 @@ func (m *mockClientConn) NewServiceConfig(serviceConfig string) {
 	// 不需要实现
 }
 
-func (m *mockClientConn) ParseServiceConfig(serviceConfigJSON string) *resolver.ServiceConfig {
+func (m *mockClientConn) ParseServiceConfig(serviceConfigJSON string) *serviceconfig.ParseResult {
 	return nil
 }
 
 func TestScheme(t *testing.T) {
-	resolver := &zkResolver{}
+	resolver := &ZkResolver{}
 	assert.Equal(t, "zk", resolver.Scheme())
 }
 
@@ -50,6 +51,7 @@ func TestResolveNow(t *testing.T) {
 			"http://host1:8080?weight=10&group=test-group&version=v1.0.0",
 			"http://host2:8080?weight=20&group=test-group&version=v1.0.0",
 		},
+		eventCh: make(chan struct{}, 1),
 	}
 
 	// 保存原始配置，以便在测试后恢复
@@ -72,8 +74,16 @@ func TestResolveNow(t *testing.T) {
 	cc := &mockClientConn{}
 
 	// 创建解析器
-	zkr := &zkResolver{}
-	r, err := zkr.Build(resolver.Target{URL: *mustParseURL("zk://test-service/")}, cc, resolver.BuildOptions{})
+	zkr := &ZkResolver{
+		ZkConfig: ZkConfigs["test-service"],
+	}
+
+	// 创建 Target
+	testURL, _ := url.Parse("zk://test-service/")
+	target := resolver.Target{URL: *testURL}
+
+	// 测试构建解析器
+	r, err := zkr.Build(target, cc, resolver.BuildOptions{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
@@ -99,11 +109,11 @@ func TestUpdateState(t *testing.T) {
 			"http://host3:8080?weight=5&group=other-group&version=v1.0.0", // 不同的组
 			"http://host4:8080?weight=5&group=test-group&version=v2.0.0",  // 不同的版本
 		},
+		eventCh: make(chan struct{}, 1),
 	}
 
-	// 创建 zkBuilder 和 zkResolver
+	// 创建 ZkResolver
 	cc := &mockClientConn{}
-	builder := &zkBuilder{}
 	config := &ZkConfig{
 		ServiceName: "test-service",
 		Watcher:     mockWatcher,
@@ -111,15 +121,12 @@ func TestUpdateState(t *testing.T) {
 		Version:     "v1.0.0",
 	}
 
-	res := &zkResolver{
-		target:  "test-service",
-		cc:      cc,
-		watcher: mockWatcher,
-		config:  config,
+	res := &ZkResolver{
+		ZkConfig: config,
 	}
 
 	// 调用 updateState 方法
-	res.updateState()
+	res.updateState(cc)
 
 	// 验证只有符合条件的地址被添加
 	assert.Equal(t, 2, len(cc.parsedAddr))
@@ -150,20 +157,27 @@ func TestConvertToAddress(t *testing.T) {
 		Version:     "v1.0.0",
 	}
 
+	// 创建解析器
+	resolver := &ZkResolver{
+		ZkConfig: config,
+	}
+
 	// 调用 convertToAddress 方法
-	addrs := convertToAddress(endpoints, config)
+	addrs := resolver.convertToAddress(endpoints)
 
 	// 验证只有符合条件的地址被转换
 	assert.Equal(t, 2, len(addrs))
 
 	// 验证地址信息正确
-	addrMap := make(map[string]resolver.Address)
+	addrMap := make(map[string]serviceInfo)
 	for _, addr := range addrs {
-		addrMap[addr.Addr] = addr
+		addrMap[addr.Address] = addr
 	}
 
 	assert.Contains(t, addrMap, "host1:8080")
+	assert.Equal(t, 10, addrMap["host1:8080"].Weight)
 	assert.Contains(t, addrMap, "host2:8080")
+	assert.Equal(t, 20, addrMap["host2:8080"].Weight)
 	assert.NotContains(t, addrMap, "host3:8080") // 不同组
 	assert.NotContains(t, addrMap, "host4:8080") // 不同版本
 }
@@ -177,7 +191,7 @@ func TestWatchZkService(t *testing.T) {
 		eventCh: make(chan struct{}, 1),
 	}
 
-	// 创建 zkResolver
+	// 创建 ZkResolver
 	cc := &mockClientConn{}
 	config := &ZkConfig{
 		ServiceName: "test-service",
@@ -186,16 +200,16 @@ func TestWatchZkService(t *testing.T) {
 		Version:     "v1.0.0",
 	}
 
-	res := &zkResolver{
-		target:  "test-service",
-		cc:      cc,
-		watcher: mockWatcher,
-		config:  config,
+	res := &ZkResolver{
+		ZkConfig: config,
 	}
 
 	// 启动监视协程
-	ctx, cancel := context.WithCancel(context.Background())
-	go res.watchZkService(ctx)
+	done := make(chan struct{})
+	go func() {
+		res.watchZkService(cc)
+		close(done)
+	}()
 
 	// 初始化后应该有地址
 	time.Sleep(100 * time.Millisecond)
@@ -214,24 +228,14 @@ func TestWatchZkService(t *testing.T) {
 	// 验证地址已更新
 	assert.Equal(t, 2, len(cc.parsedAddr))
 
-	// 取消上下文，停止监视
-	cancel()
+	// 关闭watcher，确保协程退出
+	mockWatcher.Close()
 
-	// 模拟再次更新，应该不会再处理
-	mockWatcher.endpoints = []string{
-		"http://host3:8080?weight=30&group=test-group&version=v1.0.0",
+	// 等待协程退出
+	select {
+	case <-done:
+		// 协程已退出
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("watchZkService goroutine did not exit in time")
 	}
-
-	// 由于上下文已取消，不应该有新的更新
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, 2, len(cc.parsedAddr))
-}
-
-// 辅助函数
-func mustParseURL(u string) *resolver.URL {
-	url, err := resolver.Parse(u)
-	if err != nil {
-		panic(err)
-	}
-	return url
 }
