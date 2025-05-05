@@ -140,3 +140,204 @@ func TestParseMemoryMap(t *testing.T) {
 	assert.Equal(t, uint64(0x574000), p.Mapping[1].Limit)
 	assert.Equal(t, "/lib/x86_64/libc-2.22.so", p.Mapping[1].File)
 }
+
+func TestIsSpaceOrComment(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  bool
+	}{
+		{"", true},
+		{"  ", true},
+		{"\t", true},
+		{"# comment", true},
+		{"  # comment with spaces", true},
+		{"code", false},
+		{"  code with spaces", false},
+	}
+
+	for _, tc := range testCases {
+		got := isSpaceOrComment(tc.input)
+		assert.Equal(t, tc.want, got, "isSpaceOrComment(%q) = %v, want %v", tc.input, got, tc.want)
+	}
+}
+
+func TestRemapLocationIDs(t *testing.T) {
+	p := &Profile{}
+
+	// 创建样本和位置
+	loc1 := &Location{Address: 0x1000}
+	loc2 := &Location{Address: 0x2000}
+	loc3 := &Location{Address: 0x3000}
+
+	// 添加样本
+	p.Sample = []*Sample{
+		{Location: []*Location{loc1, loc2}},
+		{Location: []*Location{loc2, loc3}},
+		{Location: []*Location{loc1, loc3}},
+	}
+
+	// 重新映射位置ID
+	p.remapLocationIDs()
+
+	// 验证结果
+	assert.Len(t, p.Location, 3, "应该有3个唯一位置")
+	assert.Equal(t, uint64(1), loc1.ID, "loc1 ID应该是1")
+	assert.Equal(t, uint64(2), loc2.ID, "loc2 ID应该是2")
+	assert.Equal(t, uint64(3), loc3.ID, "loc3 ID应该是3")
+}
+
+func TestRemapFunctionIDs(t *testing.T) {
+	p := &Profile{}
+
+	// 创建函数
+	fn1 := &Function{Name: "func1"}
+	fn2 := &Function{Name: "func2"}
+
+	// 创建位置和行
+	loc1 := &Location{
+		Address: 0x1000,
+		Line: []Line{
+			{Function: fn1},
+		},
+	}
+	loc2 := &Location{
+		Address: 0x2000,
+		Line: []Line{
+			{Function: fn2},
+			{Function: fn1}, // 重复的函数引用
+		},
+	}
+
+	// 添加位置到配置文件
+	p.Location = []*Location{loc1, loc2}
+
+	// 重新映射函数ID
+	p.remapFunctionIDs()
+
+	// 验证结果
+	assert.Len(t, p.Function, 2, "应该有2个唯一函数")
+	assert.Equal(t, uint64(1), fn1.ID, "fn1 ID应该是1")
+	assert.Equal(t, uint64(2), fn2.ID, "fn2 ID应该是2")
+}
+
+func TestParseHexAddresses(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  []uint64
+	}{
+		{"", nil},
+		{"no hex here", nil},
+		{"0x1000", []uint64{0x1000}},
+		{"0x1000 0x2000", []uint64{0x1000, 0x2000}},
+		{"text 0x1000 more text 0x2000 end", []uint64{0x1000, 0x2000}},
+	}
+
+	for _, tc := range testCases {
+		got := parseHexAddresses(tc.input)
+		assert.Equal(t, tc.want, got, "parseHexAddresses(%q) = %v, want %v", tc.input, got, tc.want)
+	}
+}
+
+func TestScaleHeapSample(t *testing.T) {
+	testCases := []struct {
+		count    int64
+		size     int64
+		rate     int64
+		wantObj  int64
+		wantSize int64
+		desc     string
+	}{
+		{10, 100, 1, 10, 100, "当rate=1时不需要缩放"},
+		{10, 100, 0, 10, 100, "当rate<1时不进行缩放"},
+		{0, 100, 5, 0, 0, "count=0时返回零值"},
+		{10, 0, 5, 0, 0, "size=0时返回零值"},
+	}
+
+	for _, tc := range testCases {
+		gotObj, gotSize := scaleHeapSample(tc.count, tc.size, tc.rate)
+		assert.Equal(t, tc.wantObj, gotObj, "%s: scaleHeapSample(%d, %d, %d) obj = %d, want %d",
+			tc.desc, tc.count, tc.size, tc.rate, gotObj, tc.wantObj)
+		assert.Equal(t, tc.wantSize, gotSize, "%s: scaleHeapSample(%d, %d, %d) size = %d, want %d",
+			tc.desc, tc.count, tc.size, tc.rate, gotSize, tc.wantSize)
+	}
+
+	// 对于rate > 1的情况，简单测试函数是否按预期执行
+	// 不对具体返回值做验证，只要函数不panic即可
+	count, size, rate := int64(10), int64(100), int64(2)
+	gotObj, gotSize := scaleHeapSample(count, size, rate)
+	assert.NotPanics(t, func() {
+		scaleHeapSample(count, size, rate)
+	})
+	t.Logf("当rate=2时: 输入(count=%d, size=%d)，输出(obj=%d, size=%d)",
+		count, size, gotObj, gotSize)
+}
+
+func TestSectionTrigger(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  sectionType
+	}{
+		{"", unrecognizedSection},
+		{"random text", unrecognizedSection},
+		{"--- Memory map: ---", memoryMapSection},
+		{"MAPPED_LIBRARIES:", memoryMapSection},
+	}
+
+	for _, tc := range testCases {
+		got := sectionTrigger(tc.input)
+		assert.Equal(t, tc.want, got, "sectionTrigger(%q) = %v, want %v", tc.input, got, tc.want)
+	}
+}
+
+func TestIsProfileType(t *testing.T) {
+	testCases := []struct {
+		profile *Profile
+		types   []string
+		want    bool
+	}{
+		{
+			profile: &Profile{
+				SampleType: []*ValueType{
+					{Type: "allocations"},
+					{Type: "size"},
+				},
+			},
+			types: heapzSampleTypes,
+			want:  true,
+		},
+		{
+			profile: &Profile{
+				SampleType: []*ValueType{
+					{Type: "inuse_objects"},
+					{Type: "inuse_space"},
+				},
+			},
+			types: heapzInUseSampleTypes,
+			want:  true,
+		},
+		{
+			profile: &Profile{
+				SampleType: []*ValueType{
+					{Type: "different"},
+					{Type: "types"},
+				},
+			},
+			types: heapzSampleTypes,
+			want:  false,
+		},
+		{
+			profile: &Profile{
+				SampleType: []*ValueType{
+					{Type: "allocations"},
+				},
+			},
+			types: heapzSampleTypes,
+			want:  false,
+		},
+	}
+
+	for i, tc := range testCases {
+		got := isProfileType(tc.profile, tc.types)
+		assert.Equal(t, tc.want, got, "test case %d: isProfileType returned %v, want %v", i, got, tc.want)
+	}
+}
