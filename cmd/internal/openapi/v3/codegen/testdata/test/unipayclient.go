@@ -38,13 +38,13 @@ func (receiver *UnipayClient) SetClient(client *resty.Client) {
 func (receiver *UnipayClient) GetUnipayStartUnionPay(ctx context.Context, _headers map[string]string,
 	queryParams struct {
 		// required
+		TxnAmt string `json:"txnAmt" url:"txnAmt"`
+		// required
 		Token string `json:"token" url:"token"`
 		// required
 		CompanyId string `json:"companyId" url:"companyId"`
 		// required
 		FrontUrl string `json:"frontUrl" url:"frontUrl"`
-		// required
-		TxnAmt string `json:"txnAmt" url:"txnAmt"`
 	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 
