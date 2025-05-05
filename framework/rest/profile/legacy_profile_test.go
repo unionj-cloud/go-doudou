@@ -341,3 +341,194 @@ func TestIsProfileType(t *testing.T) {
 		assert.Equal(t, tc.want, got, "test case %d: isProfileType returned %v, want %v", i, got, tc.want)
 	}
 }
+
+func TestParseContention(t *testing.T) {
+	// 创建有效的竞争数据
+	validData := []byte(`--- contentions:
+cycles/second=2700000000
+sampling period=1000000000 ns
+1 @ 0x1000 0x2000 0x3000
+2 @ 0x4000 0x5000
+`)
+
+	p, err := ParseContention(validData)
+	assert.NoError(t, err)
+	assert.NotNil(t, p)
+	assert.Equal(t, "contentions", p.PeriodType.Type)
+	assert.Equal(t, "microseconds", p.PeriodType.Unit)
+	assert.Equal(t, int64(1000), p.Period)
+	assert.Len(t, p.Sample, 2)
+	assert.Equal(t, int64(1), p.Sample[0].Value[0])
+	assert.Equal(t, int64(2), p.Sample[1].Value[0])
+
+	// 测试没有样本的竞争数据
+	noSampleData := []byte(`--- contentions:
+cycles/second=2700000000
+sampling period=1000000000 ns
+`)
+
+	p, err = ParseContention(noSampleData)
+	assert.NoError(t, err)
+	assert.NotNil(t, p)
+	assert.Len(t, p.Sample, 0)
+
+	// 测试无效的竞争数据
+	invalidData := []byte(`not contention data`)
+	p, err = ParseContention(invalidData)
+	assert.NoError(t, err) // 不会返回错误，只会创建空的profile
+	assert.NotNil(t, p)
+	assert.Len(t, p.Sample, 0)
+
+	// 测试空数据
+	p, err = ParseContention(nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, p)
+	assert.Len(t, p.Sample, 0)
+}
+
+func TestScaleHeapSample_MoreCases(t *testing.T) {
+	testCases := []struct {
+		count    int64
+		size     int64
+		rate     int64
+		wantObj  int64
+		wantSize int64
+		desc     string
+	}{
+		{10, 100, 1, 10, 100, "当rate=1时不需要缩放"},
+		{10, 100, 0, 10, 100, "当rate<1时不进行缩放"},
+		{0, 100, 5, 0, 0, "count=0时返回零值"},
+		{10, 0, 5, 0, 0, "size=0时返回零值"},
+		{10, 100, 5, 50, 500, "rate=5时正确缩放"},
+		{7, 70, 2, 14, 140, "奇数值的缩放"},
+		{100, 1000, 10, 1000, 10000, "大数字的缩放"},
+	}
+
+	for _, tc := range testCases {
+		gotObj, gotSize := scaleHeapSample(tc.count, tc.size, tc.rate)
+		assert.Equal(t, tc.wantObj, gotObj, "%s: scaleHeapSample(%d, %d, %d) obj = %d, want %d",
+			tc.desc, tc.count, tc.size, tc.rate, gotObj, tc.wantObj)
+		assert.Equal(t, tc.wantSize, gotSize, "%s: scaleHeapSample(%d, %d, %d) size = %d, want %d",
+			tc.desc, tc.count, tc.size, tc.rate, gotSize, tc.wantSize)
+	}
+}
+
+func TestPackedEncoding(t *testing.T) {
+	// 测试编码和解码整数数组
+	testInts := []int64{0, 1, -1, 100, -100, 1000000, -1000000}
+
+	// 编码
+	var buf bytes.Buffer
+	err := encodeInt64s(&buf, 1, testInts)
+	assert.NoError(t, err)
+
+	// 解码
+	b := newBuffer(buf.Bytes())
+	field, err := decodeField(b)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, field)
+
+	var decodedInts []int64
+	err = decodeInt64s(b, &decodedInts)
+	assert.NoError(t, err)
+
+	// 验证解码结果
+	assert.Equal(t, testInts, decodedInts)
+}
+
+func TestRemapMappingIDs(t *testing.T) {
+	p := &Profile{}
+
+	// 创建映射
+	m1 := &Mapping{File: "file1.so"}
+	m2 := &Mapping{File: "file2.so"}
+	m3 := &Mapping{File: "file3.so"}
+
+	// 创建位置引用映射
+	loc1 := &Location{Mapping: m1}
+	loc2 := &Location{Mapping: m2}
+	loc3 := &Location{Mapping: m1} // 重复映射引用
+	loc4 := &Location{Mapping: m3}
+
+	// 添加位置到配置文件
+	p.Location = []*Location{loc1, loc2, loc3, loc4}
+
+	// 重新映射映射ID
+	p.remapMappingIDs()
+
+	// 验证结果
+	assert.Len(t, p.Mapping, 3, "应该有3个唯一映射")
+	assert.Equal(t, uint64(1), m1.ID, "m1 ID应该是1")
+	assert.Equal(t, uint64(2), m2.ID, "m2 ID应该是2")
+	assert.Equal(t, uint64(3), m3.ID, "m3 ID应该是3")
+}
+
+func TestParseContentionSample(t *testing.T) {
+	// 创建一个Profile用于测试
+	p := &Profile{
+		SampleType: []*ValueType{
+			{Type: "contentions", Unit: "count"},
+			{Type: "delay", Unit: "nanoseconds"},
+		},
+	}
+
+	// 测试有效的竞争样本
+	line := "10 20 @ 0x1000 0x2000 0x3000"
+	locs, err := parseContentionSample(line, p)
+	assert.NoError(t, err)
+	assert.Len(t, locs, 3)
+	assert.Len(t, p.Sample, 1)
+	assert.Equal(t, int64(10), p.Sample[0].Value[0])
+	assert.Equal(t, int64(20), p.Sample[0].Value[1])
+
+	// 测试格式不正确的竞争样本
+	line = "invalid format"
+	locs, err = parseContentionSample(line, p)
+	assert.Error(t, err)
+	assert.Nil(t, locs)
+
+	// 测试没有地址的竞争样本
+	line = "10 20 @"
+	locs, err = parseContentionSample(line, p)
+	assert.NoError(t, err)
+	assert.Empty(t, locs)
+
+	// 测试只有一个值的竞争样本
+	line = "10 @ 0x1000"
+	locs, err = parseContentionSample(line, p)
+	assert.NoError(t, err)
+	assert.Len(t, locs, 1)
+	assert.Len(t, p.Sample, 3) // 前面测试已添加了两个样本
+}
+
+func TestParseCPPContention(t *testing.T) {
+	// 创建有效的C++竞争数据
+	validData := []byte(`--- contentions:
+cycles/second=2700000000
+sampling period=1000000000 ns
+threads=10
+total time=1000000000
+total contentions=100
+entries=2
+10 50 @ 0x1000 0x2000
+20 100 @ 0x3000 0x4000 0x5000
+`)
+
+	p, err := parseCppContention(validData, "contentions")
+	assert.NoError(t, err)
+	assert.NotNil(t, p)
+	assert.Equal(t, "contentions", p.PeriodType.Type)
+	assert.Equal(t, "microseconds", p.PeriodType.Unit)
+	assert.Len(t, p.Sample, 2)
+
+	// 验证样本值
+	assert.Equal(t, int64(10), p.Sample[0].Value[0])
+	assert.Equal(t, int64(50), p.Sample[0].Value[1])
+	assert.Equal(t, int64(20), p.Sample[1].Value[0])
+	assert.Equal(t, int64(100), p.Sample[1].Value[1])
+
+	// 测试无效格式的C++竞争数据
+	invalidData := []byte(`not cpp contention data`)
+	p, err = parseCppContention(invalidData, "contentions")
+	assert.Error(t, err)
+}

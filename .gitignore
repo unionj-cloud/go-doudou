@@ -10,3 +10,4 @@ cmd/internal/openapi/v3/codegen/testdata/mytest
 .cursorrules
 .cursorignore
 .vscode/
+**/*.out
