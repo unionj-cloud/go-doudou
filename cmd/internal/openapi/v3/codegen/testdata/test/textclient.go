@@ -41,9 +41,9 @@ func (receiver *TextClient) SetClient(client *resty.Client) {
 // GetTextExtractFromUrl 提取文本
 func (receiver *TextClient) GetTextExtractFromUrl(ctx context.Context, _headers map[string]string,
 	queryParams struct {
-		ClearFormat *bool `json:"clearFormat,omitempty" url:"clearFormat"`
 		// required
-		Url string `json:"url,omitempty" url:"url"`
+		Url         string `json:"url,omitempty" url:"url"`
+		ClearFormat *bool  `json:"clearFormat,omitempty" url:"clearFormat"`
 	}) (ret ResultString, _resp *resty.Response, err error) {
 	var _err error
 

@@ -40,8 +40,8 @@ func (receiver *UserClient) SetClient(client *resty.Client) {
 // GetUserLogin Logs user into the system
 func (receiver *UserClient) GetUserLogin(ctx context.Context, _headers map[string]string,
 	queryParams *struct {
-		Username *string `json:"username,omitempty" url:"username"`
 		Password *string `json:"password,omitempty" url:"password"`
+		Username *string `json:"username,omitempty" url:"username"`
 	}) (ret string, _resp *resty.Response, err error) {
 	var _err error
 

@@ -22,7 +22,8 @@ func setupTest(t *testing.T) func() {
 	}
 }
 
-func TestNewRest(t *testing.T) {
+// 在不实际连接到外部系统的情况下测试注册功能
+func TestNewRestWithMockEnv(t *testing.T) {
 	// 设置环境
 	cleanup := setupTest(t)
 	defer cleanup()
@@ -43,9 +44,30 @@ func TestNewRest(t *testing.T) {
 		"port": 8080,
 	}
 	NewRest(testData)
+}
 
-	// 注意：我们无法直接测试真实的服务注册情况，因为那需要外部系统如nacos/etcd等
-	// 实际项目中应该考虑使用mock库来模拟这些依赖
+// 在不实际连接到外部系统的情况下测试gRPC注册功能
+func TestNewGrpcWithMockEnv(t *testing.T) {
+	// 设置环境
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	// 测试传递空服务发现模式
+	os.Setenv(string(config.GddServiceDiscoveryMode), "")
+	// 预期不会有错误发生
+	NewGrpc()
+
+	// 测试传递无效的服务发现模式
+	os.Setenv(string(config.GddServiceDiscoveryMode), "invalid-mode")
+	// 预期会输出警告日志但不会崩溃
+	NewGrpc()
+
+	// 测试传递数据参数
+	testData := map[string]interface{}{
+		"name": "test-service",
+		"port": 9090,
+	}
+	NewGrpc(testData)
 }
 
 func TestShutdownRest(t *testing.T) {
@@ -64,6 +86,24 @@ func TestShutdownRest(t *testing.T) {
 	// 测试多个服务发现模式
 	os.Setenv(string(config.GddServiceDiscoveryMode), "invalid-mode,another-invalid")
 	ShutdownRest()
+}
+
+func TestShutdownGrpc(t *testing.T) {
+	// 设置环境
+	cleanup := setupTest(t)
+	defer cleanup()
+
+	// 测试空服务发现模式
+	os.Setenv(string(config.GddServiceDiscoveryMode), "")
+	ShutdownGrpc()
+
+	// 测试无效服务发现模式
+	os.Setenv(string(config.GddServiceDiscoveryMode), "invalid-mode")
+	ShutdownGrpc()
+
+	// 测试多个服务发现模式
+	os.Setenv(string(config.GddServiceDiscoveryMode), "invalid-mode,another-invalid")
+	ShutdownGrpc()
 }
 
 func TestServiceDiscoveryMap(t *testing.T) {
@@ -90,5 +130,24 @@ func TestServiceDiscoveryMap(t *testing.T) {
 	assert.Len(t, sdMap, 2)
 }
 
-// 后续NewGrpc和ShutdownGrpc的测试类似，省略
-// 需要注意的是完整测试应该考虑使用mocking库来模拟外部依赖
+// 测试IServiceProvider接口
+type mockServiceProvider struct{}
+
+func (m *mockServiceProvider) SelectServer() string {
+	return "http://localhost:8080"
+}
+
+func (m *mockServiceProvider) Close() {
+	// 空实现
+}
+
+func TestIServiceProvider(t *testing.T) {
+	// 测试接口实现
+	var provider IServiceProvider = &mockServiceProvider{}
+
+	server := provider.SelectServer()
+	assert.Equal(t, "http://localhost:8080", server)
+
+	// 测试关闭方法，不应该有错误
+	provider.Close()
+}

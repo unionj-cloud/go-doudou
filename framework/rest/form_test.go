@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
 	"time"
@@ -16,6 +17,10 @@ type TestForm struct {
 	Address  string   `form:"address"` // 只有form标签
 	Hobbies  []string `form:"hobbies" json:"hobbies"`
 	Birthday time.Time
+}
+
+type CustomType struct {
+	Value string
 }
 
 func TestGetFormDecoder(t *testing.T) {
@@ -91,4 +96,58 @@ func TestTagNameFunc(t *testing.T) {
 	values, err = EncodeForm(testForm2)
 	assert.NoError(t, err)
 	assert.Contains(t, values.Encode(), "email=john%40example.com")
+}
+
+func TestRegisterFormDecoderCustomTypeFunc(t *testing.T) {
+	// 注册自定义解码函数
+	RegisterFormDecoderCustomTypeFunc(func(vals []string) (interface{}, error) {
+		if len(vals) > 0 {
+			return CustomType{Value: vals[0]}, nil
+		}
+		return CustomType{}, nil
+	}, CustomType{})
+
+	// 创建一个包含自定义类型的结构体
+	type TestStruct struct {
+		Custom CustomType `form:"custom"`
+	}
+
+	// 创建测试表单数据
+	formData := url.Values{}
+	formData.Set("custom", "test-value")
+
+	// 将表单数据解码到结构体
+	var result TestStruct
+	err := DecodeForm(&result, formData)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "test-value", result.Custom.Value)
+}
+
+func TestRegisterFormEncoderCustomTypeFunc(t *testing.T) {
+	// 注册自定义编码函数
+	RegisterFormEncoderCustomTypeFunc(func(value interface{}) ([]string, error) {
+		if custom, ok := value.(CustomType); ok {
+			return []string{custom.Value}, nil
+		}
+		return nil, fmt.Errorf("invalid type")
+	}, CustomType{})
+
+	// 创建一个包含自定义类型的结构体
+	type TestStruct struct {
+		Custom CustomType `form:"custom"`
+	}
+
+	// 创建测试数据
+	testStruct := TestStruct{
+		Custom: CustomType{Value: "test-value"},
+	}
+
+	// 将结构体编码为表单数据
+	values, err := EncodeForm(testStruct)
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "test-value", values.Get("custom"))
 }
