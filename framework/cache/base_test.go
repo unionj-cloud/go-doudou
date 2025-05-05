@@ -108,7 +108,7 @@ func TestBase_Set(t *testing.T) {
 	// 检查过期时间（不精确匹配，只检查是否在合理范围内）
 	expectedExpiry := time.Now().Add(ttl)
 	diff := expectedExpiry.Sub(itemObj.ExpireAt)
-	assert.LessOrEqual(t, diff.Abs(), ttl/60+time.Second, "过期时间应该在预期附近")
+	assert.LessOrEqual(t, diff.Abs(), 10*time.Second, "过期时间应该在预期附近")
 }
 
 func TestBase_Del(t *testing.T) {

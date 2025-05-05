@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/apolloconfig/agollo/v4"
@@ -9,12 +10,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/unionj-cloud/go-doudou/v2/framework/config"
-	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
-	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr/mock"
+	"github.com/stretchr/testify/assert"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/cache"
 	"github.com/wubin1989/nacos-sdk-go/v2/clients/config_client"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
+
+	"github.com/unionj-cloud/go-doudou/v2/framework/config"
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
+	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr/mock"
 )
 
 func Test_envVariable_String(t *testing.T) {
@@ -337,4 +340,61 @@ func Test_envVariable_MarshalJSON(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(string(data), ShouldEqual, `"8080"`)
 	})
+}
+
+func TestGetServiceName(t *testing.T) {
+	// 保存原始环境变量
+	oldEnv := os.Getenv(string(config.GddServiceName))
+	defer os.Setenv(string(config.GddServiceName), oldEnv)
+
+	// 测试环境变量
+	os.Setenv(string(config.GddServiceName), "test-service")
+	assert.Equal(t, "test-service", config.GetServiceName())
+
+	// 测试没有环境变量时的默认值
+	os.Unsetenv(string(config.GddServiceName))
+	// 注意：GetServiceName在没有值时会panic，所以这里不测试这种情况
+}
+
+func TestGetPort(t *testing.T) {
+	// 保存原始环境变量
+	oldEnv := os.Getenv(string(config.GddPort))
+	defer os.Setenv(string(config.GddPort), oldEnv)
+
+	// 测试环境变量
+	os.Setenv(string(config.GddPort), "8080")
+	assert.Equal(t, uint64(8080), config.GetPort())
+
+	// 测试没有环境变量时的默认值
+	os.Unsetenv(string(config.GddPort))
+	assert.Equal(t, uint64(6060), config.GetPort())
+}
+
+func TestGetGrpcPort(t *testing.T) {
+	// 保存原始环境变量
+	oldEnv := os.Getenv(string(config.GddGrpcPort))
+	defer os.Setenv(string(config.GddGrpcPort), oldEnv)
+
+	// 测试环境变量
+	os.Setenv(string(config.GddGrpcPort), "9090")
+	assert.Equal(t, uint64(9090), config.GetGrpcPort())
+
+	// 测试没有环境变量时的默认值
+	os.Unsetenv(string(config.GddGrpcPort))
+	// 使用默认配置中的值进行测试
+	assert.Equal(t, uint64(50051), config.GetGrpcPort())
+}
+
+func TestEnvVariableLoadOrDefault(t *testing.T) {
+	// 保存原始环境变量
+	oldEnv := os.Getenv(string(config.GddBanner))
+	defer os.Setenv(string(config.GddBanner), oldEnv)
+
+	// 测试有环境变量的情况
+	os.Setenv(string(config.GddBanner), "true")
+	assert.Equal(t, "true", config.GddBanner.LoadOrDefault("false"))
+
+	// 测试没有环境变量的情况
+	os.Unsetenv(string(config.GddBanner))
+	assert.Equal(t, "default_value", config.GddBanner.LoadOrDefault("default_value"))
 }

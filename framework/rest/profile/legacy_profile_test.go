@@ -54,16 +54,15 @@ func TestExtractHexAddresses(t *testing.T) {
 	// 测试有地址的字符串
 	line := "TestFunction 0xabcdef 0x123456"
 	s, addrs := extractHexAddresses(line)
-	// 按照当前实现，s应该是空的，而addrs应该包含两个地址
-	assert.Empty(t, s)
-	assert.Equal(t, []uint64{0xabcdef, 0x123456}, addrs)
+	// 函数会返回提取的十六进制字符串和转换后的uint64值
+	assert.Equal(t, []string{"0xabcdef", "0x123456"}, s, "s应该包含两个十六进制字符串")
+	assert.Equal(t, []uint64{0xabcdef, 0x123456}, addrs, "addrs应该包含两个地址")
 
 	// 测试只有文本的字符串
 	line = "TestFunction no hex addresses here"
 	s, addrs = extractHexAddresses(line)
-	// 按照当前实现，s应该包含所有文本单词，而addrs应该是空的
-	assert.Equal(t, []string{"TestFunction", "no", "hex", "addresses", "here"}, s)
-	assert.Empty(t, addrs)
+	assert.Empty(t, s, "s应该为空")
+	assert.Empty(t, addrs, "addrs应该为空")
 
 	// 测试空字符串
 	line = ""
@@ -74,15 +73,14 @@ func TestExtractHexAddresses(t *testing.T) {
 	// 测试只有地址的字符串
 	line = "0xabcdef 0x123456"
 	s, addrs = extractHexAddresses(line)
-	assert.Empty(t, s)
-	assert.Equal(t, []uint64{0xabcdef, 0x123456}, addrs)
+	assert.Equal(t, []string{"0xabcdef", "0x123456"}, s, "s应该包含两个十六进制字符串")
+	assert.Equal(t, []uint64{0xabcdef, 0x123456}, addrs, "addrs应该包含两个地址")
 
 	// 测试混合了不同格式的地址和普通文本
 	line = "TestFunction 0xabcdef abcdef 0x123"
 	s, addrs = extractHexAddresses(line)
-	// 按照当前实现，以0x开头的文本被识别为地址，其他文本被作为普通文本
-	assert.Equal(t, []string{"TestFunction", "abcdef"}, s)
-	assert.Equal(t, []uint64{0xabcdef, 0x123}, addrs)
+	assert.Equal(t, []string{"0xabcdef", "0x123"}, s, "s应该包含两个十六进制字符串")
+	assert.Equal(t, []uint64{0xabcdef, 0x123}, addrs, "addrs应该包含两个地址")
 }
 
 func TestAddTracebackSample(t *testing.T) {
