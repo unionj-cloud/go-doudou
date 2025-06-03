@@ -331,6 +331,7 @@ var appendHttpHandlerImplTmpl = `
 		}{{- end }}
 		{{- end }}
 		{{- end }}
+		{{- if $m.Results }}
 		{{ range $i, $r := $m.Results }}{{- if $i}},{{- end}}{{- $r.Name }}{{- end }} = receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
 			{{- range $p := $m.Params }}
 			{{- if isVarargs $p.Type }}
@@ -344,14 +345,26 @@ var appendHttpHandlerImplTmpl = `
 			{{- end }}
 			{{- end }}
 		)
-		{{- $hasBizResult := false }}
+		{{- else }}
+		receiver.{{$.Meta.Name | toLowerCamel}}.{{$m.Name}}(
+			{{- range $p := $m.Params }}
+			{{- if isVarargs $p.Type }}
+			*{{ $p.Name }}...,
+			{{- else if eq $p.Type "context.Context"}}
+			{{ $p.Name }},
+			{{- else if and (and (eq $m.HttpMethod "GET") (not (isBuiltin $p))) (gt (len $m.QueryVars) 1) }}
+			{{ $p.Name }}Wrapper.{{ $p.Name | title }},
+			{{- else }}
+			{{ $p.Name }},
+			{{- end }}
+			{{- end }}
+		)
+		{{- end }}
 		{{- range $r := $m.Results }}
 			{{- if eq $r.Type "error" }}
 				if {{ $r.Name }} != nil {
 					panic({{ $r.Name }})
 				}
-			{{- else }}
-			{{- $hasBizResult = true }}	
 			{{- end }}
 		{{- end }}
 		{{- $done := false }}
@@ -373,7 +386,7 @@ var appendHttpHandlerImplTmpl = `
 				{{- $done = true }}	
 			{{- end }}
 		{{- end }}
-		{{- if and (not $done) ($hasBizResult) }}
+		{{- if not $done }}
 			_writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			if _err := json.NewEncoder(_writer).Encode(struct {
 				{{- range $r := $m.Results }}
