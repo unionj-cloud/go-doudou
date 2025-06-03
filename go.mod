@@ -2,8 +2,6 @@ module github.com/unionj-cloud/go-doudou/v2
 
 go 1.23.0
 
-toolchain go1.23.8
-
 require (
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee
