@@ -603,7 +603,7 @@ go.mod
 32 | 	github.com/uber/jaeger-lib v2.4.1+incompatible
 33 | 	github.com/unionj-cloud/toolkit v0.0.6
 34 | 	github.com/wubin1989/dbresolver v0.0.2 // indirect
-35 | 	github.com/wubin1989/gen v0.0.5
+35 | 	github.com/wubin1989/gen v0.0.4
 36 | 	github.com/wubin1989/gorm v0.0.5
 37 | 	golang.org/x/tools v0.26.0 // indirect
 38 | )
@@ -31446,7 +31446,7 @@ cmd/internal/svc/codegen/init.go
 133 | 	google.golang.org/protobuf v1.26.0
 134 | 	github.com/bytedance/sonic v1.12.1
 135 | 	github.com/unionj-cloud/toolkit v0.0.1
-136 | 	github.com/wubin1989/gen v0.0.5
+136 | 	github.com/wubin1989/gen v0.0.4
 137 | 	github.com/unionj-cloud/go-doudou/v2 ` + version.Release + `
 138 | )`
 139 | 

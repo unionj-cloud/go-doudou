@@ -71,6 +71,7 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/unionj-cloud/go-doudou/v2 v2.5.9/go.mod h1:qzfyP3C/MnWCftH7g32GV5ot9JjebS7Or8fWpwLBSnA=
 github.com/unionj-cloud/toolkit v0.0.7-0.20250418144858-a3b948354147/go.mod h1:r6zB33Bo2gqfpEG+e3U55fXp7TWNKJ1eLeLMQdncU8M=
+github.com/wubin1989/gen v0.0.4/go.mod h1:G4p5Jd41IKqHUyszLXt3eJI9nZyzB0XeFZWL3XaAgJU=
 github.com/wubin1989/gen v0.0.5/go.mod h1:G4p5Jd41IKqHUyszLXt3eJI9nZyzB0XeFZWL3XaAgJU=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

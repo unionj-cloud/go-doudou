@@ -1672,8 +1672,8 @@ github.com/wubin1989/datatypes v0.0.2 h1:a2ZiuWjqiYHRS+lkvan8QymxYtB1yvwJHf0kE7m
 github.com/wubin1989/datatypes v0.0.2/go.mod h1:ifZrSL9ZeEfOqWxCvAx6ugbiMYcMPRyY2mSgN8qRdKE=
 github.com/wubin1989/dbresolver v0.0.2 h1:nxZJa7TSPRWvrHyshbBhoiHFt3/cagHi1qOySrCyqjE=
 github.com/wubin1989/dbresolver v0.0.2/go.mod h1:QCzD3CTzNXQ8Vk/V0WRdCQw2Mu8d/UGa3AyRIbbe9hc=
-github.com/wubin1989/gen v0.0.5 h1:QJqsF16f4zE1Cr84aUSMvGiu2eEQ2k+HXhhpiPU0qAg=
-github.com/wubin1989/gen v0.0.5/go.mod h1:G4p5Jd41IKqHUyszLXt3eJI9nZyzB0XeFZWL3XaAgJU=
+github.com/wubin1989/gen v0.0.4 h1:anmAYD1RYAXtzcPRaY9rnvVD7C6W9bEq5Wja/b6803I=
+github.com/wubin1989/gen v0.0.4/go.mod h1:G4p5Jd41IKqHUyszLXt3eJI9nZyzB0XeFZWL3XaAgJU=
 github.com/wubin1989/gorm v0.0.3/go.mod h1:sv3afa8/Q6XTgEbTTWTjJd0NIlBMH4bMq5VpEnXr/Cc=
 github.com/wubin1989/gorm v0.0.5 h1:eI+zjoQ2GEURnPBEh+H4axSD4sM0wWpJCAQZw+FfZX8=
 github.com/wubin1989/gorm v0.0.5/go.mod h1:q/wDV7AJMsbDdtv+K3eNX+VMpC0k1uxCqPBPXzHO90k=
