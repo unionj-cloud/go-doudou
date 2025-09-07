@@ -94,6 +94,7 @@ type RestServer struct {
 	middlewares  []MiddlewareFunc
 	data         map[string]interface{}
 	panicHandler func(inner http.Handler) http.Handler
+	listenConfig *net.ListenConfig
 	*http.Server
 }
 
@@ -158,6 +159,12 @@ func WithPanicHandler(panicHandler func(inner http.Handler) http.Handler) Server
 func WithUserData(userData map[string]interface{}) ServerOption {
 	return func(server *RestServer) {
 		server.data = userData
+	}
+}
+
+func WithListenConfig(listenConfig *net.ListenConfig) ServerOption {
+	return func(server *RestServer) {
+		server.listenConfig = listenConfig
 	}
 }
 
@@ -371,7 +378,15 @@ func (srv *RestServer) Use(mwf ...func(http.Handler) http.Handler) {
 
 // Run runs http server
 func (srv *RestServer) Run() {
-	ln, err := net.Listen("tcp", strings.Join([]string{config.GddConfig.Host, config.GddConfig.Port}, ":"))
+	var (
+		ln  net.Listener
+		err error
+	)
+	if srv.listenConfig != nil {
+		ln, err = srv.listenConfig.Listen(context.Background(), "tcp", strings.Join([]string{config.GddConfig.Host, config.GddConfig.Port}, ":"))
+	} else {
+		ln, err = net.Listen("tcp", strings.Join([]string{config.GddConfig.Host, config.GddConfig.Port}, ":"))
+	}
 	if err != nil {
 		logger.Panic().Msg(err.Error())
 	}
