@@ -9,15 +9,17 @@ import (
 
 // rootCmd is the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Version: version.Release,
-	Use:     "go-doudou",
-	Short:   "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
+	Version:          version.Release,
+	TraverseChildren: true,
+	Use:              "go-doudou",
+	Short:            "go-doudou is microservice rapid develop framework based on openapi 3.0 spec and gossip protocol",
 	Long: `go-doudou works like a scaffolding tool but more than that. 
 it lets api providers design their apis and help them code less. 
 it generates openapi 3.0 spec json document for frontend developers or other api consumers to understand what apis there, 
 consumers can import it into postman to debug and test, or upload it into some code generators to download client sdk.
 it provides some useful components and middleware for constructing microservice cluster like service register and discovering, 
 load balancing and so on. it just begins, more features will come out soon.`,
+	PersistentPreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
@@ -28,15 +30,25 @@ func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
-func init() {
-	customFormatter := new(logrus.TextFormatter)
-	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
-	customFormatter.FullTimestamp = true
-	logrus.SetFormatter(customFormatter)
+var verbose bool
 
+func init() {
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 	rootCmd.AddCommand(modular.GetWorkCmd())
 }
 
 func GetRootCmd() *cobra.Command {
 	return rootCmd
+}
+
+func toggleDebug(cmd *cobra.Command, args []string) {
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	customFormatter.FullTimestamp = true
+	logrus.SetFormatter(customFormatter)
+
+	if verbose {
+		logrus.SetReportCaller(true)
+		logrus.SetLevel(logrus.TraceLevel)
+	}
 }

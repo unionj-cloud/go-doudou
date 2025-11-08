@@ -97,6 +97,8 @@ type Svc struct {
 
 	http2grpc   bool
 	projectType string
+
+	verbose bool
 }
 
 type DbConfig struct {
@@ -184,6 +186,7 @@ func (receiver *Svc) Init() {
 		ProtoGenerator: receiver.protoGenerator,
 		JsonCase:       receiver.JsonCase,
 		ProjectType:    receiver.projectType,
+		Verbose:        receiver.verbose,
 	})
 }
 
@@ -275,6 +278,12 @@ func WithOmitempty(omitempty bool) SvcOption {
 func WithJsonCase(jsonCase string) SvcOption {
 	return func(svc *Svc) {
 		svc.JsonCase = jsonCase
+	}
+}
+
+func WithVerbose(verbose bool) SvcOption {
+	return func(svc *Svc) {
+		svc.verbose = verbose
 	}
 }
 

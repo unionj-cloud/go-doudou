@@ -30,9 +30,9 @@ import (
 )
 
 {{- if eq .ProjectType "rest" }}
-//go:generate go-doudou svc http --case {{ .JsonCase }}
+//go:generate go-doudou svc http --case {{ .JsonCase }}{{- if .Verbose}} -v{{- end}}
 {{- else }}
-//go:generate go-doudou svc grpc --http2grpc --case {{ .JsonCase }}
+//go:generate go-doudou svc grpc --http2grpc --case {{ .JsonCase }}{{- if .Verbose}} -v{{- end}}
 {{- end }}
 
 type {{.SvcName}} interface {
@@ -131,7 +131,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
-	github.com/bytedance/sonic v1.13.2
+	github.com/bytedance/sonic v1.14.1
 	github.com/unionj-cloud/toolkit v0.1.1
 	github.com/wubin1989/gen v0.0.4
 	github.com/unionj-cloud/go-doudou/v2 ` + version.Release + `
@@ -187,6 +187,7 @@ type InitProjConfig struct {
 	JsonCase       string
 	DocPath        string
 	ProjectType    string
+	Verbose        bool
 }
 
 // InitProj inits a service project
@@ -206,7 +207,8 @@ func InitProj(conf InitProjConfig) {
 		docPath     string
 		projectType string
 	)
-	dir, modName, runner, module, jsonCase, docPath, projectType := conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath, conf.ProjectType
+	dir, modName, runner, module, jsonCase, docPath, projectType, verbose :=
+		conf.Dir, conf.ModName, conf.Runner, conf.Module, conf.JsonCase, conf.DocPath, conf.ProjectType, conf.Verbose
 	if stringutils.IsEmpty(dir) {
 		dir, _ = os.Getwd()
 	}
@@ -293,12 +295,14 @@ func InitProj(conf InitProjConfig) {
 			Version     string
 			JsonCase    string
 			ProjectType string
+			Verbose     bool
 		}{
 			DtoPackage:  strings.ReplaceAll(filepath.Join(modName, "dto"), string(os.PathSeparator), "/"),
 			SvcName:     svcName,
 			Version:     version.Release,
 			JsonCase:    jsonCase,
 			ProjectType: projectType,
+			Verbose:     verbose,
 		})
 	}
 

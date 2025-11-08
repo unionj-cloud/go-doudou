@@ -34,7 +34,8 @@ var initCmd = &cobra.Command{
 			fn = strcase.ToSnake
 		}
 		options = append(options, svc.WithJsonCase(naming), svc.WithCaseConverter(fn), svc.WithProjectType(projectType),
-			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithProtocCmd(protocCmd))))
+			svc.WithProtoGenerator(v3.NewProtoGenerator(v3.WithFieldNamingFunc(fn), v3.WithProtocCmd(protocCmd))),
+			svc.WithVerbose(verbose))
 		s := svc.NewSvc(svcdir, options...)
 		s.Init()
 	},

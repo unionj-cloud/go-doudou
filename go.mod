@@ -31,7 +31,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/unionj-cloud/toolkit v0.1.1
+	github.com/unionj-cloud/toolkit v0.1.2-0.20251108181857-6c9dabbf6494
 	github.com/wubin1989/dbresolver v0.0.2 // indirect
 	github.com/wubin1989/gen v0.0.4
 	github.com/wubin1989/gorm v0.0.5
