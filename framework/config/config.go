@@ -27,7 +27,6 @@ import (
 	"github.com/unionj-cloud/toolkit/zlogger"
 	"github.com/wubin1989/nacos-sdk-go/v2/common/constant"
 	"github.com/wubin1989/nacos-sdk-go/v2/vo"
-	_ "go.uber.org/automaxprocs"
 
 	"github.com/unionj-cloud/go-doudou/v2/framework/configmgr"
 )

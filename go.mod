@@ -287,7 +287,6 @@ require (
 	github.com/wubin1989/nacos-sdk-go/v2 v2.1.2-0.20221024120645-0288f53fdaa8
 	github.com/wubin1989/postgres v0.0.2
 	go.etcd.io/etcd/client/v3 v3.5.14
-	go.uber.org/automaxprocs v1.5.2
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/text v0.24.0

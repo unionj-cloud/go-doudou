@@ -85,14 +85,6 @@ func init() {
 	prometheus.Register(appInfo)
 
 	prometheus.Register(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Name:        "go_doudou_gomaxprocs",
-		Help:        "The value of gomaxprocs",
-		ConstLabels: nil,
-	}, func() float64 {
-		return float64(runtime.GOMAXPROCS(0))
-	}))
-
-	prometheus.Register(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
 		Name:        "go_doudou_numcpu",
 		Help:        "The value of numcpu",
 		ConstLabels: nil,
