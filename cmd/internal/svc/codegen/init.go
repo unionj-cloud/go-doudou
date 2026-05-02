@@ -10,6 +10,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/goversion"
 	"github.com/unionj-cloud/toolkit/astutils"
 	"github.com/unionj-cloud/toolkit/common"
 	"github.com/unionj-cloud/toolkit/executils"
@@ -142,7 +143,7 @@ const envTmpl = ``
 const dockerignorefileTmpl = `**/*.local
 `
 
-const dockerfileTmpl = `FROM devopsworks/golang-upx:1.18 AS builder
+const dockerfileTmpl = `FROM golang:{{.GoDockerVersion}}-alpine AS builder
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn,direct
@@ -218,6 +219,7 @@ func InitProj(conf InitProjConfig) {
 	if err != nil {
 		panic(err)
 	}
+	goVersion = goversion.Resolve(goVersion)
 	if stringutils.IsEmpty(modName) {
 		modName = filepath.Base(dir)
 	}
@@ -320,7 +322,11 @@ func InitProj(conf InitProjConfig) {
 	defer f.Close()
 
 	tpl, _ = template.New("dockerfile.tmpl").Parse(dockerfileTmpl)
-	_ = tpl.Execute(f, nil)
+	_ = tpl.Execute(f, struct {
+		GoDockerVersion string
+	}{
+		GoDockerVersion: goversion.DockerTag(goVersion),
+	})
 
 	dockerignorefile := filepath.Join(dir, ".dockerignore")
 	if f, err = os.Create(dockerignorefile); err != nil {

@@ -6,11 +6,12 @@ import (
 	"text/template"
 
 	"github.com/sirupsen/logrus"
+	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/goversion"
 	"github.com/unionj-cloud/go-doudou/v2/cmd/internal/templates"
+	"github.com/unionj-cloud/go-doudou/v2/version"
 	"github.com/unionj-cloud/toolkit/common"
 	"github.com/unionj-cloud/toolkit/executils"
 	"github.com/unionj-cloud/toolkit/stringutils"
-	"github.com/unionj-cloud/go-doudou/v2/version"
 )
 
 const (
@@ -42,9 +43,9 @@ func (receiver *Work) SetWorkDir(workDir string) {
 	receiver.conf.WorkDir = workDir
 }
 
-const workTmpl = `go 1.22.2
+const workTmpl = `go {{.GoVersion}}
 
-toolchain go1.22.3
+toolchain {{.Toolchain}}
 `
 
 func (receiver *Work) goModInMainPkg(dir, modName, goVersion string) {
@@ -150,6 +151,7 @@ func (receiver *Work) Init() {
 	if err != nil {
 		panic(err)
 	}
+	goVersion = goversion.Resolve(goVersion)
 	workFile := filepath.Join(receiver.GetWorkDir(), "go.work")
 	if _, err = os.Stat(workFile); os.IsNotExist(err) {
 		f, err := os.Create(workFile)
@@ -161,8 +163,10 @@ func (receiver *Work) Init() {
 		tpl, _ := template.New(workTmpl).Parse(workTmpl)
 		_ = tpl.Execute(f, struct {
 			GoVersion string
+			Toolchain string
 		}{
 			GoVersion: goVersion,
+			Toolchain: goversion.Toolchain(goVersion),
 		})
 	} else {
 		logrus.Warnf("file %s already exists", workFile)
